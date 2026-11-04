@@ -26,7 +26,6 @@ interface Props {
 const LIST_BOTTOM_SPACING = 16;
 const MAX_INDENT_DEPTH = 6;
 const LEVEL_INDENT = 12;
-const GROUP_CONTENT_INDENT = 40;
 
 export function ChatThreadList({ state, newChat, select, controller, bottomInset,
   openActions, openProjectActions }: Props) {
@@ -42,8 +41,7 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
   return (
     <SectionList style={styles.fill} sections={groups.map(group =>
       ({ ...group, key: group.id,
-        contentIndent: Math.min(group.depth, MAX_INDENT_DEPTH) * LEVEL_INDENT
-          + (group.kind === 'group' ? GROUP_CONTENT_INDENT : 0),
+        contentIndent: Math.min(group.depth, MAX_INDENT_DEPTH) * LEVEL_INDENT,
         label: group.kind === 'group' || group.cwd
         ? group.label : t(group.id === 'ungrouped' ? 'client.groups.ungrouped' : 'client.chat.recent') }))}
       keyExtractor={(thread) => thread.id}

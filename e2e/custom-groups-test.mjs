@@ -52,6 +52,17 @@ async function dismissKeyboard() {
   if (/mInputShown=true|isInputViewShown=true/.test(keyboard)) await adb('shell', 'input', 'keyevent', '4');
 }
 
+async function verifyConversationAlignment() {
+  const tree = await nodes();
+  const textLeft = label => {
+    const node = tree.find(entry => entry.class === 'android.widget.TextView' && entry.text === label);
+    assert.ok(node, `Missing conversation text: ${label}`);
+    return Number(node.bounds.match(/^\[(\d+),/)[1]);
+  };
+  assert.equal(textLeft('项目里的对话'), textLeft('其他项目的对话'),
+    'Custom-group and project conversation titles must share the same leading edge');
+}
+
 async function verifyRemoval(scale) {
   await hold('项目里的对话');
   await tap('移动到分组');
@@ -98,6 +109,7 @@ async function verify(scale) {
   await tap('移动到分组');
   await tap('研究');
   await find('项目里的对话');
+  await verifyConversationAlignment();
   await screenshot(`android-tree-${scale}`);
   await verifyRemoval(scale);
   await hold('折叠分组：工作');
@@ -150,7 +162,7 @@ async function verifyBatchRemoval(scale) {
   await adb('shell', 'input', 'swipe', '540', '750', '540', '1900', '350');
   await tap('移动到分组');
   await tap('取消分组');
-  await adb('shell', 'input', 'keyevent', '4');
+  await tap('关闭管理分组');
   await find('项目里的对话');
   await find('其他项目的对话', true);
   await screenshot(`android-batch-restored-${scale}`);
