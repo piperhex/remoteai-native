@@ -3,7 +3,7 @@
   "revision": "3b152fe8f824071e23afa9d41f15b9e84ea3b50c",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "8e64e8a24d58b824f7298c6152eb48f9b495a11d"
+    "revision": "5d0e2f70f2a0d04021a138864567ef1e92f1eab4"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
   "files": {
@@ -78,6 +78,7 @@
     "shared/chat/turnPresentation.ts": "b9ccebd10b77c8b2385ac113e0d477e0101ca2f6768d00c45f02c858cf592926",
     "shared/remote-chat/client/types.ts": "df85b40cd522b1c651b390d082c8f9f3464ca9ea612cab619ea03c99e3331a0d",
     "shared/theme/mode.ts": "d27ddb4c18a6bdae69e82278457d225466f600bdf003be6e7c34ff9b79f83550",
+    "shared/accounts/maskEmail.ts": "39f70734fe1c75519130da3edba5766a7487fef76a433f9f9c7e3adba984abc5",
     "shared/http/requestDeadline.ts": "5c57b063c49299d780ee99684d07ba14a919d6b13a7ee1338d3d1ffb4d23c0ec",
     "shared/http/testing/adminClientContract.ts": "6b6d0b742961dc2116296eeec5103e6b53e37b336f26aaf78979d29377839cae",
     "shared/terminal/serverSshProfiles.ts": "a64f8131914b05fa5f50f9dead9fd3a0ebdd4fae9c1198fd6f1a6ba19516ae6d",
@@ -391,6 +392,7 @@
     "apps/desktop/src/components/TokenUsageDashboard/quotaHistoryData.ts": "d09d275ee25c1c87c884a657a739be9ef8cfa7244b71aaaa30c204f5a3919d5d",
     "apps/desktop/src/components/TokenUsageDashboard/quotaChartLabels.ts": "e5b0cf574f2b9386d8e867079c38d944d3f6089f6ce57f59391cf83e5a7e5d9e",
     "shared/remote-chat/client/useTokenSummary.ts": "b7694e981dd3164e9d61e7af018eac59ad6b1b318f94195f5f4efde81f6cd32a",
+    "shared/totp/entryList.ts": "c831f5edc2618d038a31c35070e22b5c2f7de889fdfa56b9237801b90b7b6664",
     "shared/app-update/downloadReport.ts": "ce703771ef2db40fd17635beae9a057b4735337c8bbfdbed7e98b8916a3cab59",
     "shared/app-update/peerLookup.ts": "edf2f1570d41e4c57c533145635f05cae7a391059639d411ead5d8d36d34a4aa",
     "shared/app-update/androidRelease.ts": "3c21768cf24b75d897ae57d1bad8b1b4e32614700eee717cb76d3a8b85a1075d",
@@ -399,6 +401,7 @@
     "shared/app-update/peerDiscovery.ts": "ff51969945c4fa690a5547199629ad5fb55c64b5075b018cb03ac3e45405bd6c",
     "shared/app-update/idleDownload.ts": "9065fa32e8c8e1bd50fdd35084499862329760bee7330f3863acbe0ea11d98e9",
     "shared/app-update/useStartupUpdate.ts": "7e04973cf95f390273239a32b3e8d7e91c70a16c820447481f5ae67baa47ea92",
+    "shared/accounts/expiration.ts": "9e641a55cd646e49e958f883dc3db280cfc13737873b46613000b13a2e0b0619",
     "shared/project-browser/ProjectBrowser.tsx": "8a452a98576eb935fc8670d7fc146190e8d85cb7de58b9cf6a3721603d5dff50",
     "shared/terminal/nativeSshBrowser.tsx": "81c953ac4c6614281ddf9446955a6d0eaf2193a4d5ac244c600b0114897080a9",
     "shared/project-browser/fileTransfer.ts": "dc6106dd7d82d9d1208c1fed45f0a1ea622496cb21f3a8bc7d79090e16d6f521",

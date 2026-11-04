@@ -1,0 +1,17 @@
+interface SearchableTotpEntry {
+  issuer: string;
+  accountName: string;
+  createdAt: string;
+}
+
+export type TotpSortOrder = 'default' | 'name' | 'newest';
+
+export function selectTotpEntries<T extends SearchableTotpEntry>(entries: T[], query: string, sort: TotpSortOrder): T[] {
+  const search = query.trim().toLocaleLowerCase();
+  const matching = entries.filter((entry) => (
+    `${entry.issuer} ${entry.accountName}`.toLocaleLowerCase().includes(search)
+  ));
+  if (sort === 'name') return matching.sort((a, b) => a.issuer.localeCompare(b.issuer, 'zh-CN'));
+  if (sort === 'newest') return matching.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  return matching;
+}

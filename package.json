@@ -29,7 +29,6 @@
     "@remoteai/i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
     "base64-js": "1.5.1",
     "buffer": "^6.0.3",
-    "codex-switch": "file:../codex-switch",
     "expo": "^53.0.0",
     "expo-application": "~6.1.4",
     "expo-asset": "~11.1.7",

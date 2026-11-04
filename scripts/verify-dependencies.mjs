@@ -19,4 +19,13 @@ for (const [file, expected] of Object.entries(manifest.files)) {
 }
 const app = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 assert.equal(app.dependencies['@remoteai/i18n'], manifest.i18n);
+const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+for (const [location, entry] of Object.entries(lock.packages)) {
+  assert.ok(!location.startsWith('../'), `Dependency outside this repository: ${location}`);
+  for (const version of Object.values({ ...entry.dependencies, ...entry.devDependencies })) {
+    if (!version.startsWith('file:')) continue;
+    const target = path.resolve(root, location, version.slice('file:'.length));
+    assert.ok(target.startsWith(root), `Local dependency outside this repository: ${version}`);
+  }
+}
 console.log(`Verified ${Object.keys(manifest.files).length} pinned dependency files`);

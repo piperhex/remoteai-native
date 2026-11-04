@@ -12,12 +12,7 @@ export function resetLabel(timestamp?: number | null) {
   return t("client.mobile.resetsInAboutHM", { value1: days ? t("client.shared.d", { days }) : '', value2: hours, value3: minutes });
 }
 
-export function maskEmail(email: string) {
-  const at = email.indexOf('@');
-  if (at < 2) return '******';
-  const local = email.slice(0, at);
-  return `${local.slice(0, 2)}${'*'.repeat(Math.min(5, Math.max(2, local.length - 2)))}${email.slice(at)}`;
-}
+export { maskEmail } from '../../vendor/shared/accounts/maskEmail';
 
 export function displayDate(value?: string | null) {
   if (!value) return t("client.accounts.notRefreshed");
