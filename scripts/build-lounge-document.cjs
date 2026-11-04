@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
+const { webviewReactAliases } = require('./webview-react.cjs');
 const root = path.resolve(__dirname, '..');
 const pdfRoot = path.dirname(require.resolve('pdfjs-dist/package.json'));
 
@@ -36,6 +37,7 @@ async function build() {
     format: 'iife', platform: 'browser', target: ['chrome100', 'safari16'], write: false,
     outfile: 'lounge-document.js', jsx: 'automatic', legalComments: 'inline', plugins: [pdfPlugin],
     supported: { 'template-literal': false }, define: { 'process.env.NODE_ENV': '"production"' },
+    alias: webviewReactAliases,
   });
   const script = result.outputFiles.find(file => file.path.endsWith('.js')).text.replace(/<\/script/gi, '<\\/script');
   const css = result.outputFiles.find(file => file.path.endsWith('.css')).text;

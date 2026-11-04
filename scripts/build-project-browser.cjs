@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
+const { webviewReactAliases } = require('./webview-react.cjs');
 const root = path.resolve(__dirname, '..');
 
 function licenseNotices(inputs) {
@@ -27,6 +28,7 @@ async function build() {
     supported: { 'template-literal': false },
     write: false, outfile: 'project-browser.js', jsx: 'automatic', legalComments: 'inline',
     define: { 'process.env.NODE_ENV': '"production"' },
+    alias: webviewReactAliases,
   });
   const script = result.outputFiles.find(file => file.path.endsWith('.js')).text.replace(/<\/script/gi, '<\\/script');
   const css = result.outputFiles.find(file => file.path.endsWith('.css')).text;
