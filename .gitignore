@@ -1,9 +1,9 @@
 node_modules/
-android/
-ios/
-.expo/
-build/
-dist/
+/android/
+/ios/
+/.expo/
+/build/
+/dist/
 plugins/connectivity/build/
 plugins/ssh/build/
 vendor/crates/**/target/
