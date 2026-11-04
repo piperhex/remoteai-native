@@ -29,6 +29,13 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
+      - name: Reserve disk space for all Android ABIs
+        # Hosted runners include unrelated toolchains; four-ABI C++ builds need their disk space.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost
+          df -h /
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
