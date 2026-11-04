@@ -3,7 +3,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { patchPods } = require('./patch-cocoa-udp.cjs');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const output = path.join(root, '.codex-tmp/ios-udp-native-checks');
 const pods = path.join(output, 'Pods');
 const source = path.join(pods, 'CocoaAsyncSocket/Source/GCD');
@@ -39,7 +39,7 @@ function compile(sdk, executable) {
     '-framework', 'Foundation', '-framework', 'CFNetwork',
     ...(sdk === 'iphonesimulator' ? ['-framework', 'UIKit'] : []),
     '-I', source, '-I', output, '-I', adapter, path.join(source, 'GCDAsyncUdpSocket.m'),
-    path.join(adapter, 'UdpSocketClient.m'), 'apps/native/e2e/port-mapping/IosUdpSendChecks.m', '-o', executable]);
+    path.join(adapter, 'UdpSocketClient.m'), 'e2e/port-mapping/IosUdpSendChecks.m', '-o', executable]);
 }
 
 function simulator() {

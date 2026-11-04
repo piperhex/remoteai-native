@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 import { toByteArray } from 'base64-js';
-import type { MappingStreamBridge, NativeStreamProgress } from '../../../../../shared/port-mapping/streamClient';
+import type { MappingStreamBridge, NativeStreamProgress } from '../../../vendor/shared/port-mapping/streamClient';
 
 interface NativeStreams {
   registerReceiver(id: string, epoch: string, key: string): Promise<void>;

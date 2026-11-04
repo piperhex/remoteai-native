@@ -1,6 +1,6 @@
-import { accountName } from '../../../../shared/lounge/names';
+import { accountName } from '../../vendor/shared/lounge/names';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import { useNewLoungeChat, type NewLoungeChatOptions } from '../../../../shared/lounge/useNewLoungeChat';
+import { useNewLoungeChat, type NewLoungeChatOptions } from '../../vendor/shared/lounge/useNewLoungeChat';
 import { displayText, t } from '../i18n';
 import { LoungeAvatar } from './LoungeMessage';
 import { LoungeSheet } from './LoungeSheet';

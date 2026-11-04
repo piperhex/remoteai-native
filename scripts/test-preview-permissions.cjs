@@ -5,8 +5,8 @@ const https = require('node:https');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-const root = path.resolve(__dirname, '../../..');
-const native = path.join(root, 'apps/native'), android = path.join(native, 'android');
+const root = path.resolve(__dirname, '..');
+const native = root, android = path.join(native, 'android');
 const sdk = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android/Sdk');
 const adb = path.join(sdk, 'platform-tools/adb');
 const serial = process.env.ANDROID_SERIAL || 'emulator-5580';

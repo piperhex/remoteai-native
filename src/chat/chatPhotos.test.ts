@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_CHAT_PHOTOS, MAX_PHOTO_DATA_CHARS, PhotoPermissionError,
   preparePhoto, selectPhotos, validatePhotos } from './chatPhotos';
 import type { ImagePickerAsset } from 'expo-image-picker';
-import { DEFAULT_CHAT_POLICY, setChatConnectionMode, setChatPolicy } from '../../../../shared/remote-chat/policy';
+import { DEFAULT_CHAT_POLICY, setChatConnectionMode, setChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 const mocks = vi.hoisted(() => ({ library: vi.fn(), camera: vi.fn(), permission: vi.fn(),
   manipulate: vi.fn(), read: vi.fn() }));

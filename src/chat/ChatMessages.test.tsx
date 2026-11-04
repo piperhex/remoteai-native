@@ -4,9 +4,9 @@ import { ChatMessages } from './ChatMessages';
 import { conversationEntries } from './turnPresentation';
 import type { TimelineEntry } from './activityTimeline';
 import type { Item, Turn } from './types';
-import { CONTINUE_MESSAGE } from '../../../../shared/remote-chat/composerAction';
+import { CONTINUE_MESSAGE } from '../../vendor/shared/remote-chat/composerAction';
 import { useStyles } from './styles';
-import { mergeHistory } from '../../../../shared/remote-chat/client/history';
+import { mergeHistory } from '../../vendor/shared/remote-chat/client/history';
 const styles = useStyles();
 
 const state = vi.hoisted(() => ({ selection: null as unknown, inline: new Map<string, boolean>(),

@@ -1,14 +1,14 @@
 import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatGuiUpdateSheet } from './ChatGuiUpdateSheet';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 
 const update = vi.hoisted(() => ({ version: '0.155.0', release: { version: '0.156.0' },
   available: true, checkLabel: '检查更新',
   confirmation: null as string | null, canCheck: true, canInstall: true, canConfirm: false,
   message: '有新版本可安装。', progress: null as number | null, error: '',
   check: vi.fn(), requestInstall: vi.fn(), cancel: vi.fn(), confirm: vi.fn() }));
-vi.mock('../../../../shared/remote-chat/useGuiUpdate', () => ({ useGuiUpdate: () => update }));
+vi.mock('../../vendor/shared/remote-chat/useGuiUpdate', () => ({ useGuiUpdate: () => update }));
 vi.mock('react-native', () => ({ ScrollView: 'ScrollView', Text: 'Text', View: 'View',
   StyleSheet: { create: <T,>(value: T) => value } }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));

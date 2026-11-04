@@ -18,8 +18,8 @@ vi.mock('react-native', () => ({ Platform: { OS: 'android' }, NativeModules: nat
 vi.mock('./androidUpdateNotifications', () => ({ prepareUpdateNotifications: vi.fn(),
   updateNotificationLabels: () => ({}) }));
 vi.mock('../api/client', () => ({ loadSession: native.session }));
-vi.mock('../../../../shared/app-update/peerLookup', () => ({ findUpdatePeers: native.peers }));
-vi.mock('../../../../shared/app-update/downloadReport', () => ({ reportDownload: native.report }));
+vi.mock('../../vendor/shared/app-update/peerLookup', () => ({ findUpdatePeers: native.peers }));
+vi.mock('../../vendor/shared/app-update/downloadReport', () => ({ reportDownload: native.report }));
 vi.mock('react-native-blob-util', () => ({ default: {
   fs: { exists: native.exists, stat: native.stat, dirs: { DownloadDir: '/storage/emulated/0/Download' } },
   config: native.config,

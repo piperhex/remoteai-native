@@ -6,7 +6,7 @@ import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
 import type { Item } from './types';
 import { useStyles } from './styles';
-import { messageLabel } from '../../../../shared/chat/messageDetails';
+import { messageLabel } from '../../vendor/shared/chat/messageDetails';
 import { ChatToolContent } from './ChatToolContent';
 import { QuoteSourceContext } from './ChatQuotes';
 

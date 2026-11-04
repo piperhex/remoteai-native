@@ -4,9 +4,9 @@ import { GitMenu, type GitMenuTarget } from './GitMenu';
 import { GitFileActionConfirmation, GitRevisionConfirmation } from './GitActionConfirmations';
 import { GitRow } from './GitChanges';
 import { GitHistory } from './GitHistory';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
-import type { GitFileRow } from '../../../../../shared/remote-chat/useGitFileList';
-import type { GitCommit } from '../../../../../shared/remote-chat/gitTypes';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
+import type { GitFileRow } from '../../../vendor/shared/remote-chat/useGitFileList';
+import type { GitCommit } from '../../../vendor/shared/remote-chat/gitTypes';
 
 const state = vi.hoisted(() => ({ mode: 'mixed', copy: vi.fn() }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),

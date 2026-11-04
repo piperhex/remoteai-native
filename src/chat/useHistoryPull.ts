@@ -1,5 +1,5 @@
 import type { GestureResponderEvent } from 'react-native';
-import { useHistoryPull as usePull } from '../../../../shared/chat/useHistoryPull';
+import { useHistoryPull as usePull } from '../../vendor/shared/chat/useHistoryPull';
 
 /** Keep top-edge pulls available without the system refresh spinner covering the conversation. */
 export function useHistoryPull(atTop: () => boolean, loadOlder: () => Promise<void>) {

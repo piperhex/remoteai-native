@@ -3,8 +3,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PanResponder, type GestureResponderEvent, type PanResponderGestureState } from 'react-native';
 import { DesktopScrollPad } from './DesktopScrollPad';
 import { useScrollButton } from './useScrollButton';
-import { useScrollPad } from '../../../../../shared/remote-desktop/useScrollPad';
-import { DesktopPointer } from '../../../../../shared/remote-desktop/input';
+import { useScrollPad } from '../../../vendor/shared/remote-desktop/useScrollPad';
+import { DesktopPointer } from '../../../vendor/shared/remote-desktop/input';
 
 const runtime = vi.hoisted(() => ({ effects: [] as (() => void)[],
   listener: undefined as undefined | ((state: string) => void), remove: vi.fn() }));

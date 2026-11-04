@@ -2,7 +2,7 @@ import { createThemedStyles } from '../theme/styles';
 import { t, useLanguage } from '../i18n';
 import { createContext, useContext, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useChatImage, type ImagePreviewOptions } from '../../../../shared/remote-chat/client/useChatImage';
+import { useChatImage, type ImagePreviewOptions } from '../../vendor/shared/remote-chat/client/useChatImage';
 import { palette, useStyles } from './styles';
 import { useChatImagePreview } from './ChatImagePreview';
 

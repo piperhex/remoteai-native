@@ -4,13 +4,13 @@ import { promisify } from 'node:util';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical Android device');
 const app = 'com.codexswitch.mobile.discoverysshtest';
-const output = fileURLToPath(new URL('../../../.codex-tmp/discovery-ssh-editor-android/', import.meta.url));
+const output = fileURLToPath(new URL('../.codex-tmp/discovery-ssh-editor-android/', import.meta.url));
 const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   encoding: 'utf8', timeout: 30_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
 })).stdout.trim();

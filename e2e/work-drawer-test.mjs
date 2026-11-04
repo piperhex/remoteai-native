@@ -4,10 +4,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/work-drawer-native');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the connected phone');
@@ -88,7 +88,7 @@ async function scrollOutput(toEnd) {
   await adb('shell', 'input', 'swipe', x, from, x, to, '180');
 }
 async function verifyVirtual(name) {
-  await tap('已运行 Get-Content shared/chat/activityTimeline.ts; Get-Content apps/native/src/chat/ChatWorkDrawer.tsx');
+  await tap('已运行 Get-Content shared/chat/activityTimeline.ts; Get-Content src/chat/ChatWorkDrawer.tsx');
   await find('复制输出');
   // Move the outer drawer while keeping the gesture outside the nested text pane.
   await adb('shell', 'input', 'swipe', '8', '2000', '8', '700', '350');
@@ -145,7 +145,7 @@ async function verifyScale(scale) {
 
 await mkdir(output, { recursive: true });
 await prepareHierarchy({ adb, output });
-await adb('install', '-r', path.join(root, 'apps/native/android/app/build-work-drawer/outputs/apk/debug/app-debug.apk'));
+await adb('install', '-r', path.join(root, 'android/app/build-work-drawer/outputs/apk/debug/app-debug.apk'));
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
   for (const scale of ['1.0', '1.3']) await verifyScale(scale);

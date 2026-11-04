@@ -1,5 +1,5 @@
 import { NativeModules } from 'react-native';
-import { subscribeInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
+import { subscribeInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
 import { t } from '../i18n';
 
 export interface SelectionLabels { copy: string; selectAll: string; quote: string }

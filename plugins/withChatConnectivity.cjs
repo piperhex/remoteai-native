@@ -23,7 +23,7 @@ module.exports = function withChatConnectivity(config) {
     const notices = path.join(result.modRequest.platformProjectRoot, 'app/src/main/assets/chat-connectivity');
     await fs.mkdir(notices, { recursive: true });
     for (const name of ['LICENSE-EasyTier', 'README.md']) await fs.copyFile(
-      path.resolve(__dirname, '../../../crates/chat-connectivity', name), path.join(notices, name));
+      path.resolve(__dirname, '../vendor/crates/chat-connectivity', name), path.join(notices, name));
     return result;
   }]);
   config = withAppBuildGradle(config, result => {

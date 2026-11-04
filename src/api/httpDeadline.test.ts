@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { adminClientContract, credentials } from '../../../../shared/http/testing/adminClientContract';
+import { adminClientContract, credentials } from '../../vendor/shared/http/testing/adminClientContract';
 import { authorizedRequest, refreshSession } from './client';
 import { activateSession, sessionEpoch } from './sessionStore';
 

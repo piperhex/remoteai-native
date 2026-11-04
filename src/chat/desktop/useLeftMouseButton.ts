@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, type PanResponderGestureState } from 'react-native';
-import type { DesktopViewport } from '../../../../../shared/remote-desktop/geometry';
-import type { MouseButtonControls } from '../../../../../shared/remote-desktop/useMouseButtons';
-import type { MousePanelActivity } from '../../../../../shared/remote-desktop/useMousePanel';
+import type { DesktopViewport } from '../../../vendor/shared/remote-desktop/geometry';
+import type { MouseButtonControls } from '../../../vendor/shared/remote-desktop/useMouseButtons';
+import type { MousePanelActivity } from '../../../vendor/shared/remote-desktop/useMousePanel';
 
 interface Options { buttons: MouseButtonControls; viewport: DesktopViewport; panel: MousePanelActivity }
 

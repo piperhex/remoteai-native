@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { createMappingConnection } from '../../../../shared/port-mapping/connection';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { chatHandshake } from '../../../../shared/remote-chat/handshake';
+import { createMappingConnection } from '../../vendor/shared/port-mapping/connection';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { chatHandshake } from '../../vendor/shared/remote-chat/handshake';
 
 afterEach(() => vi.useRealTimers());
 const flush = async () => { for (let index = 0; index < 10; index++) await Promise.resolve(); };

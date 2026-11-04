@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
-import type { useChatDraft } from '../../../../shared/remote-chat/client/useChatDraft';
-import type { TextSelection } from '../../../../shared/remote-chat/client/skillDraft';
+import type { useChatDraft } from '../../vendor/shared/remote-chat/client/useChatDraft';
+import type { TextSelection } from '../../vendor/shared/remote-chat/client/skillDraft';
 import { composerMenuTrigger } from './composerTrigger';
 import type { Skill } from './types';
 

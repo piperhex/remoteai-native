@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 import { SWIPE_COMPLETE_DISTANCE, SWIPE_DIRECTION_RATIO, SWIPE_LONG_PRESS_MS,
-  SWIPE_START_DISTANCE } from '../../../../shared/navigation/pageSwipe';
+  SWIPE_START_DISTANCE } from '../../vendor/shared/navigation/pageSwipe';
 import type { NativeDrawerMotion } from './useNativeDrawerMotion';
 
 type Surface = 'edge' | 'conversation' | 'drawer';

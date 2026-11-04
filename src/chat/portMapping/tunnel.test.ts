@@ -2,9 +2,9 @@ import net from 'node:net';
 import http from 'node:http';
 import { afterEach, expect, it, vi } from 'vitest';
 import { NativeMappingTunnel } from './tunnel';
-import type { ForwardingClient } from '../../../../../shared/port-mapping/service';
-import { StreamBudget } from '../../../../../shared/port-mapping/streamBudget';
-import { LINK_CHUNK_BYTES } from '../../../../../shared/terminal/linkChunks';
+import type { ForwardingClient } from '../../../vendor/shared/port-mapping/service';
+import { StreamBudget } from '../../../vendor/shared/port-mapping/streamBudget';
+import { LINK_CHUNK_BYTES } from '../../../vendor/shared/terminal/linkChunks';
 
 vi.mock('react-native-tcp-socket', () => ({ default: net }));
 vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));

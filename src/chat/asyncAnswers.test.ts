@@ -1,10 +1,10 @@
 import { expect, it, vi } from 'vitest';
-import { AsyncAnswers } from '../../../../shared/remote-chat/client/asyncAnswers';
+import { AsyncAnswers } from '../../vendor/shared/remote-chat/client/asyncAnswers';
 import {
   asyncAnswerText, enqueuedAnswerId, pendingQuestions, questionMessageText,
-} from '../../../../shared/remote-chat/client/asyncQuestions';
+} from '../../vendor/shared/remote-chat/client/asyncQuestions';
 import { initialChatState, type ChatState, type Item } from './types';
-import { queueTextPreview, type QueueMessage, type QueueSnapshot } from '../../../../shared/remote-chat/queue';
+import { queueTextPreview, type QueueMessage, type QueueSnapshot } from '../../vendor/shared/remote-chat/queue';
 
 const question: Item = { id: 'ask', type: 'agentMessage', delivery: 'async',
   questions: [{ title: '在哪个系统？', options: ['Windows', 'Android'] }] };

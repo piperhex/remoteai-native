@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { GroupingContext, useGroupingUI, type GroupingUI } from '../../../../../shared/chat/groups/context';
-import type { ChatGroup } from '../../../../../shared/chat/groups/model';
+import { GroupingContext, useGroupingUI, type GroupingUI } from '../../../vendor/shared/chat/groups/context';
+import type { ChatGroup } from '../../../vendor/shared/chat/groups/model';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SheetInset, SheetScrollView } from '../../components/SheetScrollView';
 import { displayError, t } from '../../i18n';

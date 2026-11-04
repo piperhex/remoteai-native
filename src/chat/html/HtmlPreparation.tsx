@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { WebView } from 'react-native-webview';
-import type { FileClient } from '../../../../../shared/remote-chat/fileDownload';
+import type { FileClient } from '../../../vendor/shared/remote-chat/fileDownload';
 import { htmlPreparationDocument } from './htmlPreparation.generated';
 import { nativeHtmlAsset } from './nativeHtmlAsset';
-import { readHtmlImageLinks, type HtmlImageLink } from '../../../../../shared/file-preview/htmlImageLinks';
+import { readHtmlImageLinks, type HtmlImageLink } from '../../../vendor/shared/file-preview/htmlImageLinks';
 
 export interface PreparedHtml { html: string; failed: boolean; imageLinks?: HtmlImageLink[] }
 export interface HtmlFileContext { path: string; client: FileClient; threadId: string }

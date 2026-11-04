@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 import { initialChatState, type Thread } from './types';
-import { ThreadActions, threadActionReason } from '../../../../shared/remote-chat/client/threadActions';
-import { historyDelta } from '../../../../shared/remote-chat/historySync';
-import type { OfflineHistoryStore } from '../../../../shared/remote-chat/client/offline';
+import { ThreadActions, threadActionReason } from '../../vendor/shared/remote-chat/client/threadActions';
+import { historyDelta } from '../../vendor/shared/remote-chat/historySync';
+import type { OfflineHistoryStore } from '../../vendor/shared/remote-chat/client/offline';
 
 const thread: Thread = { id: 'one', name: 'Original', preview: '', cwd: '/project', updatedAt: 1, turns: [] };
 const other: Thread = { ...thread, id: 'two', name: 'Other' };

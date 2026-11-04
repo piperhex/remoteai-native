@@ -1,8 +1,8 @@
 import { useRef } from 'react';
 import type { GestureResponderEvent } from 'react-native';
-import type { DesktopPointer } from '../../../../../shared/remote-desktop/input';
-import type { DesktopViewport } from '../../../../../shared/remote-desktop/geometry';
-import type { DesktopZoom, TouchPair } from '../../../../../shared/remote-desktop/zoom';
+import type { DesktopPointer } from '../../../vendor/shared/remote-desktop/input';
+import type { DesktopViewport } from '../../../vendor/shared/remote-desktop/geometry';
+import type { DesktopZoom, TouchPair } from '../../../vendor/shared/remote-desktop/zoom';
 
 interface Options { pointer: DesktopPointer; viewport: DesktopViewport; zoom?: DesktopZoom }
 

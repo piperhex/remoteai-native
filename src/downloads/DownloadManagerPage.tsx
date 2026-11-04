@@ -11,7 +11,7 @@ import { DownloadPageHeader } from './DownloadPageHeader';
 import { DownloadSources } from './DownloadSources';
 import { useDownloadTasks } from './useDownloadTasks';
 import { useStyles } from './styles';
-import { useDownloadSelection } from '../../../../shared/downloads/useDownloadSelection';
+import { useDownloadSelection } from '../../vendor/shared/downloads/useDownloadSelection';
 import { DownloadTaskHeading } from './DownloadTaskHeading';
 import { downloadManager } from './manager';
 

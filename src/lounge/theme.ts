@@ -1,5 +1,5 @@
 import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
-import { themeColor, type ThemeColor, type ThemeColorRole } from '../../../../shared/theme/mode';
+import { themeColor, type ThemeColor, type ThemeColorRole } from '../../vendor/shared/theme/mode';
 import { useThemeMode } from '../theme/store';
 
 const darkPalette: Partial<Record<ThemeColorRole, string>> = {

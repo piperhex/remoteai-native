@@ -1,6 +1,6 @@
 import { displayText } from '../i18n/index';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import { COMPOSER_ACTION_LABELS, type ComposerAction } from '../../../../shared/remote-chat/composerAction';
+import { COMPOSER_ACTION_LABELS, type ComposerAction } from '../../vendor/shared/remote-chat/composerAction';
 import { palette, useStyles } from './styles';
 import { useLanguage } from '../i18n';
 import { Feather } from '@expo/vector-icons';

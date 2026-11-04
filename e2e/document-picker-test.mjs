@@ -4,10 +4,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
 const output = path.join(root, `.codex-tmp/document-picker-${serial}`);
@@ -69,7 +69,7 @@ async function verifySelectionAndRetry() {
 await mkdir(output, { recursive: true });
 await prepareHierarchy({ adb, output });
 await adb('install', '-r', path.join(root,
-  'apps/native/android/app/build-document-picker/outputs/apk/release/app-release.apk'));
+  'android/app/build-document-picker/outputs/apk/release/app-release.apk'));
 await adb('shell', 'am', 'force-stop', applicationId);
 await adb('shell', 'am', 'start', '-W', '-n', component);
 await waitFor(tree => tree.some(addButton));

@@ -3,7 +3,7 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useState } from 'react';
-import { isRemoteAggregateId, remoteModelOptions, type RemoteModelTarget } from '../../../../shared/remote-chat/modelTarget';
+import { isRemoteAggregateId, remoteModelOptions, type RemoteModelTarget } from '../../vendor/shared/remote-chat/modelTarget';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
 import { BottomSheet } from './BottomSheet';
 import { SheetScrollView } from './SheetScrollView';

@@ -1,15 +1,15 @@
 import React, { type ReactElement } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ComposerFileMenu } from './ComposerFileMenu';
-import type { ProjectFile } from '../../../../shared/remote-chat/projectFiles';
+import type { ProjectFile } from '../../vendor/shared/remote-chat/projectFiles';
 
 const search = vi.hoisted(() => ({ entries: [
   { name: 'robot', path: '/remote/src/robot', directory: true, relativePath: 'src/robot' },
   { name: 'robot.ts', path: '/remote/src/robot.ts', directory: false, relativePath: 'src/robot.ts' },
 ], loading: false, error: '', truncated: true }));
 const searchOptions = vi.hoisted(() => vi.fn());
-vi.mock('../../../../shared/chat/useProjectFileCandidates', async original => ({
-  ...await original<typeof import('../../../../shared/chat/useProjectFileCandidates')>(),
+vi.mock('../../vendor/shared/chat/useProjectFileCandidates', async original => ({
+  ...await original<typeof import('../../vendor/shared/chat/useProjectFileCandidates')>(),
   useProjectFileCandidates: (options: unknown) => { searchOptions(options); return search; },
 }));
 vi.mock('react-native', () => ({ FlatList: 'List', Pressable: 'Button', Text: 'Text', View: 'View' }));

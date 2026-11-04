@@ -1,9 +1,9 @@
 import { Platform } from 'react-native';
 import { setStringAsync } from 'expo-clipboard';
 import { randomUUID } from 'expo-crypto';
-import type { BrowserHost } from '../../../../shared/project-browser/entryActions';
-import type { ProjectBrowserClient } from '../../../../shared/project-browser/protocol';
-import { downloadProjectEntry } from '../../../../shared/project-browser/downloads';
+import type { BrowserHost } from '../../vendor/shared/project-browser/entryActions';
+import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
+import { downloadProjectEntry } from '../../vendor/shared/project-browser/downloads';
 import { downloadManager } from '../downloads/manager';
 import { nativeDownloadTarget } from './fileDownloadTarget';
 

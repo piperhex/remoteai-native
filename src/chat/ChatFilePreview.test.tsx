@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { parseFileReference, type FileReference } from '../../../../shared/chat/fileReference';
+import { parseFileReference, type FileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileProvider } from './ChatFilePreview';
 import { ChatImageFilePreview } from './ChatImageFilePreview';
 import { ImageViewer } from './ImageViewer';
@@ -46,7 +46,7 @@ vi.mock('./video/VideoViewer', () => ({ VideoViewer: 'Video' }));
 vi.mock('./useImageGestures', () => ({ useImageGestures: () => ({ gesture: {}, animatedStyle: {} }) }));
 vi.mock('./useImageOrientation', () => ({ useImageOrientation: () => ({ displayed: 'portrait' }) }));
 vi.mock('./useSaveImage', () => ({ useSaveImage: () => ({ saving: false, message: '', save: vi.fn() }) }));
-vi.mock('../../../../shared/chat/useImageViewer', () => ({ useImageViewer: () => ({
+vi.mock('../../vendor/shared/chat/useImageViewer', () => ({ useImageViewer: () => ({
   url: state.original, error: state.imageError, fail: vi.fn(), request: vi.fn(), loading: false, loadOriginal: state.load,
 }) }));
 

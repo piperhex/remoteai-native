@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { idleDownload } from '../../../../shared/app-update/idleDownload';
+import { idleDownload } from '../../vendor/shared/app-update/idleDownload';
 
 afterEach(() => vi.useRealTimers());
 

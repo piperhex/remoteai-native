@@ -11,7 +11,7 @@ import { ChatAudio } from './ChatAudio';
 import { toolOutputText } from './toolOutput';
 import { useStyles } from './styles';
 import type { Item } from './types';
-import { toolResultPresentation } from '../../../../shared/chat/toolResult';
+import { toolResultPresentation } from '../../vendor/shared/chat/toolResult';
 import { CopyTextButton } from './CopyTextButton';
 
 export function toolRecord(value: unknown): Record<string, unknown> | null {

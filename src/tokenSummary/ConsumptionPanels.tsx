@@ -1,9 +1,9 @@
 import { CONTEXT_FIELDS, MODE_FIELDS, type ConsumptionField }
-  from '../../../../shared/remote-chat/tokenSummaryLabels';
+  from '../../vendor/shared/remote-chat/tokenSummaryLabels';
 import { t, useLanguage } from '../i18n';
 import { Text, View } from 'react-native';
-import type { TokenSummary } from '../../../../shared/remote-chat/tokenSummary';
-import { formatTokens } from '../../../desktop/src/components/TokenUsageDashboard/chartUtils';
+import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
+import { formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
 import { TimeBars } from './TimeBars';
 import { useSummaryStyles as useS } from './styles';
 

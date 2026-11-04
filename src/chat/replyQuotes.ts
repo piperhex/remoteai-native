@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/replyQuotes';
+export * from '../../vendor/shared/chat/replyQuotes';

@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import type { FlatList } from 'react-native';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
-import type { MobileLounge } from '../../../../shared/lounge/useMobileLounge';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
+import type { MobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
 import { useLoungeListScroll } from './useLoungeListScroll';
 
 const refs = vi.hoisted(() => ({ current: { key: '', offset: null as number | null } }));

@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/codeHighlight';
+export * from '../../vendor/shared/chat/codeHighlight';

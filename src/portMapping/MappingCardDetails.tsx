@@ -1,9 +1,9 @@
 import type { MessageKey } from '@remoteai/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
-import type { ForwardingEntry } from '../../../../shared/port-mapping/service';
-import { protocolLabel } from '../../../../shared/port-mapping/settings';
-import { DEFAULT_MAPPING_HOST } from '../../../../shared/port-mapping/target';
+import type { ForwardingEntry } from '../../vendor/shared/port-mapping/service';
+import { protocolLabel } from '../../vendor/shared/port-mapping/settings';
+import { DEFAULT_MAPPING_HOST } from '../../vendor/shared/port-mapping/target';
 import { displayError, t } from '../i18n';
 import { useThemeColor } from '../theme/store';
 import { useMappingCardStyles } from './mappingCardStyles';

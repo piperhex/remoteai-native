@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import { chatHandshake } from '../../../../shared/remote-chat/handshake';
-import { DEFAULT_COMPOSER } from '../../../../shared/remote-chat/composer';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import { chatHandshake } from '../../vendor/shared/remote-chat/handshake';
+import { DEFAULT_COMPOSER } from '../../vendor/shared/remote-chat/composer';
 
 afterEach(() => vi.useRealTimers());
 

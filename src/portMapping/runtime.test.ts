@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { DeviceMappingRuntime, type MappingConnection } from '../../../../shared/port-mapping/deviceRuntime';
-import { DeviceMappingRegistry } from '../../../../shared/port-mapping/deviceRegistry';
-import type { MappingDocument } from '../../../../shared/port-mapping/sync';
-import type { MappingStorage } from '../../../../shared/port-mapping/settings';
+import { DeviceMappingRuntime, type MappingConnection } from '../../vendor/shared/port-mapping/deviceRuntime';
+import { DeviceMappingRegistry } from '../../vendor/shared/port-mapping/deviceRegistry';
+import type { MappingDocument } from '../../vendor/shared/port-mapping/sync';
+import type { MappingStorage } from '../../vendor/shared/port-mapping/settings';
 
 const flush = async () => { for (let index = 0; index < 40; index++) await Promise.resolve(); };
 const cleanup: Array<() => void> = [];

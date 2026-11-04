@@ -2,11 +2,11 @@ import React, { Children, isValidElement, type ReactElement, type ReactNode } fr
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatThreadActions } from './ChatThreadActions';
 import { ChatThreadList } from './ChatThreadList';
-import type { ThreadActionsModel } from '../../../../shared/remote-chat/client/useThreadActions';
+import type { ThreadActionsModel } from '../../vendor/shared/remote-chat/client/useThreadActions';
 import { initialChatState, type Thread } from './types';
 import type { ChatController } from './controller';
-import { useGrouping } from '../../../../shared/chat/groups/context';
-vi.mock('../../../../shared/chat/groups/context', () => ({ useGrouping: vi.fn(() => null) }));
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
+vi.mock('../../vendor/shared/chat/groups/context', () => ({ useGrouping: vi.fn(() => null) }));
 vi.mock('./groups/GroupChoice', () => ({ NativeGroupIcon: 'GroupIcon' }));
 
 vi.mock('react-native', () => ({ Pressable: 'Pressable', SectionList: 'SectionList', Text: 'Text',
@@ -15,7 +15,7 @@ vi.mock('react-native', () => ({ Pressable: 'Pressable', SectionList: 'SectionLi
 vi.mock('@expo/vector-icons/Feather', () => ({ default: 'Icon' }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 vi.mock('./useThreadListScroll', () => ({ useThreadListScroll: () => ({}) }));
-vi.mock('../../../../shared/remote-chat/client/useThreadGroups', () => ({ useThreadGroups: () => ({ groups: [] }) }));
+vi.mock('../../vendor/shared/remote-chat/client/useThreadGroups', () => ({ useThreadGroups: () => ({ groups: [] }) }));
 beforeEach(() => { vi.stubGlobal('React', React); vi.mocked(useGrouping).mockReturnValue(null); });
 afterEach(() => vi.unstubAllGlobals());
 

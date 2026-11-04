@@ -1,1 +1,1 @@
-export * from '../../../../shared/remote-chat/client/types';
+export * from '../../vendor/shared/remote-chat/client/types';

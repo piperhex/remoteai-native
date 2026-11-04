@@ -5,8 +5,8 @@ import { t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { projectFileReference, useProjectFileCandidates,
-  type ProjectFileSearch } from '../../../../shared/chat/useProjectFileCandidates';
-import type { AttachmentReference } from '../../../desktop/src/pages/codexGui/attachmentTypes';
+  type ProjectFileSearch } from '../../vendor/shared/chat/useProjectFileCandidates';
+import type { AttachmentReference } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
 
 export function ComposerFileMenu(props: {
   query: string; threadId: string | null; cwd: string; ready: boolean; load: ProjectFileSearch;

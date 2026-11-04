@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { GitCommitForm } from './GitCommitForm';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 
 vi.mock('react', async original => ({ ...await original<typeof React>(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),

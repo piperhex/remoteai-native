@@ -5,9 +5,9 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { markdownAnswer, markdownQuestion } from '../../../shared/chat/markdownFixture.json';
+import { markdownAnswer, markdownQuestion } from '../vendor/shared/chat/markdownFixture.json';
 import { ChatMessage } from '../src/chat/ChatMessage';
-import lists from '../../../shared/chat/listAlignmentFixture.json';
+import lists from '../vendor/shared/chat/listAlignmentFixture.json';
 import { updateThemeMode, useThemeMode } from '../src/theme/store';
 
 function MarkdownFixture() {

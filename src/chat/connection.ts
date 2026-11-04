@@ -1,20 +1,20 @@
 import { getRandomBytes } from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
-import { trustedHost, trustScope } from '../../../../shared/remote-chat/trustedHost';
+import { trustedHost, trustScope } from '../../vendor/shared/remote-chat/trustedHost';
 import { NativeModules, Platform } from 'react-native';
 import { nativeDownloadSocket } from './downloadSocket';
 import { registerMappingStream } from './portMapping/streamBridge';
 import { RTCPeerConnection as NativePeerConnection } from 'react-native-webrtc';
 import { fetchUserProfile, refreshSession } from '../api/client';
 import type { AuthSession } from '../types';
-import { ChatConnection, type ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { RtcPeer } from '../../../../shared/remote-chat/rtcPeer';
+import { ChatConnection, type ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { RtcPeer } from '../../vendor/shared/remote-chat/rtcPeer';
 import { createNativePacketCipher } from './packetCipher';
 import { createMobilePacketCompression } from './packetCompression';
-import { MultipathPeer } from '../../../../shared/remote-chat/multipathPeer';
+import { MultipathPeer } from '../../vendor/shared/remote-chat/multipathPeer';
 import { NativeTcpNetwork } from './tcpNetwork';
 import { createMobileNativePath } from './nativePath';
-import type { PeerFactory } from '../../../../shared/remote-chat/protocol';
+import type { PeerFactory } from '../../vendor/shared/remote-chat/protocol';
 
 interface Options extends ConnectionEvents { session: AuthSession; deviceId: string }
 const rtc: PeerFactory = peer => new RtcPeer(peer, () => (

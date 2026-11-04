@@ -2,10 +2,10 @@ import dgram from 'react-native-udp';
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 import { randomUUID } from 'expo-crypto';
-import type { UdpPacket } from '../../../../../shared/terminal/links';
-import type { DatagramEndpoint, UdpListenerFactory } from '../../../../../shared/port-mapping/udpTunnel';
+import type { UdpPacket } from '../../../vendor/shared/terminal/links';
+import type { DatagramEndpoint, UdpListenerFactory } from '../../../vendor/shared/port-mapping/udpTunnel';
 import { DatagramQueue, UDP_MAX_BATCH, UDP_MAX_BATCH_BYTES, UDP_MAX_DATAGRAM, UDP_MAX_PEERS,
-  UDP_PEER_IDLE_MS } from '../../../../../shared/port-mapping/datagrams';
+  UDP_PEER_IDLE_MS } from '../../../vendor/shared/port-mapping/datagrams';
 import { retainPortMappingConnection } from '../backgroundConnection';
 import { completeUdpSend } from './udpSend';
 

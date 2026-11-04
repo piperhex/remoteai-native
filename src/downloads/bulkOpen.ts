@@ -1,9 +1,9 @@
 import { bytesToHex } from '@noble/hashes/utils';
 import { getRandomBytes } from 'expo-crypto';
-import { bulkCapability, type BulkClient } from '../../../../shared/remote-chat/bulkControl';
-import { authenticateManifest } from '../../../../shared/remote-chat/downloadManifest';
-import { bulkAssert } from '../../../../shared/remote-chat/bulkLimits';
-import { negotiateBulk } from '../../../../shared/remote-chat/bulkProtocol';
+import { bulkCapability, type BulkClient } from '../../vendor/shared/remote-chat/bulkControl';
+import { authenticateManifest } from '../../vendor/shared/remote-chat/downloadManifest';
+import { bulkAssert } from '../../vendor/shared/remote-chat/bulkLimits';
+import { negotiateBulk } from '../../vendor/shared/remote-chat/bulkProtocol';
 import type { DownloadNative } from './types';
 
 function epochId() {

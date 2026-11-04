@@ -1,10 +1,10 @@
 import { SheetGestureScrollView as ScrollView } from '../../components/SheetScrollGesture';
 import { ActivityIndicator, Text, View } from 'react-native';
-import type { SshApi } from '../../../../../shared/terminal/ssh';
-import { sshLabel, type SshProfile } from '../../../../../shared/terminal/sshProfiles';
-import type { TerminalInfo } from '../../../../../shared/terminal/types';
-import { useSavedSshConnection } from '../../../../../shared/terminal/useSavedSshConnection';
-import { validSshValues } from '../../../../../shared/terminal/useSshConnection';
+import type { SshApi } from '../../../vendor/shared/terminal/ssh';
+import { sshLabel, type SshProfile } from '../../../vendor/shared/terminal/sshProfiles';
+import type { TerminalInfo } from '../../../vendor/shared/terminal/types';
+import { useSavedSshConnection } from '../../../vendor/shared/terminal/useSavedSshConnection';
+import { validSshValues } from '../../../vendor/shared/terminal/useSshConnection';
 import { BottomSheet } from '../../components/BottomSheet';
 import { displayError, t, useLanguage } from '../../i18n';
 import { SshButton, SshField } from './SshControls';

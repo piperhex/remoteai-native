@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import type { LoungeAttachment as Attachment } from '../../../../shared/lounge/attachments';
-import type { LoungeController } from '../../../../shared/lounge/controller';
+import type { LoungeAttachment as Attachment } from '../../vendor/shared/lounge/attachments';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
 import { nativeAttachmentSink } from './attachments';
 import { LoungeImage } from './LoungeImage';
 import { useLoungeStyles } from './styles';

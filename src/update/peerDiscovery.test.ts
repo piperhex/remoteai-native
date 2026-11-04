@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { watchUpdatePeers } from '../../../../shared/app-update/peerDiscovery';
-import { updateMirrorUrl } from '../../../../shared/app-update/mirrorUrl';
+import { watchUpdatePeers } from '../../vendor/shared/app-update/peerDiscovery';
+import { updateMirrorUrl } from '../../vendor/shared/app-update/mirrorUrl';
 
 class Socket {
   static OPEN = 1;

@@ -3,15 +3,15 @@ import { t, useLanguage } from '../../i18n';
 import { useEffect, useSyncExternalStore } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import type { DesktopPointer } from '../../../../../shared/remote-desktop/input';
+import type { DesktopPointer } from '../../../vendor/shared/remote-desktop/input';
 import { cursorPosition, mousePanelPosition, MOUSE_PANEL_SIZE, MOUSE_ICON_SIZE, type DesktopViewport }
-  from '../../../../../shared/remote-desktop/geometry';
-import type { MousePanelActivity } from '../../../../../shared/remote-desktop/useMousePanel';
-import { useMouseButtons } from '../../../../../shared/remote-desktop/useMouseButtons';
+  from '../../../vendor/shared/remote-desktop/geometry';
+import type { MousePanelActivity } from '../../../vendor/shared/remote-desktop/useMousePanel';
+import { useMouseButtons } from '../../../vendor/shared/remote-desktop/useMouseButtons';
 import { useTrackpad } from './useTrackpad';
 import { useLeftMouseButton } from './useLeftMouseButton';
-import { useScrollPad, type ScrollPadGesture } from '../../../../../shared/remote-desktop/useScrollPad';
-import type { DesktopWheel } from '../../../../../shared/remote-desktop/scrollPad';
+import { useScrollPad, type ScrollPadGesture } from '../../../vendor/shared/remote-desktop/useScrollPad';
+import type { DesktopWheel } from '../../../vendor/shared/remote-desktop/scrollPad';
 import { useScrollButton } from './useScrollButton';
 import { DesktopScrollPad } from './DesktopScrollPad';
 import { useDesktopStyles as useS } from './styles';
@@ -32,7 +32,7 @@ export function DesktopMouse({ visible, ...props }: Props & { visible: boolean }
   return <>
     {props.panel.expanded && <View pointerEvents="none" accessible={false}
       style={[s.cursor, { left: cursor.x, top: cursor.y }]}>
-      <Image accessible={false} source={require('../../../../../shared/remote-desktop/cursor.png')}
+      <Image accessible={false} source={require('../../../vendor/shared/remote-desktop/cursor.png')}
         resizeMode="contain" style={s.cursorImage} />
     </View>}
     {visible && <View pointerEvents="box-none" accessibilityElementsHidden={scroll.active}

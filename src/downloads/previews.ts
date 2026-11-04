@@ -1,4 +1,4 @@
-import { PreviewDownloads } from '../../../../shared/remote-chat/previewDownloads';
+import { PreviewDownloads } from '../../vendor/shared/remote-chat/previewDownloads';
 import { downloadManager } from './manager';
 
 export function createPreviewDownloads(identity: { owner: string; deviceId: string }) {

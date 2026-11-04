@@ -8,11 +8,11 @@ import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-ha
 import Animated from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useImageViewer } from '../../../../shared/chat/useImageViewer';
+import { useImageViewer } from '../../vendor/shared/chat/useImageViewer';
 import { useImageOrientation } from './useImageOrientation';
 import { useImageGestures } from './useImageGestures';
 import { useSaveImage } from './useSaveImage';
-import type { PreviewImageLoader } from '../../../../shared/remote-chat/previewProgress';
+import type { PreviewImageLoader } from '../../vendor/shared/remote-chat/previewProgress';
 import { PreviewTransferProgress } from './PreviewTransferProgress';
 import { ImageAiToolbar } from './ImageAiToolbar';
 

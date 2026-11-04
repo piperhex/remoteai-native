@@ -1,7 +1,7 @@
 import { AudioModule, RecordingPresets, setAudioModeAsync, type AudioRecorder } from 'expo-audio';
 import { deleteAsync } from 'expo-file-system';
 import { AppState, Platform } from 'react-native';
-import { MAX_AUDIO_BYTES, MAX_RECORDING_SECONDS, type Recording } from '../../../../../shared/chat/dictation/recording';
+import { MAX_AUDIO_BYTES, MAX_RECORDING_SECONDS, type Recording } from '../../../vendor/shared/chat/dictation/recording';
 
 const RECORDING_FAILED = 'client.dictation.recordingStoppedUnexpectedlyCheckYourMicrophoneAndRetry';
 const PERMISSION_RESUME_TIMEOUT_MS = 2_000;

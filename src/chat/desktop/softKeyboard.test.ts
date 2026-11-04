@@ -1,8 +1,8 @@
 import { expect, it, vi } from 'vitest';
-import { desktopKeyCode } from '../../../../../shared/remote-desktop/keyboard';
+import { desktopKeyCode } from '../../../vendor/shared/remote-desktop/keyboard';
 import { DESKTOP_SHORTCUTS, KEYBOARD_PAGES, MODIFIERS, sendDesktopChord, desktopShortcuts, desktopModifiers }
-  from '../../../../../shared/remote-desktop/softKeyboard';
-import { parseDesktopImeMessage } from '../../../../../shared/remote-desktop/ime';
+  from '../../../vendor/shared/remote-desktop/softKeyboard';
+import { parseDesktopImeMessage } from '../../../vendor/shared/remote-desktop/ime';
 
 it('sends a chord in order and releases every key in reverse order', () => {
   const input = vi.fn();

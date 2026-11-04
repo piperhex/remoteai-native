@@ -1,8 +1,8 @@
 import { expect, it, vi } from 'vitest';
-import { chatRetryState, retryChat } from '../../../../shared/remote-chat/ChatRetryProvider';
-import { initialChatState, type ChatState } from '../../../../shared/remote-chat/client/types';
-import { CONTINUE_MESSAGE } from '../../../../shared/remote-chat/composerAction';
-import type { SendInput } from '../../../../shared/remote-chat/client/types';
+import { chatRetryState, retryChat } from '../../vendor/shared/remote-chat/ChatRetryProvider';
+import { initialChatState, type ChatState } from '../../vendor/shared/remote-chat/client/types';
+import { CONTINUE_MESSAGE } from '../../vendor/shared/remote-chat/composerAction';
+import type { SendInput } from '../../vendor/shared/remote-chat/client/types';
 
 const target = { threadId: 'thread', turnId: 'failed' };
 const state = (): ChatState => ({ ...initialChatState(), ready: true, mode: 'relay',

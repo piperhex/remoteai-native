@@ -1,8 +1,8 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Modal } from '../components/Modal';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { MAX_MUTE_MINUTES, type LoungeAccount } from '../../../../shared/lounge/types';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { MAX_MUTE_MINUTES, type LoungeAccount } from '../../vendor/shared/lounge/types';
 import { displayText, t } from '../i18n';
 import { pickLoungeImages } from './images';
 import { LoungeAvatar } from './LoungeMessage';

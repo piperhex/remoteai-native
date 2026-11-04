@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/goal-native');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
@@ -61,7 +61,7 @@ async function verifyGoal(name) {
 }
 
 await mkdir(output, { recursive: true });
-await adb('install', '-r', path.join(root, 'apps/native/android/app/build/outputs/apk/release/goal-fixture.apk'));
+await adb('install', '-r', path.join(root, 'android/app/build/outputs/apk/release/goal-fixture.apk'));
 await adb('shell', 'am', 'force-stop', applicationId);
 await adb('shell', 'am', 'start', '-W', '-n', `${applicationId}/com.codexswitch.mobile.MainActivity`);
 try {

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { GuiToolsClient } from '../../../../../shared/remote-chat/guiTools';
-import type { useRemoteTerminalLauncher } from '../../../../../shared/remote-chat/useRemoteTerminalLauncher';
-import { MAX_REMOTE_TERMINALS } from '../../../../../shared/remote-chat/useRemoteTerminalPanel';
-import { sshLabel } from '../../../../../shared/terminal/sshProfiles';
+import type { GuiToolsClient } from '../../../vendor/shared/remote-chat/guiTools';
+import type { useRemoteTerminalLauncher } from '../../../vendor/shared/remote-chat/useRemoteTerminalLauncher';
+import { MAX_REMOTE_TERMINALS } from '../../../vendor/shared/remote-chat/useRemoteTerminalPanel';
+import { sshLabel } from '../../../vendor/shared/terminal/sshProfiles';
 import { t, useLanguage } from '../../i18n';
 import { useThemeColor } from '../../theme/store';
 import { useTerminalStyles } from './styles';
@@ -14,7 +14,7 @@ import { TerminalTabItem } from './TerminalTabItem';
 import { useTabOverflow } from './useTabOverflow';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SheetGestureScrollView } from '../../components/SheetScrollGesture';
-import type { TerminalInfo } from '../../../../../shared/terminal/types';
+import type { TerminalInfo } from '../../../vendor/shared/terminal/types';
 
 function terminalLabel(session: TerminalInfo, index: number) {
   if (session.ssh) return sshLabel(session.ssh);

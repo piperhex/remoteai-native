@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
-import { sshLabel } from '../../../../shared/terminal/sshProfiles';
-import { useSshDiscovery } from '../../../../shared/terminal/useSshDiscovery';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
+import { sshLabel } from '../../vendor/shared/terminal/sshProfiles';
+import { useSshDiscovery } from '../../vendor/shared/terminal/useSshDiscovery';
 import { displayError, t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';

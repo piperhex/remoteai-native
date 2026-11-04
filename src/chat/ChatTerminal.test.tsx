@@ -1,13 +1,13 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatTerminal } from './ChatTerminal';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { palette } from './styles';
 
 const panel = vi.hoisted(() => ({ tabs: [], selected: '', open: false, busy: false, error: '',
   toggle: vi.fn(), hide: vi.fn(), retry: vi.fn() }));
-vi.mock('../../../../shared/remote-chat/useRemoteTerminalLauncher', () => ({ useRemoteTerminalLauncher: () => panel }));
-vi.mock('../../../../shared/remote-chat/useToolLaunch', () => ({ useToolLaunch: vi.fn() }));
+vi.mock('../../vendor/shared/remote-chat/useRemoteTerminalLauncher', () => ({ useRemoteTerminalLauncher: () => panel }));
+vi.mock('../../vendor/shared/remote-chat/useToolLaunch', () => ({ useToolLaunch: vi.fn() }));
 vi.mock('react-native', () => ({ Pressable: 'Pressable', Text: 'Text', ScrollView: 'ScrollView',
   ActivityIndicator: 'Spinner', Keyboard: { dismiss: vi.fn() }, Platform: { OS: 'android' },
   StyleSheet: { create: <T,>(value: T) => value } }));

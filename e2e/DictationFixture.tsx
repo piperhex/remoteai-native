@@ -5,9 +5,9 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatComposer } from '../src/chat/ChatComposer';
 import { useStyles } from '../src/chat/styles';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
-import { createRemoteDictationClient } from '../../../shared/remote-chat/dictation';
-import { testModels } from '../../desktop/src/pages/codexGui/testModels';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
+import { createRemoteDictationClient } from '../vendor/shared/remote-chat/dictation';
+import { testModels } from '../vendor/apps/desktop/src/pages/codexGui/testModels';
 import { updateThemeMode } from '../src/theme/store';
 
 setInterfaceLanguage('zh');

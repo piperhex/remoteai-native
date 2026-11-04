@@ -5,8 +5,8 @@ import { textMetrics } from '../theme/text';
 import { SelectableChatText } from './SelectableChatText';
 import { CopyTextButton } from './CopyTextButton';
 import { palette } from './styles';
-import { useVirtualText } from '../../../../shared/chat/useVirtualText';
-import { chunkDisplayText, TEXT_VIEWPORT_HEIGHT } from '../../../../shared/chat/virtualText';
+import { useVirtualText } from '../../vendor/shared/chat/useVirtualText';
+import { chunkDisplayText, TEXT_VIEWPORT_HEIGHT } from '../../vendor/shared/chat/virtualText';
 
 const FONT_SIZE = 12;
 const LINE_HEIGHT = 19;

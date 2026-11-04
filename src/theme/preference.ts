@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as SystemUI from 'expo-system-ui';
 import * as NavigationBar from 'expo-navigation-bar';
 import { isThemePreference, resolveThemeMode, themeColor,
-  type ThemeMode, type ThemePreference } from '../../../../shared/theme/mode';
+  type ThemeMode, type ThemePreference } from '../../vendor/shared/theme/mode';
 
 export const THEME_KEY = 'codex-switch.native.theme.v1';
 let revision = 0;

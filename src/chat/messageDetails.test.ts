@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { messageContent, messageSections, turnFiles } from '../../../../shared/chat/messageDetails';
+import { messageContent, messageSections, turnFiles } from '../../vendor/shared/chat/messageDetails';
 
 it('keeps reasoning, output, arguments, falsy results and errors together without duplicate bodies', () => {
   const sections = messageSections({ id: 'tool', type: 'mcpToolCall', summary: ['summary'], text: 'details',

@@ -3,7 +3,7 @@ import { languageLabel, t, useLanguage } from '../i18n';
 import { LanguageSheet } from './LanguageSheet';
 import { ThemeSheet } from './ThemeSheet';
 import { useThemePreference } from '../theme/preference';
-import { THEME_LABELS } from '../../../../shared/theme/mode';
+import { THEME_LABELS } from '../../vendor/shared/theme/mode';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -19,8 +19,8 @@ import { DesktopVersionSheet } from './DesktopVersionSheet';
 import { settingsColors, useStyles } from './styles';
 import { FileAutoSaveSheet } from './FileAutoSaveSheet';
 import { useFilePreferences } from './filePreferences';
-import { AUTO_SAVE_OPTIONS } from '../../../../shared/project-browser/preferences';
-import type { LoungeController } from '../../../../shared/lounge/controller';
+import { AUTO_SAVE_OPTIONS } from '../../vendor/shared/project-browser/preferences';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
 import { SettingsAvatar } from './SettingsAvatar';
 
 interface SettingsPageProps {

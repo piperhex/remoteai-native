@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { afterEach, expect, it, vi } from 'vitest';
-import { fetchBufferedResponse, waitWithSignal, withRequestDeadline } from '../../../../shared/http/requestDeadline';
-import { deferred } from '../../../../shared/http/testing/adminClientContract';
+import { fetchBufferedResponse, waitWithSignal, withRequestDeadline } from '../../vendor/shared/http/requestDeadline';
+import { deferred } from '../../vendor/shared/http/testing/adminClientContract';
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 

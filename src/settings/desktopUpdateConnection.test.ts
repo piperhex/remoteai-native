@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { DesktopUpdateConnection, type UpdateSocket } from '../../../../shared/desktop-update/connection';
-import { parseUpdateStatus, type DesktopUpdateStatus } from '../../../../shared/desktop-update/protocol';
+import { DesktopUpdateConnection, type UpdateSocket } from '../../vendor/shared/desktop-update/connection';
+import { parseUpdateStatus, type DesktopUpdateStatus } from '../../vendor/shared/desktop-update/protocol';
 
 const status: DesktopUpdateStatus = { currentVersion: '1.0.0', latestVersion: '2.0.0',
   notes: null, phase: 'available', progress: null, error: null };

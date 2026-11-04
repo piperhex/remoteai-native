@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { withMappingBackground } from './background';
-import type { MappingConnection } from '../../../../shared/port-mapping/deviceRuntime';
+import type { MappingConnection } from '../../vendor/shared/port-mapping/deviceRuntime';
 
 const background = vi.hoisted(() => ({ retain: vi.fn(), remove: vi.fn() }));
 vi.mock('../chat/backgroundConnection', () => ({ retainPortMappingConnection: background.retain }));

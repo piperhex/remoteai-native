@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
-import type { GuiAccountsClient } from '../../../../shared/remote-chat/guiAccounts';
-import { guiAccountAvatar } from '../../../../shared/remote-chat/guiAccountAvatar';
-import { useGuiAccounts } from '../../../../shared/remote-chat/client/useGuiAccounts';
+import type { GuiAccountsClient } from '../../vendor/shared/remote-chat/guiAccounts';
+import { guiAccountAvatar } from '../../vendor/shared/remote-chat/guiAccountAvatar';
+import { useGuiAccounts } from '../../vendor/shared/remote-chat/client/useGuiAccounts';
 import { t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { palette } from './styles';

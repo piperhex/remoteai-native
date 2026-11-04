@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { usePageTransition } from '../../../../shared/navigation/usePageTransition';
+import { usePageTransition } from '../../vendor/shared/navigation/usePageTransition';
 import { usePrimaryPageSwipe } from './usePrimaryPageSwipe';
 import { PanResponder, type GestureResponderEvent, type PanResponderGestureState } from 'react-native';
 

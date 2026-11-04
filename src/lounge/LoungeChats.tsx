@@ -1,11 +1,11 @@
-import { accountName, accountMatches } from '../../../../shared/lounge/names';
+import { accountName, accountMatches } from '../../vendor/shared/lounge/names';
 import { useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import type { MobileLounge } from '../../../../shared/lounge/useMobileLounge';
-import { conversationRows, type ConversationRow } from '../../../../shared/lounge/conversationRows';
-import { contactStatus } from '../../../../shared/lounge/contacts';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import type { MobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
+import { conversationRows, type ConversationRow } from '../../vendor/shared/lounge/conversationRows';
+import { contactStatus } from '../../vendor/shared/lounge/contacts';
 import { t } from '../i18n';
 import { LoungeAvatar } from './LoungeMessage';
 import { LoungeSheet } from './LoungeSheet';

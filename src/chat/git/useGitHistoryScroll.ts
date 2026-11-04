@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 import { GIT_HISTORY_LOAD_DISTANCE, gitHistoryPageKey, useGitHistoryPagination }
-  from '../../../../../shared/remote-chat/useGitHistoryPagination';
+  from '../../../vendor/shared/remote-chat/useGitHistoryPagination';
 
 const SCROLL_EVENT_THROTTLE = 16;
 

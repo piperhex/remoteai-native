@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { handleNativeScriptAction, nativeScriptPanel, nativeScriptState }
-  from '../../../../shared/project-browser/nativeScripts';
+  from '../../vendor/shared/project-browser/nativeScripts';
 
 function fixture() {
   const panel = { busy: false, tabs: [

@@ -1,7 +1,7 @@
 import TcpSocket from 'react-native-tcp-socket';
 import { Buffer } from 'buffer';
 import { localChatAddresses } from './nativePath';
-import type { TcpAddress, TcpNetwork, TcpSocket as SocketPort } from '../../../../shared/remote-chat/tcp/types';
+import type { TcpAddress, TcpNetwork, TcpSocket as SocketPort } from '../../vendor/shared/remote-chat/tcp/types';
 
 type Socket = InstanceType<typeof TcpSocket.Socket>;
 const CONNECT_TIMEOUT_MS = 8000;

@@ -9,7 +9,7 @@ const exec = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical Android device');
 const app = 'com.codexswitch.mobile.portmappingtest';
-const output = fileURLToPath(new URL('../../../.codex-tmp/port-mapping-android/', import.meta.url));
+const output = fileURLToPath(new URL('../.codex-tmp/port-mapping-android/', import.meta.url));
 const adb = async (...args) => (await exec('adb', ['-s', serial, ...args],
   { encoding: 'utf8', windowsHide: true, timeout: 30_000, maxBuffer: 4 * 1024 * 1024 })).stdout.trim();
 const oldScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');

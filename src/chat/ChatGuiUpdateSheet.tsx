@@ -5,7 +5,7 @@ import { t, useLanguage } from '../i18n';
 import { Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { useGuiUpdate, type GuiUpdateOptions } from '../../../../shared/remote-chat/useGuiUpdate';
+import { useGuiUpdate, type GuiUpdateOptions } from '../../vendor/shared/remote-chat/useGuiUpdate';
 import { useStyles } from './styles';
 
 export function ChatGuiUpdateSheet({ deviceName, onClose, onBack, ...options }: GuiUpdateOptions & {

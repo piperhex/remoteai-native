@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FlatList, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ViewToken } from 'react-native';
-import type { ChatMessagesProps } from '../../../../shared/remote-chat/client/messageProps';
+import type { ChatMessagesProps } from '../../vendor/shared/remote-chat/client/messageProps';
 import { isNearHistoryStart, shouldFollowScroll, shouldShowScrollToBottom }
-  from '../../../../shared/chat/scrollPosition';
-import { useHistoryContinuation } from '../../../../shared/chat/useHistoryContinuation';
+  from '../../vendor/shared/chat/scrollPosition';
+import { useHistoryContinuation } from '../../vendor/shared/chat/useHistoryContinuation';
 import type { Item } from './types';
 import { useNativeChatScroll } from './useNativeChatScroll';
 import { useHistoryPull } from './useHistoryPull';

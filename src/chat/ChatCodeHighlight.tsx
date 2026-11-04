@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { Text } from 'react-native';
 import { highlightCode } from './codeHighlight';
 import { useThemeColor } from '../theme/store';
-import { syntaxColorRoles } from '../../../../shared/theme/syntax';
+import { syntaxColorRoles } from '../../vendor/shared/theme/syntax';
 
 export { fileLanguage } from './codeHighlight';
 

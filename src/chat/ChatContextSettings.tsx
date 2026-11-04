@@ -4,8 +4,8 @@ import { t, useLanguage } from '../i18n';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
-import { CONTEXT_CAPACITY_PRESETS_K, type ContextSettingsApi } from '../../../../shared/remote-chat/contextSettings';
-import { useContextSettings } from '../../../../shared/remote-chat/client/useContextSettings';
+import { CONTEXT_CAPACITY_PRESETS_K, type ContextSettingsApi } from '../../vendor/shared/remote-chat/contextSettings';
+import { useContextSettings } from '../../vendor/shared/remote-chat/client/useContextSettings';
 import { useStyles } from './styles';
 
 export function ChatContextSettings({ threadId, api, onClose }: {

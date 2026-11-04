@@ -6,14 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/tools-background-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
 const packageName = 'com.codexswitch.mobile.gittest';
 const activity = `${packageName}/com.codexswitch.mobile.MainActivity`;
 const apk = process.env.ANDROID_GIT_APK
-  ?? path.join(root, 'apps/native/android/app/build/outputs/apk/release/git-fixture.apk');
+  ?? path.join(root, 'android/app/build/outputs/apk/release/git-fixture.apk');
 const adb = async (...args) => (await exec('adb', ['-s', serial, ...args],
   { encoding: 'utf8', timeout: 60_000, maxBuffer: 4 * 1024 * 1024, windowsHide: true })).stdout;
 const decode = text => text.replace(/&#(\d+);/g, (_, value) => String.fromCharCode(Number(value)))

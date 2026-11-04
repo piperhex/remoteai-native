@@ -3,7 +3,7 @@ import { useThemeMode } from '../theme/store';
 import { useContext, useMemo, useState } from 'react';
 import { Linking, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileContext } from './ChatFilePreview';
 import { MIN_MATH_HEIGHT, mathDocument, mathHeight, type MathTextOptions } from './mathDocument';
 import { SelectableChatText } from './SelectableChatText';

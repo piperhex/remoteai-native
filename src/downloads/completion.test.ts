@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from 'vitest';
-import { downloadCompletionDetails } from '../../../../shared/downloads/completion';
-import { setInterfaceLanguage } from '../../../../shared/localization/interfaceLanguage';
+import { downloadCompletionDetails } from '../../vendor/shared/downloads/completion';
+import { setInterfaceLanguage } from '../../vendor/shared/localization/interfaceLanguage';
 
 const createdAt = new Date(2026, 9, 25, 14, 0, 0).getTime();
 const duration = (milliseconds: number) => downloadCompletionDetails({

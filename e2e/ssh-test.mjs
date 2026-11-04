@@ -3,14 +3,14 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 import { checkSshFiles } from './ssh-file-checks.mjs';
 
 const exec = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 if (!serial) throw new Error('Set ANDROID_SERIAL to the test device.');
 const packageName = 'com.codexswitch.mobile.terminaltest';
-const output = fileURLToPath(new URL('../../../.codex-tmp/mobile-ssh-android/', import.meta.url));
+const output = fileURLToPath(new URL('../.codex-tmp/mobile-ssh-android/', import.meta.url));
 const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   timeout: 30_000, maxBuffer: 8 * 1024 * 1024, encoding: 'utf8', windowsHide: true,
 })).stdout.trim();

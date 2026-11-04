@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { contentHash } from '../../../../shared/remote-chat/historySync';
-import { contentStringHash } from '../../../../shared/remote-chat/stringHash';
+import { contentHash } from '../../vendor/shared/remote-chat/historySync';
+import { contentStringHash } from '../../vendor/shared/remote-chat/stringHash';
 
 it.each(['', '中文🌍', '"\\\b\f\n\r\t\0', '\ud800x\udfff', '\u2028\u2029',
   'a'.repeat(8191) + '🌍', 'a'.repeat(8191) + '\ud800x', 'a'.repeat(8191) + '\\"',

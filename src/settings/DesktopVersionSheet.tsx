@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { fetchUserProfile } from '../api/client';
 import type { AuthSession } from '../types';
-import { useDesktopUpdate } from '../../../../shared/desktop-update/useDesktopUpdate';
+import { useDesktopUpdate } from '../../vendor/shared/desktop-update/useDesktopUpdate';
 import { useStyles } from './styles';
 
 export function DesktopVersionSheet({ session, onClose }: { session: AuthSession; onClose: () => void }) {

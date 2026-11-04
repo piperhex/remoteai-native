@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import { base64Bytes, checkDownloadSize } from '../../../../shared/remote-chat/policy';
+import { base64Bytes, checkDownloadSize } from '../../vendor/shared/remote-chat/policy';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';

@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import path from 'node:path';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/lounge-annotation-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');

@@ -6,7 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { getStringAsync } from 'expo-clipboard';
-import reported from '../../../shared/chat/toolDetailsFixture.json';
+import reported from '../vendor/shared/chat/toolDetailsFixture.json';
 import { ChatToolDetails } from '../src/chat/ChatToolDetails';
 import { ChatQuotesProvider } from '../src/chat/ChatQuotes';
 import { TOOL_OUTPUT_PAGE_CHARACTERS } from '../src/chat/toolOutput';

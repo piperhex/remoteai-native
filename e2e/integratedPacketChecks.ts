@@ -1,10 +1,10 @@
 import { getRandomBytes } from 'expo-crypto';
 import { utf8ToBytes } from '@noble/hashes/utils';
-import { keyPair, SessionCipher } from '../../../shared/remote-chat/cipher';
+import { keyPair, SessionCipher } from '../vendor/shared/remote-chat/cipher';
 import { compressedPacket, compressedPacketBody, MAX_PACKET_PLAIN_BYTES }
-  from '../../../shared/remote-chat/packetCompression';
-import { isCompressedPacket } from '../../../shared/remote-chat/compressedPackets';
-import { decodeChatUtf8 } from '../../../shared/remote-chat/utf8';
+  from '../vendor/shared/remote-chat/packetCompression';
+import { isCompressedPacket } from '../vendor/shared/remote-chat/compressedPackets';
+import { decodeChatUtf8 } from '../vendor/shared/remote-chat/utf8';
 import { createMobilePacketCompression } from '../src/chat/packetCompression';
 import { createNativePacketCipher } from '../src/chat/packetCipher';
 

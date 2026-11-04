@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest';
-import { HistoryReader } from '../../../../shared/remote-chat/client/historyReader';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { historyDelta, type HistoryVersion } from '../../../../shared/remote-chat/historySync';
-import { sliceHistory, type HistoryWindow } from '../../../../shared/remote-chat/historyPage';
+import { HistoryReader } from '../../vendor/shared/remote-chat/client/historyReader';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { historyDelta, type HistoryVersion } from '../../vendor/shared/remote-chat/historySync';
+import { sliceHistory, type HistoryWindow } from '../../vendor/shared/remote-chat/historyPage';
 import type { Thread } from './types';
 
 const unsupported = '当前手机端暂不支持此操作。';

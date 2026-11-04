@@ -5,8 +5,8 @@ import { t, displayError } from '../../i18n';
 import { SshButton } from './SshControls';
 import { useSshStyles } from './sshStyles';
 import type { useZmodemFiles } from './useZmodemFiles';
-import type { ZmodemTransfer } from '../../../../../shared/terminal/zmodem';
-import { zmodemMessage } from '../../../../../shared/terminal/zmodemMessage';
+import type { ZmodemTransfer } from '../../../vendor/shared/terminal/zmodem';
+import { zmodemMessage } from '../../../vendor/shared/terminal/zmodemMessage';
 
 export function ZmodemSheet({ files, transfer, visible }: {
   files: ReturnType<typeof useZmodemFiles>; transfer?: ZmodemTransfer; visible: boolean;

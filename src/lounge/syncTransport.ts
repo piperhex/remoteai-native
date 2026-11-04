@@ -1,7 +1,7 @@
 import { getRandomBytes } from 'expo-crypto';
 import { RTCPeerConnection as NativePeerConnection } from 'react-native-webrtc';
-import { RtcPeer } from '../../../../shared/remote-chat/rtcPeer';
-import type { LoungeSyncTransport } from '../../../../shared/lounge/syncConnection';
+import { RtcPeer } from '../../vendor/shared/remote-chat/rtcPeer';
+import type { LoungeSyncTransport } from '../../vendor/shared/lounge/syncConnection';
 import { createNativePacketCipher } from '../chat/packetCipher';
 import { createMobilePacketCompression } from '../chat/packetCompression';
 

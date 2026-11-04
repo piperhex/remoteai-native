@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { deliveryLabel, type LoungeDelivery } from '../../../../shared/lounge/delivery';
+import { deliveryLabel, type LoungeDelivery } from '../../vendor/shared/lounge/delivery';
 import { t } from '../i18n';
 
 export function LoungeDeliveryStatus({ delivery, inline = false }: { delivery?: LoungeDelivery; inline?: boolean }) {

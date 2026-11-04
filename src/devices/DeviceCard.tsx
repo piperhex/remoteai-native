@@ -3,7 +3,7 @@ import { getLocale, t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
-import { remoteModelOptions, type RemoteModelTarget } from '../../../../shared/remote-chat/modelTarget';
+import { remoteModelOptions, type RemoteModelTarget } from '../../vendor/shared/remote-chat/modelTarget';
 import { deviceColors, useStyles } from './styles';
 
 type IconName = keyof typeof Ionicons.glyphMap;

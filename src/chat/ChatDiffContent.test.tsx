@@ -1,7 +1,7 @@
 import React, { type ReactElement } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollViewProps } from 'react-native';
-import type { DiffFile } from '../../../../shared/chat/diff';
+import type { DiffFile } from '../../vendor/shared/chat/diff';
 import { ChatDiffContent } from './ChatDiffContent';
 
 const hooks = vi.hoisted(() => ({ state: [] as unknown[], refs: [] as { current: unknown }[],

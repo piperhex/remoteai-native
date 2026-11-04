@@ -15,7 +15,7 @@ const content = JSON.stringify({ license, css }) + '\n';
 const target = path.join(__dirname, '../assets/math-css.json');
 if (process.argv.includes('--check')) {
   if (!fs.existsSync(target) || read(target) !== content) {
-    throw new Error('Math fonts are outdated. Run node apps/native/scripts/build-math-css.cjs');
+    throw new Error('Math fonts are outdated. Run node scripts/build-math-css.cjs');
   }
 } else {
   fs.writeFileSync(target, content);

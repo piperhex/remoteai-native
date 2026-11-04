@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { AgreementConsent as Consent } from '../../../../shared/legal/useAgreementConsent';
+import type { AgreementConsent as Consent } from '../../vendor/shared/legal/useAgreementConsent';
 import { AgreementConsent } from './AgreementConsent';
 
 const state = vi.hoisted(() => ({ reading: false, setReading: vi.fn(), dismiss: vi.fn() }));

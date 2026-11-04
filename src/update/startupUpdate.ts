@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import type { StartupUpdateOptions } from '../../../../shared/app-update/useStartupUpdate';
+import type { StartupUpdateOptions } from '../../vendor/shared/app-update/useStartupUpdate';
 import { checkForAppUpdate, getAndroidUpdateDownloadState,
   refreshAndroidUpdateDownloadState, type AppRelease } from './appUpdate';
 

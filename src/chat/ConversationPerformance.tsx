@@ -1,9 +1,9 @@
 import { Text } from 'react-native';
-import { CONVERSATION_TSR_DESCRIPTION, formatConversationTsr } from '../../../../shared/remote-chat/commandMetrics';
+import { CONVERSATION_TSR_DESCRIPTION, formatConversationTsr } from '../../vendor/shared/remote-chat/commandMetrics';
 import { t, useLanguage } from '../i18n';
-import { useConversationMetrics } from '../../../../shared/remote-chat/client/useConversationMetrics';
+import { useConversationMetrics } from '../../vendor/shared/remote-chat/client/useConversationMetrics';
 import { CONVERSATION_TPS_DESCRIPTION, CONVERSATION_TTFT_DESCRIPTION, formatConversationTps, formatConversationTtft,
-  type ConversationMetrics, type ReadConversationMetrics } from '../../../../shared/remote-chat/conversationMetrics';
+  type ConversationMetrics, type ReadConversationMetrics } from '../../vendor/shared/remote-chat/conversationMetrics';
 
 export function ConversationPerformance({ read, threadId, active }: {
   read: ReadConversationMetrics; threadId: string | null; active: boolean;

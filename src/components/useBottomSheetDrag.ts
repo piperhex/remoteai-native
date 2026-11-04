@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type Component } from 'react';
 import { Animated, findNodeHandle, PanResponder, TextInput, type PanResponderCallbacks } from 'react-native';
-import { shouldDismissSheet } from '../../../../shared/sheets/dragDismiss';
+import { shouldDismissSheet } from '../../vendor/shared/sheets/dragDismiss';
 import type { SheetScrollGesture } from './SheetScrollGesture';
 
 export function useBottomSheetDrag({ visible, enabled, onClose }: {

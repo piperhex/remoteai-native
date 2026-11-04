@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { WebViewProps } from 'react-native-webview';
-import type { ProjectBrowserClient } from '../../../../shared/project-browser/protocol';
+import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
 import { ProjectBrowser } from './ProjectBrowser';
 import { readBrowserSession } from './projectBrowserSessions';
 
@@ -38,7 +38,7 @@ vi.mock('../theme/useWebviewSource', () => ({ useWebviewSource: (html: string) =
 vi.mock('../settings/filePreferences', () => ({ useFilePreferences: () => ({ ready: true, delay: 0 }),
   setFileAutoSave: vi.fn() }));
 vi.mock('./projectBrowserHost', () => ({ projectBrowserHost: () => ({}) }));
-vi.mock('../../../../shared/chat/ChatFileReferences', () => ({
+vi.mock('../../vendor/shared/chat/ChatFileReferences', () => ({
   useChatFileReference: () => vi.fn(), useChatFileSelection: () => vi.fn(),
 }));
 

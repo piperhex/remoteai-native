@@ -6,8 +6,8 @@ import Feather from '@expo/vector-icons/Feather';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetFlatList, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { directoryProject, type ProjectPickerProps } from '../../../../shared/remote-chat/projectDirectories';
-import { useProjectDirectories } from '../../../../shared/remote-chat/client/useProjectDirectories';
+import { directoryProject, type ProjectPickerProps } from '../../vendor/shared/remote-chat/projectDirectories';
+import { useProjectDirectories } from '../../vendor/shared/remote-chat/client/useProjectDirectories';
 
 export function ChatProjectPicker(props: ProjectPickerProps) {
   const pickerStyles = usePickerStyles();

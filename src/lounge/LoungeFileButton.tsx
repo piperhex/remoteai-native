@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
-import type { LoungeDraft } from '../../../../shared/lounge/types';
-import { checkAttachmentSize } from '../../../../shared/lounge/attachments';
+import type { LoungeDraft } from '../../vendor/shared/lounge/types';
+import { checkAttachmentSize } from '../../vendor/shared/lounge/attachments';
 import { pickLoungeFile } from './attachments';
 import { displayText, t } from '../i18n';
 import { LoungeComposerAction } from './LoungeComposerAction';
-import { sendError } from '../../../../shared/lounge/contacts';
+import { sendError } from '../../vendor/shared/lounge/contacts';
 
 export function LoungeFileButton({ send, disabled, close }: {
   send: (draft: LoungeDraft) => Promise<void>; disabled: boolean; close: () => void;

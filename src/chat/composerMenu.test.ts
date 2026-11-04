@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest';
 import { composerMenuTrigger } from './composerTrigger';
-import { remoteAttachments } from '../../../../shared/remote-chat/composerAttachments';
-import { fileUploadByteLimit } from '../../../../shared/remote-chat/policy';
-import { remotePlugins } from '../../../../shared/remote-chat/composerCatalog';
-import { projectFileReference } from '../../../../shared/chat/useProjectFileCandidates';
+import { remoteAttachments } from '../../vendor/shared/remote-chat/composerAttachments';
+import { fileUploadByteLimit } from '../../vendor/shared/remote-chat/policy';
+import { remotePlugins } from '../../vendor/shared/remote-chat/composerCatalog';
+import { projectFileReference } from '../../vendor/shared/chat/useProjectFileCandidates';
 
 it('matches % file paths at the caret without treating ordinary percentages as references', () => {
   for (const query of ['', 'robot', 'src/robot', 'src\\robot', '中文', '.env', 'my-file.ts']) {

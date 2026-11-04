@@ -1,1 +1,1 @@
-export { quotedMessage, type QuotedMessage } from '../../../../shared/chat/quotedMessage';
+export { quotedMessage, type QuotedMessage } from '../../vendor/shared/chat/quotedMessage';

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 import { useChat } from './useChat';
 import { checkFileUploadSize, DEFAULT_CHAT_POLICY, MIB, setChatConnectionMode, setChatPolicy }
-  from '../../../../shared/remote-chat/policy';
+  from '../../vendor/shared/remote-chat/policy';
 
 interface Effect { dependencies: unknown[]; cleanup?: () => void }
 

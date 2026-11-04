@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import type { FlatList } from 'react-native';
-import { historyKey } from '../../../../shared/lounge/archive';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
+import { historyKey } from '../../vendor/shared/lounge/archive';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 
 const RETRY_DELAY_MS = 150;
 const MAX_SCROLL_ATTEMPTS = 6;

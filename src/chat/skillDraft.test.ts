@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { composerTrigger, draftSkills, editSkillDraft, emptySkillDraft, insertDraftSkill }
-  from '../../../../shared/remote-chat/client/skillDraft';
+  from '../../vendor/shared/remote-chat/client/skillDraft';
 import type { Skill } from './types';
 const skill: Skill = { name: 'review', path: 'C:/skills/review/SKILL.md', description: '检查代码', enabled: true };
 

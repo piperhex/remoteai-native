@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/download-count-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
@@ -101,7 +101,7 @@ async function checkCounts(scale) {
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
   await mkdir(output, { recursive: true });
-  const apk = 'apps/native/android/app/build-download-count/outputs/apk/release/app-release.apk';
+  const apk = 'android/app/build-download-count/outputs/apk/release/app-release.apk';
   await adb('install', '-r', path.join(root, apk));
   for (const scale of [1.3, 1]) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', String(scale));

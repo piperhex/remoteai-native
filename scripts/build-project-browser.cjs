@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 
 function licenseNotices(inputs) {
   const packages = new Set();
@@ -21,7 +21,7 @@ function licenseNotices(inputs) {
 async function build() {
   const result = await esbuild.build({
     absWorkingDir: root, metafile: true,
-    entryPoints: [path.join(root, 'shared/project-browser/nativeEntry.tsx')],
+    entryPoints: [path.join(root, 'vendor/shared/project-browser/nativeEntry.tsx')],
     bundle: true, minify: true, format: 'iife', platform: 'browser', target: ['chrome100', 'safari16'],
     // Escape multiline snippets so generated source has no whitespace-only lines.
     supported: { 'template-literal': false },
@@ -37,10 +37,10 @@ async function build() {
 content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:">
 <style>html,body,#root{height:100%;margin:0;overflow:hidden}body{background:var(--panel,#fff)}
 ${css}</style></head><body><div id="root"></div><script>${script}</script></body></html>`;
-  const target = path.join(root, 'apps/native/assets/project-browser.html');
+  const target = path.join(root, 'assets/project-browser.html');
   if (process.argv.includes('--check')) {
     if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n') !== html) {
-      throw new Error('File browser asset is outdated. Run node apps/native/scripts/build-project-browser.cjs');
+      throw new Error('File browser asset is outdated. Run node scripts/build-project-browser.cjs');
     }
   } else fs.writeFileSync(target, html);
 }

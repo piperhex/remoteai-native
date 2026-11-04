@@ -5,8 +5,8 @@ import { t, useLanguage } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
-import { useDesktopLauncher } from '../../../../shared/remote-desktop/useDesktopLauncher';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
+import { useDesktopLauncher } from '../../vendor/shared/remote-desktop/useDesktopLauncher';
 import { ChatTerminal } from './ChatTerminal';
 import { ChatGit } from './git/ChatGit';
 import { RemoteDesktop } from './desktop/RemoteDesktop';
@@ -15,8 +15,8 @@ import { PortMappings } from './portMapping/PortMappings';
 import type { AuthSession } from '../types';
 import { palette, useStyles } from './styles';
 import { ProjectBrowser } from './ProjectBrowser';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
-import { useRemoteTerminalLauncher } from '../../../../shared/remote-chat/useRemoteTerminalLauncher';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
+import { useRemoteTerminalLauncher } from '../../vendor/shared/remote-chat/useRemoteTerminalLauncher';
 
 interface Props {
   client: GuiToolsClient; cwd: string; active: boolean; connected: boolean; deviceName?: string;

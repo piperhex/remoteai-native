@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
-import { createTerminalBridge, parseTerminalMessage } from '../../../../../shared/terminal/webviewBridge';
-import type { TerminalApi, TerminalEvent } from '../../../../../shared/terminal/types';
+import { createTerminalBridge, parseTerminalMessage } from '../../../vendor/shared/terminal/webviewBridge';
+import type { TerminalApi, TerminalEvent } from '../../../vendor/shared/terminal/types';
 
 const ready = JSON.stringify({ type: 'ready', cols: 45, rows: 30 });
 const flush = async () => { for (let index = 0; index < 6; index++) await Promise.resolve(); };

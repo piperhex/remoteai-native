@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 /** Exercise actual multitouch and compare rendered pixels, including previews above history. */
 export async function verifyNativeImage(options) {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { copyText, MAX_ANDROID_CLIPBOARD_CHARACTERS, saveTextFile } from './copyText';
-import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../../../shared/remote-chat/policy';
+import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 const mocks = vi.hoisted(() => ({
   platform: { OS: 'android', Version: 31 }, clipboard: vi.fn(), mediaStore: vi.fn(),

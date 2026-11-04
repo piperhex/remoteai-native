@@ -4,14 +4,14 @@ import { useThemeColor } from '../../theme/store';
 import { t, useLanguage } from '../../i18n';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { selectionState } from '../../../../../shared/remote-chat/gitFiles';
-import type { GitFileRow } from '../../../../../shared/remote-chat/useGitFileList';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import { selectionState } from '../../../vendor/shared/remote-chat/gitFiles';
+import type { GitFileRow } from '../../../vendor/shared/remote-chat/useGitFileList';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 import { useGitStyles as useStyles } from './styles';
 import { palette } from '../styles';
 import { GitSelectionMark, GitTreeIcon } from './GitTreeIcon';
 import { GitCommitForm } from './GitCommitForm';
-import { GIT_LONG_PRESS_MS } from '../../../../../shared/remote-chat/gitMenu';
+import { GIT_LONG_PRESS_MS } from '../../../vendor/shared/remote-chat/gitMenu';
 
 export function GitChanges({ panel, connected, onMenu }: {
   panel: RemoteGit; connected: boolean; onMenu: (row: GitFileRow) => void;

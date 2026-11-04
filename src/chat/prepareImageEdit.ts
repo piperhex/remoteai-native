@@ -1,7 +1,7 @@
 import { Image } from 'react-native';
 import { EncodingType, getInfoAsync, readAsStringAsync } from 'expo-file-system';
-import { chatImageCharLimit, validateChatImages } from '../../../../shared/remote-chat/attachments';
-import { getChatPolicy, MIB } from '../../../../shared/remote-chat/policy';
+import { chatImageCharLimit, validateChatImages } from '../../vendor/shared/remote-chat/attachments';
+import { getChatPolicy, MIB } from '../../vendor/shared/remote-chat/policy';
 import { preparePhoto } from './chatPhotos';
 
 export async function prepareImageEdit(source: string) {

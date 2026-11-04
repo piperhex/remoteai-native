@@ -1,6 +1,6 @@
 import type { Item, Thread, Turn } from '../types';
-import { contentHash } from '../../../../../shared/remote-chat/historySync';
-import type { PrepareHistoryObject } from '../../../../../shared/remote-chat/client/historyPreparation';
+import { contentHash } from '../../../vendor/shared/remote-chat/historySync';
+import type { PrepareHistoryObject } from '../../../vendor/shared/remote-chat/client/historyPreparation';
 
 export const THREAD_CHAR_LIMIT = 2 * 1024 * 1024;
 export const HISTORY_CHAR_LIMIT = 16 * 1024 * 1024;

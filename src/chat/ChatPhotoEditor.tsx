@@ -8,8 +8,8 @@ import { Modal } from '../components/Modal';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { editedImageMessage, imageEditorHtml,
-  type ImageEditorOutputLimits } from '../../../../shared/chat/imageEditorHtml';
-import type { ConnectionMode } from '../../../../shared/remote-chat/protocol';
+  type ImageEditorOutputLimits } from '../../vendor/shared/chat/imageEditorHtml';
+import type { ConnectionMode } from '../../vendor/shared/remote-chat/protocol';
 import type { ChatPhoto } from './chatPhotos';
 
 interface Props {

@@ -1,12 +1,12 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, Text, View } from 'react-native';
-import type { ProjectActionsModel } from '../../../../shared/remote-chat/client/useProjectActions';
+import type { ProjectActionsModel } from '../../vendor/shared/remote-chat/client/useProjectActions';
 import { BottomSheet } from '../components/BottomSheet';
 import { displayError, t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
 import { palette } from './styles';
-import { useGrouping } from '../../../../shared/chat/groups/context';
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
 
 export function ChatProjectActions({ actions }: { actions: ProjectActionsModel }) {
   const groups = useGrouping();

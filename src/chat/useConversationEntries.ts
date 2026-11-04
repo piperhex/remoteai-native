@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/useConversationEntries';
+export * from '../../vendor/shared/chat/useConversationEntries';

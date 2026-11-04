@@ -1,5 +1,5 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { useLoungeNameEditor, type LoungeNameEditorOptions } from '../../../../shared/lounge/useLoungeNameEditor';
+import { useLoungeNameEditor, type LoungeNameEditorOptions } from '../../vendor/shared/lounge/useLoungeNameEditor';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 import { createLoungeStyles, useLoungeColor } from './theme';

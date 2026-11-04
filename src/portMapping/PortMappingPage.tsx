@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import type { RemoteDevice } from '../types';
 import { t, useLanguage } from '../i18n';
-import { useDeviceMappings, type DeviceMappingEntry } from '../../../../shared/port-mapping/deviceRegistry';
+import { useDeviceMappings, type DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import { MappingPreview } from '../chat/portMapping/MappingPreview';
 import { useMappingStyles } from '../chat/portMapping/mappingStyles';
 import { MappingEditor } from './MappingEditor';

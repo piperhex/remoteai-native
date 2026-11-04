@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { LocalMappingAliases } from '../../../../shared/port-mapping/localAliases';
+import { LocalMappingAliases } from '../../vendor/shared/port-mapping/localAliases';
 
 it('retains the displayed alias if local storage fails and reports a translated error key', () => {
   const storage = { getItem: () => '{"one":"Previous"}', setItem: vi.fn(() => { throw new Error('storage'); }) };

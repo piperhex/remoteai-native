@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest';
-import { PublicEndpointObserver } from '../../../../shared/remote-chat/publicEndpointObserver';
+import { PublicEndpointObserver } from '../../vendor/shared/remote-chat/publicEndpointObserver';
 import { formatPublicEndpoint, MAX_PUBLIC_ENDPOINTS, signalPublicEndpoints,
-  type ConnectionPublicEndpoints } from '../../../../shared/remote-chat/publicEndpoints';
-import type { PeerOptions, Signal } from '../../../../shared/remote-chat/protocol';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
+  type ConnectionPublicEndpoints } from '../../vendor/shared/remote-chat/publicEndpoints';
+import type { PeerOptions, Signal } from '../../vendor/shared/remote-chat/protocol';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 
 function ice(host = '203.0.113.8', port = 42123, type = 'srflx'): Signal & { kind: 'ice' } {
   return { kind: 'ice', candidate: `candidate:1 1 udp 1 ${host} ${port} typ ${type}`,

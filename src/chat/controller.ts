@@ -1,9 +1,9 @@
 import type { AuthSession } from '../types';
-import { ChatController as SharedController } from '../../../../shared/remote-chat/client/controller';
+import { ChatController as SharedController } from '../../vendor/shared/remote-chat/client/controller';
 import { MobileChatConnection } from './connection';
 import { SqliteHistoryStore } from './offline/store';
 import { createHistoryPreparer } from './historyPreparation';
-import { AsyncHistoryVersionCache } from '../../../../shared/remote-chat/client/historyPreparation';
+import { AsyncHistoryVersionCache } from '../../vendor/shared/remote-chat/client/historyPreparation';
 import { Platform } from 'react-native';
 import { createPreviewDownloads } from '../downloads/previews';
 import { downloadOwner } from '../downloads/manager';

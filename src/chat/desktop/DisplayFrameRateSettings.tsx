@@ -1,7 +1,7 @@
 import { displayError } from '../../i18n/index';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { FRAME_RATE_OPTIONS, type DisplaySettingsProps } from '../../../../../shared/remote-desktop/displaySettings';
-import { useFrameRateInput } from '../../../../../shared/remote-desktop/useFrameRateInput';
+import { FRAME_RATE_OPTIONS, type DisplaySettingsProps } from '../../../vendor/shared/remote-desktop/displaySettings';
+import { useFrameRateInput } from '../../../vendor/shared/remote-desktop/useFrameRateInput';
 import { t } from '../../i18n';
 import { DisplaySettingsHint, DisplaySettingsSection } from './DisplaySettingsSection';
 import { useDisplaySettingsStyles as useS } from './displaySettingsStyles';

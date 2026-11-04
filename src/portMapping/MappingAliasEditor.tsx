@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import type { DeviceMappingEntry } from '../../../../shared/port-mapping/deviceRegistry';
-import { MAX_MAPPING_ALIAS_LENGTH } from '../../../../shared/port-mapping/localAliases';
+import type { DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
+import { MAX_MAPPING_ALIAS_LENGTH } from '../../vendor/shared/port-mapping/localAliases';
 import { BottomSheet } from '../components/BottomSheet';
 import { displayError, t } from '../i18n';
 import { useThemeColor } from '../theme/store';

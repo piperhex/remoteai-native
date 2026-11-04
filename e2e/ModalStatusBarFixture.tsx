@@ -9,7 +9,7 @@ import { ChatPhotoEditor } from '../src/chat/ChatPhotoEditor';
 import { useThemeColor, useThemeMode } from '../src/theme/store';
 import { setThemeMode } from '../src/theme/preference';
 import { textMetrics } from '../src/theme/text';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { statusBarTestImage } from './modalStatusBarImage';
 
 setInterfaceLanguage('zh');

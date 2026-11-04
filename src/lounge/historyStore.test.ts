@@ -1,9 +1,9 @@
 import { beforeAll, afterAll, expect, it, vi } from 'vitest';
 import initSqlJs, { type Database, type BindParams } from 'sql.js';
 import { nativeLoungeHistory } from './historyStore';
-import { historyPosition, historyScope, recentMessages } from '../../../../shared/lounge/archive';
-import { orderedDirectContacts } from '../../../../shared/lounge/contacts';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
+import { historyPosition, historyScope, recentMessages } from '../../vendor/shared/lounge/archive';
+import { orderedDirectContacts } from '../../vendor/shared/lounge/contacts';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 
 const state = vi.hoisted(() => ({ db: null as Database | null }));
 vi.mock('expo-sqlite', () => {

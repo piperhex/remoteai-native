@@ -1,7 +1,7 @@
-import type { SshApi } from '../../../shared/terminal/ssh';
-import type { SshProfile } from '../../../shared/terminal/sshProfiles';
-import type { SshCredentials } from '../../../shared/terminal/sshCredentials';
-import type { TerminalInfo } from '../../../shared/terminal/types';
+import type { SshApi } from '../vendor/shared/terminal/ssh';
+import type { SshProfile } from '../vendor/shared/terminal/sshProfiles';
+import type { SshCredentials } from '../vendor/shared/terminal/sshCredentials';
+import type { TerminalInfo } from '../vendor/shared/terminal/types';
 import { createNativeSshProfiles } from '../src/api/sshProfiles';
 import { createSshFileFixture } from './sshFileFixture';
 

@@ -4,8 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGitStyles as useStyles } from './styles';
 
 const icons: Record<'file' | 'folder', ImageSourcePropType> = {
-  file: require('../../../../../shared/remote-chat/assets/git-icons/file-v2.png'),
-  folder: require('../../../../../shared/remote-chat/assets/git-icons/folder-v2.png'),
+  file: require('../../../vendor/shared/remote-chat/assets/git-icons/file-v2.png'),
+  folder: require('../../../vendor/shared/remote-chat/assets/git-icons/folder-v2.png'),
 };
 
 export function GitTreeIcon({ folder }: { folder: boolean }) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as Clipboard from 'expo-clipboard';
 import type { MessageKey } from '@remoteai/i18n';
-import type { ForwardingEntry } from '../../../../../shared/port-mapping/service';
+import type { ForwardingEntry } from '../../../vendor/shared/port-mapping/service';
 
 export function useMappingRowActions(entry: ForwardingEntry) {
   const [notice, setNotice] = useState<MessageKey>();

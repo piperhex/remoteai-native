@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/useChatSearch';
+export * from '../../vendor/shared/chat/useChatSearch';

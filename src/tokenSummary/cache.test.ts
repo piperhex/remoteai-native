@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { TokenSummaryCache } from '../../../../shared/remote-chat/client/tokenSummaryCache';
-import type { TokenSummary } from '../../../../shared/remote-chat/tokenSummary';
+import { TokenSummaryCache } from '../../vendor/shared/remote-chat/client/tokenSummaryCache';
+import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
 
 const snapshot: TokenSummary = { weeks: 3, refreshSeconds: 60, thresholdTokens: 128000,
   startTs: 100, endTs: 200, dateKeys: [], dailyUsage: [], breakdown: [],

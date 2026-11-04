@@ -4,18 +4,18 @@ import { t, useLanguage } from '../i18n';
 import { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { DiffFile } from '../../../../shared/chat/diff';
-import { generatedImageSource } from '../../../../shared/chat/imageSources';
-import { formatTurnDuration, turnElapsedMs } from '../../../desktop/src/pages/codexGui/turnTiming';
+import type { DiffFile } from '../../vendor/shared/chat/diff';
+import { generatedImageSource } from '../../vendor/shared/chat/imageSources';
+import { formatTurnDuration, turnElapsedMs } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
 import { ChatImage } from './ChatImage';
 import { completedTurnFiles } from './turnPresentation';
 import type { Turn } from './types';
 import { palette, useStyles } from './styles';
-import { useTaskReviewAvailable } from '../../../../shared/remote-chat/TaskReviewContext';
+import { useTaskReviewAvailable } from '../../vendor/shared/remote-chat/TaskReviewContext';
 import { ReviewButton } from './review/ReviewButton';
 import { ChatRetryButton } from './ChatRetryButton';
 import { ChatCapacityErrorNotice } from './ChatCapacityErrorNotice';
-import { isModelCapacityError } from '../../../desktop/src/pages/codexGui/requestError';
+import { isModelCapacityError } from '../../vendor/apps/desktop/src/pages/codexGui/requestError';
 
 export type TurnPanel = 'plan' | 'changes' | 'error' | 'result';
 interface Props { turn: Turn; onOpen: (turnId: string, panel: TurnPanel) => void }

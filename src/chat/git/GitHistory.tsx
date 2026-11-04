@@ -2,14 +2,14 @@ import { useThemeColor } from '../../theme/store';
 import { t, getLocale, useLanguage } from '../../i18n';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { gitGraph, GRAPH_ROW_HEIGHT, type GraphLine, type GraphRow } from '../../../../../shared/remote-chat/gitGraph';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
-import { GIT_HISTORY_CONTENT_WIDTH, GIT_HISTORY_DATE_FORMAT } from '../../../../../shared/remote-chat/gitHistoryLayout';
+import { gitGraph, GRAPH_ROW_HEIGHT, type GraphLine, type GraphRow } from '../../../vendor/shared/remote-chat/gitGraph';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
+import { GIT_HISTORY_CONTENT_WIDTH, GIT_HISTORY_DATE_FORMAT } from '../../../vendor/shared/remote-chat/gitHistoryLayout';
 import { useGitStyles as useStyles } from './styles';
 import { useGitHistoryScroll } from './useGitHistoryScroll';
 import { SheetGestureScrollView as ScrollView } from '../../components/SheetScrollGesture';
-import { GIT_LONG_PRESS_MS } from '../../../../../shared/remote-chat/gitMenu';
-import type { GitCommit } from '../../../../../shared/remote-chat/gitTypes';
+import { GIT_LONG_PRESS_MS } from '../../../vendor/shared/remote-chat/gitMenu';
+import type { GitCommit } from '../../../vendor/shared/remote-chat/gitTypes';
 
 function Line({ line }: { line: GraphLine }) {
   useLanguage();

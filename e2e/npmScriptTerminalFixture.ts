@@ -1,7 +1,7 @@
-import type { GuiToolsClient } from '../../../shared/remote-chat/guiTools';
-import type { TerminalEvent, TerminalInfo } from '../../../shared/terminal/types';
+import type { GuiToolsClient } from '../vendor/shared/remote-chat/guiTools';
+import type { TerminalEvent, TerminalInfo } from '../vendor/shared/terminal/types';
 import { createSshFixture } from './sshFixture';
-import { savedFiles } from '../../desktop/e2e/project-browser-fixture';
+import { savedFiles } from '../vendor/apps/desktop/e2e/project-browser-fixture';
 
 /** Simulate the PC protocol while exercising the actual native terminal UI and editor bridge. */
 export function npmScriptTerminalFixture(): GuiToolsClient['terminal'] {

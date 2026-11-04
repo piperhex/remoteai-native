@@ -8,8 +8,8 @@ import { useFonts } from 'expo-font';
 import { ChatGit } from '../src/chat/git/ChatGit';
 import { ChatOverlay } from '../src/chat/ChatOverlay';
 import { textMetrics } from '../src/theme/text';
-import { createAsyncGitFixture } from '../../../shared/remote-chat/testing/gitFixture';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { createAsyncGitFixture } from '../vendor/shared/remote-chat/testing/gitFixture';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 
 setInterfaceLanguage('zh');
 const client = createAsyncGitFixture();

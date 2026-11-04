@@ -4,7 +4,7 @@ import { readAsStringAsync } from 'expo-file-system';
 import { Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { fromByteArray } from 'base64-js';
-import type { LoungeAttachment } from '../../../../shared/lounge/attachments';
+import type { LoungeAttachment } from '../../vendor/shared/lounge/attachments';
 import { useThemeColor, useThemeMode } from '../theme/store';
 import { textMetrics } from '../theme/text';
 import { t, useLanguage } from '../i18n';

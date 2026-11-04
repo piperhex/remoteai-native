@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import type { SshFileActions } from '../../../../../shared/terminal/useSshFileActions';
+import type { SshFileActions } from '../../../vendor/shared/terminal/useSshFileActions';
 import { BottomSheet } from '../../components/BottomSheet';
 import { t } from '../../i18n';
 import { SshButton } from './SshControls';

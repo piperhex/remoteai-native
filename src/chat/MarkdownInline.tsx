@@ -1,7 +1,7 @@
 import { t, useLanguage } from '../i18n';
 import { useContext } from 'react';
 import { Linking, Text, View, type TextStyle } from 'react-native';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileContext } from './ChatFilePreview';
 import { ChatImage } from './ChatImage';
 import { ChatMath } from './ChatMath';

@@ -1,8 +1,8 @@
 import { displayError } from '../i18n/index';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { IMAGE_AI_TOOLS } from '../../../../shared/chat/imageAiEdit';
-import { useImageAiEdit } from '../../../../shared/chat/useImageAiEdit';
+import { IMAGE_AI_TOOLS } from '../../vendor/shared/chat/imageAiEdit';
+import { useImageAiEdit } from '../../vendor/shared/chat/useImageAiEdit';
 import { t } from '../i18n';
 
 const icons = ['draw', 'comment-plus-outline', 'image-filter-center-focus', 'eraser', 'resize'] as const;

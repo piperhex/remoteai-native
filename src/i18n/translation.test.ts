@@ -9,13 +9,13 @@ import ts from 'typescript';
 import { afterEach, expect, it } from 'vitest';
 
 
-import { interpolate, translateMessage } from "../../../../shared/localization/messages";
+import { interpolate, translateMessage } from "../../vendor/shared/localization/messages";
 import { getInterfaceLanguage, setInterfaceLanguage, subscribeInterfaceLanguage } from
-  "../../../../shared/localization/interfaceLanguage";
-import { systemLanguage } from "../../../../shared/localization/language";
-import { composerPatch, composerLabel } from '../../../../shared/remote-chat/composer';
-import { settingOptions, settingValue } from '../../../../shared/remote-chat/settingsMenu';
-import { collaborationSummary } from '../../../desktop/src/pages/codexGui/collaborationActivity';
+  "../../vendor/shared/localization/interfaceLanguage";
+import { systemLanguage } from "../../vendor/shared/localization/language";
+import { composerPatch, composerLabel } from '../../vendor/shared/remote-chat/composer';
+import { settingOptions, settingValue } from '../../vendor/shared/remote-chat/settingsMenu';
+import { collaborationSummary } from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
 
 const placeholders = (text: string) => [...text.matchAll(/\{\w+\}/g)].map(match => match[0]).sort();
 const dictionaries: Readonly<Record<string, string>>[] = [english, russian, clientResources.ja];

@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { nativeDownloadTarget } from './fileDownloadTarget';
-import type { FileInfo } from '../../../../shared/remote-chat/fileDownload';
+import type { FileInfo } from '../../vendor/shared/remote-chat/fileDownload';
 const mocks = vi.hoisted(() => ({
   platform: { OS: 'android', Version: 35 }, permission: vi.fn(),
   stream: { write: vi.fn(), close: vi.fn() }, copy: vi.fn(), preview: vi.fn(),

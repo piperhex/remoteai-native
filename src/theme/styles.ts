@@ -1,5 +1,5 @@
 import { StyleSheet, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
-import { themeColor, type ThemeColor } from '../../../../shared/theme/mode';
+import { themeColor, type ThemeColor } from '../../vendor/shared/theme/mode';
 import { useThemeMode } from './store';
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };

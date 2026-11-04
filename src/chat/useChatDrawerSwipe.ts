@@ -1,4 +1,4 @@
-import { usePageSwipe } from '../../../../shared/navigation/PageSwipeContext';
+import { usePageSwipe } from '../../vendor/shared/navigation/PageSwipeContext';
 import { useHorizontalSwipe } from '../navigation/useHorizontalSwipe';
 
 /** Left swipes still navigate pages; the drawer's right swipe is owned by its native gesture. */

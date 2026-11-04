@@ -1,10 +1,10 @@
 import { Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { contextUsage } from '../../../../shared/context-usage/values';
-import { remainingStroke } from '../../../../shared/quota';
-import { contextUsageLabel } from '../../../../shared/remote-chat/contextUsage';
+import { contextUsage } from '../../vendor/shared/context-usage/values';
+import { remainingStroke } from '../../vendor/shared/quota';
+import { contextUsageLabel } from '../../vendor/shared/remote-chat/contextUsage';
 import { getLocale, t, useLanguage } from '../i18n';
-import { settingsContextAmounts } from '../../../../shared/remote-chat/settingsPresentation';
+import { settingsContextAmounts } from '../../vendor/shared/remote-chat/settingsPresentation';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { textMetrics } from '../theme/text';

@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { createDrawerMotion } from '../../../../shared/navigation/drawerMotion';
+import { createDrawerMotion } from '../../vendor/shared/navigation/drawerMotion';
 
 function setup(initiallyOpen = false) {
   const animation = { setOffset: vi.fn(), stop: vi.fn(), animate: vi.fn((_value: number, _done: () => void) => {}) };

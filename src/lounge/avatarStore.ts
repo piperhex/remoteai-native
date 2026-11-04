@@ -1,5 +1,5 @@
 import Storage from 'expo-sqlite/kv-store';
-import { avatarData, type LoungeAvatarStore } from '../../../../shared/lounge/avatar';
+import { avatarData, type LoungeAvatarStore } from '../../vendor/shared/lounge/avatar';
 
 export function nativeLoungeAvatars(baseUrl: string): LoungeAvatarStore {
   const key = (id: string) => `lounge-avatar:${JSON.stringify([baseUrl.replace(/\/+$/, ''), id])}`;

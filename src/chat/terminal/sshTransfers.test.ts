@@ -3,7 +3,7 @@ import { getDocumentAsync } from 'expo-document-picker';
 import { deleteAsync, getInfoAsync, readAsStringAsync } from 'expo-file-system';
 import { nativeDownloadTarget } from '../fileDownloadTarget';
 import { nativeSshDownload, pickSshUpload } from './sshTransfers';
-import type { SshUpload } from '../../../../../shared/terminal/sshTransfers';
+import type { SshUpload } from '../../../vendor/shared/terminal/sshTransfers';
 
 vi.mock('expo-document-picker', () => ({ getDocumentAsync: vi.fn() }));
 vi.mock('expo-file-system', () => ({ cacheDirectory: 'file:///cache/', EncodingType: { Base64: 'base64' },

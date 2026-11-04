@@ -6,12 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/tool-details');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the connected phone');
 const applicationId = 'com.codexswitch.mobile.tooldetailstest';
-const reported = JSON.parse(await readFile(path.join(root, 'shared/chat/toolDetailsFixture.json'), 'utf8'));
+const reported = JSON.parse(await readFile(path.join(root, 'vendor/shared/chat/toolDetailsFixture.json'), 'utf8'));
 const adb = async (...args) => (await exec('adb', ['-s', serial, ...args],
   { encoding: 'utf8', timeout: 60_000, maxBuffer: 4 * 1024 * 1024, windowsHide: true })).stdout;
 const decode = text => text.replace(/&#(\d+);/g, (_, value) => String.fromCharCode(Number(value)))
@@ -88,7 +88,7 @@ const originalFontScale = (await adb('shell', 'settings', 'get', 'system', 'font
 try {
 await adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0');
 await adb('install', '-r', path.join(root,
-  'apps/native/android/app/build/outputs/apk/release/tool-details-fixture.apk'));
+  'android/app/build/outputs/apk/release/tool-details-fixture.apk'));
 await adb('shell', 'am', 'force-stop', applicationId);
 await adb('shell', 'am', 'start', '-W', '-n', `${applicationId}/com.codexswitch.mobile.MainActivity`);
 await find('关闭使用工具');

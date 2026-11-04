@@ -2,7 +2,7 @@ import * as React from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { HtmlPreviewDocument } from './HtmlPreviewDocument';
 import type { PreparedHtml } from './HtmlPreparation';
-import type { HtmlImageLink } from '../../../../../shared/file-preview/htmlImageLinks';
+import type { HtmlImageLink } from '../../../vendor/shared/file-preview/htmlImageLinks';
 
 const state = vi.hoisted(() => ({ prepared: undefined as PreparedHtml | undefined, loading: true,
   image: null as HtmlImageLink | null }));

@@ -1,0 +1,248 @@
+name: Native builds
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit, branch or tag to build
+        type: string
+        default: main
+permissions:
+  contents: read
+env:
+  CARGO_NET_GIT_FETCH_WITH_CLI: 'true'
+  CARGO_PROFILE_DEV_DEBUG: '0'
+  CARGO_PROFILE_TEST_DEBUG: '0'
+jobs:
+  native-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    env:
+      NODE_PATH: ${{ github.workspace }}/node_modules
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Read artifact version
+        shell: bash
+        run: echo "TAG_NAME=v$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+
+      - name: Install Android NDK
+        id: android-ndk
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ndk_version="$(sed -n 's/^ndkVersion = "\([^"]*\)"/\1/p' node_modules/react-native/gradle/libs.versions.toml)"
+          if [[ -z "$ndk_version" ]]; then
+            echo "::error::Unable to determine the React Native NDK version."
+            exit 1
+          fi
+
+          android_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          sdkmanager="$android_sdk_root/cmdline-tools/latest/bin/sdkmanager"
+          if [[ -z "$android_sdk_root" || ! -x "$sdkmanager" ]]; then
+            echo "::error::Android SDK command-line tools are unavailable."
+            exit 1
+          fi
+
+          for attempt in 1 2 3; do
+            if "$sdkmanager" "ndk;$ndk_version" \
+              && [[ -f "$android_sdk_root/ndk/$ndk_version/source.properties" ]]; then
+              echo "version=$ndk_version" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "::warning::NDK $ndk_version installation failed (attempt $attempt of 3)."
+            rm -rf "$android_sdk_root/ndk/$ndk_version" "$android_sdk_root/.temp"
+            if [[ "$attempt" -lt 3 ]]; then
+              sleep $((attempt * 10))
+            fi
+          done
+
+          echo "::error::Failed to install NDK $ndk_version after 3 attempts."
+          exit 1
+
+      - name: Install Rust connectivity toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+      - name: Cache Android Rust dependencies and cargo-ndk
+        uses: swatinem/rust-cache@v2
+        with:
+          key: android-ndk-${{ steps.android-ndk.outputs.version }}-cargo-ndk-4.1.2-all-abis
+          workspaces: |
+            vendor/crates/chat-connectivity
+            vendor/crates/ssh-mobile
+      - name: Install connectivity build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libprotobuf-dev clang cmake
+          cargo install cargo-ndk --version 4.1.2 --locked
+
+      - name: Type-check native app
+        run: npm run check
+
+      - name: Test Android update discovery
+        run: >-
+          npm run test --
+          src/update/androidRelease.test.ts src/update/androidUpdateDownload.test.ts
+
+      - name: Generate Android project
+        working-directory: .
+        run: npm run prebuild:android
+
+      - name: Cache Gradle downloads
+        uses: actions/cache@v5
+        with:
+          # Cache downloaded modules and Gradle distributions, not ABI-dependent task outputs.
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper
+          key: >-
+            gradle-downloads-${{ runner.os }}-java17-${{
+              hashFiles('package-lock.json', 'android/**/*.gradle*',
+                'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-downloads-${{ runner.os }}-java17-
+
+      - name: Build release APK
+        working-directory: .
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease --no-daemon --max-workers=2 \
+            --no-build-cache --rerun-tasks \
+            -PreactNativeArchitectures=armeabi-v7a,arm64-v8a,x86,x86_64 \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=768m"
+
+      - name: Verify APK native libraries
+        run: >-
+          node scripts/verify-apk.cjs
+          android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Verify native update URL boundaries
+        run: node scripts/test-update-urls.cjs
+
+      - name: Prepare APK asset
+        run: >-
+          cp android/app/build/outputs/apk/release/app-release.apk
+          "RemoteAI-android-${TAG_NAME}.apk"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemoteAI-android-apk-${{ env.TAG_NAME }}
+          path: RemoteAI-android-*.apk
+          if-no-files-found: error
+
+
+  native-ios:
+    name: Build iOS app
+    # React Native 0.79's fmt pod is not compatible with Xcode 26 yet.
+    runs-on: macos-15
+    env:
+      NODE_PATH: ${{ github.workspace }}/node_modules
+      IOS_BUNDLE_IDENTIFIER: ${{ vars.IOS_BUNDLE_IDENTIFIER || 'com.codexswitch.mobile' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Read artifact version
+        shell: bash
+        run: echo "TAG_NAME=v$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+
+      - name: Install Rust connectivity toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+      - name: Install connectivity build dependencies
+        run: brew install protobuf
+      - name: Identify Apple build toolchain
+        id: apple-cache
+        shell: bash
+        run: echo "version=$(xcodebuild -version | shasum -a 256 | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: Cache iOS Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          # Match chat-connectivity.yml so new tags can read the default branch cache.
+          shared-key: chat-connectivity-macos-15-${{ steps.apple-cache.outputs.version }}
+          cache-bin: false
+          workspaces: |
+            vendor/crates/chat-connectivity
+            vendor/crates/ssh-mobile
+
+      - name: Type-check native app
+        run: npm run check
+
+      - name: Generate iOS project
+        working-directory: .
+        run: npm run prebuild:ios
+
+      - name: Cache CocoaPods downloads
+        uses: actions/cache@v5
+        with:
+          # Always regenerate Pods and the app; only reuse downloaded dependency sources.
+          path: ~/Library/Caches/CocoaPods
+          key: >-
+            cocoapods-downloads-${{ runner.os }}-${{ runner.arch }}-${{
+              hashFiles('package-lock.json', 'ios/Podfile',
+                'ios/Podfile.properties.json', 'plugins/**/*.podspec') }}
+          restore-keys: cocoapods-downloads-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Install iOS Pods
+        working-directory: ios
+        run: pod install
+
+      - name: Build unsigned iOS Release app
+        working-directory: .
+        run: >-
+          xcodebuild -workspace ios/RemoteAI.xcworkspace -scheme RemoteAI
+          -configuration Release -sdk iphoneos -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+
+      - name: Package iOS app
+        working-directory: .
+        run: >-
+          ditto -c -k --sequesterRsrc --keepParent
+          build/Build/Products/Release-iphoneos/RemoteAI.app
+          RemoteAI-ios-unsigned.app.zip
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemoteAI-ios-unsigned-app
+          path: RemoteAI-ios-unsigned.app.zip
+          if-no-files-found: error
+

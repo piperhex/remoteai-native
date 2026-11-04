@@ -5,10 +5,10 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/image-preview-status-bar', process.argv[2] ?? 'android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the physical test device');
@@ -104,7 +104,7 @@ async function sheets(theme) {
 await mkdir(output, { recursive: true });
 await prepareHierarchy({ adb, output });
 await adb('install', '-r', path.join(root,
-  'apps/native/android/app/build-modal-status-bar/outputs/apk/debug/app-debug.apk'));
+  'android/app/build-modal-status-bar/outputs/apk/debug/app-debug.apk'));
 const previousScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { setInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
-import { translateMessage } from "../../../../shared/localization/messages";
+import { setInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
+import { translateMessage } from "../../vendor/shared/localization/messages";
 
 const bridge = vi.hoisted(() => ({ configure: vi.fn(), detach: vi.fn(), dismiss: vi.fn(),
   setLabels: vi.fn() }));

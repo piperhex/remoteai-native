@@ -3,7 +3,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { patchPods } = require('./patch-cocoa-tcp-punch.cjs');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const output = path.join(root, '.codex-tmp/ios-tcp-native-checks');
 const pods = path.join(output, 'Pods');
 const sourceDirectory = path.join(pods, 'CocoaAsyncSocket/Source/GCD');
@@ -30,7 +30,7 @@ function compile(sdk, executable) {
   run('xcrun', ['--sdk', sdk, 'clang', '-fobjc-arc', '-fmodules', '-Werror=implicit-function-declaration',
     '-target', `${architecture}-apple-${platform}`, '-isysroot', run('xcrun', ['--sdk', sdk, '--show-sdk-path']).trim(),
     '-framework', 'Foundation', '-framework', 'Security', '-framework', 'CFNetwork', '-I', sourceDirectory,
-    path.join(sourceDirectory, 'GCDAsyncSocket.m'), 'apps/native/e2e/tcp/IosTcpPunchChecks.m', '-o', executable]);
+    path.join(sourceDirectory, 'GCDAsyncSocket.m'), 'e2e/tcp/IosTcpPunchChecks.m', '-o', executable]);
 }
 
 function simulator() {

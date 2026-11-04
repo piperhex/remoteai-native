@@ -3,9 +3,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatConnectionInfo } from './ChatConnectionInfo';
 import { ChatReconnectButton } from './ChatReconnectButton';
 import { HostIdentityVerification } from './HostIdentityVerification';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import { initialChatState } from '../../../../shared/remote-chat/client/types';
-import { HOST_IDENTITY_CHANGED } from '../../../../shared/remote-chat/trustedHost';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import { initialChatState } from '../../vendor/shared/remote-chat/client/types';
+import { HOST_IDENTITY_CHANGED } from '../../vendor/shared/remote-chat/trustedHost';
 
 const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[] }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),

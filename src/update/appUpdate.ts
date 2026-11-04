@@ -6,22 +6,22 @@ import appConfig from '../../app.json';
 import { getAndroidDownloadSnapshot } from './androidDownloadStatus';
 import { downloadSharedAndroidUpdate, downloadOfficialAndroidUpdate,
   cancelNativeAndroidUpdate, nativeUpdatePath, verifyAndroidPackage } from './androidSharedDownload';
-import { compareAppVersions, versionFromReleaseMetadata } from '../../../../shared/app-update/version';
-import { findAndroidReleaseAsset } from '../../../../shared/app-update/androidRelease';
+import { compareAppVersions, versionFromReleaseMetadata } from '../../vendor/shared/app-update/version';
+import { findAndroidReleaseAsset } from '../../vendor/shared/app-update/androidRelease';
 import { subscribeAndroidDownloadProgress, type AndroidDownloadProgress } from './androidDownloadProgress';
 import { prepareUpdateNotifications } from './androidUpdateNotifications';
 import { AndroidDownloadReporting } from './androidDownloadReporting';
 import { AndroidUpdateAttempt, AndroidUpdateCancelled } from './androidUpdateAttempt';
 
-export { compareAppVersions } from '../../../../shared/app-update/version';
+export { compareAppVersions } from '../../vendor/shared/app-update/version';
 export { versionFromReleaseMetadata } from './version';
 
-const RELEASE_API_URL = 'https://api.github.com/repos/piperhex/remoteai/releases/latest';
+const RELEASE_API_URL = 'https://api.github.com/repos/piperhex/remoteai-native/releases/latest';
 const UPDATE_METADATA_KEY = 'codex-switch.mobile.android-update.v1';
 const APK_MIME_TYPE = 'application/vnd.android.package-archive';
 const DOWNLOAD_RETRY_MESSAGE = '下载未完成，请重新下载。';
 
-export const RELEASES_URL = 'https://github.com/piperhex/remoteai/releases';
+export const RELEASES_URL = 'https://github.com/piperhex/remoteai-native/releases';
 export const CURRENT_APP_VERSION =
   Application.nativeApplicationVersion ?? appConfig.expo.version;
 export const CURRENT_BUILD_VERSION =

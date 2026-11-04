@@ -2,10 +2,10 @@ import * as Picker from 'expo-document-picker';
 import * as Files from 'expo-file-system';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { randomUUID } from 'expo-crypto';
-import type { AttachmentSink, AttachmentSource, LoungeAttachment } from '../../../../shared/lounge/attachments';
+import type { AttachmentSink, AttachmentSource, LoungeAttachment } from '../../vendor/shared/lounge/attachments';
 import { nativeDownloadTarget } from '../chat/fileDownloadTarget';
 import Storage from 'expo-sqlite/kv-store';
-import type { AttachmentImageStore } from '../../../../shared/lounge/attachmentCache';
+import type { AttachmentImageStore } from '../../vendor/shared/lounge/attachmentCache';
 
 export function nativeAttachmentImages(scope: string): AttachmentImageStore {
   const key = (id: string) => `lounge-image:${JSON.stringify([scope, id])}`;

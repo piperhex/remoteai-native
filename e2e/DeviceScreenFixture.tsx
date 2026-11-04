@@ -6,7 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Text } from 'react-native';
 import { DeviceManagementList } from '../src/devices/DeviceManagementList';
-import { useDeviceScreenControl } from '../../../shared/remote-desktop/useDeviceScreenControl';
+import { useDeviceScreenControl } from '../vendor/shared/remote-desktop/useDeviceScreenControl';
 import { textMetrics } from '../src/theme/text';
 import { t } from '../src/i18n';
 import type { RemoteDevice } from '../src/types';

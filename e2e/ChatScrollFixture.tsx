@@ -9,7 +9,7 @@ import { useFonts } from 'expo-font';
 import { ChatMessages } from '../src/chat/ChatMessages';
 import { ChatProcessing } from '../src/chat/ChatProcessing';
 import type { Item, Thread } from '../src/chat/types';
-import { historyLoadResult, type HistoryLoadResult } from '../../../shared/remote-chat/client/historyLoad';
+import { historyLoadResult, type HistoryLoadResult } from '../vendor/shared/remote-chat/client/historyLoad';
 
 const STREAM_STEPS = 160;
 const STREAM_INTERVAL_MS = 100;

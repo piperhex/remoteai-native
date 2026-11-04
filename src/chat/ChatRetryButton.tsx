@@ -2,7 +2,7 @@ import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTurnRetry } from '../../../../shared/chat/TurnRetryContext';
+import { useTurnRetry } from '../../vendor/shared/chat/TurnRetryContext';
 import { t } from '../i18n';
 import { palette } from './styles';
 

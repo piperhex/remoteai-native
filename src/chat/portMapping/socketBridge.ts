@@ -1,7 +1,7 @@
-import { openMappingSocket, type MappingSocket } from '../../../../../shared/port-mapping/socket';
+import { openMappingSocket, type MappingSocket } from '../../../vendor/shared/port-mapping/socket';
 import { Buffer } from 'buffer';
 import type TcpSocket from 'react-native-tcp-socket';
-import type { ForwardingClient } from '../../../../../shared/port-mapping/service';
+import type { ForwardingClient } from '../../../vendor/shared/port-mapping/service';
 
 type Socket = InstanceType<typeof TcpSocket.Socket>;
 const MAX_QUEUED_BYTES = 1024 * 1024;

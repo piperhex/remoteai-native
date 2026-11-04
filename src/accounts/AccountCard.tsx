@@ -1,4 +1,4 @@
-import type { ThemeColor } from '../../../../shared/theme/mode';
+import type { ThemeColor } from '../../vendor/shared/theme/mode';
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';

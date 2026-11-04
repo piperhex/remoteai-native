@@ -2,7 +2,7 @@ import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TaskReviewChecks } from './TaskReviewChecks';
 import { TaskReviewRestore } from './TaskReviewDelivery';
-import type { TaskReviewModel } from '../../../../../shared/remote-chat/useTaskReview';
+import type { TaskReviewModel } from '../../../vendor/shared/remote-chat/useTaskReview';
 
 vi.mock('react', async original => ({ ...await original<typeof import('react')>(),
   useState: <T,>(initial: T) => [initial, vi.fn()],

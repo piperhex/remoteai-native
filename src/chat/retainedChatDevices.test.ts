@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { useRetainedChatDevices } from '../../../../shared/remote-chat/useRetainedChatDevices';
+import { useRetainedChatDevices } from '../../vendor/shared/remote-chat/useRetainedChatDevices';
 
 const hooks = vi.hoisted(() => ({ state: undefined as unknown }));
 vi.mock('react', () => ({

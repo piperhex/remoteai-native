@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Environment
 import org.json.JSONObject
 import java.io.File
-import java.net.URI
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.UUID
@@ -106,12 +105,5 @@ internal class UpdateFiles(private val context: Context) {
     return !offered.isNullOrEmpty() && !trusted.isNullOrEmpty() && offered.toSet() == trusted.toSet()
   }
 }
-
-internal fun officialUrl(value: String): Boolean = try {
-  val uri = URI(value)
-  uri.scheme == "https" && uri.host == "github.com" && uri.port == -1 && uri.userInfo == null
-    && uri.query == null && uri.fragment == null
-    && uri.path.startsWith("/piperhex/remoteai/releases/download/") && uri.path.endsWith(".apk")
-} catch (_: Exception) { false }
 
 internal fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it.toInt() and 255) }

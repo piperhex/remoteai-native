@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatMessage } from '../src/chat/ChatMessage';
-import samples from '../../../shared/chat/userMessageFixture.json';
+import samples from '../vendor/shared/chat/userMessageFixture.json';
 import { SelectableChatText } from '../src/chat/SelectableChatText';
 
 function MessageTextFixture() {

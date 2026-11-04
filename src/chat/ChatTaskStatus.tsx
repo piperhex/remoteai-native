@@ -1,7 +1,7 @@
 import { displayText } from '../i18n/index';
 import { createThemedStyles } from '../theme/styles';
 import {  Text, View } from 'react-native';
-import { taskIssue } from '../../../../shared/remote-chat/taskStatus';
+import { taskIssue } from '../../vendor/shared/remote-chat/taskStatus';
 import { t, useLanguage } from '../i18n';
 import type { ChatState } from './types';
 import { palette } from './styles';

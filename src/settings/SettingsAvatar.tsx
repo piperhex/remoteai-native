@@ -1,8 +1,8 @@
 import { useState, useSyncExternalStore } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { accountName } from '../../../../shared/lounge/names';
-import { initials } from '../../../../shared/lounge/types';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { accountName } from '../../vendor/shared/lounge/names';
+import { initials } from '../../vendor/shared/lounge/types';
 import { LoungeAvatarSettings } from '../lounge/LoungeDialogs';
 import { t } from '../i18n';
 import { useStyles } from './styles';

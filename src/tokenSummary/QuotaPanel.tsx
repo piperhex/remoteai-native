@@ -2,10 +2,10 @@ import type { MessageKey } from '@remoteai/i18n';
 import { t, useLanguage } from '../i18n';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import type { TokenSummary } from '../../../../shared/remote-chat/tokenSummary';
+import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
 import { buildQuotaChartData, type QuotaInterval, type QuotaView } from
-  '../../../desktop/src/components/TokenUsageDashboard/quotaHistoryData';
-import { quotaChartLabels } from '../../../desktop/src/components/TokenUsageDashboard/quotaChartLabels';
+  '../../vendor/apps/desktop/src/components/TokenUsageDashboard/quotaHistoryData';
+import { quotaChartLabels } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/quotaChartLabels';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { TimeBars } from './TimeBars';

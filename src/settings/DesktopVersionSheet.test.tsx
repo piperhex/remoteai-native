@@ -1,9 +1,9 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { DesktopVersionContent } from './DesktopVersionSheet';
-import type { useDesktopUpdate } from '../../../../shared/desktop-update/useDesktopUpdate';
-import { setInterfaceLanguage } from '../../../../shared/localization/interfaceLanguage';
-import { remoteErrorText } from '../../../../shared/localization/errors';
+import type { useDesktopUpdate } from '../../vendor/shared/desktop-update/useDesktopUpdate';
+import { setInterfaceLanguage } from '../../vendor/shared/localization/interfaceLanguage';
+import { remoteErrorText } from '../../vendor/shared/localization/errors';
 
 const state = vi.hoisted(() => ({ confirmation: null as { deviceId: string; version: string } | null }));
 vi.mock('react', async (original) => ({ ...await original<typeof React>(),

@@ -1,9 +1,9 @@
 import { displayError, displayText } from '../../i18n/index';
 import { useState } from 'react';
 import { Pressable, Text, TextInput } from 'react-native';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
-import type { GitResetMode } from '../../../../../shared/remote-chat/gitTypes';
-import { GIT_RESET_MODES } from '../../../../../shared/remote-chat/gitMenu';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
+import type { GitResetMode } from '../../../vendor/shared/remote-chat/gitTypes';
+import { GIT_RESET_MODES } from '../../../vendor/shared/remote-chat/gitMenu';
 import { t, useLanguage } from '../../i18n';
 import { GitActionDialog, useGitActionStyles } from './GitActionDialog';
 

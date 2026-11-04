@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { setInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
-import { isMarkdownPath } from '../../../../shared/remote-chat/textPreview';
+import { setInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
+import { isMarkdownPath } from '../../vendor/shared/remote-chat/textPreview';
 import { ChatMarkdownPreview } from './ChatMarkdownPreview';
 
 const state = vi.hoisted(() => ({ mode: 'preview' }));

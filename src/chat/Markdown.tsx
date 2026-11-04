@@ -2,7 +2,7 @@ import { t, useLanguage } from '../i18n';
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, Text, View, type TextStyle } from 'react-native';
 import { SwipeSafeScrollView } from '../navigation/SwipeGestureBoundary';
-import { parseDiff } from '../../../../shared/chat/diff';
+import { parseDiff } from '../../vendor/shared/chat/diff';
 import { ChatCodeBlock } from './ChatCodeBlock';
 import { ChatDiff } from './ChatDiff';
 import { ChatCodeReview } from './ChatCodeReview';

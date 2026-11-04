@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { useStyles } from './styles';
 import { useLanguage } from '../i18n';
 import { useProcessingStatus, type ChatProcessingProps }
-  from '../../../../shared/remote-chat/client/useProcessingStatus';
+  from '../../vendor/shared/remote-chat/client/useProcessingStatus';
 
 export function ChatProcessing(props: ChatProcessingProps) {
   const styles = useStyles();

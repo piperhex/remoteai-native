@@ -1,5 +1,5 @@
 import { displayError, displayText } from '../i18n/index';
-import type { ThemeColor } from '../../../../shared/theme/mode';
+import type { ThemeColor } from '../../vendor/shared/theme/mode';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { getLocale, t, useLanguage } from '../i18n';

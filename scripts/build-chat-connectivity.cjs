@@ -2,10 +2,10 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const native = path.resolve(__dirname, '..');
-const manifest = path.join(root, 'crates/chat-connectivity/Cargo.toml');
-const target = path.join(root, 'crates/chat-connectivity/target');
+const manifest = path.join(root, 'vendor/crates/chat-connectivity/Cargo.toml');
+const target = path.join(root, 'vendor/crates/chat-connectivity/target');
 const destination = path.join(native, 'plugins/connectivity/build');
 const targets = { 'arm64-v8a': 'aarch64-linux-android', 'armeabi-v7a': 'armv7-linux-androideabi',
   x86: 'i686-linux-android', x86_64: 'x86_64-linux-android' };
@@ -46,7 +46,7 @@ function ios() {
   const notices = path.join(destination, 'notices');
   fs.mkdirSync(notices, { recursive: true });
   for (const name of ['LICENSE-EasyTier', 'README.md']) fs.copyFileSync(
-    path.join(root, 'crates/chat-connectivity', name), path.join(notices, name));
+    path.join(root, 'vendor/crates/chat-connectivity', name), path.join(notices, name));
 }
 
 if (process.argv[2] === 'android') android(process.argv[3] ?? Object.keys(targets).join(','));

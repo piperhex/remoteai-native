@@ -1,7 +1,7 @@
 import { setStringAsync } from 'expo-clipboard';
-import type { SshApi } from '../../../../../shared/terminal/ssh';
-import type { BrowserHost } from '../../../../../shared/project-browser/entryActions';
-import { getSshProjectClient } from '../../../../../shared/terminal/sshProjectClient';
+import type { SshApi } from '../../../vendor/shared/terminal/ssh';
+import type { BrowserHost } from '../../../vendor/shared/project-browser/entryActions';
+import { getSshProjectClient } from '../../../vendor/shared/terminal/sshProjectClient';
 import { nativeSshDownload } from './sshTransfers';
 
 export function nativeSshProjectBrowser(api: SshApi, id: string) {

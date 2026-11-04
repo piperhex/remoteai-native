@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { GitToolbar } from './GitToolbar';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 
 const state = vi.hoisted(() => ({ menu: 'actions' as string | null, action: 'update' }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),

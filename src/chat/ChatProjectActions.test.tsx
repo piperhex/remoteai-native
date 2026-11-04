@@ -1,10 +1,10 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatProjectActions } from './ChatProjectActions';
-import { useProjectActions, type ProjectActionsModel } from '../../../../shared/remote-chat/client/useProjectActions';
+import { useProjectActions, type ProjectActionsModel } from '../../vendor/shared/remote-chat/client/useProjectActions';
 import { initialChatState } from './types';
-import { useGrouping } from '../../../../shared/chat/groups/context';
-vi.mock('../../../../shared/chat/groups/context', () => ({ useGrouping: vi.fn(() => null) }));
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
+vi.mock('../../vendor/shared/chat/groups/context', () => ({ useGrouping: vi.fn(() => null) }));
 
 const hooks = vi.hoisted(() => ({ cursor: 0, values: [] as unknown[] }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),

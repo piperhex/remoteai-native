@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { findAndroidReleaseAsset } from '../../../../shared/app-update/androidRelease';
-import { updateMirrorUrl } from '../../../../shared/app-update/mirrorUrl';
-import { versionFromReleaseMetadata } from '../../../../shared/app-update/version';
+import { findAndroidReleaseAsset } from '../../vendor/shared/app-update/androidRelease';
+import { updateMirrorUrl } from '../../vendor/shared/app-update/mirrorUrl';
+import { versionFromReleaseMetadata } from '../../vendor/shared/app-update/version';
 
 const currentName = 'RemoteAI-android-v2.1.13.apk';
 const legacyName = 'CodexSwitch-android-v2.1.12.apk';

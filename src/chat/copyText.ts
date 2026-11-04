@@ -1,5 +1,5 @@
 import { utf8ToBytes } from '@noble/hashes/utils';
-import { checkDownloadSize } from '../../../../shared/remote-chat/policy';
+import { checkDownloadSize } from '../../vendor/shared/remote-chat/policy';
 import { Platform } from 'react-native';
 import { setStringAsync } from 'expo-clipboard';
 import * as FileSystem from 'expo-file-system';

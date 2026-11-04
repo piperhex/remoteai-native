@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { QueueConnection } from '../../../../shared/remote-chat/client/queueConnection';
+import { QueueConnection } from '../../vendor/shared/remote-chat/client/queueConnection';
 
 const unsupported = new Error('当前手机端暂不支持此操作。');
 const thread = { id: 'chat', cwd: '/project', preview: '', updatedAt: 1, turns: [] };

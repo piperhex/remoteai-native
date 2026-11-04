@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { answer } from '../../../../shared/chat/lineBreakFixture.json';
-import userMessages from '../../../../shared/chat/userMessageFixture.json';
+import { answer } from '../../vendor/shared/chat/lineBreakFixture.json';
+import userMessages from '../../vendor/shared/chat/userMessageFixture.json';
 import { ChatMarkdown } from './Markdown';
 import { MarkdownParagraph } from './MarkdownInline';
 import { parseMarkdown } from './markdownTree';

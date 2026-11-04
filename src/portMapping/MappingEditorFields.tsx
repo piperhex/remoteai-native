@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import { DEFAULT_MAPPING_HOST } from '../../../../shared/port-mapping/target';
+import { DEFAULT_MAPPING_HOST } from '../../vendor/shared/port-mapping/target';
 import type { useMappingFormState } from '../chat/portMapping/useMappingFormState';
 import { t } from '../i18n';
 import { useThemeColor } from '../theme/store';

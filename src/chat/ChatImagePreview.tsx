@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
 import { Keyboard } from 'react-native';
 import { ImageViewer } from './ImageViewer';
-import type { PreviewImageLoader } from '../../../../shared/remote-chat/previewProgress';
+import type { PreviewImageLoader } from '../../vendor/shared/remote-chat/previewProgress';
 
 interface ImagePreview {
   key: string; thumbnail: string; description: string; load: PreviewImageLoader;

@@ -1,7 +1,7 @@
 import { t } from '../../i18n';
 import { Buffer } from 'buffer';
-import { getChatPolicy, MIB } from '../../../../../shared/remote-chat/policy';
-import { VIDEO_CHUNK_BYTES, type VideoChunk, type VideoInfo } from '../../../../../shared/remote-chat/video';
+import { getChatPolicy, MIB } from '../../../vendor/shared/remote-chat/policy';
+import { VIDEO_CHUNK_BYTES, type VideoChunk, type VideoInfo } from '../../../vendor/shared/remote-chat/video';
 import type { VideoRange } from './videoHttp';
 
 export interface RangeSource {

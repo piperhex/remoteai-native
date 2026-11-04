@@ -1,9 +1,9 @@
-import { accountName } from '../../../../shared/lounge/names';
+import { accountName } from '../../vendor/shared/lounge/names';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Modal } from '../components/Modal';
-import type { LoungeAccount } from '../../../../shared/lounge/types';
-import type { LoungeController } from '../../../../shared/lounge/controller';
+import type { LoungeAccount } from '../../vendor/shared/lounge/types';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
 import { t } from '../i18n';
 import { useLoungeStyles } from './styles';
 

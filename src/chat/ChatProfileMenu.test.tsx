@@ -2,9 +2,9 @@ import React, { Children, isValidElement, type ReactElement, type ReactNode } fr
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatProfileMenu } from './ChatProfileMenu';
 import { ChatGuiUpdateSheet } from './ChatGuiUpdateSheet';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { parseGuiAccountsSnapshot, type GuiAccountsClient, type GuiAccountsSnapshot }
-  from '../../../../shared/remote-chat/guiAccounts';
+  from '../../vendor/shared/remote-chat/guiAccounts';
 
 const state = vi.hoisted(() => ({ panel: 'profile' as string | null, snapshot: null as GuiAccountsSnapshot | null }));
 vi.mock('react', async original => ({ ...await original<typeof React>(), useEffect: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('react-native', () => ({ Pressable: 'Pressable', Text: 'Text', TextInput
   ActivityIndicator: 'Spinner', Platform: { OS: 'android' }, StyleSheet: { create: <T,>(value: T) => value } }));
 vi.mock('@expo/vector-icons/Feather', () => ({ default: 'Icon' }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
-vi.mock('../../../../shared/remote-chat/client/useGuiAccounts', () => ({ useGuiAccounts: () => ({
+vi.mock('../../vendor/shared/remote-chat/client/useGuiAccounts', () => ({ useGuiAccounts: () => ({
   loading: false, saving: false, snapshot: state.snapshot, error: '', refresh: vi.fn(), select: vi.fn(),
 }) }));
 interface NodeProps {

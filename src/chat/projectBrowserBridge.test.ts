@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
-import { handleBrowserRequest } from '../../../../shared/project-browser/nativeBridge';
-import type { ProjectBrowserClient } from '../../../../shared/project-browser/protocol';
+import { handleBrowserRequest } from '../../vendor/shared/project-browser/nativeBridge';
+import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
 
 function fixture(connected = true) {
   const client: ProjectBrowserClient = {

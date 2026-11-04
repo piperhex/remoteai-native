@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/toolText';
+export * from '../../vendor/shared/chat/toolText';

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder } from 'react-native';
-import { desktopPoint } from '../../../../../shared/remote-desktop/geometry';
-import { TRACKPAD_TAP_DISTANCE, type TrackpadOptions } from '../../../../../shared/remote-desktop/trackpad';
+import { desktopPoint } from '../../../vendor/shared/remote-desktop/geometry';
+import { TRACKPAD_TAP_DISTANCE, type TrackpadOptions } from '../../../vendor/shared/remote-desktop/trackpad';
 import { usePinchZoom } from './usePinchZoom';
 
 export function useTrackpad(options: TrackpadOptions) {

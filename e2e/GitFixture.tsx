@@ -7,9 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { ChatTools } from '../src/chat/ChatTools';
 import { ChatOverlay } from '../src/chat/ChatOverlay';
-import { createGuiToolsClient } from '../../../shared/remote-chat/guiTools';
-import { createAsyncGitFixture } from '../../../shared/remote-chat/testing/gitFixture';
-import { setInterfaceLanguage } from "../../../shared/localization/interfaceLanguage";
+import { createGuiToolsClient } from '../vendor/shared/remote-chat/guiTools';
+import { createAsyncGitFixture } from '../vendor/shared/remote-chat/testing/gitFixture';
+import { setInterfaceLanguage } from "../vendor/shared/localization/interfaceLanguage";
 
 setInterfaceLanguage('zh');
 

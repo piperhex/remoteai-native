@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { DeviceStatusConnection } from '../../shared/realtime/deviceStatusConnection';
+import { DeviceStatusConnection } from './vendor/shared/realtime/deviceStatusConnection';
 import { createThemedStyles } from './src/theme/styles';
 import { loadTheme, useThemeColor } from './src/theme/preference';
 import { ThemeStatusBar } from './src/theme/ThemeStatusBar';
@@ -7,7 +7,7 @@ import { t, useLanguage } from './src/i18n';
 import { loadLanguage } from './src/i18n/preference';
 import { LoginLanguagePicker } from './src/settings/LanguagePicker';
 import './src/chat/backgroundConnection';
-import { mergeRemoteModelState, type RemoteModelTarget } from '../../shared/remote-chat/modelTarget';
+import { mergeRemoteModelState, type RemoteModelTarget } from './vendor/shared/remote-chat/modelTarget';
 import { Ionicons } from '@expo/vector-icons';
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from 'react';
 import {
@@ -85,7 +85,7 @@ import { PortMappingPage } from './src/portMapping/PortMappingPage';
 import { DiscoveryBackButton, DiscoveryPage } from './src/discovery/DiscoveryPage';
 import { LoungePage } from './src/lounge/LoungePage';
 import { useNativeLounge } from './src/lounge/useNativeLounge';
-import { isDiscoveryPage } from '../../shared/navigation/discovery';
+import { isDiscoveryPage } from './vendor/shared/navigation/discovery';
 import { usePageStyles as useTotpPageStyles } from './src/totp/pageStyles';
 import { ChatPage } from './src/chat/ChatPage';
 import { SshPage } from './src/discovery/SshPage';
@@ -108,7 +108,7 @@ import { StartupUpdatePrompt } from './src/update/StartupUpdatePrompt';
 import { useIdleAppUpdate } from './src/update/useIdleAppUpdate';
 import { AboutPage } from './src/about/AboutPage';
 import { AgreementConsent } from './src/auth/AgreementConsent';
-import { useAgreementConsent } from '../../shared/legal/useAgreementConsent';
+import { useAgreementConsent } from './vendor/shared/legal/useAgreementConsent';
 
 const COLORS = {
   ink: '#13231c',

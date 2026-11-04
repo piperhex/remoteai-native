@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { expect, it } from 'vitest';
-import { conversationEntries } from '../../../shared/chat/turnPresentation';
-import type { Turn } from '../../../shared/remote-chat/client/types';
+import { conversationEntries } from '../vendor/shared/chat/turnPresentation';
+import type { Turn } from '../vendor/shared/remote-chat/client/types';
 
 interface Range { first: number; last: number }
 interface RenderMask { numCells: () => number; enumerateRegions: () => (Range & { isSpacer: boolean })[] }

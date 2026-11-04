@@ -10,7 +10,7 @@ vi.mock('react', async (original) => ({ ...await original<typeof React>(),
   useState: () => [state.error, (error: string) => { state.error = error; }] ,
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
-vi.mock('../../../../shared/app-update/useStartupUpdate', () => ({
+vi.mock('../../vendor/shared/app-update/useStartupUpdate', () => ({
   useStartupUpdate: () => ({ release: state.release, ignoreVersion: state.ignore, dismiss: state.dismiss }),
 }));
 vi.mock('./startupUpdate', () => ({ startupUpdateOptions: {} }));

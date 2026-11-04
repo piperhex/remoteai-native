@@ -5,7 +5,7 @@ import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { GOAL_STATUS, type ThreadGoal } from '../../../desktop/src/pages/codexGui/goalTypes';
+import { GOAL_STATUS, type ThreadGoal } from '../../vendor/apps/desktop/src/pages/codexGui/goalTypes';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { palette } from './styles';

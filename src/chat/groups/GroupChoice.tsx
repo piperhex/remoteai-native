@@ -3,8 +3,8 @@ import Feather from '@expo/vector-icons/Feather';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SheetScrollView } from '../../components/SheetScrollView';
 import { t } from '../../i18n';
-import type { ChatGroup } from '../../../../../shared/chat/groups/model';
-import { groupOptions } from '../../../../../shared/chat/groups/model';
+import type { ChatGroup } from '../../../vendor/shared/chat/groups/model';
+import { groupOptions } from '../../../vendor/shared/chat/groups/model';
 import { useGroupStyles } from './styles';
 
 export function NativeGroupIcon({ icon, size = 18 }: { icon?: string; size?: number }) {

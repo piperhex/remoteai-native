@@ -1,7 +1,7 @@
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
-import type { SshProfileStore } from '../../../../shared/terminal/sshProfiles';
-import type { TerminalInfo, TerminalRead } from '../../../../shared/terminal/types';
-import type { SshFileReply } from '../../../../shared/terminal/ssh';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
+import type { SshProfileStore } from '../../vendor/shared/terminal/sshProfiles';
+import type { TerminalInfo, TerminalRead } from '../../vendor/shared/terminal/types';
+import type { SshFileReply } from '../../vendor/shared/terminal/ssh';
 
 export interface DirectSshBridge { call: (request: string) => Promise<string> }
 

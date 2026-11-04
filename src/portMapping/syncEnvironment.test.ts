@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { nativeMappingEnvironment } from './syncEnvironment';
-import { MappingSyncPolling } from '../../../../shared/port-mapping/syncPolling';
+import { MappingSyncPolling } from '../../vendor/shared/port-mapping/syncPolling';
 
 const app = vi.hoisted(() => ({ currentState: 'active', listener: () => {}, remove: vi.fn() }));
 vi.mock('react-native', () => ({ AppState: {

@@ -1,9 +1,9 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { randomUUID } from 'expo-crypto';
 import { cacheDirectory, EncodingType, readAsStringAsync, getInfoAsync, deleteAsync } from 'expo-file-system';
-import type { SshDownload, SshUpload } from '../../../../../shared/terminal/sshTransfers';
+import type { SshDownload, SshUpload } from '../../../vendor/shared/terminal/sshTransfers';
 import { nativeDownloadTarget } from '../fileDownloadTarget';
-import { validSshName } from '../../../../../shared/terminal/useSshFiles';
+import { validSshName } from '../../../vendor/shared/terminal/useSshFiles';
 
 export const nativeSshDownload: SshDownload = async (entry, data) => {
   if (!validSshName(entry.name) || entry.name.includes('\\')) throw new Error('client.ssh.invalidName');

@@ -3,7 +3,7 @@ import { SheetGestureScrollView as ScrollView } from '../../components/SheetScro
 import { BottomSheet } from '../../components/BottomSheet';
 import { t } from '../../i18n';
 import { useSshStyles } from './sshStyles';
-import type { useSshConnection } from '../../../../../shared/terminal/useSshConnection';
+import type { useSshConnection } from '../../../vendor/shared/terminal/useSshConnection';
 
 export function SshHostKeySheet({ connection }: { connection: ReturnType<typeof useSshConnection> }) {
   const styles = useSshStyles();

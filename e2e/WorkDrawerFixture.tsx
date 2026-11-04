@@ -23,7 +23,7 @@ const items: Item[] = [
   { id: 'tool', type: 'dynamicToolCall', status: 'failed', tool: 'review.check',
     result: { content: [{ type: 'text', text: 'TOOL_OUTPUT\n请检查命令输出。' }] } },
   { id: 'long', type: 'commandExecution', status: 'completed',
-    command: 'Get-Content shared/chat/activityTimeline.ts; Get-Content apps/native/src/chat/ChatWorkDrawer.tsx',
+    command: 'Get-Content shared/chat/activityTimeline.ts; Get-Content src/chat/ChatWorkDrawer.tsx',
     aggregatedOutput: Array.from({ length: 160 }, (_, i) =>
       `LINE_${i} 检查记录 🙂 packages/cua/vendor/libs/cua-driver/scripts/install-windows-regression.ps1`).join('\n')
       + '\nOUTPUT_END', exitCode: 0 },

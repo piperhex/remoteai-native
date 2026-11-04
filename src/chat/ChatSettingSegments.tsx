@@ -1,7 +1,7 @@
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
-import type { SettingField, SettingOption } from '../../../../shared/remote-chat/settingsMenu';
-import { settingSegmentColor } from '../../../../shared/remote-chat/settingSegments';
-import { SETTING_SHORT_LABELS, settingShortLabel } from '../../../../shared/remote-chat/settingsPresentation';
+import type { SettingField, SettingOption } from '../../vendor/shared/remote-chat/settingsMenu';
+import { settingSegmentColor } from '../../vendor/shared/remote-chat/settingSegments';
+import { SETTING_SHORT_LABELS, settingShortLabel } from '../../vendor/shared/remote-chat/settingsPresentation';
 import { displayText, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';

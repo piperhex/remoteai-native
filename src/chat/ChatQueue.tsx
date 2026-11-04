@@ -3,10 +3,10 @@ import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import type { QueueProps } from '../../../../shared/remote-chat/client/queueProps';
+import type { QueueProps } from '../../vendor/shared/remote-chat/client/queueProps';
 import { palette, useStyles } from './styles';
 import Feather from '@expo/vector-icons/Feather';
-import { useQueueSelection } from '../../../../shared/remote-chat/client/useQueueSelection';
+import { useQueueSelection } from '../../vendor/shared/remote-chat/client/useQueueSelection';
 
 type Props = QueueProps & { edit: (id: string) => Promise<void>; editDisabled: boolean };
 

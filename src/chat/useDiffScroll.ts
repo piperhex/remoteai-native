@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { ScrollViewProps } from 'react-native';
-import { DIFF_LOAD_THRESHOLD, useDiffPagination } from '../../../../shared/chat/useDiffPagination';
+import { DIFF_LOAD_THRESHOLD, useDiffPagination } from '../../vendor/shared/chat/useDiffPagination';
 
 const SCROLL_EVENT_THROTTLE = 16;
 

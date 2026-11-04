@@ -5,9 +5,9 @@ import { Text } from 'react-native';
 import TcpSocket from 'react-native-tcp-socket';
 import { Buffer } from 'buffer';
 import { NativeTcpNetwork } from '../src/chat/tcpNetwork';
-import { TcpPeer } from '../../../shared/remote-chat/tcp/peer';
-import type { TcpSignal } from '../../../shared/remote-chat/tcp/types';
-import type { Channel } from '../../../shared/remote-chat/protocol';
+import { TcpPeer } from '../vendor/shared/remote-chat/tcp/peer';
+import type { TcpSignal } from '../vendor/shared/remote-chat/tcp/types';
+import type { Channel } from '../vendor/shared/remote-chat/protocol';
 
 const pause = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 async function wait(check: () => boolean) {

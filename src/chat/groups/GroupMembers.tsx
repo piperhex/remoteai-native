@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import type { GroupingUI } from '../../../../../shared/chat/groups/context';
-import type { GroupMember } from '../../../../../shared/chat/groups/model';
+import type { GroupingUI } from '../../../vendor/shared/chat/groups/context';
+import type { GroupMember } from '../../../vendor/shared/chat/groups/model';
 import { t } from '../../i18n';
 import { GroupChoice } from './GroupChoice';
 import { useGroupStyles } from './styles';

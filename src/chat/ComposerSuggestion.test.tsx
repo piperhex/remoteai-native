@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ComposerSuggestion } from './ComposerSuggestion';
-import { useComposerSuggestion } from '../../../../shared/chat/useComposerSuggestion';
+import { useComposerSuggestion } from '../../vendor/shared/chat/useComposerSuggestion';
 
 const prediction = vi.hoisted(() => ({ text: '按这个方案实现', dismiss: vi.fn() }));
-vi.mock('../../../../shared/chat/usePromptSuggestion', () => ({ usePromptSuggestion: () => prediction }));
+vi.mock('../../vendor/shared/chat/usePromptSuggestion', () => ({ usePromptSuggestion: () => prediction }));
 vi.mock('react', async () => ({ ...await vi.importActual<typeof React>('react'),
   useRef: (value: unknown) => ({ current: value }),
 }));

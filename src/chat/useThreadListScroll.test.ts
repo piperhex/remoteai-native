@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { useThreadListScroll } from './useThreadListScroll';
-import { initialChatState } from '../../../../shared/remote-chat/client/types';
+import { initialChatState } from '../../vendor/shared/remote-chat/client/types';
 import type { ChatController } from './controller';
 
 const mock = vi.hoisted(() => ({
@@ -17,7 +17,7 @@ vi.mock('react', () => ({
     return [mock.states[slot], (next: T) => { mock.states[slot] = next; }];
   },
 }));
-vi.mock('../../../../shared/remote-chat/client/useThreadPagination', () => ({
+vi.mock('../../vendor/shared/remote-chat/client/useThreadPagination', () => ({
   useThreadPagination: (_state: unknown, _controller: unknown, checkNearEnd: () => boolean) => {
     mock.checkNearEnd = checkNearEnd;
     return { setNearEnd: (nearEnd: boolean) => { mock.nearEnd = nearEnd; } };

@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { parseMarkdown, renderMathParagraph, type MarkdownNode } from './markdownTree';
-import { answer } from '../../../../shared/chat/lineBreakFixture.json';
-import { localImageSource } from '../../../../shared/chat/imageSources';
+import { answer } from '../../vendor/shared/chat/lineBreakFixture.json';
+import { localImageSource } from '../../vendor/shared/chat/imageSources';
 
 function descendants(nodes: MarkdownNode[]): MarkdownNode[] {
   return nodes.flatMap((node) => [node, ...descendants(node.children)]);

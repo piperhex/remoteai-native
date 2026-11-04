@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { randomUUID } from 'expo-crypto';
-import type { GroupingUI } from '../../../../../shared/chat/groups/context';
-import { groupPath, GROUP_NAME_LIMIT, type ChatGroup } from '../../../../../shared/chat/groups/model';
+import type { GroupingUI } from '../../../vendor/shared/chat/groups/context';
+import { groupPath, GROUP_NAME_LIMIT, type ChatGroup } from '../../../vendor/shared/chat/groups/model';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SheetScrollView } from '../../components/SheetScrollView';
 import { displayError, t } from '../../i18n';

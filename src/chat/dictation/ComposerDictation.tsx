@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { AppState, Keyboard, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { DictationClient } from '../../../../../shared/chat/dictation/client';
-import { useDictation } from '../../../../../shared/chat/dictation/useDictation';
-import { MAX_RECORDING_SECONDS } from '../../../../../shared/chat/dictation/recording';
+import type { DictationClient } from '../../../vendor/shared/chat/dictation/client';
+import { useDictation } from '../../../vendor/shared/chat/dictation/useDictation';
+import { MAX_RECORDING_SECONDS } from '../../../vendor/shared/chat/dictation/recording';
 import { t, displayError, useLanguage } from '../../i18n';
 import { textMetrics } from '../../theme/text';
 import { useThemeColor } from '../../theme/store';

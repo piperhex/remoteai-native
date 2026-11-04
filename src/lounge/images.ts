@@ -1,8 +1,8 @@
 import * as Picker from 'expo-image-picker';
 import * as Files from 'expo-file-system';
 import { manipulateAsync, SaveFormat, type Action } from 'expo-image-manipulator';
-import { AVATAR_SIZE, avatarData } from '../../../../shared/lounge/avatar';
-import { MAX_IMAGE_BYTES } from '../../../../shared/lounge/types';
+import { AVATAR_SIZE, avatarData } from '../../vendor/shared/lounge/avatar';
+import { MAX_IMAGE_BYTES } from '../../vendor/shared/lounge/types';
 
 const MAX_EDGE = 2048;
 const QUALITIES = [0.85, 0.65, 0.45];

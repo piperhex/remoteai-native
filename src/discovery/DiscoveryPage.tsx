@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { discoveryEntries, type DiscoveryPage as DiscoveryDestination } from '../../../../shared/navigation/discovery';
+import { discoveryEntries, type DiscoveryPage as DiscoveryDestination } from '../../vendor/shared/navigation/discovery';
 import { t, useLanguage } from '../i18n';
 import { useThemeColor } from '../theme/store';
 import { createThemedStyles } from '../theme/styles';

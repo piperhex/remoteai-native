@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import type { SshApi, SshEntry, SshFileAction, SshFileReply } from '../../../shared/terminal/ssh';
+import type { SshApi, SshEntry, SshFileAction, SshFileReply } from '../vendor/shared/terminal/ssh';
 
 type Upload = { path: string; size: number; bytes: Buffer };
 

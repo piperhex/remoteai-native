@@ -4,10 +4,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
 const output = path.join(root, `.codex-tmp/message-attachments-${serial}`);
@@ -97,7 +97,7 @@ await prepareHierarchy({ adb, output });
 const originalScale = (await adb('shell', 'settings', 'get', 'system', 'font_scale')).trim();
 try {
   await adb('install', '-r', path.join(root,
-    'apps/native/android/app/build/outputs/apk/release/message-attachments-fixture.apk'));
+    'android/app/build/outputs/apk/release/message-attachments-fixture.apk'));
   for (const scale of [1, 1.3]) await verifyScale(scale);
   await verifyThemeAndLanguage();
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, scales: [1, 1.3],

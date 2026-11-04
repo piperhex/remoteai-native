@@ -7,11 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { ChatMessage } from '../src/chat/ChatMessage';
 import { ChatFileContext } from '../src/chat/ChatFilePreview';
-import { AttachmentMetadataContext } from '../../../shared/chat/attachmentMetadata';
+import { AttachmentMetadataContext } from '../vendor/shared/chat/attachmentMetadata';
 import { BottomSheet } from '../src/components/BottomSheet';
 import { textMetrics } from '../src/theme/text';
 import { updateThemeMode, useThemeMode } from '../src/theme/store';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 
 const path = 'C:\\Users\\CXR\\AppData\\Roaming\\dev.codex.switch\\codex-gui-workspaces\\attachments\\'
   + '7e776098-b1d1-45d5-9f8c-7d44602a5e43\\attachment-顶部状态栏录屏-2026-10-25-17-56-11-991.mp4';

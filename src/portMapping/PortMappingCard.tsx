@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { useState, useSyncExternalStore } from 'react';
-import type { DeviceMappingEntry } from '../../../../shared/port-mapping/deviceRegistry';
+import type { DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import { useMappingRowActions } from '../chat/portMapping/useMappingRowActions';
 import { displayError, t, useLanguage } from '../i18n';
 import { useMappingCardStyles } from './mappingCardStyles';

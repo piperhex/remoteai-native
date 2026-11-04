@@ -2,8 +2,8 @@ import dgram from 'node:dgram';
 import { randomUUID } from 'node:crypto';
 import { afterEach, expect, it, vi } from 'vitest';
 import { listenUdp } from './udpListener';
-import type { DatagramEndpoint } from '../../../../../shared/port-mapping/udpTunnel';
-import { UDP_MAX_BATCH, UDP_MAX_DATAGRAM, UDP_QUEUE_SIZE } from '../../../../../shared/port-mapping/datagrams';
+import type { DatagramEndpoint } from '../../../vendor/shared/port-mapping/udpTunnel';
+import { UDP_MAX_BATCH, UDP_MAX_DATAGRAM, UDP_QUEUE_SIZE } from '../../../vendor/shared/port-mapping/datagrams';
 
 vi.mock('react-native-udp', () => ({ default: dgram }));
 vi.mock('react-native', () => ({ NativeModules: { UdpSockets: {} } }));

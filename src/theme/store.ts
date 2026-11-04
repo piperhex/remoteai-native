@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { themeColor, type ThemeMode, type ThemePreference } from '../../../../shared/theme/mode';
+import { themeColor, type ThemeMode, type ThemePreference } from '../../vendor/shared/theme/mode';
 
 let mode: ThemeMode = 'light';
 let preference: ThemePreference = 'system';

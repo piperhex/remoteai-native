@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { mergeHistory } from '../../../../shared/remote-chat/client/history';
-import { acknowledgedEvents } from '../../../../shared/chat/acknowledgedMessages';
-import { updateThread } from '../../../../shared/remote-chat/client/events';
+import { mergeHistory } from '../../vendor/shared/remote-chat/client/history';
+import { acknowledgedEvents } from '../../vendor/shared/chat/acknowledgedMessages';
+import { updateThread } from '../../vendor/shared/remote-chat/client/events';
 import type { Item, Thread } from './types';
 
 const user = (id: string, localEcho = false): Item => ({ id, type: 'userMessage', localEcho,

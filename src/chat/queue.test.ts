@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { QUEUE_EVENT, type QueueSnapshot } from '../../../../shared/remote-chat/queue';
-import { queueProps } from '../../../../shared/remote-chat/client/queueProps';
-import { initialChatState } from '../../../../shared/remote-chat/client/types';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { QUEUE_EVENT, type QueueSnapshot } from '../../vendor/shared/remote-chat/queue';
+import { queueProps } from '../../vendor/shared/remote-chat/client/queueProps';
+import { initialChatState } from '../../vendor/shared/remote-chat/client/types';
 
 it.each(['completed', 'inProgress'])('matches native and web queue controls to the latest turn (%s)', status => {
   const controller = new ChatController(() => ({ request: vi.fn(), start() {}, stop() {} }));

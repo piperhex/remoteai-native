@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Modal } from '../../components/Modal';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { DesktopResolution } from '../../../../../shared/remote-desktop/protocol';
+import type { DesktopResolution } from '../../../vendor/shared/remote-desktop/protocol';
 import { t } from '../../i18n';
 import { useThemeColor } from '../../theme/store';
 import { useDisplaySettingsStyles as useS } from './displaySettingsStyles';

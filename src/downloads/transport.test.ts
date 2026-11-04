@@ -1,8 +1,8 @@
 import { expect, it, vi } from 'vitest';
 import { forwardDownloadRequest } from './transport';
 import type { DownloadNative, DownloadRequest } from './types';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
-import { BulkError } from '../../../../shared/remote-chat/bulkLimits';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
+import { BulkError } from '../../vendor/shared/remote-chat/bulkLimits';
 
 const source = { scope: 'computer' as const, owner: 'account', deviceId: 'pc', deviceName: 'PC', path: 'F:/app.apk' };
 const request: DownloadRequest = { requestId: 'request', taskId: 'job', source,

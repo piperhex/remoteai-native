@@ -4,7 +4,7 @@ import { registerRootComponent } from 'expo';
 import { ScrollView, Text } from 'react-native';
 import App from '../App';
 import { createMobileNativePath, localChatAddresses } from '../src/chat/nativePath';
-import type { NativePathOptions } from '../../../shared/remote-chat/nativePath';
+import type { NativePathOptions } from '../vendor/shared/remote-chat/nativePath';
 
 const endpoint = 'http://127.0.0.1:15049';
 interface Fixture { mode: 'native' | 'app'; options: NativePathOptions }

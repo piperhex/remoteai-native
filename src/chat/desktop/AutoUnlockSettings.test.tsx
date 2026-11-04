@@ -1,11 +1,11 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { AutoUnlockSettings } from './AutoUnlockSettings';
-import type { SecuritySettingsProps } from '../../../../../shared/remote-desktop/security';
+import type { SecuritySettingsProps } from '../../../vendor/shared/remote-desktop/security';
 
 const form = vi.hoisted(() => ({ editing: false, username: 'alice', password: 'fixture-password',
   toggle: vi.fn(), edit: vi.fn(), cancel: vi.fn(), save: vi.fn(), setUsername: vi.fn(), setPassword: vi.fn() }));
-vi.mock('../../../../../shared/remote-desktop/useAutoUnlockForm', () => ({ useAutoUnlockForm: () => form }));
+vi.mock('../../../vendor/shared/remote-desktop/useAutoUnlockForm', () => ({ useAutoUnlockForm: () => form }));
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot() }));
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable', Text: 'Text', TextInput: 'TextInput',

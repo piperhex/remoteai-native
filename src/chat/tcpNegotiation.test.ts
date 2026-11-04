@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { MobileChatConnection } from './connection';
 import type { AuthSession } from '../types';
-import { getChatPolicy, setChatConnectionMode } from '../../../../shared/remote-chat/policy';
+import { getChatPolicy, setChatConnectionMode } from '../../vendor/shared/remote-chat/policy';
 
 const platform = vi.hoisted(() => ({ OS: 'ios', constants: { Model: 'Test phone' } }));
 vi.mock('react-native', () => ({ Platform: platform, NativeModules: {} }));

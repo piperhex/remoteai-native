@@ -1,5 +1,5 @@
 import { getRandomBytes } from 'expo-crypto';
-import { keyPair, SessionCipher } from '../../../shared/remote-chat/cipher';
+import { keyPair, SessionCipher } from '../vendor/shared/remote-chat/cipher';
 import { createNativePacketCipher } from '../src/chat/packetCipher';
 
 function assert(condition: boolean, message: string) {

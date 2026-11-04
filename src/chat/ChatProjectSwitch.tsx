@@ -6,7 +6,7 @@ import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetFlatList, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { useProjectSwitch, type ProjectSwitchProps } from '../../../../shared/remote-chat/client/useProjectSwitch';
+import { useProjectSwitch, type ProjectSwitchProps } from '../../vendor/shared/remote-chat/client/useProjectSwitch';
 import { ChatProjectPicker } from './ChatProjectPicker';
 
 export function ChatProjectSwitch(props: ProjectSwitchProps) {

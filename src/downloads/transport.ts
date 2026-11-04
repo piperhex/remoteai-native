@@ -1,7 +1,7 @@
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 import type { DownloadNative, DownloadRequest } from './types';
-import { BulkError, bulkAssert } from '../../../../shared/remote-chat/bulkLimits';
-import { normalizeFileError } from '../../../../shared/remote-chat/fileErrors';
+import { BulkError, bulkAssert } from '../../vendor/shared/remote-chat/bulkLimits';
+import { normalizeFileError } from '../../vendor/shared/remote-chat/fileErrors';
 
 const preparing = new Map<string, AbortController>();
 

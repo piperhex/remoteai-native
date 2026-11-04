@@ -5,7 +5,7 @@ import { t } from '../../i18n';
 import { textMetrics } from '../../theme/text';
 import { useThemeColor } from '../../theme/store';
 import { HtmlPreparation, type HtmlFileContext, type PreparedHtml } from './HtmlPreparation';
-import { findHtmlImageLink, type HtmlImageLink } from '../../../../../shared/file-preview/htmlImageLinks';
+import { findHtmlImageLink, type HtmlImageLink } from '../../../vendor/shared/file-preview/htmlImageLinks';
 import { HtmlImagePreview } from './HtmlImagePreview';
 
 export function HtmlPreviewDocument({ text, context, onError }: {

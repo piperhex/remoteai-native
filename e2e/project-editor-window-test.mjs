@@ -6,7 +6,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/project-editor/android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
@@ -68,7 +68,7 @@ async function verifyFixtureApk(apk) {
 }
 
 await mkdir(output, { recursive: true });
-const apk = path.join(root, 'apps/native/android/app/build/outputs/apk/release/project-browser-fixture.apk');
+const apk = path.join(root, 'android/app/build/outputs/apk/release/project-browser-fixture.apk');
 await verifyFixtureApk(apk);
 const fontScale = (await adb('shell', 'settings', 'get', 'system', 'font_scale')).trim();
 const focus = (await adb('shell', 'dumpsys', 'window')).match(/mCurrentFocus=.* u0 ([\w.$]+\/[\w.$]+)/)?.[1];

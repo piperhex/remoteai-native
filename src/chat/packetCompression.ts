@@ -1,6 +1,6 @@
 import { NativeModules } from 'react-native';
-import { nativePacketCompression } from '../../../../shared/remote-chat/nativePacketCompression';
-import type { PacketCompressionFactory } from '../../../../shared/remote-chat/packetCompression';
+import { nativePacketCompression } from '../../vendor/shared/remote-chat/nativePacketCompression';
+import type { PacketCompressionFactory } from '../../vendor/shared/remote-chat/packetCompression';
 
 interface ConnectivityCodec {
   packetCompression?: boolean;

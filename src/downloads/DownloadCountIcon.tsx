@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Platform, Text, View } from 'react-native';
-import { useActiveDownloadCount } from '../../../../shared/downloads/useActiveDownloadCount';
+import { useActiveDownloadCount } from '../../vendor/shared/downloads/useActiveDownloadCount';
 import { t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';

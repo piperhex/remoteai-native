@@ -2,11 +2,11 @@ import { SheetGestureScrollView as ScrollView } from '../../components/SheetScro
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { randomUUID } from 'expo-crypto';
-import type { SshApi } from '../../../../../shared/terminal/ssh';
-import type { TerminalInfo } from '../../../../../shared/terminal/types';
-import { sshLabel, type SshProfile } from '../../../../../shared/terminal/sshProfiles';
-import { newSshValues, useSshConnection, type SshValues } from '../../../../../shared/terminal/useSshConnection';
-import { validSshSettings } from '../../../../../shared/terminal/sshConnectionValues';
+import type { SshApi } from '../../../vendor/shared/terminal/ssh';
+import type { TerminalInfo } from '../../../vendor/shared/terminal/types';
+import { sshLabel, type SshProfile } from '../../../vendor/shared/terminal/sshProfiles';
+import { newSshValues, useSshConnection, type SshValues } from '../../../vendor/shared/terminal/useSshConnection';
+import { validSshSettings } from '../../../vendor/shared/terminal/sshConnectionValues';
 import { BottomSheet } from '../../components/BottomSheet';
 import { t, displayError, useLanguage } from '../../i18n';
 import { useSshStyles } from './sshStyles';

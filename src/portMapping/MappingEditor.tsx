@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDeviceMapping, useMappingRuntime,
-  type DeviceMappingEntry } from '../../../../shared/port-mapping/deviceRegistry';
-import { MAX_PORT_MAPPINGS } from '../../../../shared/port-mapping/settings';
+  type DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
+import { MAX_PORT_MAPPINGS } from '../../vendor/shared/port-mapping/settings';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { MappingEditorForm } from './MappingEditorForm';

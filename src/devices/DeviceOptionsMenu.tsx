@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { supportsScreenControl } from '../../../../shared/remote-desktop/screenControl';
+import { supportsScreenControl } from '../../vendor/shared/remote-desktop/screenControl';
 import type { RemoteDevice } from '../types';
 import { deviceColors, useStyles } from './styles';
 

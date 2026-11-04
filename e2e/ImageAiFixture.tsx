@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { ImageViewer } from '../src/chat/ImageViewer';
-import { ImageAiContext } from '../../../shared/chat/ImageAiContext';
+import { ImageAiContext } from '../vendor/shared/chat/ImageAiContext';
 const source = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAH0CAIAAABKIt4vAAAHXUlEQVR42u3WMREAMAgA'
   + 'sVJX+F9Qgg5MMHGJhJ8+svoBALDnSwAAYLAAAAwWAIDBAgDAYAEAGCwAAIMFAIDBAgAwWAAABgsAAIMFAGCwAAAMFg'
   + 'CAwQIAwGABABgsAACDBQCAwQIAMFgAAAYLAACDBQBgsAAADBYAAAYLAMBgAQAYLAAAgwUAgMECADBYAAAGCwAAgwUA'

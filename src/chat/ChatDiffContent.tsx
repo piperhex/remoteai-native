@@ -3,7 +3,7 @@ import { t, useLanguage } from '../i18n';
 import { useContext, useMemo, useState } from 'react';
 import { SelectableChatText } from './SelectableChatText';
 import { Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { pairDiffLines, type DiffFile, type DiffLine, type DiffPair } from '../../../../shared/chat/diff';
+import { pairDiffLines, type DiffFile, type DiffLine, type DiffPair } from '../../vendor/shared/chat/diff';
 import { INLINE_COPY_WIDTH, type CopyAction } from './CopyTextButton';
 import { ChatFileContext } from './ChatFilePreview';
 import { HighlightedCode, fileLanguage } from './ChatCodeHighlight';

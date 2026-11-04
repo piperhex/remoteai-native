@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import * as SecureStore from 'expo-secure-store';
-import { credentials, deferred, json, renewed } from '../../../../shared/http/testing/adminClientContract';
+import { credentials, deferred, json, renewed } from '../../vendor/shared/http/testing/adminClientContract';
 import { refreshSession, authorizedRequest } from './adminSession';
 import { activateSession, clearSession, loadSession, sessionEpoch } from './sessionStore';
 

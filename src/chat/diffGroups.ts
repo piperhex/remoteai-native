@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/diffGroups';
+export * from '../../vendor/shared/chat/diffGroups';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AUTO_SAVE_OPTIONS } from '../../../../shared/project-browser/preferences';
+import { AUTO_SAVE_OPTIONS } from '../../vendor/shared/project-browser/preferences';
 import { BottomSheet } from '../components/BottomSheet';
 import { t } from '../i18n';
 import { setFileAutoSave, useFilePreferences } from './filePreferences';

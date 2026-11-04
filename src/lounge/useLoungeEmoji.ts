@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { BackHandler, Keyboard, Platform, type TextInput, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { insertLoungeEmoji, loungeEmojiPanelHeight } from '../../../../shared/lounge/emoji';
+import { insertLoungeEmoji, loungeEmojiPanelHeight } from '../../vendor/shared/lounge/emoji';
 
 export function useLoungeEmoji({ input, text, setText, viewportHeight }: {
   input: RefObject<TextInput | null>; text: string; setText: (text: string) => void; viewportHeight: number;

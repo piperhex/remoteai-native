@@ -1,1 +1,1 @@
-export { normalizedVersion, parseVersion, versionFromReleaseMetadata } from '../../../../shared/app-update/version';
+export { normalizedVersion, parseVersion, versionFromReleaseMetadata } from '../../vendor/shared/app-update/version';

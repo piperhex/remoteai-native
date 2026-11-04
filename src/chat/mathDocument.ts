@@ -1,6 +1,6 @@
 import { css } from '../../assets/math-css.json';
 import { script as textSelectionScript } from '../../assets/text-selection.json';
-import { themeColor, type ThemeMode } from '../../../../shared/theme/mode';
+import { themeColor, type ThemeMode } from '../../vendor/shared/theme/mode';
 
 export const MIN_MATH_HEIGHT = 32;
 const MAX_MATH_HEIGHT = 10000;

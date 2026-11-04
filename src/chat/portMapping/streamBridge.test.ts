@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { Buffer } from 'buffer';
-import type { MappingStreamBridge } from '../../../../../shared/port-mapping/streamClient';
+import type { MappingStreamBridge } from '../../../vendor/shared/port-mapping/streamClient';
 
 const native = vi.hoisted(() => ({ registerReceiver: vi.fn(), pollReceiver: vi.fn(), close: vi.fn(),
   bind: vi.fn(), unbind: vi.fn() }));

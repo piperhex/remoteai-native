@@ -1,6 +1,6 @@
 import { createThemedStyles } from '../theme/styles';
 import { palette } from './styles';
-import type { ThemeColor } from '../../../../shared/theme/mode';
+import type { ThemeColor } from '../../vendor/shared/theme/mode';
 
 export const healthTones = (color: ThemeColor) => ({
   ok: { color: color('#21883f', 'accent'), background: color('#edf7f0', 'accentSoft') },

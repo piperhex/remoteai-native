@@ -4,10 +4,10 @@ import { useFonts } from 'expo-font';
 import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { ChatController } from '../../../shared/remote-chat/client/controller';
+import { ChatController } from '../vendor/shared/remote-chat/client/controller';
 import { ChatThreads } from '../src/chat/ChatThreads';
 import type { ChatController as NativeController } from '../src/chat/controller';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 
 setInterfaceLanguage('zh');
 

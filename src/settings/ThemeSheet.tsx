@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { THEME_PREFERENCE_OPTIONS, type ThemePreference } from '../../../../shared/theme/mode';
+import { THEME_PREFERENCE_OPTIONS, type ThemePreference } from '../../vendor/shared/theme/mode';
 import { BottomSheet } from '../components/BottomSheet';
 import { t } from '../i18n';
 import { setThemeMode, useThemePreference } from '../theme/preference';

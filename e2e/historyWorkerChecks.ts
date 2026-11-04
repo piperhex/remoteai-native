@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native';
-import { contentHash, historyVersion } from '../../../shared/remote-chat/historySync';
+import { contentHash, historyVersion } from '../vendor/shared/remote-chat/historySync';
 import { createHistoryPreparer } from '../src/chat/historyPreparation';
-import type { PreparedHistoryObject } from '../../../shared/remote-chat/client/historyPreparation';
+import type { PreparedHistoryObject } from '../vendor/shared/remote-chat/client/historyPreparation';
 
 export async function checkHistoryWorker() {
   const prepare = createHistoryPreparer();

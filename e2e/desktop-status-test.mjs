@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const baseline = process.argv.includes('--baseline');
 const accessOnly = process.argv.includes('--access');
 const output = path.join(root, '.codex-tmp/desktop-status', baseline ? 'baseline' : 'fixed');
@@ -146,7 +146,7 @@ const model = await adb('shell', 'getprop', 'ro.product.model');
 assert.notEqual(await adb('shell', 'getprop', 'ro.kernel.qemu'), '1', 'Use a physical Android device');
 try {
   const apk = process.env.DESKTOP_STATUS_APK
-    ?? 'apps/native/android/app/build/outputs/apk/release/desktop-status-fixture.apk';
+    ?? 'android/app/build/outputs/apk/release/desktop-status-fixture.apk';
   await adb('install', '-r', path.resolve(root, apk));
   for (const fontScale of [1, 1.3]) await runScenarios(fontScale, density);
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ model, baseline, results }, null, 2));

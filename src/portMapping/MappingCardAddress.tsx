@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
-import type { DeviceMappingEntry } from '../../../../shared/port-mapping/deviceRegistry';
+import type { DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import type { useMappingRowActions } from '../chat/portMapping/useMappingRowActions';
 import { t } from '../i18n';
 import { useThemeColor } from '../theme/store';

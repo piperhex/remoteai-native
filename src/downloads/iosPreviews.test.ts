@@ -1,8 +1,8 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import type { ChatController } from '../../../../shared/remote-chat/client/controller';
+import type { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 import { createIosPreviewDownloads } from './iosPreviews';
 import { saveImage } from '../chat/saveImage';
-import type { DownloadOpen } from '../../../../shared/remote-chat/downloads';
+import type { DownloadOpen } from '../../vendor/shared/remote-chat/downloads';
 
 const data = vi.hoisted(() => ({ files: new Map<string, Buffer>(), index: new Map<string, string>() }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => crypto.randomUUID() }));

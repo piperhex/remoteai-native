@@ -5,9 +5,9 @@ import { accountScope, SqliteHistoryStore } from './store';
 import { readDevices, saveDevices } from './devices';
 import { THREAD_COUNT_LIMIT, THREAD_CHAR_LIMIT, HISTORY_CHAR_LIMIT, IMAGE_CHAR_LIMIT } from './records';
 import type { Thread } from '../types';
-import { sliceHistory } from '../../../../../shared/remote-chat/historyPage';
-import { DEFAULT_CHAT_POLICY, setChatPolicy } from '../../../../../shared/remote-chat/policy';
-import { contentHash } from '../../../../../shared/remote-chat/historySync';
+import { sliceHistory } from '../../../vendor/shared/remote-chat/historyPage';
+import { DEFAULT_CHAT_POLICY, setChatPolicy } from '../../../vendor/shared/remote-chat/policy';
+import { contentHash } from '../../../vendor/shared/remote-chat/historySync';
 
 const state = vi.hoisted(() => ({ db: null as Database | null, reads: [] as string[] }));
 vi.mock('expo-sqlite', () => {

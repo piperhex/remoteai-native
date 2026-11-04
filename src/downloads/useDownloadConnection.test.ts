@@ -1,14 +1,14 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 import { useDownloadConnection as useNativeDownloadConnection } from './useDownloadConnection';
-import { useDownloadConnection as useWebDownloadConnection } from '../../../web/src/downloads/useDownloadConnection';
+import { useDownloadConnection as useWebDownloadConnection } from '../../vendor/apps/web/src/downloads/useDownloadConnection';
 
 const runtime = vi.hoisted(() => ({
   effect: undefined as { dependencies: unknown[]; cleanup?: () => void } | undefined,
   manager: { bind: vi.fn(), unbind: vi.fn(), initialize: vi.fn(async () => undefined) },
 }));
 vi.mock('./manager', () => ({ downloadManager: runtime.manager, downloadOwner: () => 'owner' }));
-vi.mock('../../../web/src/downloads/manager', () => ({
+vi.mock('../../vendor/apps/web/src/downloads/manager', () => ({
   downloadManager: runtime.manager, downloadOwner: () => 'owner',
 }));
 vi.mock('react-native', () => ({ Platform: { OS: 'android' } }));

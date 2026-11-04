@@ -3,9 +3,9 @@ import { createThemedStyles } from '../theme/styles';
 import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import type { TokenSummary } from '../../../../shared/remote-chat/tokenSummary';
-import { chartPalette, formatTokens } from '../../../desktop/src/components/TokenUsageDashboard/chartUtils';
-import { TOKEN_FIELDS } from '../../../../shared/remote-chat/tokenSummaryLabels';
+import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
+import { chartPalette, formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
+import { TOKEN_FIELDS } from '../../vendor/shared/remote-chat/tokenSummaryLabels';
 import { useSummaryStyles as useS } from './styles';
 
 const DAYS_PER_WEEK = 7;

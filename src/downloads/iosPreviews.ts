@@ -1,8 +1,8 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { randomUUID } from 'expo-crypto';
-import { PreviewDownloads, type PreviewSource } from '../../../../shared/remote-chat/previewDownloads';
-import { transferFileChunks, validateFileInfo } from '../../../../shared/remote-chat/fileDownload';
-import type { ChatController } from '../../../../shared/remote-chat/client/controller';
+import { PreviewDownloads, type PreviewSource } from '../../vendor/shared/remote-chat/previewDownloads';
+import { transferFileChunks, validateFileInfo } from '../../vendor/shared/remote-chat/fileDownload';
+import type { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 import type { DownloadTask } from './types';
 import { saveImage } from '../chat/saveImage';
 import { sha256 } from '@noble/hashes/sha256';

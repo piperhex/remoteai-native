@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { downloadManager, downloadOwner } from '../downloads/manager';
 import type { AuthSession } from '../types';
 import { t } from '../i18n';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { loungeDownloadClient, LOUNGE_DOWNLOAD_DEVICE } from '../../../../shared/lounge/downloadClient';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { loungeDownloadClient, LOUNGE_DOWNLOAD_DEVICE } from '../../vendor/shared/lounge/downloadClient';
 
 export function useLoungeDownloads(controller: LoungeController, session: AuthSession | null) {
   const owner = session ? downloadOwner(session) : '';

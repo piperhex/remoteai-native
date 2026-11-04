@@ -3,13 +3,13 @@ import { registerRootComponent } from 'expo';
 import { useEffect, useState } from 'react';
 import { AppState, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { setInterfaceLanguage } from "../../../shared/localization/interfaceLanguage";
-import { createProjectBrowserClient } from '../../../shared/project-browser/protocol';
-import { browserRequest, browserRoot, seedLargeText } from '../../desktop/e2e/project-browser-fixture';
+import { setInterfaceLanguage } from "../vendor/shared/localization/interfaceLanguage";
+import { createProjectBrowserClient } from '../vendor/shared/project-browser/protocol';
+import { browserRequest, browserRoot, seedLargeText } from '../vendor/apps/desktop/e2e/project-browser-fixture';
 import { ProjectBrowser } from '../src/chat/ProjectBrowser';
 import { setFileAutoSave } from '../src/settings/filePreferences';
-import { ChatFileReferencesProvider, useComposerFileReferences } from '../../../shared/chat/ChatFileReferences';
-import type { ReplyQuote } from '../../desktop/src/pages/codexGui/replyQuotes';
+import { ChatFileReferencesProvider, useComposerFileReferences } from '../vendor/shared/chat/ChatFileReferences';
+import type { ReplyQuote } from '../vendor/apps/desktop/src/pages/codexGui/replyQuotes';
 
 setInterfaceLanguage('zh');
 seedLargeText();

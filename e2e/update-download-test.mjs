@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/update-download-checks');
 const sdk = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT;
 const serial = process.env.ANDROID_SERIAL ?? 'emulator-5580';
@@ -55,12 +55,12 @@ const dex = path.join(output, 'checks-dex.jar');
 const sources = ['UpdateOriginBlocks.kt', 'UpdateFiles.kt', 'UpdateBlockPlan.kt', 'UpdateRequestWindow.kt',
   'UpdateMirrorUrl.kt', 'UpdateCheckpoint.kt', 'UpdateBlockSession.kt', 'UpdateBlockWire.kt',
   'UpdateDownloadSnapshot.kt', 'UpdateDownloadCancellation.kt']
-  .map(name => path.join(root, 'apps/native/plugins/appUpdate', name));
-sources.push(path.join(root, 'apps/native/plugins/connectivity/NativeConnectivity.kt'));
+  .map(name => path.join(root, 'plugins/appUpdate', name));
+sources.push(path.join(root, 'plugins/connectivity/NativeConnectivity.kt'));
 const storageSources = ['DownloadStorage.kt', 'DownloadTask.kt', 'DownloadImages.kt', 'BulkDownloadStorage.kt',
   'BulkManifest.kt', 'BulkDownloadFailure.kt', 'DownloadSharing.kt', 'DownloadSpeed.kt']
-  .map(name => path.join(root, 'apps/native/plugins/downloads', name));
-storageSources.push(path.join(root, 'apps/native/plugins/chatPacketCipher/PacketCipher.kt'));
+  .map(name => path.join(root, 'plugins/downloads', name));
+storageSources.push(path.join(root, 'plugins/chatPacketCipher/PacketCipher.kt'));
 const checks = ['UpdateOriginChecks.kt', 'UpdateDownloadProbe.kt', 'UpdateStorageChecks.kt', 'UpdateTestStorage.kt',
   'UpdatePipelineChecks.kt', 'UpdateSnapshotChecks.kt', 'UpdateCancellationChecks.kt', 'DownloadCheckpointChecks.kt']
   .map(name => fileURLToPath(new URL(`./update-download/${name}`, import.meta.url)));

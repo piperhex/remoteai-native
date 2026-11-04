@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button, Text, View } from 'react-native';
-import type { SshApi } from '../../../shared/terminal/ssh';
-import type { SshProfile } from '../../../shared/terminal/sshProfiles';
+import type { SshApi } from '../vendor/shared/terminal/ssh';
+import type { SshProfile } from '../vendor/shared/terminal/sshProfiles';
 import { SshConnectionSheet } from '../src/chat/terminal/SshConnectionSheet';
 import { SshQuickConnectSheet } from '../src/chat/terminal/SshQuickConnectSheet';
 import { textMetrics } from '../src/theme/text';

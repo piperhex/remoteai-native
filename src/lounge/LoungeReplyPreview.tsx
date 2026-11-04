@@ -1,14 +1,14 @@
-import { accountName } from '../../../../shared/lounge/names';
+import { accountName } from '../../vendor/shared/lounge/names';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { LoungeReply } from '../../../../shared/lounge/reply';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { useQuotedMessage } from '../../../../shared/lounge/useQuotedMessage';
+import type { LoungeReply } from '../../vendor/shared/lounge/reply';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { useQuotedMessage } from '../../vendor/shared/lounge/useQuotedMessage';
 import { getLocale, t } from '../i18n';
 import { useThemeColor } from '../theme/store';
 import { useLoungeStyles } from './styles';
 
-import type { LoungeMessage } from '../../../../shared/lounge/types';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 
 interface Props { reply: LoungeReply; cancel?: () => void; controller?: LoungeController;
   locate?: (reference: LoungeReply) => void; onLongPress?: () => void }

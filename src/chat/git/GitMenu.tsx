@@ -1,10 +1,10 @@
 import { displayText } from '../../i18n/index';
 import { Pressable, Text } from 'react-native';
 import { setStringAsync } from 'expo-clipboard';
-import type { GitCommit } from '../../../../../shared/remote-chat/gitTypes';
-import type { GitFileRow } from '../../../../../shared/remote-chat/useGitFileList';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
-import { deletableGitFiles, gitFileMenuLabels } from '../../../../../shared/remote-chat/gitMenu';
+import type { GitCommit } from '../../../vendor/shared/remote-chat/gitTypes';
+import type { GitFileRow } from '../../../vendor/shared/remote-chat/useGitFileList';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
+import { deletableGitFiles, gitFileMenuLabels } from '../../../vendor/shared/remote-chat/gitMenu';
 import { useLanguage } from '../../i18n';
 import { GitActionDialog, useGitActionStyles } from './GitActionDialog';
 

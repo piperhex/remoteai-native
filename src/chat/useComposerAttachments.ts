@@ -2,9 +2,9 @@ import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync, EncodingType } from 'expo-file-system';
-import type { AttachmentReference, ComposerPlugin } from '../../../desktop/src/pages/codexGui/attachmentTypes';
-import { remoteAttachments } from '../../../../shared/remote-chat/composerAttachments';
-import { checkFileUploadSize, UploadPolicyError } from '../../../../shared/remote-chat/policy';
+import type { AttachmentReference, ComposerPlugin } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import { remoteAttachments } from '../../vendor/shared/remote-chat/composerAttachments';
+import { checkFileUploadSize, UploadPolicyError } from '../../vendor/shared/remote-chat/policy';
 
 /** Validators may localize their copy when thrown, so trust it by type rather than by wording. */
 export function attachmentErrorMessage(cause: unknown) {

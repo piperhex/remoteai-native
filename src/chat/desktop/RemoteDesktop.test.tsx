@@ -7,8 +7,8 @@ import { RTCView } from 'react-native-webrtc';
 import { RemoteDesktop } from './RemoteDesktop';
 import { DesktopTakeover } from './DesktopTakeover';
 import { resources } from '@remoteai/i18n/client';
-import { setInterfaceLanguage } from '../../../../../shared/localization/interfaceLanguage';
-import type { DesktopClient } from '../../../../../shared/remote-desktop/protocol';
+import { setInterfaceLanguage } from '../../../vendor/shared/localization/interfaceLanguage';
+import type { DesktopClient } from '../../../vendor/shared/remote-desktop/protocol';
 
 const runtime = vi.hoisted(() => ({ landscape: false, viewOnly: false, input: vi.fn(), rotate: vi.fn(),
   status: '', waitingForPermission: false, retry: vi.fn(), privacy: false, privacyAvailable: true, togglePrivacy: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('../terminal/useTerminalOrientation', () => ({ useTerminalOrientation: (
   runtime.orientation(...options);
   return { landscape: runtime.landscape, rotate: runtime.rotate, onShow: runtime.onShow };
 } }));
-vi.mock('../../../../../shared/remote-desktop/useDesktopSession', () => ({ useDesktopSession: (options: unknown) => {
+vi.mock('../../../vendor/shared/remote-desktop/useDesktopSession', () => ({ useDesktopSession: (options: unknown) => {
   runtime.session(options);
   return { stream: runtime.stream, pointer: {}, input: runtime.input, hasAudio: true, muted: false, mute: runtime.mute,
     security: { clipboardSync: true }, clipboard: {}, takeover: { pending: runtime.takeover },
@@ -45,11 +45,11 @@ vi.mock('../../../../../shared/remote-desktop/useDesktopSession', () => ({ useDe
     privacyScreen: runtime.privacy, togglePrivacy: runtime.togglePrivacy, frameRendered: runtime.frameRendered,
     capabilities: { control: !runtime.viewOnly, keyboard: !runtime.viewOnly, privacyScreen: runtime.privacyAvailable } };
 } }));
-vi.mock('../../../../../shared/remote-desktop/useMousePanel', () => ({ useMousePanel: () => ({ expanded: true }) }));
-vi.mock('../../../../../shared/remote-desktop/useMouseViewport', () => ({
+vi.mock('../../../vendor/shared/remote-desktop/useMousePanel', () => ({ useMousePanel: () => ({ expanded: true }) }));
+vi.mock('../../../vendor/shared/remote-desktop/useMouseViewport', () => ({
   useMouseViewport: (_pointer: unknown, viewport: unknown) => viewport,
 }));
-vi.mock('../../../../../shared/remote-desktop/useDesktopZoom', () => ({
+vi.mock('../../../vendor/shared/remote-desktop/useDesktopZoom', () => ({
   useDesktopZoom: (viewport: unknown) => ({ viewport }),
 }));
 vi.mock('./useTrackpad', () => ({ useTrackpad: () => ({ panHandlers: {} }) }));

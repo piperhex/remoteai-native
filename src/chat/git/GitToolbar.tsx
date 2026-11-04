@@ -4,9 +4,9 @@ import { t, useLanguage } from '../../i18n';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
-import type { GitAction } from '../../../../../shared/remote-chat/gitTypes';
-import { GIT_ACTIONS, gitSyncCounts } from '../../../../../shared/remote-chat/gitActions';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
+import type { GitAction } from '../../../vendor/shared/remote-chat/gitTypes';
+import { GIT_ACTIONS, gitSyncCounts } from '../../../vendor/shared/remote-chat/gitActions';
 import { useGitStyles as useStyles } from './styles';
 
 const ACTION_ICONS = {

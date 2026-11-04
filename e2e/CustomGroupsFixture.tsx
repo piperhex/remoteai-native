@@ -5,12 +5,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { ChatController } from '../../../shared/remote-chat/client/controller';
-import { emptyGrouping, type Grouping, type GroupMutation } from '../../../shared/chat/groups/model';
-import { mutateGrouping } from '../../../shared/chat/groups/mutations';
+import { ChatController } from '../vendor/shared/remote-chat/client/controller';
+import { emptyGrouping, type Grouping, type GroupMutation } from '../vendor/shared/chat/groups/model';
+import { mutateGrouping } from '../vendor/shared/chat/groups/mutations';
 import { ChatThreads } from '../src/chat/ChatThreads';
 import type { ChatController as NativeController } from '../src/chat/controller';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { textMetrics } from '../src/theme/text';
 import { updateThemeMode, useThemeColor, useThemeMode } from '../src/theme/store';
 

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 process.env.ANDROID_CHAT_OUTPUT ??= 'terminal-keyboard-regression';
-const driver = await import('../../desktop/e2e/android-chat-driver.mjs');
+const driver = await import('../vendor/apps/desktop/e2e/android-chat-driver.mjs');
 const { adb, nodes, output, screenshot, tap, tapNode, waitFor, waitText } = driver;
 const packageName = 'com.codexswitch.mobile.terminaltest';
 const apk = fileURLToPath(new URL('../android/app/build/outputs/apk/release/terminal-fixture.apk', import.meta.url));

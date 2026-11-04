@@ -1,0 +1,20 @@
+name: Native CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: native-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+    with:
+      ref: ${{ github.sha }}
+  build:
+    needs: check
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ github.sha }}

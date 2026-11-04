@@ -1,12 +1,12 @@
 import { useMemo, type ReactElement } from 'react';
 import { randomUUID } from 'expo-crypto';
 import Storage from 'expo-sqlite/kv-store';
-import { DeviceMappingProvider, DeviceMappingRegistry } from '../../../../shared/port-mapping/deviceRegistry';
-import { DeviceMappingRuntime } from '../../../../shared/port-mapping/deviceRuntime';
-import { createMappingConnection } from '../../../../shared/port-mapping/connection';
-import { protocolTunnel } from '../../../../shared/port-mapping/protocolTunnel';
-import { UdpMappingTunnel } from '../../../../shared/port-mapping/udpTunnel';
-import type { MappingDocument } from '../../../../shared/port-mapping/sync';
+import { DeviceMappingProvider, DeviceMappingRegistry } from '../../vendor/shared/port-mapping/deviceRegistry';
+import { DeviceMappingRuntime } from '../../vendor/shared/port-mapping/deviceRuntime';
+import { createMappingConnection } from '../../vendor/shared/port-mapping/connection';
+import { protocolTunnel } from '../../vendor/shared/port-mapping/protocolTunnel';
+import { UdpMappingTunnel } from '../../vendor/shared/port-mapping/udpTunnel';
+import type { MappingDocument } from '../../vendor/shared/port-mapping/sync';
 import { MobileChatConnection } from '../chat/connection';
 import { NativeMappingTunnel } from '../chat/portMapping/tunnel';
 import { listenUdp } from '../chat/portMapping/udpListener';

@@ -3,7 +3,7 @@ import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Modal } from '../components/Modal';
-import { useStartupUpdate } from '../../../../shared/app-update/useStartupUpdate';
+import { useStartupUpdate } from '../../vendor/shared/app-update/useStartupUpdate';
 import { startupUpdateOptions } from './startupUpdate';
 import { beginAppUpdateDownload } from './updateActions';
 import { useAndroidUpdateDownloadState } from './useAndroidUpdateDownloadState';

@@ -1,11 +1,11 @@
 import { displayError } from '../../i18n/index';
 import type { ReactNode } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import type { ForwardingEntry, PortForwardingService } from '../../../../../shared/port-mapping/service';
+import type { ForwardingEntry, PortForwardingService } from '../../../vendor/shared/port-mapping/service';
 import { t } from '../../i18n';
 import { useMappingStyles } from './mappingStyles';
-import { MAPPING_PROTOCOLS } from '../../../../../shared/port-mapping/settings';
-import { DEFAULT_MAPPING_HOST } from '../../../../../shared/port-mapping/target';
+import { MAPPING_PROTOCOLS } from '../../../vendor/shared/port-mapping/settings';
+import { DEFAULT_MAPPING_HOST } from '../../../vendor/shared/port-mapping/target';
 import { useMappingFormState } from './useMappingFormState';
 
 export function MappingForm({ service, disabled, connected = true, entry, done, devicePicker }: {

@@ -1,8 +1,8 @@
 import { DeviceEventEmitter, NativeModules } from 'react-native';
 import { getRandomBytes } from 'expo-crypto';
 import { Buffer } from 'buffer';
-import { encodeNativeBulkBatch } from '../../../../shared/remote-chat/nativeBulkChannel';
-import type { ChatSocket } from '../../../../shared/remote-chat/client/socket';
+import { encodeNativeBulkBatch } from '../../vendor/shared/remote-chat/nativeBulkChannel';
+import type { ChatSocket } from '../../vendor/shared/remote-chat/client/socket';
 
 interface SocketNative {
   open: (id: string, url: string) => Promise<void>;

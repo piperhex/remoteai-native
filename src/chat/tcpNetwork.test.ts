@@ -3,9 +3,9 @@ import { networkInterfaces } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { expect, it, vi } from 'vitest';
 import { NativeTcpNetwork } from './tcpNetwork';
-import { TcpPeer } from '../../../../shared/remote-chat/tcp/peer';
-import type { TcpSignal } from '../../../../shared/remote-chat/tcp/types';
-import type { Channel } from '../../../../shared/remote-chat/protocol';
+import { TcpPeer } from '../../vendor/shared/remote-chat/tcp/peer';
+import type { TcpSignal } from '../../vendor/shared/remote-chat/tcp/types';
+import type { Channel } from '../../vendor/shared/remote-chat/protocol';
 
 const mapping = vi.hoisted(() => new Map<number, number>());
 vi.mock('react-native', () => ({ NativeModules: {} }));

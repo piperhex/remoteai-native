@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { LoungeAttachment } from '../../../../shared/lounge/attachments';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { attachmentExtension, attachmentSize, loungePreviewKind } from '../../../../shared/lounge/filePresentation';
-import { useFileActions } from '../../../../shared/lounge/useFileActions';
+import type { LoungeAttachment } from '../../vendor/shared/lounge/attachments';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { attachmentExtension, attachmentSize, loungePreviewKind } from '../../vendor/shared/lounge/filePresentation';
+import { useFileActions } from '../../vendor/shared/lounge/useFileActions';
 import { BottomSheet } from '../components/BottomSheet';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';

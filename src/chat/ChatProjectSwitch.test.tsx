@@ -3,8 +3,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatProjectSwitch } from './ChatProjectSwitch';
 import { ChatProjectPicker } from './ChatProjectPicker';
 import { SheetFlatList } from '../components/SheetScrollView';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatProject } from '../../../../shared/remote-chat/client/types';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatProject } from '../../vendor/shared/remote-chat/client/types';
 
 const hooks = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[], effectCursor: 0,
   effects: [] as Array<{ dependencies: unknown[]; cleanup?: () => void }>, pending: [] as Array<() => void> }));

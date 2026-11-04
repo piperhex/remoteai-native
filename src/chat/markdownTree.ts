@@ -1,8 +1,8 @@
 import MarkdownIt from 'markdown-it';
 import texmath from 'markdown-it-texmath';
 import katex from 'katex';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
-import { mathOptions, normalizeMathDelimiters } from '../../../../shared/chat/mathMarkdown';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
+import { mathOptions, normalizeMathDelimiters } from '../../vendor/shared/chat/mathMarkdown';
 
 function createParser(html: boolean) {
   const result = new MarkdownIt({ html, breaks: true, linkify: true, typographer: false, maxNesting: 20 });

@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 import { saveGitPatch } from './gitPatch';
 
 const mock = vi.hoisted(() => ({ platform: { OS: 'android' }, connection: vi.fn(), enqueue: vi.fn(),
@@ -8,7 +8,7 @@ vi.mock('react-native', () => ({ Platform: mock.platform }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => 'transfer' }));
 vi.mock('./manager', () => ({ downloadManager: { connection: mock.connection, enqueue: mock.enqueue } }));
 vi.mock('../chat/fileDownloadTarget', () => ({ nativeDownloadTarget: mock.target }));
-vi.mock('../../../../shared/remote-chat/fileDownload', () => ({ downloadFile: mock.download }));
+vi.mock('../../vendor/shared/remote-chat/fileDownload', () => ({ downloadFile: mock.download }));
 const client: DownloadClient = { open: vi.fn(), read: vi.fn(), close: vi.fn(), browse: vi.fn() };
 const commit = 'a'.repeat(40);
 beforeEach(() => {

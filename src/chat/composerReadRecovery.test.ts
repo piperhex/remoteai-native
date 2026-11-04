@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { RemoteComposerSettings } from '../../../../shared/remote-chat/client/composerSettings';
-import { initialChatState, type ChatState } from '../../../../shared/remote-chat/client/types';
-import type { ComposerSnapshot } from '../../../../shared/remote-chat/composer';
+import { RemoteComposerSettings } from '../../vendor/shared/remote-chat/client/composerSettings';
+import { initialChatState, type ChatState } from '../../vendor/shared/remote-chat/client/types';
+import type { ComposerSnapshot } from '../../vendor/shared/remote-chat/composer';
 
 const snapshot: ComposerSnapshot = { revision: 1, threadId: null,
   models: [{ id: 'model', model: 'model', displayName: 'Model', isDefault: true,

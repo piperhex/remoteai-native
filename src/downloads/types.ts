@@ -1,15 +1,15 @@
-import type { DownloadLocation, DownloadClient } from '../../../../shared/remote-chat/downloads';
-import type { FileClient } from '../../../../shared/remote-chat/fileDownload';
-import type { ConnectionMode } from '../../../../shared/remote-chat/protocol';
+import type { DownloadLocation, DownloadClient } from '../../vendor/shared/remote-chat/downloads';
+import type { FileClient } from '../../vendor/shared/remote-chat/fileDownload';
+import type { ConnectionMode } from '../../vendor/shared/remote-chat/protocol';
 
 export interface DownloadSource extends DownloadLocation {
-  attachment?: import('../../../../shared/lounge/attachments').LoungeAttachment;
+  attachment?: import('../../vendor/shared/lounge/attachments').LoungeAttachment;
   owner: string;
   deviceId: string;
   deviceName: string;
   path: string;
   gitCommit?: string;
-  preview?: import('../../../../shared/remote-chat/downloads').PreviewKind;
+  preview?: import('../../vendor/shared/remote-chat/downloads').PreviewKind;
 }
 export interface DownloadTask {
   id: string;
@@ -29,7 +29,7 @@ export interface DownloadTask {
   revision?: string;
   readyToSave?: boolean;
   savedBytes?: number;
-  preparation?: import('../../../../shared/remote-chat/archiveDownload').ArchiveProgress;
+  preparation?: import('../../vendor/shared/remote-chat/archiveDownload').ArchiveProgress;
 }
 export interface DownloadConnection {
   owner: string;
@@ -42,7 +42,7 @@ export interface DownloadConnection {
   cwd?: string;
   client: DownloadClient;
   files: FileClient;
-  projectBrowser?: import('../../../../shared/project-browser/protocol').ProjectBrowserClient;
+  projectBrowser?: import('../../vendor/shared/project-browser/protocol').ProjectBrowserClient;
 }
 export interface DownloadRequest {
   requestId: string;

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { PanResponder, type View } from 'react-native';
-import { isSettingDrag, settingSegmentAt } from '../../../../shared/remote-chat/settingSegments';
+import { isSettingDrag, settingSegmentAt } from '../../vendor/shared/remote-chat/settingSegments';
 
 /** Preview while dragging; save once on release, and discard interrupted gestures. */
 export function useSettingSegmentDrag(count: number, select: (index: number) => void) {

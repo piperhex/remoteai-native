@@ -1,8 +1,8 @@
 import { registerRootComponent } from 'expo';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
-import { HistoryVersionCache } from '../../../shared/remote-chat/historySync';
-import { AsyncHistoryVersionCache } from '../../../shared/remote-chat/client/historyPreparation';
+import { HistoryVersionCache } from '../vendor/shared/remote-chat/historySync';
+import { AsyncHistoryVersionCache } from '../vendor/shared/remote-chat/client/historyPreparation';
 import { createHistoryPreparer } from '../src/chat/historyPreparation';
 import { RecordEncoder } from '../src/chat/offline/records';
 import type { Thread } from '../src/chat/types';

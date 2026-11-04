@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import type { ChatController } from '../chat/controller';
 import type { AuthSession } from '../types';
 import { downloadManager, downloadOwner } from './manager';
-import { getChatPolicy, subscribeChatPolicy } from '../../../../shared/remote-chat/policy';
+import { getChatPolicy, subscribeChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 export function useDownloadConnection(options: {
   session: AuthSession; deviceId: string; deviceName: string; controller: ChatController; enabled?: boolean;

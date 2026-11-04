@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import { randomUUID } from 'expo-crypto';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
-import { downloadFile } from '../../../../shared/remote-chat/fileDownload';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
+import { downloadFile } from '../../vendor/shared/remote-chat/fileDownload';
 import { nativeDownloadTarget } from '../chat/fileDownloadTarget';
 import { downloadManager } from './manager';
 

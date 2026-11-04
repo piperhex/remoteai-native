@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
-import type { SshApi } from '../../../../../shared/terminal/ssh';
-import type { TerminalInfo } from '../../../../../shared/terminal/types';
-import { useSshFiles } from '../../../../../shared/terminal/useSshFiles';
-import { useSshFileActions } from '../../../../../shared/terminal/useSshFileActions';
-import type { NativeSshBrowserAction } from '../../../../../shared/terminal/nativeSshBrowserAction';
+import type { SshApi } from '../../../vendor/shared/terminal/ssh';
+import type { TerminalInfo } from '../../../vendor/shared/terminal/types';
+import { useSshFiles } from '../../../vendor/shared/terminal/useSshFiles';
+import { useSshFileActions } from '../../../vendor/shared/terminal/useSshFileActions';
+import type { NativeSshBrowserAction } from '../../../vendor/shared/terminal/nativeSshBrowserAction';
 import { ProjectBrowser } from '../ProjectBrowser';
 import { displayError, t, useLanguage } from '../../i18n';
 import { createThemedStyles } from '../../theme/styles';

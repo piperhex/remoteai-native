@@ -1,4 +1,4 @@
-import { formatRemoteError } from '../../../../shared/localization/errors';
+import { formatRemoteError } from '../../vendor/shared/localization/errors';
 
 import { beforeEach, expect, it, vi } from 'vitest';
 
@@ -17,7 +17,7 @@ const translated = (language: 'en' | 'ru') =>
   Object.fromEntries(Object.entries(sources).map(([key, source]) => [key, formatRemoteError(language, source)]));
 // Import after resetModules so the test and the module share one language store.
 const load = async () => {
-  const language = await import('../../../../shared/localization/interfaceLanguage');
+  const language = await import('../../vendor/shared/localization/interfaceLanguage');
   language.setInterfaceLanguage('zh');
   return { ...await import('./backgroundConnection'), setInterfaceLanguage: language.setInterfaceLanguage };
 };

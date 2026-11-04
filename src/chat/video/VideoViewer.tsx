@@ -7,11 +7,11 @@ import { Modal } from '../../components/Modal';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import type { VideoClient } from '../../../../../shared/remote-chat/video';
+import type { VideoClient } from '../../../vendor/shared/remote-chat/video';
 import { useImageOrientation } from '../useImageOrientation';
 import { useVideoStream } from './useVideoStream';
 import { videoPlayerHtml } from './videoPlayerHtml';
-import type { FileClient } from '../../../../../shared/remote-chat/fileDownload';
+import type { FileClient } from '../../../vendor/shared/remote-chat/fileDownload';
 import { useManagedDownload } from '../../downloads/useManagedDownload';
 
 interface Props {

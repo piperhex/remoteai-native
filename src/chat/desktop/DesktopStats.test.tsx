@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { DesktopStats } from './DesktopStats';
-import type { DesktopStats as Stats } from '../../../../../shared/remote-desktop/protocol';
+import type { DesktopStats as Stats } from '../../../vendor/shared/remote-desktop/protocol';
 
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),

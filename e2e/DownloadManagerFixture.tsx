@@ -6,8 +6,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DownloadManagerPage } from '../src/downloads/DownloadManagerPage';
 import { downloadManager, downloadOwner } from '../src/downloads/manager';
 import type { AuthSession } from '../src/types';
-import type { DownloadClient } from '../../../shared/remote-chat/downloads';
-import { setInterfaceLanguage } from "../../../shared/localization/interfaceLanguage";
+import type { DownloadClient } from '../vendor/shared/remote-chat/downloads';
+import { setInterfaceLanguage } from "../vendor/shared/localization/interfaceLanguage";
 
 setInterfaceLanguage('zh');
 const session: AuthSession = { baseUrl: 'https://download.test', email: 'fixture@download.test',

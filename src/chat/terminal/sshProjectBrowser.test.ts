@@ -3,8 +3,8 @@ import { setStringAsync } from 'expo-clipboard';
 import { nativeSshProjectBrowser } from './sshProjectBrowser';
 import { nativeSshDownload } from './sshTransfers';
 import { createSshFileFixture } from '../../../e2e/sshFileFixture';
-import { isNativeSshBrowserAction } from '../../../../../shared/terminal/nativeSshBrowserAction';
-import type { SshApi } from '../../../../../shared/terminal/ssh';
+import { isNativeSshBrowserAction } from '../../../vendor/shared/terminal/nativeSshBrowserAction';
+import type { SshApi } from '../../../vendor/shared/terminal/ssh';
 
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn(async () => true) }));
 vi.mock('./sshTransfers', () => ({ nativeSshDownload: vi.fn(async () => {}) }));

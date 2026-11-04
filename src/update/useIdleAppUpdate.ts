@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
-import { idleDownload } from '../../../../shared/app-update/idleDownload';
+import { idleDownload } from '../../vendor/shared/app-update/idleDownload';
 import { canAutoDownload } from './androidSharedDownload';
 import { checkForAppUpdate, refreshAndroidUpdateDownloadState, startAndroidUpdateDownload } from './appUpdate';
 import { startupUpdateOptions } from './startupUpdate';

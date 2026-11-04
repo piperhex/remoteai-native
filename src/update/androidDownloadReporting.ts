@@ -1,5 +1,5 @@
-import { reportDownload, type DownloadReport } from '../../../../shared/app-update/downloadReport';
-import type { UpdatePeerSession } from '../../../../shared/app-update/peerLookup';
+import { reportDownload, type DownloadReport } from '../../vendor/shared/app-update/downloadReport';
+import type { UpdatePeerSession } from '../../vendor/shared/app-update/peerLookup';
 
 const MAX_FAILURES = 16;
 const MAX_FAILURE_COUNT = 1000;

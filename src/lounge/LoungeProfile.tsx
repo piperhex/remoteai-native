@@ -2,18 +2,18 @@ import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, 
 import { Modal } from '../components/Modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import type { MobileLounge } from '../../../../shared/lounge/useMobileLounge';
-import { contactStatus } from '../../../../shared/lounge/contacts';
+import type { MobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
+import { contactStatus } from '../../vendor/shared/lounge/contacts';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 import { LoungeAvatar } from './LoungeMessage';
 import { useLoungeStyles } from './styles';
 import { createLoungeStyles, useLoungeColor } from './theme';
-import type { LoungeController } from '../../../../shared/lounge/controller';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
 import { LoungeAvatarSettings } from './LoungeDialogs';
 import { LoungeNameFields } from './LoungeNameFields';
-import { accountName } from '../../../../shared/lounge/names';
-import { useLoungeNameNavigation } from '../../../../shared/lounge/useLoungeNameNavigation';
+import { accountName } from '../../vendor/shared/lounge/names';
+import { useLoungeNameNavigation } from '../../vendor/shared/lounge/useLoungeNameNavigation';
 
 const useProfileStyles = createLoungeStyles(color => ({
   cover: { height: 100, backgroundColor: color('#deebf7', 'infoSoft') },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { useThreadPagination } from '../../../../shared/remote-chat/client/useThreadPagination';
+import { useThreadPagination } from '../../vendor/shared/remote-chat/client/useThreadPagination';
 import type { ChatController } from './controller';
 import type { ChatState } from './types';
 

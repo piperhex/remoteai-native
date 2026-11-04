@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
-import type { usageTrailing, UsageSummary } from '../../../../shared/remote-chat/usage';
-import { settingsQuotaAmounts } from '../../../../shared/remote-chat/settingsPresentation';
-import { remainingStroke } from '../../../../shared/quota';
+import type { usageTrailing, UsageSummary } from '../../vendor/shared/remote-chat/usage';
+import { settingsQuotaAmounts } from '../../vendor/shared/remote-chat/settingsPresentation';
+import { remainingStroke } from '../../vendor/shared/quota';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
 import { t } from '../i18n';

@@ -1,10 +1,10 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { AuthSession } from '../../types';
 import type { Thread } from '../types';
-import type { CachedConversation, OfflineHistoryStore } from '../../../../../shared/remote-chat/client/offline';
-import type { HistoryWindow } from '../../../../../shared/remote-chat/historyPage';
-import type { PrepareHistoryObject } from '../../../../../shared/remote-chat/client/historyPreparation';
-import { getChatPolicy } from '../../../../../shared/remote-chat/policy';
+import type { CachedConversation, OfflineHistoryStore } from '../../../vendor/shared/remote-chat/client/offline';
+import type { HistoryWindow } from '../../../vendor/shared/remote-chat/historyPage';
+import type { PrepareHistoryObject } from '../../../vendor/shared/remote-chat/client/historyPreparation';
+import { getChatPolicy } from '../../../vendor/shared/remote-chat/policy';
 import { cacheTransaction, withCache } from './database';
 import { decodeRecords, RecordEncoder, type MessageRecord, HISTORY_CHAR_LIMIT,
   THREAD_CHAR_LIMIT, THREAD_COUNT_LIMIT, IMAGE_CHAR_LIMIT, IMAGE_COUNT_LIMIT } from './records';

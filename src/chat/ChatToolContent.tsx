@@ -4,19 +4,19 @@ import { t, useLanguage } from '../i18n';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { SelectableChatText } from './SelectableChatText';
 import { UserMessageText } from './UserMessageText';
-import { messageReferences } from '../../../../shared/chat/messageReferences';
-import { messageContent, messageSections } from '../../../../shared/chat/messageDetails';
-import { changedFiles } from '../../../../shared/chat/diff';
+import { messageReferences } from '../../vendor/shared/chat/messageReferences';
+import { messageContent, messageSections } from '../../vendor/shared/chat/messageDetails';
+import { changedFiles } from '../../vendor/shared/chat/diff';
 import {
   collaborationStates, collaborationStatus, collaborationSummary, isCollaborationActivity,
-} from '../../../desktop/src/pages/codexGui/collaborationActivity';
-import { formatTurnDuration } from '../../../desktop/src/pages/codexGui/turnTiming';
+} from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
+import { formatTurnDuration } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
 import { ChatCodeBlock } from './ChatCodeBlock';
 import { ChatMarkdown } from './Markdown';
 import { ChatDiff } from './ChatDiff';
 import { ChatToolResult } from './ChatToolResult';
 import { ChatImage } from './ChatImage';
-import { generatedImageSource, itemImageSources } from '../../../../shared/chat/imageSources';
+import { generatedImageSource, itemImageSources } from '../../vendor/shared/chat/imageSources';
 import { ChatCommandDetails } from './ChatCommandDetails';
 import { toolText } from './toolText';
 import { useStyles, palette } from './styles';

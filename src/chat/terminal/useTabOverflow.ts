@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, type LayoutChangeEvent } from 'react-native';
-import { revealTabOffset, tabOverflow, type TabBounds } from '../../../../../shared/tabs/overflow';
+import { revealTabOffset, tabOverflow, type TabBounds } from '../../../vendor/shared/tabs/overflow';
 
 export function useTabOverflow(ids: string[], selected: string | null) {
   const viewport = useRef<ScrollView>(null);

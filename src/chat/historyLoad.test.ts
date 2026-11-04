@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { historyLoadResult } from '../../../../shared/remote-chat/client/historyLoad';
-import type { OfflineHistoryStore } from '../../../../shared/remote-chat/client/offline';
-import { sliceHistory, type HistoryWindow } from '../../../../shared/remote-chat/historyPage';
-import { historyDelta, type HistoryVersion } from '../../../../shared/remote-chat/historySync';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { historyLoadResult } from '../../vendor/shared/remote-chat/client/historyLoad';
+import type { OfflineHistoryStore } from '../../vendor/shared/remote-chat/client/offline';
+import { sliceHistory, type HistoryWindow } from '../../vendor/shared/remote-chat/historyPage';
+import { historyDelta, type HistoryVersion } from '../../vendor/shared/remote-chat/historySync';
 import type { Thread } from './types';
 
 const history: Thread = { id: 'chat', cwd: '', preview: '', updatedAt: 1, turns: [

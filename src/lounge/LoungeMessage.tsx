@@ -1,8 +1,8 @@
 import { LoungeAttachment } from './LoungeAttachment';
-import { accountName } from '../../../../shared/lounge/names';
+import { accountName } from '../../vendor/shared/lounge/names';
 import { Image, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useRef, useState, type ReactNode } from 'react';
-import { initials, type LoungeAccount, type LoungeMessage as Message } from '../../../../shared/lounge/types';
+import { initials, type LoungeAccount, type LoungeMessage as Message } from '../../vendor/shared/lounge/types';
 import { getLocale, t } from '../i18n';
 import { UNREAD_BADGE_FONT_SIZE, UNREAD_BADGE_HORIZONTAL_PADDING, useLoungeStyles } from './styles';
 import { LoungeReplyPreview } from './LoungeReplyPreview';
@@ -11,9 +11,9 @@ import { LoungeImage } from './LoungeImage';
 import { LoungeDeliveryStatus } from './LoungeDeliveryStatus';
 import { messageMinimumWidth } from './messageLayout';
 import { LoungeSender } from './LoungeSender';
-import type { LoungeReply } from '../../../../shared/lounge/reply';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import type { MenuAnchor } from '../../../../shared/lounge/messageMenuLayout';
+import type { LoungeReply } from '../../vendor/shared/lounge/reply';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import type { MenuAnchor } from '../../vendor/shared/lounge/messageMenuLayout';
 import { HISTORY_MESSAGE_FONT_SIZE, useHistoryStyles } from './historyStyles';
 
 const MESSAGE_AVATAR_TOUCH_PADDING = 7;

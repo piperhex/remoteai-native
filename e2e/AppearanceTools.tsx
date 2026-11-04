@@ -3,8 +3,8 @@ import { Pressable, Text, View } from 'react-native';
 import { updateThemeMode, useThemeMode } from '../src/theme/store';
 import { textMetrics } from '../src/theme/text';
 import { ProjectBrowser } from '../src/chat/ProjectBrowser';
-import { createProjectBrowserClient } from '../../../shared/project-browser/protocol';
-import { browserRequest, browserRoot } from '../../desktop/e2e/project-browser-fixture';
+import { createProjectBrowserClient } from '../vendor/shared/project-browser/protocol';
+import { browserRequest, browserRoot } from '../vendor/apps/desktop/e2e/project-browser-fixture';
 
 const client = createProjectBrowserClient(browserRequest);
 

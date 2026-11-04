@@ -1,12 +1,12 @@
-import { defaultText } from '../../../../shared/localization/messages';
+import { defaultText } from '../../vendor/shared/localization/messages';
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatRpc } from '../../../../shared/remote-chat/rpc';
-import type { RpcMessage } from '../../../../shared/remote-chat/protocol';
-import { mergeTaskDelivery, type TaskDelivery } from '../../../../shared/remote-chat/taskDelivery';
-import { taskIssue, taskStatus } from '../../../../shared/remote-chat/taskStatus';
-import { connectionHealth } from '../../../../shared/remote-chat/connectionHealth';
-import { CONNECTION_ERRORS } from '../../../../shared/remote-chat/connectionErrors';
-import { HOST_IDENTITY_CHANGED } from '../../../../shared/remote-chat/trustedHost';
+import { ChatRpc } from '../../vendor/shared/remote-chat/rpc';
+import type { RpcMessage } from '../../vendor/shared/remote-chat/protocol';
+import { mergeTaskDelivery, type TaskDelivery } from '../../vendor/shared/remote-chat/taskDelivery';
+import { taskIssue, taskStatus } from '../../vendor/shared/remote-chat/taskStatus';
+import { connectionHealth } from '../../vendor/shared/remote-chat/connectionHealth';
+import { CONNECTION_ERRORS } from '../../vendor/shared/remote-chat/connectionErrors';
+import { HOST_IDENTITY_CHANGED } from '../../vendor/shared/remote-chat/trustedHost';
 import { initialChatState, type ChatState } from './types';
 
 afterEach(() => vi.useRealTimers());

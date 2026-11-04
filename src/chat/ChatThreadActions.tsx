@@ -5,10 +5,10 @@ import { t, useLanguage } from '../i18n';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { BottomSheet } from '../components/BottomSheet';
-import { THREAD_NAME_LIMIT, type ThreadAction } from '../../../../shared/remote-chat/client/threadActions';
-import type { ThreadActionsModel } from '../../../../shared/remote-chat/client/useThreadActions';
+import { THREAD_NAME_LIMIT, type ThreadAction } from '../../vendor/shared/remote-chat/client/threadActions';
+import type { ThreadActionsModel } from '../../vendor/shared/remote-chat/client/useThreadActions';
 import { palette, useStyles } from './styles';
-import { useGrouping } from '../../../../shared/chat/groups/context';
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
 import { textMetrics } from '../theme/text';
 
 export function ChatThreadActions({ actions }: { actions: ThreadActionsModel }) {

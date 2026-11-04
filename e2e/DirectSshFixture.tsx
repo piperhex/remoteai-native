@@ -5,7 +5,7 @@ import { Button, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { SshPage } from '../src/discovery/SshPage';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { BottomNavigation } from '../src/discovery/BottomNavigation';

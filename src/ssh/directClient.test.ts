@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDirectSshClient } from './directClient';
-import type { SshProfileStore } from '../../../../shared/terminal/sshProfiles';
+import type { SshProfileStore } from '../../vendor/shared/terminal/sshProfiles';
 
 const profiles: SshProfileStore = { list: async () => [], save: async () => [], remove: async () => [] };
 const request = { endpoint: { host: 'server.test', port: 22 }, username: 'dev', password: 'secret',

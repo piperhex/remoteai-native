@@ -1,6 +1,6 @@
 import { t } from '../i18n';
-import { messageSections, type ReviewComment } from '../../../desktop/src/pages/codexGui/messageDirectives';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
+import { messageSections, type ReviewComment } from '../../vendor/apps/desktop/src/pages/codexGui/messageDirectives';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { parseMarkdown, type MarkdownNode } from './markdownTree';
 
 export type MarkdownContent = { type: 'block'; node: MarkdownNode } | { type: 'review'; comment: ReviewComment };

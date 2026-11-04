@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
-import { accountName } from '../../../../shared/lounge/names';
-import type { LoungeAccount } from '../../../../shared/lounge/types';
+import { accountName } from '../../vendor/shared/lounge/names';
+import type { LoungeAccount } from '../../vendor/shared/lounge/types';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 import { createLoungeStyles } from './theme';

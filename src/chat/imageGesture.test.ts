@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { INITIAL_TRANSFORM } from '../../../../shared/chat/imageTransform';
+import { INITIAL_TRANSFORM } from '../../vendor/shared/chat/imageTransform';
 import { beginImageGesture, isImageGestureTap, updateImageGesture, type ImageGestureTouch } from './imageGesture';
 
 const touch = (x: number, y: number, identifier = '1'): ImageGestureTouch => ({ x, y, identifier });

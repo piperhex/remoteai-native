@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { MessageAttachment } from '../../../../shared/chat/messageAttachments';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
-import { useAttachmentDetails } from '../../../../shared/chat/useAttachmentDetails';
+import type { MessageAttachment } from '../../vendor/shared/chat/messageAttachments';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
+import { useAttachmentDetails } from '../../vendor/shared/chat/useAttachmentDetails';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { t, useLanguage } from '../i18n';

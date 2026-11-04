@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
-import type { LoungeController } from '../../../../shared/lounge/controller';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
 import { t } from '../i18n';
 import { useLoungeStyles } from './styles';
 

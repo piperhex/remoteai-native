@@ -1,10 +1,10 @@
 import { DeviceEventEmitter, NativeModules } from 'react-native';
 import type { AppRelease } from './appUpdate';
-import { findUpdatePeers } from '../../../../shared/app-update/peerLookup';
-import { watchUpdatePeers } from '../../../../shared/app-update/peerDiscovery';
-import { updateMirrorUrl } from '../../../../shared/app-update/mirrorUrl';
+import { findUpdatePeers } from '../../vendor/shared/app-update/peerLookup';
+import { watchUpdatePeers } from '../../vendor/shared/app-update/peerDiscovery';
+import { updateMirrorUrl } from '../../vendor/shared/app-update/mirrorUrl';
 import { updateNotificationLabels } from './androidUpdateNotifications';
-import type { DownloadReport } from '../../../../shared/app-update/downloadReport';
+import type { DownloadReport } from '../../vendor/shared/app-update/downloadReport';
 import type { AndroidDownloadReporting } from './androidDownloadReporting';
 import { AndroidUpdateCancelled } from './androidUpdateAttempt';
 

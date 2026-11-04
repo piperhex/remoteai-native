@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatController } from './controller';
 import type { AuthSession } from '../types';
 import type { Thread } from './types';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { COMPOSER_EVENT, type ComposerSnapshot } from '../../../../shared/remote-chat/composer';
-import { historyDelta, type HistoryVersion } from '../../../../shared/remote-chat/historySync';
-import { sliceHistory, type HistoryWindow } from '../../../../shared/remote-chat/historyPage';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { COMPOSER_EVENT, type ComposerSnapshot } from '../../vendor/shared/remote-chat/composer';
+import { historyDelta, type HistoryVersion } from '../../vendor/shared/remote-chat/historySync';
+import { sliceHistory, type HistoryWindow } from '../../vendor/shared/remote-chat/historyPage';
 
 const mocks = vi.hoisted(() => ({ request: vi.fn(), events: null as ConnectionEvents | null }));
 vi.mock('react-native', () => ({ Platform: { OS: 'android' }, NativeModules: {} }));

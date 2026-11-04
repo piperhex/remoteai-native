@@ -2,7 +2,7 @@
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-const output = fileURLToPath(new URL('../../../.codex-tmp/direct-ssh/', import.meta.url));
+const output = fileURLToPath(new URL('../.codex-tmp/direct-ssh/', import.meta.url));
 const configPath = process.env.SSH_TEST_CONFIG;
 if (!configPath) throw new Error('Set SSH_TEST_CONFIG to a disposable fixture configuration');
 await mkdir(output, { recursive: true });

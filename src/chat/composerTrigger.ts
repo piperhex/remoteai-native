@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/composerTrigger';
+export * from '../../vendor/shared/chat/composerTrigger';

@@ -1,8 +1,8 @@
 import { displayText } from '../../i18n/index';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { autoUnlockDescription, type SecuritySettingsProps } from '../../../../../shared/remote-desktop/security';
-import { useAutoUnlockForm } from '../../../../../shared/remote-desktop/useAutoUnlockForm';
+import { autoUnlockDescription, type SecuritySettingsProps } from '../../../vendor/shared/remote-desktop/security';
+import { useAutoUnlockForm } from '../../../vendor/shared/remote-desktop/useAutoUnlockForm';
 import { t } from '../../i18n';
 import { createThemedStyles } from '../../theme/styles';
 

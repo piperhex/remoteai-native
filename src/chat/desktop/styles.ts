@@ -2,7 +2,7 @@ import { createThemedStyles } from '../../theme/styles';
 import { textMetrics } from '../../theme/text';
 import { StyleSheet } from 'react-native';
 import { CURSOR_SIZE, MOUSE_SIZE, MOUSE_ICON_SIZE }
-  from '../../../../../shared/remote-desktop/geometry';
+  from '../../../vendor/shared/remote-desktop/geometry';
 
 export const useDesktopStyles = createThemedStyles((color) => ({
   root: { flex: 1, backgroundColor: '#080b12' },

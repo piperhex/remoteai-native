@@ -3,7 +3,7 @@ import { Keyboard, Pressable, ScrollView, Text, View } from 'react-native';
 import { Modal } from '../components/Modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { agreementCopy, getUserAgreement } from '@remoteai/i18n/legal/agreement';
-import type { AgreementConsent as Consent } from '../../../../shared/legal/useAgreementConsent';
+import type { AgreementConsent as Consent } from '../../vendor/shared/legal/useAgreementConsent';
 import { useStyles } from './agreementStyles';
 import { useLanguage } from '../i18n';
 

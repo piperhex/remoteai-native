@@ -10,7 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import WebSocket from 'ws';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
 const app = 'com.codexswitch.mobile.avatarcachetest';
@@ -96,7 +96,7 @@ try {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   await adb('reverse', 'tcp:1499', `tcp:${server.address().port}`);
   await adb('install', '-r', path.join(root,
-    'apps/native/android/app/build/outputs/apk/release/lounge-avatar-cache-fixture.apk'));
+    'android/app/build/outputs/apk/release/lounge-avatar-cache-fixture.apk'));
   await adb('shell', 'pm', 'clear', app); await launch();
   const matches = avatar => snapshot?.self === version(image)
     && snapshot.messages.some(message => message.sender === 'bob' && message.avatar === version(avatar));

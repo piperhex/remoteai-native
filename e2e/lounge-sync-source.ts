@@ -1,9 +1,9 @@
-import { historyKey, historyPage, type LoungeHistoryStore } from '../../../shared/lounge/archive';
-import { SyncArchive } from '../../../shared/lounge/syncArchive';
-import { HistorySyncConnection } from '../../../shared/lounge/syncConnection';
-import { LoungeSyncBroker } from '../../../shared/lounge/testing/syncBroker';
-import { mergeDelivery } from '../../../shared/lounge/delivery';
-import type { LoungeMessage } from '../../../shared/lounge/types';
+import { historyKey, historyPage, type LoungeHistoryStore } from '../vendor/shared/lounge/archive';
+import { SyncArchive } from '../vendor/shared/lounge/syncArchive';
+import { HistorySyncConnection } from '../vendor/shared/lounge/syncConnection';
+import { LoungeSyncBroker } from '../vendor/shared/lounge/testing/syncBroker';
+import { mergeDelivery } from '../vendor/shared/lounge/delivery';
+import type { LoungeMessage } from '../vendor/shared/lounge/types';
 
 export function createHistorySource() {
   const broker = new LoungeSyncBroker();

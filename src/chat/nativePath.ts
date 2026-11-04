@@ -1,7 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 import { Buffer } from 'buffer';
-import { encodeNativeBulkBatch } from '../../../../shared/remote-chat/nativeBulkChannel';
-import { NativePath, type NativePathFactory, type NativePathEvent } from '../../../../shared/remote-chat/nativePath';
+import { encodeNativeBulkBatch } from '../../vendor/shared/remote-chat/nativeBulkChannel';
+import { NativePath, type NativePathFactory, type NativePathEvent } from '../../vendor/shared/remote-chat/nativePath';
 
 interface ConnectivityModule {
   bulkBinaryAvailable?: boolean; bulkDuplexAvailable?: boolean; call(request: string): Promise<string>;

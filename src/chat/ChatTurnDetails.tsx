@@ -10,7 +10,7 @@ import { ChatDiff } from './ChatDiff';
 import { SelectableChatText } from './SelectableChatText';
 import { completedTurnFiles } from './turnPresentation';
 import { turnErrorNotice, type TurnPanel } from './ChatTurnSummary';
-import { requestErrorDetails } from '../../../desktop/src/pages/codexGui/requestError';
+import { requestErrorDetails } from '../../vendor/apps/desktop/src/pages/codexGui/requestError';
 import { palette, useStyles } from './styles';
 import type { Turn } from './types';
 import { TaskReviewPanel } from './review/TaskReviewPanel';

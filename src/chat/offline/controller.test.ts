@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../../shared/remote-chat/client/controller';
+import { ChatController } from '../../../vendor/shared/remote-chat/client/controller';
 import { OfflineWriter, type CachedConversation, type OfflineHistoryStore }
-  from '../../../../../shared/remote-chat/client/offline';
-import { offlineImage } from '../../../../../shared/remote-chat/client/offlineImages';
-import type { ConnectionEvents } from '../../../../../shared/remote-chat/client/connection';
-import { historyDelta } from '../../../../../shared/remote-chat/historySync';
-import { mergeHistory } from '../../../../../shared/remote-chat/client/history';
+  from '../../../vendor/shared/remote-chat/client/offline';
+import { offlineImage } from '../../../vendor/shared/remote-chat/client/offlineImages';
+import type { ConnectionEvents } from '../../../vendor/shared/remote-chat/client/connection';
+import { historyDelta } from '../../../vendor/shared/remote-chat/historySync';
+import { mergeHistory } from '../../../vendor/shared/remote-chat/client/history';
 import type { Thread } from '../types';
 
 const thread = (id = 'chat', text = 'cached'): Thread => ({ id, preview: id, cwd: '/', updatedAt: 1,

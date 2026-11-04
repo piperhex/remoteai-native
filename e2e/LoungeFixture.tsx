@@ -11,7 +11,7 @@ import { LoungePage } from '../src/lounge/LoungePage';
 import { useNativeLounge } from '../src/lounge/useNativeLounge';
 import type { AuthSession } from '../src/types';
 import { textMetrics } from '../src/theme/text';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import { SettingsPage } from '../src/settings/SettingsPage';
 import type { TotpManagerState } from '../src/totp/types';

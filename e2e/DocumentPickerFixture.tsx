@@ -8,8 +8,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatComposer } from '../src/chat/ChatComposer';
 import { ChatOverlay } from '../src/chat/ChatOverlay';
 import { textMetrics } from '../src/theme/text';
-import { initialSettings, settingsFixture } from '../../../shared/remote-chat/testing/settingsFixture';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { initialSettings, settingsFixture } from '../vendor/shared/remote-chat/testing/settingsFixture';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 
 setInterfaceLanguage('zh');
 

@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { LoungeController } from '../../../../shared/lounge/controller';
-import { conversationRows } from '../../../../shared/lounge/conversationRows';
-import { conversationPreviewText } from '../../../../shared/lounge/conversationPreview';
+import { LoungeController } from '../../vendor/shared/lounge/controller';
+import { conversationRows } from '../../vendor/shared/lounge/conversationRows';
+import { conversationPreviewText } from '../../vendor/shared/lounge/conversationPreview';
 
 class Socket {
   static OPEN = 1;

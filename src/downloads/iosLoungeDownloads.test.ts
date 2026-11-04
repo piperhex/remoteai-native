@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { IosLoungeDownloads } from './iosLoungeDownloads';
 import type { DownloadSource, DownloadTask } from './types';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 
 const mock = vi.hoisted(() => ({ files: new Map<string, Buffer>(), index: '', count: 0 }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => `10000000-0000-4000-8000-${String(++mock.count).padStart(12, '0')}` }));

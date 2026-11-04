@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { PanResponder, type GestureResponderEvent, type PanResponderGestureState } from 'react-native';
-import { DesktopPointer } from '../../../../../shared/remote-desktop/input';
-import { cursorPosition, desktopViewport, MOUSE_PANEL_SIZE } from '../../../../../shared/remote-desktop/geometry';
+import { DesktopPointer } from '../../../vendor/shared/remote-desktop/input';
+import { cursorPosition, desktopViewport, MOUSE_PANEL_SIZE } from '../../../vendor/shared/remote-desktop/geometry';
 import { useTrackpad } from './useTrackpad';
 
 vi.mock('react', () => ({ useEffect: vi.fn(), useMemo: (factory: () => unknown) => factory(),

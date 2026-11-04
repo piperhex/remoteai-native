@@ -1,7 +1,7 @@
 import { createThemedStyles } from '../theme/styles';
 import { t, useLanguage } from '../i18n';
 import { StyleSheet, Text, View } from 'react-native';
-import type { UploadProgress } from '../../../../shared/remote-chat/uploadProgress';
+import type { UploadProgress } from '../../vendor/shared/remote-chat/uploadProgress';
 
 export function ComposerUploadProgress({ progress, reconnecting = false, inline = false }: {
   progress?: UploadProgress; reconnecting?: boolean; inline?: boolean;

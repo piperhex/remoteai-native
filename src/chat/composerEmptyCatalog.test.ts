@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { RemoteComposerSettings } from '../../../../shared/remote-chat/client/composerSettings';
-import { initialChatState, type ChatState } from '../../../../shared/remote-chat/client/types';
-import { MODEL_CATALOG_ERROR, type ComposerSnapshot } from '../../../../shared/remote-chat/composer';
+import { RemoteComposerSettings } from '../../vendor/shared/remote-chat/client/composerSettings';
+import { initialChatState, type ChatState } from '../../vendor/shared/remote-chat/client/types';
+import { MODEL_CATALOG_ERROR, type ComposerSnapshot } from '../../vendor/shared/remote-chat/composer';
 
 const models = [{ id: 'model', model: 'model', displayName: 'Model', isDefault: true,
   defaultReasoningEffort: 'high', supportedReasoningEfforts: [{ reasoningEffort: 'high', description: '' }] }];

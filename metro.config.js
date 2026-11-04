@@ -13,7 +13,7 @@ require('./scripts/build-desktop-ime.cjs');
 require('./scripts/build-text-selection.cjs');
 
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../..');
+const workspaceRoot = path.join(projectRoot, 'vendor');
 const config = getDefaultConfig(projectRoot);
 
 // Keep bundle entries relative to this app while retaining access to packages

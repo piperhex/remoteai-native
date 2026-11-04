@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Keyboard, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PRIMARY_PAGES, type PrimaryPage } from '../../../../shared/navigation/pageSwipe';
-import { PagePreviewContext, PageSwipeContext } from '../../../../shared/navigation/PageSwipeContext';
-import { usePageTransition } from '../../../../shared/navigation/usePageTransition';
+import { PRIMARY_PAGES, type PrimaryPage } from '../../vendor/shared/navigation/pageSwipe';
+import { PagePreviewContext, PageSwipeContext } from '../../vendor/shared/navigation/PageSwipeContext';
+import { usePageTransition } from '../../vendor/shared/navigation/usePageTransition';
 import { usePrimaryPageSwipe } from './usePrimaryPageSwipe';
 import { createPageAnimation } from './pageAnimation';
 

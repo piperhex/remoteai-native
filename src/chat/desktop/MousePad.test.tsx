@@ -3,14 +3,14 @@ import React, { Children, isValidElement, type ReactElement, type ReactNode } fr
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Image } from 'react-native';
 import { DesktopMouse } from './MousePad';
-import { DesktopPointer } from '../../../../../shared/remote-desktop/input';
+import { DesktopPointer } from '../../../vendor/shared/remote-desktop/input';
 import { desktopViewport, MOUSE_PANEL_SIZE, panDesktopViewport }
-  from '../../../../../shared/remote-desktop/geometry';
+  from '../../../vendor/shared/remote-desktop/geometry';
 import { useTrackpad } from './useTrackpad';
 import { DesktopScrollPad } from './DesktopScrollPad';
 
 const runtime = vi.hoisted(() => ({ scrolling: false }));
-vi.mock('../../../../../shared/remote-desktop/useScrollPad', () => ({ useScrollPad: () => ({
+vi.mock('../../../vendor/shared/remote-desktop/useScrollPad', () => ({ useScrollPad: () => ({
   active: runtime.scrolling, layout: { x: 0, y: 0, size: 180 }, position: { x: 0, y: 0 },
   start: vi.fn(), move: vi.fn(), end: vi.fn(),
 }) }));
@@ -32,7 +32,7 @@ function nodes(tree: ReactNode): ReactElement<Props>[] {
 }
 
 const assetRequire = createRequire(import.meta.url);
-const cursorAsset = assetRequire.resolve('../../../../../shared/remote-desktop/cursor.png');
+const cursorAsset = assetRequire.resolve('../../../vendor/shared/remote-desktop/cursor.png');
 const previousAsset = assetRequire.cache[cursorAsset];
 beforeEach(() => {
   runtime.scrolling = false;

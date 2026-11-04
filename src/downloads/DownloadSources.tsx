@@ -3,7 +3,7 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
-import { downloadConnectionLabel } from '../../../../shared/remote-chat/downloadConnection';
+import { downloadConnectionLabel } from '../../vendor/shared/remote-chat/downloadConnection';
 import type { DownloadConnection } from './types';
 import { colors, useStyles } from './styles';
 

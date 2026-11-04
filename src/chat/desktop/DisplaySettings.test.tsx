@@ -2,7 +2,7 @@ import React, { Children, isValidElement, useState, type ReactElement, type Reac
 import { afterEach, expect, it, vi } from 'vitest';
 import { DisplaySettings } from './DisplaySettings';
 import { DisplayResolutionSettings } from './DisplayResolutionSettings';
-import { DEFAULT_SETTINGS, type DesktopDisplay } from '../../../../../shared/remote-desktop/protocol';
+import { DEFAULT_SETTINGS, type DesktopDisplay } from '../../../vendor/shared/remote-desktop/protocol';
 
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
   useState: vi.fn((value: unknown) => [value, vi.fn()]),

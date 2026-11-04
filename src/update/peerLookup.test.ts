@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { findUpdatePeers } from '../../../../shared/app-update/peerLookup';
+import { findUpdatePeers } from '../../vendor/shared/app-update/peerLookup';
 
 class Socket {
   static OPEN = 1;

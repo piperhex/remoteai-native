@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { themedWebviewDocument, type WebviewAppearance } from '../../../../shared/theme/webviewDocument';
+import { themedWebviewDocument, type WebviewAppearance } from '../../vendor/shared/theme/webviewDocument';
 
 /** Live theme changes go through the bridge; replacing source would discard drafts and scrollback. */
 export function useWebviewSource(html: string, appearance: WebviewAppearance, generation = 0) {

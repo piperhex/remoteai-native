@@ -1,0 +1,64 @@
+name: Native release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing native release tag, for example v2.2.1
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: native-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Verify release version
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: node scripts/validate-release.mjs
+  check:
+    needs: validate
+    uses: ./.github/workflows/check.yml
+    with:
+      ref: ${{ inputs.tag || github.ref_name }}
+  build:
+    needs: check
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ inputs.tag || github.ref_name }}
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: RemoteAI-*
+          path: release
+          merge-multiple: true
+      - name: Check artifacts and write checksums
+        working-directory: release
+        run: |
+          test "$(find . -maxdepth 1 -name 'RemoteAI-android-*.apk' | wc -l)" -eq 1
+          test -f RemoteAI-ios-unsigned.app.zip
+          sha256sum RemoteAI-android-*.apk RemoteAI-ios-unsigned.app.zip > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: Remote AI Native ${{ inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(inputs.tag || github.ref_name, '-') }}
+          files: release/*
+          fail_on_unmatched_files: true

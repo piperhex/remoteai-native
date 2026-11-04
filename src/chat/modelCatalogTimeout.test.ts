@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatRpc } from '../../../../shared/remote-chat/rpc';
-import type { RpcMessage } from '../../../../shared/remote-chat/protocol';
-import { createGuiAccountsClient } from '../../../../shared/remote-chat/client/guiAccounts';
+import { ChatRpc } from '../../vendor/shared/remote-chat/rpc';
+import type { RpcMessage } from '../../vendor/shared/remote-chat/protocol';
+import { createGuiAccountsClient } from '../../vendor/shared/remote-chat/client/guiAccounts';
 
 afterEach(() => vi.useRealTimers());
 

@@ -1,8 +1,8 @@
 import { NativeModules } from 'react-native';
 import { fromByteArray } from 'base64-js';
 import { createDirectSshClient, type DirectSshBridge } from '../src/ssh/directClient';
-import type { SshProfile, SshProfileStore } from '../../../shared/terminal/sshProfiles';
-import type { SshCredentials } from '../../../shared/terminal/sshCredentials';
+import type { SshProfile, SshProfileStore } from '../vendor/shared/terminal/sshProfiles';
+import type { SshCredentials } from '../vendor/shared/terminal/sshCredentials';
 
 const CONTROL = 'http://127.0.0.1:15995';
 interface Config { host: string; port: number; username: string; password: string; privateKey: string }

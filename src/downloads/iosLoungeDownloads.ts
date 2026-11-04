@@ -1,8 +1,8 @@
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import Storage from 'expo-sqlite/kv-store';
 import { randomUUID } from 'expo-crypto';
-import { transferFileChunks, validateFileInfo } from '../../../../shared/remote-chat/fileDownload';
-import type { DownloadClient } from '../../../../shared/remote-chat/downloads';
+import { transferFileChunks, validateFileInfo } from '../../vendor/shared/remote-chat/fileDownload';
+import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 import type { DownloadSource, DownloadTask } from './types';
 
 const INDEX = 'lounge-downloads:v1';

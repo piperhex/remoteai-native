@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { AuthSession } from '../types';
 import { downloadManager, downloadOwner } from './manager';
 import type { DownloadTask } from './types';
-import { removeDownloads } from '../../../../shared/downloads/removeDownloads';
+import { removeDownloads } from '../../vendor/shared/downloads/removeDownloads';
 
 export function useDownloadTasks(session: AuthSession) {
   const tasks = useSyncExternalStore(downloadManager.subscribe, downloadManager.snapshot);

@@ -1,5 +1,5 @@
-import type { GitArea } from '../../../../../shared/remote-chat/gitFiles';
-import type { ThemeColor, ThemeColorRole } from '../../../../../shared/theme/mode';
+import type { GitArea } from '../../../vendor/shared/remote-chat/gitFiles';
+import type { ThemeColor, ThemeColorRole } from '../../../vendor/shared/theme/mode';
 
 const areaRoles: Record<GitArea['id'], ThemeColorRole> = {
   conflict: 'danger', unstaged: 'info', staged: 'accent', mixed: 'purple', untracked: 'warning',

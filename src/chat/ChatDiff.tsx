@@ -4,7 +4,7 @@ import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import type { DiffFile, DiffLine } from '../../../../shared/chat/diff';
+import type { DiffFile, DiffLine } from '../../vendor/shared/chat/diff';
 import { BottomSheet } from '../components/BottomSheet';
 import { ChatDiffContent } from './ChatDiffContent';
 import { groupDiffFiles } from './diffGroups';

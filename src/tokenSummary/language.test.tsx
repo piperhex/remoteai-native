@@ -3,10 +3,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { UsageTotals, UsageTrend } from './UsagePanels';
 import { ConsumptionPanels } from './ConsumptionPanels';
 import { QuotaPanel } from './QuotaPanel';
-import { setInterfaceLanguage } from '../../../../shared/localization/interfaceLanguage';
-import { translateMessage } from '../../../../shared/localization/messages';
-import { TOKEN_FIELDS, CONTEXT_FIELDS, MODE_FIELDS } from '../../../../shared/remote-chat/tokenSummaryLabels';
-import type { TokenSummary } from '../../../../shared/remote-chat/tokenSummary';
+import { setInterfaceLanguage } from '../../vendor/shared/localization/interfaceLanguage';
+import { translateMessage } from '../../vendor/shared/localization/messages';
+import { TOKEN_FIELDS, CONTEXT_FIELDS, MODE_FIELDS } from '../../vendor/shared/remote-chat/tokenSummaryLabels';
+import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
 
 vi.mock('react', async original => ({ ...await original<typeof React>(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),

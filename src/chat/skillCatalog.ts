@@ -1,1 +1,1 @@
-export * from '../../../../shared/chat/skillCatalog';
+export * from '../../vendor/shared/chat/skillCatalog';

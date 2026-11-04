@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatUsage } from './ChatUsage';
-import { useConversationMetrics } from '../../../../shared/remote-chat/client/useConversationMetrics';
+import { useConversationMetrics } from '../../vendor/shared/remote-chat/client/useConversationMetrics';
 
 vi.mock('../i18n', async () => ({ ...await vi.importActual<typeof import('../i18n')>('../i18n'), useLanguage: () => 'zh' }));
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
@@ -12,10 +12,10 @@ vi.mock('react-native', () => ({ Text: 'Text', View: 'View', Pressable: 'Pressab
   StyleSheet: { create: <T,>(value: T) => value, hairlineWidth: 1 },
 }));
 vi.mock('@expo/vector-icons/Feather', () => ({ default: 'Icon' }));
-vi.mock('../../../../shared/remote-chat/client/useChatUsage', () => ({
+vi.mock('../../vendor/shared/remote-chat/client/useChatUsage', () => ({
   useChatUsage: () => ({ usage: null, error: '' }),
 }));
-vi.mock('../../../../shared/remote-chat/client/useConversationMetrics', () => ({ useConversationMetrics: vi.fn() }));
+vi.mock('../../vendor/shared/remote-chat/client/useConversationMetrics', () => ({ useConversationMetrics: vi.fn() }));
 
 function text(node: ReactNode): string {
   return Children.toArray(node).map(child => {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { startNativeRecording } from './recording';
-import { recordingError } from '../../../../../shared/chat/dictation/errors';
+import { recordingError } from '../../../vendor/shared/chat/dictation/errors';
 
 const audio = vi.hoisted(() => ({
   permission: vi.fn(), mode: vi.fn(), prepare: vi.fn(), stop: vi.fn(), record: vi.fn(), release: vi.fn(),

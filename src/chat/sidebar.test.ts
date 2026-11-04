@@ -1,8 +1,8 @@
 import { expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
-import { SIDEBAR_EVENT, type SidebarSnapshot } from '../../../../shared/remote-chat/sidebar';
-import { historyDelta, type HistoryVersion } from '../../../../shared/remote-chat/historySync';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
+import { SIDEBAR_EVENT, type SidebarSnapshot } from '../../vendor/shared/remote-chat/sidebar';
+import { historyDelta, type HistoryVersion } from '../../vendor/shared/remote-chat/historySync';
 
 it('acknowledges loaded visible replies and keeps newer PC read state ahead of stale responses', async () => {
   const thread = { id: 'one', cwd: '', preview: '', updatedAt: 1,

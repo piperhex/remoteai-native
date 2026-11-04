@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { nativeLoungeAvatars } from './avatarStore';
-import { LoungeAvatarCache, loungeAvatarVersion } from '../../../../shared/lounge/avatarCache';
+import { LoungeAvatarCache, loungeAvatarVersion } from '../../vendor/shared/lounge/avatarCache';
 
 const persisted = vi.hoisted(() => new Map<string, string>());
 vi.mock('expo-sqlite/kv-store', () => ({ default: {

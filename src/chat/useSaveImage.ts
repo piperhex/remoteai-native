@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
-import { DownloadPolicyError } from '../../../../shared/remote-chat/policy';
+import { DownloadPolicyError } from '../../vendor/shared/remote-chat/policy';
 import { ImageSavePermissionError, saveImage } from './saveImage';
 
 export function useSaveImage(options: { load: () => Promise<string>; save?: (url: string) => Promise<void> }) {

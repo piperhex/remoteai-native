@@ -6,7 +6,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetFlatList, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import type { ProjectFile, ProjectFilesRequest, ProjectFilesResponse } from '../../../../shared/remote-chat/projectFiles';
+import type { ProjectFile, ProjectFilesRequest, ProjectFilesResponse } from '../../vendor/shared/remote-chat/projectFiles';
 
 interface Props {
   imagesOnly: boolean;

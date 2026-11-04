@@ -1,6 +1,6 @@
 import { t, useLanguage } from '../i18n';
 import { useContext } from 'react';
-import { useChatImage } from '../../../../shared/remote-chat/client/useChatImage';
+import { useChatImage } from '../../vendor/shared/remote-chat/client/useChatImage';
 import { ChatImageContext } from './ChatImage';
 import { ImageViewer } from './ImageViewer';
 

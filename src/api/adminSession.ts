@@ -3,7 +3,7 @@ import type { AuthResponse, AuthSession } from '../types';
 import {
   fetchBufferedResponse, SESSION_REFRESH_TIMEOUT_MS, throwIfAborted, waitWithSignal, withRequestDeadline,
   type DeadlineRequestInit,
-} from '../../../../shared/http/requestDeadline';
+} from '../../vendor/shared/http/requestDeadline';
 import {
   activateSession, assertCurrentSession, assertSessionEpoch, beginLogin, clearSession, persistSession, sessionEpoch,
 } from './sessionStore';

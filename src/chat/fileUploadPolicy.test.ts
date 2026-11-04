@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { afterEach, expect, it } from 'vitest';
-import { remoteAttachments, validateUploadedFiles } from '../../../../shared/remote-chat/composerAttachments';
-import { checkFileUploadSize, DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../../../shared/remote-chat/policy';
+import { remoteAttachments, validateUploadedFiles } from '../../vendor/shared/remote-chat/composerAttachments';
+import { checkFileUploadSize, DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 afterEach(() => setChatPolicy(DEFAULT_CHAT_POLICY));
 const upload = (bytes: number) => ({ kind: 'file' as const, name: 'notes.txt', path: '',

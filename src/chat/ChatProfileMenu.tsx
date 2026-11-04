@@ -7,10 +7,10 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import Feather from '@expo/vector-icons/Feather';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import type { GuiAccountChoice, GuiAccountsClient } from '../../../../shared/remote-chat/guiAccounts';
-import { guiAccountAvatar } from '../../../../shared/remote-chat/guiAccountAvatar';
-import { useGuiAccounts } from '../../../../shared/remote-chat/client/useGuiAccounts';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
+import type { GuiAccountChoice, GuiAccountsClient } from '../../vendor/shared/remote-chat/guiAccounts';
+import { guiAccountAvatar } from '../../vendor/shared/remote-chat/guiAccountAvatar';
+import { useGuiAccounts } from '../../vendor/shared/remote-chat/client/useGuiAccounts';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { ChatGuiUpdateSheet } from './ChatGuiUpdateSheet';
 import { palette, useStyles } from './styles';
 import { ChatSettingsConnection } from './ChatSettingsConnection';

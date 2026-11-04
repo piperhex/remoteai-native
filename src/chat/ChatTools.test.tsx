@@ -1,6 +1,6 @@
 import React, { type ReactElement } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { ChatTools } from './ChatTools';
 
 const state = vi.hoisted(() => ({ project: 'C:/project' }));
@@ -21,10 +21,10 @@ vi.mock('./desktop/RemoteDesktop', () => ({ RemoteDesktop: 'Desktop' }));
 vi.mock('./ChatToolsPopover', () => ({ ChatToolsPopover: 'Popover' }));
 vi.mock('./portMapping/PortMappings', () => ({ PortMappings: 'Mappings' }));
 vi.mock('./ProjectBrowser', () => ({ ProjectBrowser: 'Browser' }));
-vi.mock('../../../../shared/remote-chat/useRemoteTerminalLauncher', () => ({
+vi.mock('../../vendor/shared/remote-chat/useRemoteTerminalLauncher', () => ({
   useRemoteTerminalLauncher: () => ({ tabs: [], busy: false, toggle: vi.fn() }),
 }));
-vi.mock('../../../../shared/remote-desktop/useDesktopLauncher', () => ({
+vi.mock('../../vendor/shared/remote-desktop/useDesktopLauncher', () => ({
   useDesktopLauncher: () => ({ opened: true, open: vi.fn(), close: vi.fn() }),
 }));
 

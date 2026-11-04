@@ -4,7 +4,7 @@ import { cacheDirectory, deleteAsync, EncodingType, getInfoAsync, readAsStringAs
 import { fromByteArray, toByteArray } from 'base64-js';
 import { randomUUID } from 'expo-crypto';
 import { nativeDownloadTarget } from '../fileDownloadTarget';
-import type { ZmodemFile, ZmodemState, ZmodemTransfer } from '../../../../../shared/terminal/zmodem';
+import type { ZmodemFile, ZmodemState, ZmodemTransfer } from '../../../vendor/shared/terminal/zmodem';
 
 interface Download { name: string; chunks: Uint8Array[]; saved?: boolean }
 

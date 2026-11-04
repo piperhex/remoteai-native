@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { composerPatch, DEFAULT_COMPOSER } from '../../../../shared/remote-chat/composer';
-import { settingOptions, settingValue, visibleSettingsFields } from '../../../../shared/remote-chat/settingsMenu';
-import { nextRequestSpeed, speedBoltCount } from '../../../../shared/remote-chat/requestSpeed';
+import { composerPatch, DEFAULT_COMPOSER } from '../../vendor/shared/remote-chat/composer';
+import { settingOptions, settingValue, visibleSettingsFields } from '../../vendor/shared/remote-chat/settingsMenu';
+import { nextRequestSpeed, speedBoltCount } from '../../vendor/shared/remote-chat/requestSpeed';
 
 it('validates speed choices and hides unsupported controls for older hosts', () => {
   expect(composerPatch({ speed: 'fast' })).toEqual({ speed: 'fast' });

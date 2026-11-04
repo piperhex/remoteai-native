@@ -2,7 +2,7 @@ import { createThemedStyles } from '../../theme/styles';
 import { textMetrics } from '../../theme/text';
 import { Platform,  } from 'react-native';
 import { palette } from '../styles';
-import { GRAPH_ROW_HEIGHT } from '../../../../../shared/remote-chat/gitGraph';
+import { GRAPH_ROW_HEIGHT } from '../../../vendor/shared/remote-chat/gitGraph';
 
 export const useGitStyles = createThemedStyles((color) => ({
   fill: { flex: 1, minWidth: 0 },

@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const pdfRoot = path.dirname(require.resolve('pdfjs-dist/package.json'));
 
 // Bundle PDF fonts and worker code locally so received documents work without a public viewer or network upload.
@@ -32,7 +32,7 @@ const pdfPlugin = {
 };
 async function build() {
   const result = await esbuild.build({ absWorkingDir: root,
-    entryPoints: ['shared/lounge/nativeDocumentEntry.tsx'], bundle: true, minify: true,
+    entryPoints: ['vendor/shared/lounge/nativeDocumentEntry.tsx'], bundle: true, minify: true,
     format: 'iife', platform: 'browser', target: ['chrome100', 'safari16'], write: false,
     outfile: 'lounge-document.js', jsx: 'automatic', legalComments: 'inline', plugins: [pdfPlugin],
     supported: { 'template-literal': false }, define: { 'process.env.NODE_ENV': '"production"' },
@@ -49,10 +49,10 @@ style-src 'unsafe-inline'; img-src data: blob:">
 :root[data-theme=dark]{--panel:#252a30;--ink:#e8eef5;--muted:#a2acb8;--line:#414850;--pf-subtle:#1d2227}
 body{font:14px system-ui;color:var(--ink);background:var(--panel)}button{font:inherit}
 ${css}</style></head><body><div id="root"></div><script>${script}</script></body></html>`;
-  const target = path.join(root, 'apps/native/assets/lounge-document.html');
+  const target = path.join(root, 'assets/lounge-document.html');
   if (process.argv.includes('--check')) {
     if (!fs.existsSync(target) || fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n') !== html) {
-      throw new Error('Run node apps/native/scripts/build-lounge-document.cjs');
+      throw new Error('Run node scripts/build-lounge-document.cjs');
     }
   } else fs.writeFileSync(target, html);
 }

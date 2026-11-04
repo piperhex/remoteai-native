@@ -7,11 +7,11 @@ import { Pressable, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatFileContext, ChatFileProvider } from '../src/chat/ChatFilePreview';
 import { textMetrics } from '../src/theme/text';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { updateThemeMode } from '../src/theme/store';
 import { Buffer } from 'buffer';
 import { fromByteArray } from 'base64-js';
-import { HTML_FIXTURE_ASSETS, HTML_FIXTURE_DOCUMENT, HTML_FIXTURE_PATH } from '../../../shared/file-preview/htmlPreviewFixture';
+import { HTML_FIXTURE_ASSETS, HTML_FIXTURE_DOCUMENT, HTML_FIXTURE_PATH } from '../vendor/shared/file-preview/htmlPreviewFixture';
 import { statusBarTestImage } from './modalStatusBarImage';
 
 setInterfaceLanguage('zh');

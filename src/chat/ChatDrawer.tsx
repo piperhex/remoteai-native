@@ -4,7 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, type ReactNode } from 'reac
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { chatDrawerWidth } from '../../../../shared/navigation/drawerMotion';
+import { chatDrawerWidth } from '../../vendor/shared/navigation/drawerMotion';
 import { useNativeDrawerMotion } from './useNativeDrawerMotion';
 import { useDrawerGesture } from './useDrawerGesture';
 import { DrawerGestureContext } from './ChatDrawerSurface';

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { Keyboard } from 'react-native';
-import { adjacentPage, type PrimaryPage, type SwipeProgress } from '../../../../shared/navigation/pageSwipe';
+import { adjacentPage, type PrimaryPage, type SwipeProgress } from '../../vendor/shared/navigation/pageSwipe';
 import { useHorizontalSwipe } from './useHorizontalSwipe';
 
 export function usePrimaryPageSwipe(page: string, onChange: (page: PrimaryPage) => void, progress?: SwipeProgress) {

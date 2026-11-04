@@ -1,8 +1,8 @@
-import { TOKEN_FIELDS } from '../../../../shared/remote-chat/tokenSummaryLabels';
+import { TOKEN_FIELDS } from '../../vendor/shared/remote-chat/tokenSummaryLabels';
 import { t, useLanguage } from '../i18n';
 import { Text, View } from 'react-native';
-import type { TokenSummary, UsageRanking } from '../../../../shared/remote-chat/tokenSummary';
-import { formatTokens } from '../../../desktop/src/components/TokenUsageDashboard/chartUtils';
+import type { TokenSummary, UsageRanking } from '../../vendor/shared/remote-chat/tokenSummary';
+import { formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
 import { TimeBars } from './TimeBars';
 import { useSummaryStyles as useS } from './styles';
 

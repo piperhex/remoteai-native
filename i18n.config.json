@@ -1,0 +1,31 @@
+{
+  "mirrors": [
+    {
+      "source": "platform/native/locales/zh.json",
+      "target": "locales/zh.json"
+    },
+    {
+      "source": "platform/native/locales/en.json",
+      "target": "locales/en.json"
+    },
+    {
+      "source": "platform/native/locales/ru.json",
+      "target": "locales/ru.json"
+    },
+    {
+      "source": "platform/native/locales/ja.json",
+      "target": "locales/ja.json"
+    }
+  ],
+  "sections": [],
+  "ownership": {
+    "include": [
+      "src",
+      "scripts",
+      "plugins",
+      "App.tsx",
+      "locales"
+    ],
+    "exclude": []
+  }
+}

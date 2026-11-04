@@ -1,7 +1,7 @@
 import { t } from '../../i18n';
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
-import { validateVideoInfo, type VideoClient } from '../../../../../shared/remote-chat/video';
+import { validateVideoInfo, type VideoClient } from '../../../vendor/shared/remote-chat/video';
 import { checkVideoSize, VideoPlaybackError } from './videoRangeStream';
 import { createVideoServer, type VideoServer } from './videoServer';
 

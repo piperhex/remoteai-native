@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { AppRegistry, DeviceEventEmitter, NativeModules, Platform } from 'react-native';
-import { subscribeInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
+import { subscribeInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
 
 export const CHAT_SERVICE_STOPPED = 'codexChatConnectionStopped';
 export interface ConnectionLabels {

@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/file-preview-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
@@ -146,7 +146,7 @@ async function verifyImageLink(scale) {
 await mkdir(output, { recursive: true });
 const previousScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 if (!process.argv.includes('--skip-install')) {
-  await adb('install', '-r', path.join(root, 'apps/native/android/app/build-file-preview/outputs/apk/debug/app-debug.apk'));
+  await adb('install', '-r', path.join(root, 'android/app/build-file-preview/outputs/apk/debug/app-debug.apk'));
 }
 try {
   const results = {};

@@ -5,9 +5,9 @@ import { t, useLanguage } from '../i18n';
 import Feather from '@expo/vector-icons/Feather';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { conversationCandidates,
-  conversationReference } from '../../../desktop/src/pages/codexGui/conversationReferences';
-import type { AttachmentReference } from '../../../desktop/src/pages/codexGui/attachmentTypes';
-import { useConversationCandidates, type ConversationSearch } from '../../../../shared/chat/useConversationCandidates';
+  conversationReference } from '../../vendor/apps/desktop/src/pages/codexGui/conversationReferences';
+import type { AttachmentReference } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import { useConversationCandidates, type ConversationSearch } from '../../vendor/shared/chat/useConversationCandidates';
 
 interface Props {
   query: string;

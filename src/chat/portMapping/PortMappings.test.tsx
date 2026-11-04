@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { PortForwardingService, type ForwardingClient } from '../../../../../shared/port-mapping/service';
-import { MappingSync } from '../../../../../shared/port-mapping/sync';
+import { PortForwardingService, type ForwardingClient } from '../../../vendor/shared/port-mapping/service';
+import { MappingSync } from '../../../vendor/shared/port-mapping/sync';
 import { PortMappings } from './PortMappings';
 
 const runtime = vi.hoisted(() => ({ cursor: 0, component: '', states: new Map<string, unknown[]>(),

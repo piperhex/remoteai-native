@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { t, useLanguage } from '../../i18n';
 import { Keyboard, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { DesktopInput, DesktopPlatform } from '../../../../../shared/remote-desktop/protocol';
+import type { DesktopInput, DesktopPlatform } from '../../../vendor/shared/remote-desktop/protocol';
 import { desktopShortcuts, desktopModifiers, INPUT_TABS, KEYBOARD_PAGES }
-  from '../../../../../shared/remote-desktop/softKeyboard';
-import { useSoftKeyboard } from '../../../../../shared/remote-desktop/useSoftKeyboard';
+  from '../../../vendor/shared/remote-desktop/softKeyboard';
+import { useSoftKeyboard } from '../../../vendor/shared/remote-desktop/useSoftKeyboard';
 import { DesktopIme } from './DesktopIme';
 import { useKeyboardStyles as useS } from './keyboardStyles';
 

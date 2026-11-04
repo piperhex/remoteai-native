@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { SecuritySettings } from './SecuritySettings';
-import type { SecuritySettingsProps } from '../../../../../shared/remote-desktop/security';
+import type { SecuritySettingsProps } from '../../../vendor/shared/remote-desktop/security';
 
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),

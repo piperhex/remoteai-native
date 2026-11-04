@@ -10,11 +10,11 @@ import type { ChatProject, ChatState, Thread } from './types';
 import { ChatThreadList } from './ChatThreadList';
 import { ChatThreadActions } from './ChatThreadActions';
 import { ChatProjectActions } from './ChatProjectActions';
-import { useProjectActions } from '../../../../shared/remote-chat/client/useProjectActions';
-import { useThreadActions } from '../../../../shared/remote-chat/client/useThreadActions';
+import { useProjectActions } from '../../vendor/shared/remote-chat/client/useProjectActions';
+import { useThreadActions } from '../../vendor/shared/remote-chat/client/useThreadActions';
 import { palette, useStyles } from './styles';
 import { NativeGroups } from './groups/NativeGroups';
-import { useGrouping } from '../../../../shared/chat/groups/context';
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
 
 interface Props {
   state: ChatState; controller: ChatController; newChat: (project?: ChatProject) => void;

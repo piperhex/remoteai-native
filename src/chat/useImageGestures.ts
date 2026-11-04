@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Gesture, type TouchData } from 'react-native-gesture-handler';
 import { runOnJS, runOnUI, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { INITIAL_TRANSFORM } from '../../../../shared/chat/imageTransform';
+import { INITIAL_TRANSFORM } from '../../vendor/shared/chat/imageTransform';
 import { beginImageGesture, isImageGestureTap, updateImageGesture,
   type ImageGestureState, type ImageGestureTouch } from './imageGesture';
 

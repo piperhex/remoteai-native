@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 import type { ListResponse, Thread } from './types';
-import { HISTORY_CHANGED, historyDelta } from '../../../../shared/remote-chat/historySync';
+import { HISTORY_CHANGED, historyDelta } from '../../vendor/shared/remote-chat/historySync';
 
 const thread: Thread = { id: 'chat', name: 'Original', preview: '', cwd: '/project', updatedAt: 1 };
 let controller: ChatController;

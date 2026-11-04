@@ -1,7 +1,7 @@
 import { createThemedStyles } from '../theme/styles';
 import { t, useLanguage } from '../i18n';
 import { Text, View } from 'react-native';
-import { formatTurnDuration } from '../../../desktop/src/pages/codexGui/turnTiming';
+import { formatTurnDuration } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
 import { palette, useStyles } from './styles';
 import type { Item } from './types';
 import { VirtualCommandText } from './VirtualCommandText';

@@ -1,7 +1,7 @@
 import { useThemeColor } from '../theme/store';
 import { useContext } from 'react';
 import { Linking, Pressable, Text } from 'react-native';
-import { parseFileReference } from '../../../../shared/chat/fileReference';
+import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileContext } from './ChatFilePreview';
 import { palette, useStyles } from './styles';
 

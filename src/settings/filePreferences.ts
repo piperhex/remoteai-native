@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { AUTO_SAVE_KEY, autoSaveDelay, DEFAULT_AUTO_SAVE_DELAY } from '../../../../shared/project-browser/preferences';
+import { AUTO_SAVE_KEY, autoSaveDelay, DEFAULT_AUTO_SAVE_DELAY } from '../../vendor/shared/project-browser/preferences';
 
 let state = { delay: DEFAULT_AUTO_SAVE_DELAY, ready: false };
 let loading: Promise<void> | undefined;

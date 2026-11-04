@@ -1,10 +1,10 @@
 import TcpSocket from 'react-native-tcp-socket';
 import { Platform } from 'react-native';
-import type { ForwardingClient } from '../../../../../shared/port-mapping/service';
-import type { MappingTunnel, MappingTunnelOptions } from '../../../../../shared/port-mapping/types';
+import type { ForwardingClient } from '../../../vendor/shared/port-mapping/service';
+import type { MappingTunnel, MappingTunnelOptions } from '../../../vendor/shared/port-mapping/types';
 import { retainPortMappingConnection } from '../backgroundConnection';
 import { bridgeSocket } from './socketBridge';
-import { openMappingSocket } from '../../../../../shared/port-mapping/socket';
+import { openMappingSocket } from '../../../vendor/shared/port-mapping/socket';
 
 const START_TIMEOUT_MS = 10_000;
 const LOOPBACK = '127.0.0.1';

@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import type { DownloadTask } from './types';
 import { downloadDetail, downloadPercent, downloadStatusLabel, formatBytes } from './presentation';
 import { colors, useStyles } from './styles';
-import { downloadCompletionDetails } from '../../../../shared/downloads/completion';
+import { downloadCompletionDetails } from '../../vendor/shared/downloads/completion';
 
 export function DownloadCard({ task, connected, busy, action, share, remove, selected = false, toggleSelection }: {
   task: DownloadTask; connected: boolean; busy: boolean;

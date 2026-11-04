@@ -1,6 +1,6 @@
 import { Animated, Easing } from 'react-native';
-import { SWIPE_SETTLE_MS } from '../../../../shared/navigation/pageSwipe';
-import type { PageAnimation } from '../../../../shared/navigation/usePageTransition';
+import { SWIPE_SETTLE_MS } from '../../vendor/shared/navigation/pageSwipe';
+import type { PageAnimation } from '../../vendor/shared/navigation/usePageTransition';
 
 export function createPageAnimation(offset: Animated.Value): PageAnimation {
   return {

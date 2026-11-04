@@ -1,10 +1,10 @@
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const native = path.resolve(__dirname, '..');
-const manifest = path.join(root, 'crates/ssh-mobile/Cargo.toml');
-const target = path.join(root, 'crates/ssh-mobile/target');
+const manifest = path.join(root, 'vendor/crates/ssh-mobile/Cargo.toml');
+const target = path.join(root, 'vendor/crates/ssh-mobile/target');
 const destination = path.join(native, 'plugins/ssh/build');
 const targets = { 'arm64-v8a': 'aarch64-linux-android', 'armeabi-v7a': 'armv7-linux-androideabi',
   x86: 'i686-linux-android', x86_64: 'x86_64-linux-android' };

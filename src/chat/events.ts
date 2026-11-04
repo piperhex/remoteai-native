@@ -1,1 +1,1 @@
-export * from '../../../../shared/remote-chat/client/events';
+export * from '../../vendor/shared/remote-chat/client/events';

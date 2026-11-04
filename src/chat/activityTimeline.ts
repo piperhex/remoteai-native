@@ -1,2 +1,2 @@
-export { activityTimeline, findActivityEntry, latestActivity } from '../../../../shared/chat/activityTimeline';
-export type { ActivityEntry, TimelineEntry } from '../../../../shared/chat/activityTimeline';
+export { activityTimeline, findActivityEntry, latestActivity } from '../../vendor/shared/chat/activityTimeline';
+export type { ActivityEntry, TimelineEntry } from '../../vendor/shared/chat/activityTimeline';

@@ -7,7 +7,7 @@ import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { t, useLanguage } from '../i18n';
 import { connectionHealth, healthStatusLabels, HEALTH_INLINE_STATUS_MAX_CHARACTERS,
-  type HealthStatus, type HealthStep } from '../../../../shared/remote-chat/connectionHealth';
+  type HealthStatus, type HealthStep } from '../../vendor/shared/remote-chat/connectionHealth';
 import type { ChatState } from './types';
 import { ChatConnectionAddresses } from './ChatConnectionAddresses';
 import { useHealthStyles as useCss, healthTones, stepTones } from './connectionHealthStyles';

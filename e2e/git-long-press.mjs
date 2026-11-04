@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 process.env.ANDROID_CHAT_OUTPUT ??= 'git-long-press-android';
-const driver = await import('../../desktop/e2e/android-chat-driver.mjs');
+const driver = await import('../vendor/apps/desktop/e2e/android-chat-driver.mjs');
 const { adb, nodes, output, screenshot, tap, waitText } = driver;
 const packageName = 'com.codexswitch.mobile.gittest';
 const apk = process.env.ANDROID_GIT_APK

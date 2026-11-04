@@ -4,8 +4,8 @@ import { useThemeColor } from '../../theme/store';
 import { t, useLanguage } from '../../i18n';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { DesktopStats as Stats } from '../../../../../shared/remote-desktop/protocol';
-import { desktopStatsLines } from '../../../../../shared/remote-desktop/stats';
+import type { DesktopStats as Stats } from '../../../vendor/shared/remote-desktop/protocol';
+import { desktopStatsLines } from '../../../vendor/shared/remote-desktop/stats';
 
 export function DesktopStats({ stats, close }: { stats: Stats; close: () => void }) {
   const s = useS();

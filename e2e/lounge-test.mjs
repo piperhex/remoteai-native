@@ -31,7 +31,7 @@ import { verifyNativePrivateScroll } from './lounge-private-scroll-check.mjs';
 import { verifyNativeHistory } from './lounge-history-check.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
 const output = path.join(root, process.env.LOUNGE_TEST_OUTPUT ?? (process.env.LOUNGE_TEXT_ONLY === '1'
@@ -252,7 +252,7 @@ try {
   }
   await adb('reverse', 'tcp:1497', `tcp:${server.address().port}`);
   await adb('install', '-r', process.env.LOUNGE_TEST_APK
-    ?? path.join(root, 'apps/native/android/app/build/outputs/apk/release/lounge-fixture.apk'));
+    ?? path.join(root, 'android/app/build/outputs/apk/release/lounge-fixture.apk'));
   for (const scale of [1, 1.3]) {
     notifications.muted.clear(); notifications.fail = false;
     names.reset();

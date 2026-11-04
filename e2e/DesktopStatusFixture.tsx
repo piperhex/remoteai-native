@@ -5,7 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import type { DesktopClient } from '../../../shared/remote-desktop/protocol';
+import type { DesktopClient } from '../vendor/shared/remote-desktop/protocol';
 import { RemoteDesktop } from '../src/chat/desktop/RemoteDesktop';
 import { textMetrics } from '../src/theme/text';
 import { t } from '../src/i18n';

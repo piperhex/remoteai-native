@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { contentHash, historyVersion } from '../../../../shared/remote-chat/historySync';
-import { AsyncHistoryVersionCache } from '../../../../shared/remote-chat/client/historyPreparation';
-import { HistoryReader } from '../../../../shared/remote-chat/client/historyReader';
+import { contentHash, historyVersion } from '../../vendor/shared/remote-chat/historySync';
+import { AsyncHistoryVersionCache } from '../../vendor/shared/remote-chat/client/historyPreparation';
+import { HistoryReader } from '../../vendor/shared/remote-chat/client/historyReader';
 import { RecordEncoder, THREAD_CHAR_LIMIT } from './offline/records';
 import type { Thread } from './types';
 

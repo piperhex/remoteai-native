@@ -1,24 +1,24 @@
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
 import { Keyboard, Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MAX_IMAGES, MAX_TEXT, type LoungeDraft } from '../../../../shared/lounge/types';
+import { MAX_IMAGES, MAX_TEXT, type LoungeDraft } from '../../vendor/shared/lounge/types';
 import { displayText, t } from '../i18n';
 import { useLoungeColor } from './theme';
 import { LoungeFileButton } from './LoungeFileButton';
-import { attachmentByteLimit } from '../../../../shared/lounge/attachments';
-import { useLoungeAttachmentLimit } from '../../../../shared/lounge/useLoungeAttachmentLimit';
+import { attachmentByteLimit } from '../../vendor/shared/lounge/attachments';
+import { useLoungeAttachmentLimit } from '../../vendor/shared/lounge/useLoungeAttachmentLimit';
 import { pickLoungeImages } from './images';
 import { useLoungeStyles } from './styles';
-import type { LoungeReply } from '../../../../shared/lounge/reply';
+import type { LoungeReply } from '../../vendor/shared/lounge/reply';
 import { LoungeReplyPreview } from './LoungeReplyPreview';
-import { sendError } from '../../../../shared/lounge/contacts';
-import { useComposerDraft, type ComposerDraftState } from '../../../../shared/lounge/useComposerDraft';
+import { sendError } from '../../vendor/shared/lounge/contacts';
+import { useComposerDraft, type ComposerDraftState } from '../../vendor/shared/lounge/useComposerDraft';
 import { LoungeSheet } from './LoungeSheet';
 import { LoungeComposerAction } from './LoungeComposerAction';
 import { LoungeEmojiPanel } from './LoungeEmojiPanel';
 import { useLoungeEmoji } from './useLoungeEmoji';
 import { LoungeImageAttachments } from './LoungeImageAttachments';
-import { loungeMention, type LoungeComposerHandle } from '../../../../shared/lounge/mention';
+import { loungeMention, type LoungeComposerHandle } from '../../vendor/shared/lounge/mention';
 
 export function LoungeComposer({ connected, send, onHistory, reply, cancelReply, draftState, extraActions,
   onOverlayChange, viewportHeight, composerRef, direct = false, filesAvailable = false }: {

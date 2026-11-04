@@ -1,7 +1,7 @@
 import { createThemedStyles } from '../theme/styles';
 import {  Text, View } from 'react-native';
-import type { PreviewProgress } from '../../../../shared/remote-chat/previewProgress';
-import { previewProgressText } from '../../../../shared/chat/previewProgress';
+import type { PreviewProgress } from '../../vendor/shared/remote-chat/previewProgress';
+import { previewProgressText } from '../../vendor/shared/chat/previewProgress';
 
 export function PreviewTransferProgress({ progress, label, dark = false }: {
   progress?: PreviewProgress; label: string; dark?: boolean;

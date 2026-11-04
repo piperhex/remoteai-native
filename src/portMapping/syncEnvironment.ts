@@ -1,5 +1,5 @@
 import { AppState } from 'react-native';
-import type { MappingSyncEnvironment } from '../../../../shared/port-mapping/syncPolling';
+import type { MappingSyncEnvironment } from '../../vendor/shared/port-mapping/syncPolling';
 
 // Native reachability is learned from HTTP failures; AppState resumes immediately after suspension.
 export const nativeMappingEnvironment: MappingSyncEnvironment = {

@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { LOUNGE_EMOJI } from '../../../../shared/lounge/emoji';
+import { LOUNGE_EMOJI } from '../../vendor/shared/lounge/emoji';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 import { createLoungeStyles } from './theme';

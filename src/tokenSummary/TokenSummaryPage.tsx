@@ -5,8 +5,8 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, TextInp
 import Feather from '@expo/vector-icons/Feather';
 import Storage from 'expo-sqlite/kv-store';
 import { MAX_SUMMARY_WEEKS, MIN_SUMMARY_WEEKS, type ReadTokenSummary } from
-  '../../../../shared/remote-chat/tokenSummary';
-import { useTokenSummary } from '../../../../shared/remote-chat/client/useTokenSummary';
+  '../../vendor/shared/remote-chat/tokenSummary';
+import { useTokenSummary } from '../../vendor/shared/remote-chat/client/useTokenSummary';
 import { UsageTotals, UsageTrend, RankingPanel } from './UsagePanels';
 import { ConsumptionPanels } from './ConsumptionPanels';
 import { UsageHeatmap } from './UsageHeatmap';

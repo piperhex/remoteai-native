@@ -1,4 +1,4 @@
-import type { DisplaySettingsProps } from '../../../../../shared/remote-desktop/displaySettings';
+import type { DisplaySettingsProps } from '../../../vendor/shared/remote-desktop/displaySettings';
 import { t } from '../../i18n';
 import { ResolutionDropdown } from './ResolutionDropdown';
 import { DisplaySettingsHint, DisplaySettingsSection } from './DisplaySettingsSection';

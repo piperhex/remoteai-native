@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
-import { checkDirectPermission } from '../../../../shared/lounge/directPermission';
-import { historyPosition, type HistoryPage } from '../../../../shared/lounge/archive';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
+import { checkDirectPermission } from '../../vendor/shared/lounge/directPermission';
+import { historyPosition, type HistoryPage } from '../../vendor/shared/lounge/archive';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 
 const self = { id: 'self', account: 'self@test' };
 const peer = { id: 'peer', account: 'peer@test' };

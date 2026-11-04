@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { AppState } from 'react-native';
 import { randomUUID } from 'expo-crypto';
-import { LoungeController } from '../../../../shared/lounge/controller';
+import { LoungeController } from '../../vendor/shared/lounge/controller';
 import { nativeLoungeAvatars } from './avatarStore';
-import type { LoungeRuntime } from '../../../../shared/lounge/runtime';
-import { useLounge } from '../../../../shared/lounge/useLounge';
+import type { LoungeRuntime } from '../../vendor/shared/lounge/runtime';
+import { useLounge } from '../../vendor/shared/lounge/useLounge';
 import { authorizedRequest } from '../api/client';
 import type { AuthSession } from '../types';
 import { nativeLoungeHistory } from './historyStore';

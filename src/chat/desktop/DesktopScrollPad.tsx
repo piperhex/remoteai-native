@@ -2,8 +2,8 @@ import { useThemeColor } from '../../theme/store';
 import { t, useLanguage } from '../../i18n';
 import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SCROLL_PAD_SIZE } from '../../../../../shared/remote-desktop/scrollPad';
-import type { ScrollPadProps } from '../../../../../shared/remote-desktop/useScrollPad';
+import { SCROLL_PAD_SIZE } from '../../../vendor/shared/remote-desktop/scrollPad';
+import type { ScrollPadProps } from '../../../vendor/shared/remote-desktop/useScrollPad';
 import { useScrollPadStyles as useS } from './scrollPadStyles';
 
 export function DesktopScrollPad({ layout, position, horizontal, cancel }: ScrollPadProps) {

@@ -6,8 +6,8 @@ import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { LoungeComposer } from '../src/lounge/LoungeComposer';
-import type { LoungeDraft } from '../../../shared/lounge/types';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import type { LoungeDraft } from '../vendor/shared/lounge/types';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import { textMetrics } from '../src/theme/text';
 

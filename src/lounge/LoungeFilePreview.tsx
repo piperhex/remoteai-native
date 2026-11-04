@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import type { LoungeAttachment } from '../../../../shared/lounge/attachments';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import { previewAttachment } from '../../../../shared/lounge/previewAttachment';
-import { useFileActions } from '../../../../shared/lounge/useFileActions';
+import type { LoungeAttachment } from '../../vendor/shared/lounge/attachments';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import { previewAttachment } from '../../vendor/shared/lounge/previewAttachment';
+import { useFileActions } from '../../vendor/shared/lounge/useFileActions';
 import { FilePreviewSheet } from '../chat/FilePreviewSheet';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';

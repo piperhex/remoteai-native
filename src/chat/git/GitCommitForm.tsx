@@ -1,5 +1,5 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 import { t, useLanguage } from '../../i18n';
 import { useThemeColor } from '../../theme/store';
 import { palette } from '../styles';

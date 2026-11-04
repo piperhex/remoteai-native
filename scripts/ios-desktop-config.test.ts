@@ -16,8 +16,8 @@ it('generates iOS desktop permissions and rotation support after all Expo plugin
   };
   const plist = config._internal.modResults.ios.infoPlist;
   expect(plist.NSLocalNetworkUsageDescription).toContain('远程桌面');
-  // WebRTC's plugin restores this permission if our receive-only configuration runs too early.
-  expect(plist).not.toHaveProperty('NSMicrophoneUsageDescription');
+  // Dictation needs the localized microphone explanation after all Expo plugins have run.
+  expect(plist.NSMicrophoneUsageDescription).toBe('允许 Remote AI 使用麦克风，将语音转换为文字');
   expect(plist.NSCameraUsageDescription).toContain('扫描二维码');
   expect(plist.UIRequiresFullScreen).toBe(true);
   expect(plist.UISupportedInterfaceOrientations).toEqual(expect.arrayContaining([

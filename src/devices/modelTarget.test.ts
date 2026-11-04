@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeRemoteModelState, remoteModelOptions, remoteProviderCommand } from '../../../../shared/remote-chat/modelTarget';
+import { mergeRemoteModelState, remoteModelOptions, remoteProviderCommand } from '../../vendor/shared/remote-chat/modelTarget';
 
 const device = {
   activeAccountId: 'proxy-account', activeProviderId: 'proxy-provider', activeProviderGroup: 'work',

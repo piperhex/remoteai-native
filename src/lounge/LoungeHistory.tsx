@@ -3,12 +3,12 @@ import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'r
 import { Ionicons } from '@expo/vector-icons';
 import { Modal } from '../components/Modal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useHistoryTimeline, type HistoryTimelineModel } from '../../../../shared/lounge/useHistoryTimeline';
-import { historyTimelineRows } from '../../../../shared/lounge/historyTimelineRows';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import type { LoungeAccount, LoungeMessage as Message } from '../../../../shared/lounge/types';
-import type { LoungeReply } from '../../../../shared/lounge/reply';
-import type { LoungeNavigationError } from '../../../../shared/lounge/useLoungeNavigation';
+import { useHistoryTimeline, type HistoryTimelineModel } from '../../vendor/shared/lounge/useHistoryTimeline';
+import { historyTimelineRows } from '../../vendor/shared/lounge/historyTimelineRows';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import type { LoungeAccount, LoungeMessage as Message } from '../../vendor/shared/lounge/types';
+import type { LoungeReply } from '../../vendor/shared/lounge/reply';
+import type { LoungeNavigationError } from '../../vendor/shared/lounge/useLoungeNavigation';
 import { getLocale, t } from '../i18n';
 import { LoungeMessage } from './LoungeMessage';
 import { LoungePreview } from './LoungePreview';

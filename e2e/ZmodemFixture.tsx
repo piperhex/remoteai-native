@@ -9,8 +9,8 @@ import { useFonts } from 'expo-font';
 import { textMetrics } from '../src/theme/text';
 import { SshHostKeyFixture } from './SshHostKeyFixture';
 import { TerminalSession } from '../src/chat/terminal/TerminalSession';
-import { createGuiToolsClient } from '../../../shared/remote-chat/guiTools';
-import type { TerminalInfo } from '../../../shared/terminal/types';
+import { createGuiToolsClient } from '../vendor/shared/remote-chat/guiTools';
+import type { TerminalInfo } from '../vendor/shared/terminal/types';
 
 const base = 'http://127.0.0.1:1518';
 async function rpc<T>(request: object): Promise<T> {

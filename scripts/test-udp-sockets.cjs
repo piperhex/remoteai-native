@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const sdk = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android/Sdk');
 const serial = process.env.ANDROID_SERIAL;
 if (!serial || !/^[\w.:-]+$/.test(serial)) throw new Error('Set ANDROID_SERIAL to the test device.');
@@ -29,7 +29,7 @@ const fixtureClasses = path.join(work, 'fixture');
 const classes = path.join(work, 'checks.jar');
 const dex = path.join(work, 'checks-dex.jar');
 run(path.join(javaBin, 'javac'), ['-classpath', [android, react, moduleClasses].join(path.delimiter),
-  '-d', fixtureClasses, path.join(root, 'apps/native/e2e/port-mapping/UdpSocketChecks.java')]);
+  '-d', fixtureClasses, path.join(root, 'e2e/port-mapping/UdpSocketChecks.java')]);
 run(path.join(javaBin, 'jar'), ['cf', classes, '-C', moduleClasses, '.', '-C', fixtureClasses, '.']);
 run(path.join(javaBin, 'java'), ['-cp', path.join(sdk, 'build-tools/35.0.0/lib/d8.jar'), 'com.android.tools.r8.D8',
   '--lib', android, '--classpath', react, '--output', dex, classes]);

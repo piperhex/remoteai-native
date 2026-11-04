@@ -1,7 +1,7 @@
 import { Image, Keyboard, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LOUNGE_IMAGE_EDITOR_LIMITS, useLoungeImageEditor,
-  type LoungeImageAttachmentsProps } from '../../../../shared/lounge/useLoungeImageEditor';
+  type LoungeImageAttachmentsProps } from '../../vendor/shared/lounge/useLoungeImageEditor';
 import { ChatPhotoEditor } from '../chat/ChatPhotoEditor';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';

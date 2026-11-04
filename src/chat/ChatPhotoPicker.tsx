@@ -9,7 +9,7 @@ import { palette, useStyles } from './styles';
 import { ImageViewer } from './ImageViewer';
 import { ChatPhotoEditor } from './ChatPhotoEditor';
 import type { useChatPhotos } from './useChatPhotos';
-import { itemUploadProgress, type UploadProgress } from '../../../../shared/remote-chat/uploadProgress';
+import { itemUploadProgress, type UploadProgress } from '../../vendor/shared/remote-chat/uploadProgress';
 import { ComposerUploadProgress } from './ComposerUploadProgress';
 
 interface Props {

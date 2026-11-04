@@ -6,13 +6,13 @@ import { t, useLanguage } from '../i18n';
 import { ActivityIndicator, Pressable, SectionList, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import type { ChatProject, ChatState, Thread } from './types';
-import { threadPresentation } from '../../../../shared/remote-chat/sidebar';
-import { useThreadGroups } from '../../../../shared/remote-chat/client/useThreadGroups';
+import { threadPresentation } from '../../vendor/shared/remote-chat/sidebar';
+import { useThreadGroups } from '../../vendor/shared/remote-chat/client/useThreadGroups';
 import { useThreadListScroll } from './useThreadListScroll';
 import type { ChatController } from './controller';
 import { palette, useStyles } from './styles';
-import { THREAD_LONG_PRESS_MS } from '../../../../shared/remote-chat/client/threadActions';
-import { useGrouping } from '../../../../shared/chat/groups/context';
+import { THREAD_LONG_PRESS_MS } from '../../vendor/shared/remote-chat/client/threadActions';
+import { useGrouping } from '../../vendor/shared/chat/groups/context';
 import { NativeGroupIcon } from './groups/GroupChoice';
 
 interface Props {

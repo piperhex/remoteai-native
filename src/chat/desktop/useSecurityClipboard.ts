@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Clipboard from 'expo-clipboard';
-import type { sessionClipboard } from '../../../../../shared/remote-desktop/sessionClipboard';
+import type { sessionClipboard } from '../../../vendor/shared/remote-desktop/sessionClipboard';
 
 /** Native clipboard access is tied to a tap, including the iOS paste permission prompt. */
 export function useSecurityClipboard(clipboard: Pick<ReturnType<typeof sessionClipboard>, 'read' | 'write'>,

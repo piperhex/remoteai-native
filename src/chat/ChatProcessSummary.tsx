@@ -3,7 +3,7 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatTurnDuration, turnElapsedMs } from '../../../desktop/src/pages/codexGui/turnTiming';
+import { formatTurnDuration, turnElapsedMs } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
 import type { WorkEntry } from './turnPresentation';
 import { palette, useStyles } from './styles';
 

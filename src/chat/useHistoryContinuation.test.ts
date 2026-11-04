@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useHistoryContinuation } from '../../../../shared/chat/useHistoryContinuation';
-import type { HistoryLoadResult } from '../../../../shared/remote-chat/client/historyLoad';
+import { useHistoryContinuation } from '../../vendor/shared/chat/useHistoryContinuation';
+import type { HistoryLoadResult } from '../../vendor/shared/remote-chat/client/historyLoad';
 
 const hooks = vi.hoisted(() => ({ values: [] as unknown[], slot: 0,
   effects: [] as (() => void)[], cleanups: [] as (() => void)[] }));

@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { checkStatus, createReviewClient, resultSummary, reviewComment,
-  type ReviewCheck, type ReviewRevision } from '../../../../shared/remote-chat/taskReview';
-import { changedFiles } from '../../../../shared/chat/diff';
+  type ReviewCheck, type ReviewRevision } from '../../vendor/shared/remote-chat/taskReview';
+import { changedFiles } from '../../vendor/shared/chat/diff';
 
 const revision: ReviewRevision = { id: 'current', head: 'head', branch: 'feature', dirty: true };
 const check: ReviewCheck = { kind: 'test', command: 'npm run test', revision: 'current',

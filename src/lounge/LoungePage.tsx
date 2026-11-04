@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { BackHandler, FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { LoungeController } from '../../../../shared/lounge/controller';
-import type { LoungeMessage as Message } from '../../../../shared/lounge/types';
-import { useMobileLounge } from '../../../../shared/lounge/useMobileLounge';
+import type { LoungeController } from '../../vendor/shared/lounge/controller';
+import type { LoungeMessage as Message } from '../../vendor/shared/lounge/types';
+import { useMobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
 import { getLocale, t, useLanguage } from '../i18n';
 import { LoungeMessage } from './LoungeMessage';
 import { LoungeComposer } from './LoungeComposer';
@@ -21,10 +21,10 @@ import { useLoungeColor } from './theme';
 import { LoungeProfile } from './LoungeProfile';
 import { LoungeDeleteDialog } from './LoungeDeleteDialog';
 import { LoungeNewChat } from './LoungeNewChat';
-import { historyKey } from '../../../../shared/lounge/archive';
+import { historyKey } from '../../vendor/shared/lounge/archive';
 import { useLoungeListFocus } from './useLoungeListFocus';
 import { useLoungeListScroll } from './useLoungeListScroll';
-import type { LoungeComposerHandle } from '../../../../shared/lounge/mention';
+import type { LoungeComposerHandle } from '../../vendor/shared/lounge/mention';
 
 export function LoungePage({ controller, onBack }: { controller: LoungeController; onBack: () => void }) {
   useLanguage();

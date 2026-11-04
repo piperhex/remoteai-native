@@ -1,10 +1,10 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { historyKey, historyPage, historyPageLimit, historyScope, historyText, historyTerms,
   messageBytes, RECENT_BYTE_LIMIT, type HistoryQuery, type LoungeHistoryStore,
-} from '../../../../shared/lounge/archive';
-import { parseMessage, type LoungeMessage } from '../../../../shared/lounge/types';
-import { mergeContact, parseContact, type LoungeContact } from '../../../../shared/lounge/contacts';
-import { mergeDelivery } from '../../../../shared/lounge/delivery';
+} from '../../vendor/shared/lounge/archive';
+import { parseMessage, type LoungeMessage } from '../../vendor/shared/lounge/types';
+import { mergeContact, parseContact, type LoungeContact } from '../../vendor/shared/lounge/contacts';
+import { mergeDelivery } from '../../vendor/shared/lounge/delivery';
 
 let database: Promise<SQLiteDatabase> | undefined;
 let pending: Promise<unknown> = Promise.resolve();

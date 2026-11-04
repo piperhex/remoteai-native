@@ -2,8 +2,8 @@ import { displayText } from '../i18n/index';
 import { Buffer } from 'buffer';
 import type * as React from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../../../shared/remote-chat/policy';
-import { setInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
+import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../vendor/shared/remote-chat/policy';
+import { setInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
 
 import { useComposerAttachments } from './useComposerAttachments';
 

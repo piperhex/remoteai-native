@@ -2,7 +2,7 @@ import { displayText } from '../i18n/index';
 import { Text, View } from 'react-native';
 import { useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
-import type { messageReferences } from '../../../../shared/chat/messageReferences';
+import type { messageReferences } from '../../vendor/shared/chat/messageReferences';
 import { textMetrics } from '../theme/text';
 
 export function ChatMessageReferences({ references }: { references: ReturnType<typeof messageReferences> }) {

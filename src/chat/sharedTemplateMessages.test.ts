@@ -1,16 +1,16 @@
 import { displayText } from '../i18n/index';
 import { Buffer } from 'buffer';
 import { afterEach, describe, expect, it } from 'vitest';
-import { appendQuote, type ChatQuote } from '../../../../shared/chat/replyQuotes';
-import { ChatImageError, validateChatImages } from '../../../../shared/remote-chat/attachments';
-import { remoteAttachments } from '../../../../shared/remote-chat/composerAttachments';
-import { compressChatImage, ImagePolicyError } from '../../../../shared/remote-chat/compressImage';
+import { appendQuote, type ChatQuote } from '../../vendor/shared/chat/replyQuotes';
+import { ChatImageError, validateChatImages } from '../../vendor/shared/remote-chat/attachments';
+import { remoteAttachments } from '../../vendor/shared/remote-chat/composerAttachments';
+import { compressChatImage, ImagePolicyError } from '../../vendor/shared/remote-chat/compressImage';
 import { checkDownloadSize, checkFileUploadSize, DEFAULT_CHAT_POLICY, DownloadPolicyError, MIB, setChatPolicy,
-  UploadPolicyError } from '../../../../shared/remote-chat/policy';
-import { MAX_FPS, validateSettings } from '../../../../shared/remote-desktop/protocol';
-import { setInterfaceLanguage } from "../../../../shared/localization/interfaceLanguage";
+  UploadPolicyError } from '../../vendor/shared/remote-chat/policy';
+import { MAX_FPS, validateSettings } from '../../vendor/shared/remote-desktop/protocol';
+import { setInterfaceLanguage } from "../../vendor/shared/localization/interfaceLanguage";
 
-import type { Language } from "../../../../shared/localization/language";
+import type { Language } from "../../vendor/shared/localization/language";
 
 const han = /[一-鿿]/;
 const quote = (text: string): ChatQuote => ({ text, messageId: 'answer', role: 'assistant' });

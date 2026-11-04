@@ -1,6 +1,6 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import { downloadFile, type FileClient } from '../../../../../shared/remote-chat/fileDownload';
-import { checkPreviewSize, previewMimeType } from '../../../../../shared/file-preview/kinds';
+import { downloadFile, type FileClient } from '../../../vendor/shared/remote-chat/fileDownload';
+import { checkPreviewSize, previewMimeType } from '../../../vendor/shared/file-preview/kinds';
 
 /** Keep the existing authenticated file transfer and cancellation/close behavior on native. */
 export async function nativeHtmlAsset(options: {

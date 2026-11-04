@@ -1,8 +1,8 @@
 import { t } from '../i18n';
 import { EncodingType, getInfoAsync, readAsStringAsync } from 'expo-file-system';
-import { base64Bytes, getChatPolicy, isDirectChat, MIB } from '../../../../shared/remote-chat/policy';
-import { compressChatImage, ImagePolicyError } from '../../../../shared/remote-chat/compressImage';
-import { normalizeImageDataUrl } from '../../../../shared/remote-chat/imageDataUrl';
+import { base64Bytes, getChatPolicy, isDirectChat, MIB } from '../../vendor/shared/remote-chat/policy';
+import { compressChatImage, ImagePolicyError } from '../../vendor/shared/remote-chat/compressImage';
+import { normalizeImageDataUrl } from '../../vendor/shared/remote-chat/imageDataUrl';
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 

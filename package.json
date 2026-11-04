@@ -14,7 +14,11 @@
     "build:apk": "node ./scripts/build-apk.cjs",
     "prebuild:ios": "node ./scripts/expo.cjs prebuild --platform ios --clean --no-install",
     "check": "node ./scripts/build-html-preparation.cjs --check && node ./scripts/build-project-browser.cjs --check && node ./scripts/build-terminal-document.cjs --check && node ./scripts/build-math-css.cjs --check && node ./scripts/build-desktop-ime.cjs --check && node ./scripts/build-text-selection.cjs --check && node ./scripts/build-lounge-document.cjs --check && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:assets": "node ./scripts/build-html-preparation.cjs && node ./scripts/build-project-browser.cjs && node ./scripts/build-terminal-document.cjs && node ./scripts/build-math-css.cjs && node ./scripts/build-desktop-ime.cjs && node ./scripts/build-text-selection.cjs && node ./scripts/build-lounge-document.cjs",
+    "generate:i18n": "remoteai-i18n integrate --root . --manifest i18n.config.json",
+    "check:i18n": "npm run generate:i18n -- --check && remoteai-i18n scan --root . --manifest i18n.config.json",
+    "version:native": "node scripts/set-version.mjs"
   },
   "dependencies": {
     "@config-plugins/react-native-webrtc": "^12.0.0",
@@ -22,9 +26,10 @@
     "@noble/ciphers": "^1.3.0",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
-    "@remoteai/i18n": "0.1.0",
+    "@remoteai/i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
     "base64-js": "1.5.1",
     "buffer": "^6.0.3",
+    "codex-switch": "file:../codex-switch",
     "expo": "^53.0.0",
     "expo-application": "~6.1.4",
     "expo-asset": "~11.1.7",
@@ -63,14 +68,23 @@
     "zmodem.js": "^0.1.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/hast": "^3.0.5",
     "@types/katex": "^0.16.8",
+    "@types/node": "^22.10.7",
     "@types/react": "~19.0.10",
+    "@types/react-dom": "~19.0.0",
     "@types/sql.js": "^1.4.11",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
+    "esbuild": "0.25.12",
+    "jsdom": "^26.1.0",
+    "react-dom": "19.0.0",
     "sql.js": "^1.14.2",
     "typescript": "~5.8.3",
     "vitest": "^4.1.9"
-  }
+  },
+  "workspaces": [
+    "vendor"
+  ]
 }

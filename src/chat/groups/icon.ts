@@ -1,6 +1,6 @@
 import { launchImageLibraryAsync } from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { GROUP_ICON_LIMIT, GROUP_ICON_SIZE } from '../../../../../shared/chat/groups/model';
+import { GROUP_ICON_LIMIT, GROUP_ICON_SIZE } from '../../../vendor/shared/chat/groups/model';
 
 export async function pickGroupIcon(): Promise<string | undefined> {
   const result = await launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });

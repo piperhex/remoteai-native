@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import { bytesToHex, hexToBytes, utf8ToBytes } from '@noble/hashes/utils';
-import type { PacketCipherFactory } from '../../../../shared/remote-chat/packetCipher';
+import type { PacketCipherFactory } from '../../vendor/shared/remote-chat/packetCipher';
 
 type NativePlaintext = { text: string } | { utf8Hex: string };
 

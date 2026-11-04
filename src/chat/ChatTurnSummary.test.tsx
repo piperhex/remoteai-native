@@ -2,7 +2,7 @@ import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChatTurnSummary } from './ChatTurnSummary';
 import type { Turn } from './types';
-import { MODEL_CAPACITY_MESSAGE } from '../../../desktop/src/pages/codexGui/requestError';
+import { MODEL_CAPACITY_MESSAGE } from '../../vendor/apps/desktop/src/pages/codexGui/requestError';
 import { t } from '../i18n';
 
 const reviewContext = vi.hoisted(() => ({ value: {} as object | null }));

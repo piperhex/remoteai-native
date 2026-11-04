@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { randomUUID } from 'expo-crypto';
 import Storage from 'expo-sqlite/kv-store';
-import { PortForwardingService, type ForwardingClient } from '../../../../../shared/port-mapping/service';
-import { readPortMappings, savePortMappings } from '../../../../../shared/port-mapping/settings';
+import { PortForwardingService, type ForwardingClient } from '../../../vendor/shared/port-mapping/service';
+import { readPortMappings, savePortMappings } from '../../../vendor/shared/port-mapping/settings';
 import { NativeMappingTunnel } from './tunnel';
-import { protocolTunnel } from '../../../../../shared/port-mapping/protocolTunnel';
-import { UdpMappingTunnel } from '../../../../../shared/port-mapping/udpTunnel';
+import { protocolTunnel } from '../../../vendor/shared/port-mapping/protocolTunnel';
+import { UdpMappingTunnel } from '../../../vendor/shared/port-mapping/udpTunnel';
 import { listenUdp } from './udpListener';
 import { adminRequest } from '../../api/client';
 import type { AuthSession } from '../../types';
-import { mappingSyncScope, type MappingDocument } from '../../../../../shared/port-mapping/sync';
-import { useMappingSync } from '../../../../../shared/port-mapping/useMappingSync';
-import { useDeviceMapping } from '../../../../../shared/port-mapping/deviceRegistry';
+import { mappingSyncScope, type MappingDocument } from '../../../vendor/shared/port-mapping/sync';
+import { useMappingSync } from '../../../vendor/shared/port-mapping/useMappingSync';
+import { useDeviceMapping } from '../../../vendor/shared/port-mapping/deviceRegistry';
 import { nativeMappingEnvironment } from '../../portMapping/syncEnvironment';
 
 const storage = { getItem: (key: string) => Storage.getItemSync(key),

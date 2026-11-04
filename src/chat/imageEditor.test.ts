@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { editedImageMessage, imageEditorHtml } from '../../../../shared/chat/imageEditorHtml';
-import { MAX_CHAT_IMAGE_CHARS } from '../../../../shared/remote-chat/attachments';
+import { editedImageMessage, imageEditorHtml } from '../../vendor/shared/chat/imageEditorHtml';
+import { MAX_CHAT_IMAGE_CHARS } from '../../vendor/shared/remote-chat/attachments';
 import { createI18n } from '@remoteai/i18n';
 import { resources } from '@remoteai/i18n/client';
 

@@ -7,9 +7,9 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { LoungePage } from '../src/lounge/LoungePage';
 import { useNativeLounge } from '../src/lounge/useNativeLounge';
 import type { AuthSession } from '../src/types';
-import { setInterfaceLanguage } from '../../../shared/localization/interfaceLanguage';
+import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { updateThemeMode } from '../src/theme/store';
-import { loungeAvatarVersion } from '../../../shared/lounge/avatarCache';
+import { loungeAvatarVersion } from '../vendor/shared/lounge/avatarCache';
 
 const session: AuthSession = { baseUrl: 'http://127.0.0.1:1499', email: 'alice@example.test',
   accessToken: 'fixture', refreshToken: 'fixture' };

@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { NativeModules, Platform } from 'react-native';
 import type { PrepareHistoryObject, PreparedHistoryObject }
-  from '../../../../shared/remote-chat/client/historyPreparation';
+  from '../../vendor/shared/remote-chat/client/historyPreparation';
 
 interface HistoryWorker { prepare(json: string[]): Promise<Omit<PreparedHistoryObject, 'data'>[]> }
 interface PendingObject {

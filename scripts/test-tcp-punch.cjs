@@ -2,7 +2,7 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const sdk = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android/Sdk');
 const buildTools = process.env.ANDROID_BUILD_TOOLS || '35.0.0';
 const javaTool = name => process.env.JAVA_HOME ? path.join(process.env.JAVA_HOME, 'bin', name) : name;
@@ -17,9 +17,9 @@ function run(command, args) {
   return result.stdout;
 }
 const sources = ['PunchSocket', 'PunchServer', 'PunchDescriptor']
-  .map(name => path.join(root, `apps/native/patches/tcp/${name}.java`));
+  .map(name => path.join(root, `patches/tcp/${name}.java`));
 run(javaTool('javac'), ['-encoding', 'UTF-8', '-cp', androidJar, '-d', work,
-  ...sources, path.join(root, 'apps/native/e2e/tcp/PunchSocketChecks.java')]);
+  ...sources, path.join(root, 'e2e/tcp/PunchSocketChecks.java')]);
 const classes = [path.join(work, 'PunchSocketChecks.class'),
   ...fs.readdirSync(path.join(work, 'com/asterinet/react/tcpsocket')).filter(name => name.endsWith('.class'))
     .map(name => path.join(work, 'com/asterinet/react/tcpsocket', name))];

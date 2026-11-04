@@ -4,10 +4,10 @@ import { Modal } from '../components/Modal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
-import { messageMenuActions } from '../../../../shared/lounge/messageMenuActions';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
+import { messageMenuActions } from '../../vendor/shared/lounge/messageMenuActions';
 import { MESSAGE_MENU_PADDING, messageMenuPosition, messageMenuSize,
-  type MenuAnchor } from '../../../../shared/lounge/messageMenuLayout';
+  type MenuAnchor } from '../../vendor/shared/lounge/messageMenuLayout';
 import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 

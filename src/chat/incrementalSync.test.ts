@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import type { ChatConnection, ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import type { ChatConnection, ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 import { HISTORY_CHANGED, historyDelta, type HistoryDelta, type HistoryVersion }
-  from '../../../../shared/remote-chat/historySync';
+  from '../../vendor/shared/remote-chat/historySync';
 import type { Thread } from './types';
-import { INITIAL_TRANSFORM, moveImage } from '../../../../shared/chat/imageTransform';
+import { INITIAL_TRANSFORM, moveImage } from '../../vendor/shared/chat/imageTransform';
 
 afterEach(() => vi.useRealTimers());
 

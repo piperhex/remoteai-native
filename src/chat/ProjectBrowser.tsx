@@ -1,4 +1,4 @@
-import { messageKeys } from '../../../../shared/project-browser/messageKeys';
+import { messageKeys } from '../../vendor/shared/project-browser/messageKeys';
 import { displayText, displayError } from '../i18n/index';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
@@ -8,12 +8,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import { Asset } from 'expo-asset';
 import { readAsStringAsync } from 'expo-file-system';
-import type { ProjectBrowserClient } from '../../../../shared/project-browser/protocol';
+import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
 import { handleBrowserRequest, type BrowserHostMessage,
-  type BrowserSettings } from '../../../../shared/project-browser/nativeBridge';
-import type { BrowserHost } from '../../../../shared/project-browser/entryActions';
+  type BrowserSettings } from '../../vendor/shared/project-browser/nativeBridge';
+import type { BrowserHost } from '../../vendor/shared/project-browser/entryActions';
 import { isNativeSshBrowserAction,
-  type NativeSshBrowserAction } from '../../../../shared/terminal/nativeSshBrowserAction';
+  type NativeSshBrowserAction } from '../../vendor/shared/terminal/nativeSshBrowserAction';
 
 import { t, useLanguage } from '../i18n';
 import { useThemeColor, useThemeMode } from '../theme/store';
@@ -22,11 +22,11 @@ import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
 import { useFilePreferences, setFileAutoSave } from '../settings/filePreferences';
 import { readBrowserSession, saveBrowserSession } from './projectBrowserSessions';
-import type { DocumentsSnapshot } from '../../../../shared/project-browser/documents';
+import type { DocumentsSnapshot } from '../../vendor/shared/project-browser/documents';
 import { projectBrowserHost } from './projectBrowserHost';
-import type { ScriptPanel } from '../../../../shared/terminal/TerminalWorkspaceProvider';
-import { handleNativeScriptAction, nativeScriptState } from '../../../../shared/project-browser/nativeScripts';
-import { useChatFileReference, useChatFileSelection } from '../../../../shared/chat/ChatFileReferences';
+import type { ScriptPanel } from '../../vendor/shared/terminal/TerminalWorkspaceProvider';
+import { handleNativeScriptAction, nativeScriptState } from '../../vendor/shared/project-browser/nativeScripts';
+import { useChatFileReference, useChatFileSelection } from '../../vendor/shared/chat/ChatFileReferences';
 
 export function ProjectBrowser({ client, cwd, connected, active, onClose, title, subtitle,
   host: suppliedHost, ssh, children, scripts }: {

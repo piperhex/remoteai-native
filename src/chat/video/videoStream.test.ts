@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { Buffer } from 'buffer';
-import { DEFAULT_CHAT_POLICY, setChatPolicy, MIB } from '../../../../../shared/remote-chat/policy';
-import { isVideoPath, validateVideoInfo, VIDEO_CHUNK_BYTES } from '../../../../../shared/remote-chat/video';
+import { DEFAULT_CHAT_POLICY, setChatPolicy, MIB } from '../../../vendor/shared/remote-chat/policy';
+import { isVideoPath, validateVideoInfo, VIDEO_CHUNK_BYTES } from '../../../vendor/shared/remote-chat/video';
 import { videoHeaders, videoRange, videoRequest } from './videoHttp';
 import { videoRangeStream } from './videoRangeStream';
 

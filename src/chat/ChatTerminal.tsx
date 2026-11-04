@@ -3,14 +3,14 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { ActivityIndicator, Keyboard, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { GuiToolsClient } from '../../../../shared/remote-chat/guiTools';
-import { useRemoteTerminalLauncher } from '../../../../shared/remote-chat/useRemoteTerminalLauncher';
+import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
+import { useRemoteTerminalLauncher } from '../../vendor/shared/remote-chat/useRemoteTerminalLauncher';
 import { TerminalTabs } from './terminal/TerminalTabs';
 import { TerminalSession } from './terminal/TerminalSession';
 import { useTerminalStyles as useStyles } from './terminal/styles';
 import { BottomSheet } from '../components/BottomSheet';
 import { palette } from './styles';
-import { useToolLaunch } from '../../../../shared/remote-chat/useToolLaunch';
+import { useToolLaunch } from '../../vendor/shared/remote-chat/useToolLaunch';
 
 interface Props {
   client: GuiToolsClient['terminal']; cwd: string; active: boolean; connected: boolean; deviceName?: string;

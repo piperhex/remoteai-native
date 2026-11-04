@@ -4,10 +4,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/chat-history-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
@@ -61,7 +61,7 @@ await mkdir(output, { recursive: true });
 await prepareHierarchy({ adb, output });
 const focus = (await adb('shell', 'dumpsys', 'window')).match(/mCurrentFocus=.* u0 ([\w.$]+\/[\w.$]+)/)?.[1];
 try {
-  await adb('install', '-r', path.join(root, 'apps/native/android/app/build/outputs/apk/release/chat-scroll-fixture.apk'));
+  await adb('install', '-r', path.join(root, 'android/app/build/outputs/apk/release/chat-scroll-fixture.apk'));
   await adb('shell', 'am', 'force-stop', applicationId);
   await adb('shell', 'am', 'start', '-W', '-n', `${applicationId}/com.codexswitch.mobile.MainActivity`);
   await tap('short');

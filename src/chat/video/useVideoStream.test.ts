@@ -1,8 +1,8 @@
 import { displayText } from '../../i18n/index';
 import { afterEach, expect, it, vi } from 'vitest';
-import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../../../../shared/remote-chat/policy';
-import { setInterfaceLanguage } from "../../../../../shared/localization/interfaceLanguage";
-import { translateMessage } from "../../../../../shared/localization/messages";
+import { DEFAULT_CHAT_POLICY, MIB, setChatPolicy } from '../../../vendor/shared/remote-chat/policy';
+import { setInterfaceLanguage } from "../../../vendor/shared/localization/interfaceLanguage";
+import { translateMessage } from "../../../vendor/shared/localization/messages";
 import { checkVideoSize, VideoPlaybackError, videoRangeStream } from './videoRangeStream';
 import { videoErrorMessage } from './useVideoStream';
 

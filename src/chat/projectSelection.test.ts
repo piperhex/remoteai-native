@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import { directoryProject } from '../../../../shared/remote-chat/projectDirectories';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import { directoryProject } from '../../vendor/shared/remote-chat/projectDirectories';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 
 async function setup() {
   const thread = { id: 'chosen', cwd: 'F:/projects/demo', preview: '', updatedAt: 1, turns: [] };

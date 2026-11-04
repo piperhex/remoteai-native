@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MOUSE_INSTRUCTIONS, QUALITY_OPTIONS, type DisplaySettingsProps }
-  from '../../../../../shared/remote-desktop/displaySettings';
+  from '../../../vendor/shared/remote-desktop/displaySettings';
 import { t, useLanguage } from '../../i18n';
 import { DisplayFrameRateSettings } from './DisplayFrameRateSettings';
 import { DisplayMonitorSettings } from './DisplayMonitorSettings';

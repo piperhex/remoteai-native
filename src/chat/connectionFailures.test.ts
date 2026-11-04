@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ChatController } from '../../../../shared/remote-chat/client/controller';
-import { CONNECTION_ERRORS } from '../../../../shared/remote-chat/connectionErrors';
-import { chatHandshake } from '../../../../shared/remote-chat/handshake';
-import type { ConnectionEvents } from '../../../../shared/remote-chat/client/connection';
+import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
+import { CONNECTION_ERRORS } from '../../vendor/shared/remote-chat/connectionErrors';
+import { chatHandshake } from '../../vendor/shared/remote-chat/handshake';
+import type { ConnectionEvents } from '../../vendor/shared/remote-chat/client/connection';
 
 afterEach(() => vi.useRealTimers());
 

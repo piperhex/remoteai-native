@@ -13,10 +13,10 @@ import { ChatTurnDetails } from './ChatTurnDetails';
 import { findWorkEntry } from './turnPresentation';
 import { activityTimeline, findActivityEntry, latestActivity, type TimelineEntry as Entry } from './activityTimeline';
 import { useConversationEntries } from './useConversationEntries';
-import { currentRunningTurn } from '../../../../shared/chat/runningTurn';
-import { hasCompactTimelineGap } from '../../../../shared/chat/timelineSpacing';
-import { questionMessageText } from '../../../../shared/remote-chat/client/asyncQuestions';
-import type { ChatMessagesProps } from '../../../../shared/remote-chat/client/messageProps';
+import { currentRunningTurn } from '../../vendor/shared/chat/runningTurn';
+import { hasCompactTimelineGap } from '../../vendor/shared/chat/timelineSpacing';
+import { questionMessageText } from '../../vendor/shared/remote-chat/client/asyncQuestions';
+import type { ChatMessagesProps } from '../../vendor/shared/remote-chat/client/messageProps';
 import { palette, useStyles } from './styles';
 
 type ProcessSelection = { type: 'work' | 'activities'; id: string };

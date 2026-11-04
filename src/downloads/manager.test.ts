@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import type { DownloadConnection, DownloadRequest, DownloadTask } from './types';
-import { BulkTransport } from '../../../../shared/remote-chat/bulkTransport';
-import { downloadBulkClient } from '../../../../shared/remote-chat/client/bulkClient';
-import { NativeBulkChannel } from '../../../../shared/remote-chat/nativeBulkChannel';
-import type { ChatLink } from '../../../../shared/remote-chat/link';
+import { BulkTransport } from '../../vendor/shared/remote-chat/bulkTransport';
+import { downloadBulkClient } from '../../vendor/shared/remote-chat/client/bulkClient';
+import { NativeBulkChannel } from '../../vendor/shared/remote-chat/nativeBulkChannel';
+import type { ChatLink } from '../../vendor/shared/remote-chat/link';
 
 const mocks = vi.hoisted(() => ({
   events: new Map<string, (value: string) => void>(),

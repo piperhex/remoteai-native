@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import type { ChatController } from './controller';
 import type { ChatState, Thread } from './types';
-import { threadPresentation } from '../../../../shared/remote-chat/sidebar';
+import { threadPresentation } from '../../vendor/shared/remote-chat/sidebar';
 import { useChatSearch } from './useChatSearch';
 import { palette, useStyles } from './styles';
 

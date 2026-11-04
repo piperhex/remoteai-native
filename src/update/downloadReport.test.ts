@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { reportDownload, type DownloadReport } from '../../../../shared/app-update/downloadReport';
+import { reportDownload, type DownloadReport } from '../../vendor/shared/app-update/downloadReport';
 
 const report: DownloadReport = { id: 'test-id', artifact: 'a'.repeat(64), platform: 'android',
   outcome: 'success', peerBytes: 10, serverBytes: 20, originBytes: 0, failures: [] };

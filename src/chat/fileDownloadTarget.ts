@@ -1,7 +1,7 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import { randomUUID } from 'expo-crypto';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-import { DownloadCancelled, type DownloadTarget, type FileInfo } from '../../../../shared/remote-chat/fileDownload';
+import { DownloadCancelled, type DownloadTarget, type FileInfo } from '../../vendor/shared/remote-chat/fileDownload';
 
 const SCOPED_STORAGE_API = 29;
 const { fs } = ReactNativeBlobUtil;

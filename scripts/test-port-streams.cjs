@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const sdk = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android/Sdk');
 const serial = process.env.ANDROID_SERIAL;
 const duplex = process.argv.includes('--duplex');
@@ -31,16 +31,16 @@ const compiler = ['org.jetbrains.kotlin/kotlin-compiler-embeddable/2.0.21', 'org
   'org.jetbrains/annotations/13.0'].map(jar);
 const android = path.join(sdk, 'platforms/android-35/android.jar');
 const classes = path.join(work, 'checks.jar'), dex = path.join(work, 'checks-dex.jar');
-const sources = ['apps/native/plugins/downloads/PortStreamRecords.kt',
-  'apps/native/plugins/downloads/PortStreamCipher.kt', 'apps/native/plugins/chatPacketCipher/PacketCipher.kt',
-  'apps/native/plugins/downloads/PortStreamDelivery.kt',
-  'apps/native/plugins/downloads/PortStreamBuffer.kt', 'apps/native/plugins/downloads/PortStreamSink.kt',
-  'apps/native/plugins/downloads/PortStreamSinks.kt', 'apps/native/e2e/port-mapping/PortStreamSinkChecks.kt',
-  'apps/native/e2e/port-mapping/PortStreamCipherChecks.kt',
-  'apps/native/e2e/port-mapping/PortStreamDeliveryChecks.kt',
-  'apps/native/plugins/connectivity/NativeConnectivity.kt', 'apps/native/e2e/port-mapping/PortStreamChecks.kt']
+const sources = ['plugins/downloads/PortStreamRecords.kt',
+  'plugins/downloads/PortStreamCipher.kt', 'plugins/chatPacketCipher/PacketCipher.kt',
+  'plugins/downloads/PortStreamDelivery.kt',
+  'plugins/downloads/PortStreamBuffer.kt', 'plugins/downloads/PortStreamSink.kt',
+  'plugins/downloads/PortStreamSinks.kt', 'e2e/port-mapping/PortStreamSinkChecks.kt',
+  'e2e/port-mapping/PortStreamCipherChecks.kt',
+  'e2e/port-mapping/PortStreamDeliveryChecks.kt',
+  'plugins/connectivity/NativeConnectivity.kt', 'e2e/port-mapping/PortStreamChecks.kt']
   .map(file => path.join(root, file));
-sources.push(path.join(root, 'apps/native/e2e/port-mapping/PortStreamDuplex.kt'));
+sources.push(path.join(root, 'e2e/port-mapping/PortStreamDuplex.kt'));
 run(java, ['-cp', compiler.join(path.delimiter), 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler', '-no-stdlib',
   '-no-reflect', '-classpath', [android, compiler[1]].join(path.delimiter), '-d', classes, ...sources]);
 run(java, ['-cp', path.join(sdk, 'build-tools/35.0.0/lib/d8.jar'), 'com.android.tools.r8.D8',
@@ -64,7 +64,7 @@ try {
   remotePrepared = true;
   run(adb, ['-s', serial, 'push', dex, `${remote}/checks.jar`]);
   run(adb, ['-s', serial, 'push', path.join(root,
-    'apps/native/android/app/src/main/jniLibs/arm64-v8a/libcsw_chat_connectivity.so'), remote]);
+    'android/app/src/main/jniLibs/arm64-v8a/libcsw_chat_connectivity.so'), remote]);
   const check = duplex ? 'PortStreamDuplex' : 'PortStreamChecks';
   const output = run(adb, ['-s', serial, 'shell',
     `CLASSPATH=${remote}/checks.jar LD_LIBRARY_PATH=${remote} app_process / com.codexswitch.downloads.${check}`]);

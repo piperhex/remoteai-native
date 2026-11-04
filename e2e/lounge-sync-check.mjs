@@ -5,7 +5,7 @@ import path from 'node:path';
 
 export async function loadHistorySource(root) {
   const outfile = path.join(root, '.codex-tmp/lounge-sync-source.mjs');
-  await build({ entryPoints: [path.join(root, 'apps/native/e2e/lounge-sync-source.ts')], outfile,
+  await build({ entryPoints: [path.join(root, 'e2e/lounge-sync-source.ts')], outfile,
     bundle: true, platform: 'node', format: 'esm', target: 'node22' });
   return (await import(pathToFileURL(outfile).href)).createHistorySource();
 }

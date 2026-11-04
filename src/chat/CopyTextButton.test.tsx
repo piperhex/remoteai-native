@@ -1,8 +1,8 @@
 import React, { Children, isValidElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { CopyTextButton } from './CopyTextButton';
-import { setInterfaceLanguage } from '../../../../shared/localization/interfaceLanguage';
-import { translateMessage } from '../../../../shared/localization/messages';
+import { setInterfaceLanguage } from '../../vendor/shared/localization/interfaceLanguage';
+import { translateMessage } from '../../vendor/shared/localization/messages';
 
 const mocks = vi.hoisted(() => ({ copy: vi.fn(), announce: vi.fn(), fail: vi.fn(), success: vi.fn(),
   states: new Map<number, unknown>(), cursor: 0 }));

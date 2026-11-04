@@ -1,8 +1,8 @@
-import { accountName } from '../../../../shared/lounge/names';
+import { accountName } from '../../vendor/shared/lounge/names';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { MobileLounge } from '../../../../shared/lounge/useMobileLounge';
-import { contactStatus } from '../../../../shared/lounge/contacts';
+import type { MobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
+import { contactStatus } from '../../vendor/shared/lounge/contacts';
 import { t } from '../i18n';
 import { useLoungeStyles } from './styles';
 import { useLoungeColor } from './theme';

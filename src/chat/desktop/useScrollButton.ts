@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { AppState, PanResponder } from 'react-native';
-import type { ScrollPadGesture } from '../../../../../shared/remote-desktop/useScrollPad';
+import type { ScrollPadGesture } from '../../../vendor/shared/remote-desktop/useScrollPad';
 
 export function useScrollButton(scroll: ScrollPadGesture) {
   const latest = useRef(scroll); latest.current = scroll;

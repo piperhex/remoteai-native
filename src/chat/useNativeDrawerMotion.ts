@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { cancelAnimation, Easing, runOnJS, runOnUI, useAnimatedStyle, useSharedValue,
   withTiming } from 'react-native-reanimated';
-import { SWIPE_SETTLE_MS } from '../../../../shared/navigation/pageSwipe';
+import { SWIPE_SETTLE_MS } from '../../vendor/shared/navigation/pageSwipe';
 import { nativeTextSelection } from './nativeTextSelection';
 
 interface Options {

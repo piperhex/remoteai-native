@@ -2,12 +2,12 @@ import { t } from '../i18n';
 import { authorizedRequest } from './adminSession';
 import { persistSession } from './sessionStore';
 import { ApiError, parseError } from './responseError';
-import type { DeadlineRequestInit } from '../../../../shared/http/requestDeadline';
+import type { DeadlineRequestInit } from '../../vendor/shared/http/requestDeadline';
 export { authorizedRequest, login, refreshSession } from './adminSession';
 export { clearSession, loadSession } from './sessionStore';
 export { ApiError, SessionExpiredError, isSessionExpiredError } from './responseError';
 import * as SecureStore from 'expo-secure-store';
-import { remoteModelPath, remoteProviderCommand, type RemoteModelTarget } from '../../../../shared/remote-chat/modelTarget';
+import { remoteModelPath, remoteProviderCommand, type RemoteModelTarget } from '../../vendor/shared/remote-chat/modelTarget';
 import type {
   AccountDetailsDraft,
   AccountOAuthPoll,

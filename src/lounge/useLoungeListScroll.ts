@@ -1,7 +1,7 @@
 import { useRef, type RefObject } from 'react';
 import type { FlatList, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { LOUNGE_SCROLL_EDGE_TOLERANCE, type MobileLounge } from '../../../../shared/lounge/useMobileLounge';
-import type { LoungeMessage } from '../../../../shared/lounge/types';
+import { LOUNGE_SCROLL_EDGE_TOLERANCE, type MobileLounge } from '../../vendor/shared/lounge/useMobileLounge';
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 
 const RESTORE_TOLERANCE = 1;
 interface ScrollPosition {

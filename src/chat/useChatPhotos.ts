@@ -1,6 +1,6 @@
 import { t } from '../i18n';
-import { ImagePolicyError } from '../../../../shared/remote-chat/compressImage';
-import { validateChatImages } from '../../../../shared/remote-chat/attachments';
+import { ImagePolicyError } from '../../vendor/shared/remote-chat/compressImage';
+import { validateChatImages } from '../../vendor/shared/remote-chat/attachments';
 import { useEffect, useRef, useState } from 'react';
 import { Linking } from 'react-native';
 import { getPendingResultAsync, type ImagePickerResult, type ImagePickerErrorResult } from 'expo-image-picker';

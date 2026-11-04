@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
-import { HistoryCache } from '../../../../shared/remote-chat/client/historyCache';
-import { HistoryVersionCache, historyVersion } from '../../../../shared/remote-chat/historySync';
-import { getChatPolicy } from '../../../../shared/remote-chat/policy';
+import { HistoryCache } from '../../vendor/shared/remote-chat/client/historyCache';
+import { HistoryVersionCache, historyVersion } from '../../vendor/shared/remote-chat/historySync';
+import { getChatPolicy } from '../../vendor/shared/remote-chat/policy';
 import type { Thread } from './types';
 
 function thread(id: string, count = 1, text = 'message'): Thread {

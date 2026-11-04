@@ -11,15 +11,15 @@ import { ChatActivityLabel } from './ChatActivityLabel';
 import { QuoteSourceContext } from './ChatQuotes';
 import { UserMessageText } from './UserMessageText';
 import { CopyTextButton } from './CopyTextButton';
-import { messageReferences } from '../../../../shared/chat/messageReferences';
-import { questionMessageText } from '../../../../shared/remote-chat/client/asyncQuestions';
-import { messageContent, messageLabel } from '../../../../shared/chat/messageDetails';
-import { itemImageSources } from '../../../../shared/chat/imageSources';
-import { commandPreview } from '../../../../shared/chat/commandPreview';
+import { messageReferences } from '../../vendor/shared/chat/messageReferences';
+import { questionMessageText } from '../../vendor/shared/remote-chat/client/asyncQuestions';
+import { messageContent, messageLabel } from '../../vendor/shared/chat/messageDetails';
+import { itemImageSources } from '../../vendor/shared/chat/imageSources';
+import { commandPreview } from '../../vendor/shared/chat/commandPreview';
 import {
   collaborationSummary, isCollaborationActivity,
-} from '../../../desktop/src/pages/codexGui/collaborationActivity';
-import { formatTurnDuration } from '../../../desktop/src/pages/codexGui/turnTiming';
+} from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
+import { formatTurnDuration } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
 import type { Item } from './types';
 import { palette, useStyles } from './styles';
 

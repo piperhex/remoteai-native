@@ -1,5 +1,5 @@
-import type { ProjectBrowserClient } from '../../../../shared/project-browser/protocol';
-import type { DocumentsSnapshot } from '../../../../shared/project-browser/documents';
+import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
+import type { DocumentsSnapshot } from '../../vendor/shared/project-browser/documents';
 
 // Keep drafts in memory for this device connection, including after the modal's WebView is disposed.
 const sessions = new WeakMap<ProjectBrowserClient, Map<string, DocumentsSnapshot>>();

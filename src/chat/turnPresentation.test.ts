@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { completedTurnFiles, conversationEntries, findWorkEntry, groupTurnItems } from './turnPresentation';
 import type { Item, Turn } from './types';
-import { CONTINUE_MESSAGE } from '../../../../shared/remote-chat/composerAction';
+import { CONTINUE_MESSAGE } from '../../vendor/shared/remote-chat/composerAction';
 
 it('reuses historical rows while replacing the streamed turn', () => {
   const old: Turn = { id: 'old', status: 'completed', items: [{ id: 'reply', type: 'agentMessage', text: 'Done' }] };

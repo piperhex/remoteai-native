@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
-import { MAPPING_PROTOCOLS } from '../../../../shared/port-mapping/settings';
+import { MAPPING_PROTOCOLS } from '../../vendor/shared/port-mapping/settings';
 import { useMappingFormState, type MappingFormOptions } from '../chat/portMapping/useMappingFormState';
 import { displayError, t, useLanguage } from '../i18n';
 import { useThemeColor } from '../theme/store';

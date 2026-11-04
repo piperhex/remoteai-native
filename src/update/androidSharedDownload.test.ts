@@ -11,8 +11,8 @@ vi.mock('react-native', () => ({ DeviceEventEmitter: { addListener: state.listen
   get downloadPeersReported() { return state.reported.getMockImplementation() ? state.reported : undefined; },
 } } }));
 vi.mock('../api/client', () => ({ loadSession: state.load, fetchUserProfile: state.profile }));
-vi.mock('../../../../shared/app-update/peerLookup', () => ({ findUpdatePeers: state.find }));
-vi.mock('../../../../shared/app-update/downloadReport', () => ({ reportDownload: state.report }));
+vi.mock('../../vendor/shared/app-update/peerLookup', () => ({ findUpdatePeers: state.find }));
+vi.mock('../../vendor/shared/app-update/downloadReport', () => ({ reportDownload: state.report }));
 const release = { version: '2.0.0', androidAsset: { name: 'android.apk', size: 123,
   downloadUrl: 'https://github.com/piperhex/remoteai/releases/download/v2.0.0/android.apk', sha256: 'a'.repeat(64),
 } } as AppRelease;

@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { t, useLanguage } from '../../i18n';
 import { View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { parseDesktopImeMessage } from '../../../../../shared/remote-desktop/ime';
-import type { DesktopInput } from '../../../../../shared/remote-desktop/protocol';
+import { parseDesktopImeMessage } from '../../../vendor/shared/remote-desktop/ime';
+import type { DesktopInput } from '../../../vendor/shared/remote-desktop/protocol';
 import { desktopImeHtml } from './desktopImeHtml.generated';
 import { focusDesktopIme } from './focusDesktopIme';
 

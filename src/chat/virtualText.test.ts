@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chunkDisplayText, estimatedTextHeight, textChunks, textWindow,
-  TEXT_CHUNK_CHARACTERS } from '../../../../shared/chat/virtualText';
+  TEXT_CHUNK_CHARACTERS } from '../../vendor/shared/chat/virtualText';
 
 describe('virtual command output', () => {
   it.each(['\n', '\r\n'])('preserves complete output and line boundaries with %j', newline => {

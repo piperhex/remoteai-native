@@ -1,7 +1,7 @@
 import { displayText, displayError } from '../../i18n/index';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { SecuritySettingsProps } from '../../../../../shared/remote-desktop/security';
+import type { SecuritySettingsProps } from '../../../vendor/shared/remote-desktop/security';
 import { t, useLanguage } from '../../i18n';
 import { createThemedStyles } from '../../theme/styles';
 import { useDisplaySettingsStyles } from './displaySettingsStyles';

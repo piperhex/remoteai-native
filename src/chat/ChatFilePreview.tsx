@@ -2,9 +2,9 @@ import { displayError } from '../i18n/index';
 import { t, useLanguage } from '../i18n';
 import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Keyboard, Text } from 'react-native';
-import type { FileReference } from '../../../../shared/chat/fileReference';
-import { localImageSource } from '../../../../shared/chat/imageSources';
-import { isMarkdownPath, type TextPreview } from '../../../../shared/remote-chat/textPreview';
+import type { FileReference } from '../../vendor/shared/chat/fileReference';
+import { localImageSource } from '../../vendor/shared/chat/imageSources';
+import { isMarkdownPath, type TextPreview } from '../../vendor/shared/remote-chat/textPreview';
 import { FilePreviewSheet } from './FilePreviewSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { ChatCodeBlock } from './ChatCodeBlock';
@@ -14,14 +14,14 @@ import { ChatMarkdownPreview } from './ChatMarkdownPreview';
 import { fileLanguage } from './ChatCodeHighlight';
 import { useStyles } from './styles';
 
-import { isVideoPath, type VideoClient } from '../../../../shared/remote-chat/video';
+import { isVideoPath, type VideoClient } from '../../vendor/shared/remote-chat/video';
 import { VideoViewer } from './video/VideoViewer';
-import type { FileClient } from '../../../../shared/remote-chat/fileDownload';
+import type { FileClient } from '../../vendor/shared/remote-chat/fileDownload';
 import { useManagedDownload } from '../downloads/useManagedDownload';
-import type { PreviewLoadOptions, PreviewProgress } from '../../../../shared/remote-chat/previewProgress';
+import type { PreviewLoadOptions, PreviewProgress } from '../../vendor/shared/remote-chat/previewProgress';
 import { PreviewTransferProgress } from './PreviewTransferProgress';
-import { isDownloadOnlyFile } from '../../../../shared/remote-chat/filePreview';
-import { filePreviewError } from '../../../../shared/remote-chat/fileErrors';
+import { isDownloadOnlyFile } from '../../vendor/shared/remote-chat/filePreview';
+import { filePreviewError } from '../../vendor/shared/remote-chat/fileErrors';
 
 export const ChatFileContext = createContext<((file: FileReference) => void) | null>(null);
 interface Props {

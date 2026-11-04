@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/project-browser-android');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the test device');
@@ -79,7 +79,7 @@ await mkdir(output, { recursive: true });
 const originalFontScale = (await adb('shell', 'settings', 'get', 'system', 'font_scale')).trim();
 const focus = (await adb('shell', 'dumpsys', 'window')).match(/mCurrentFocus=.* u0 ([\w.$]+\/[\w.$]+)/)?.[1];
 await adb('install', '-r', path.join(root,
-  'apps/native/android/app/build/outputs/apk/release/project-browser-fixture.apk'));
+  'android/app/build/outputs/apk/release/project-browser-fixture.apk'));
 await adb('shell', 'am', 'start', '-W', '-n', `${applicationId}/com.codexswitch.mobile.MainActivity`);
 try {
   for (const scale of [1, 1.3]) await checkFullscreen(scale);

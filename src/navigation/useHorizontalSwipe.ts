@@ -3,7 +3,7 @@ import { PanResponder, type GestureResponderEvent } from 'react-native';
 import {
   horizontalDirection, verticalSwipe, SWIPE_COMPLETE_DISTANCE, SWIPE_LONG_PRESS_MS,
   type SwipeDirection, type SwipeProgress,
-} from '../../../../shared/navigation/pageSwipe';
+} from '../../vendor/shared/navigation/pageSwipe';
 
 interface Options extends SwipeProgress {
   enabled: boolean; onLeft?: () => void; onRight?: () => void;

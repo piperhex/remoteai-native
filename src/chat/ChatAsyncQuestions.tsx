@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { pendingQuestions } from '../../../../shared/remote-chat/client/asyncQuestions';
+import { pendingQuestions } from '../../vendor/shared/remote-chat/client/asyncQuestions';
 import type { Item, Thread } from './types';
 import { palette, useStyles } from './styles';
 

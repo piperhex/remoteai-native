@@ -1,4 +1,4 @@
-import { moveImage, type ImageTransform, type Point } from '../../../../shared/chat/imageTransform';
+import { moveImage, type ImageTransform, type Point } from '../../vendor/shared/chat/imageTransform';
 
 const TAP_DISTANCE = 8;
 const TAP_DURATION_MS = 250;

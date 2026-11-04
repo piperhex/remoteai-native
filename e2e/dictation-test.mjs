@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import { hierarchy, prepareHierarchy } from '../../desktop/e2e/android-hierarchy.mjs';
+import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-hierarchy.mjs';
 
 const exec = promisify(execFile);
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/dictation-native');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
@@ -82,7 +82,7 @@ await mkdir(output, { recursive: true });
 await new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
-  await adb('install', '-r', path.join(root, 'apps/native/android/app/build-dictation/outputs/apk/debug/app-debug.apk'));
+  await adb('install', '-r', path.join(root, 'android/app/build-dictation/outputs/apk/debug/app-debug.apk'));
   await adb('reverse', `tcp:${port}`, `tcp:${port}`);
   await prepareHierarchy({ adb, output });
   await adb('shell', 'pm', 'revoke', app, 'android.permission.RECORD_AUDIO');

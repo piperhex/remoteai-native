@@ -8,7 +8,7 @@ import { useFonts } from 'expo-font';
 import { ChatMessages } from '../src/chat/ChatMessages';
 import { SelectableChatText } from '../src/chat/SelectableChatText';
 import { textMetrics } from '../src/theme/text';
-import samples from '../../../shared/chat/userMessageFixture.json';
+import samples from '../vendor/shared/chat/userMessageFixture.json';
 import { updateThemeMode, useThemeColor, useThemeMode } from '../src/theme/store';
 import type { Thread } from '../src/chat/types';
 

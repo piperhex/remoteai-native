@@ -1,15 +1,15 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
-const root = path.resolve(__dirname, '../../..');
+const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
 const packageFile = (name, file) => path.join(path.dirname(require.resolve(`${name}/package.json`)), file);
-const appearance = esbuild.buildSync({ entryPoints: [path.join(root, 'shared/terminal/theme.ts')],
+const appearance = esbuild.buildSync({ entryPoints: [path.join(root, 'vendor/shared/terminal/theme.ts')],
   bundle: true, minify: true, format: 'iife', globalName: 'remoteTerminalAppearance',
   target: ['chrome100', 'safari16'], write: false }).outputFiles[0].text;
 const scripts = [appearance, read(packageFile('@xterm/xterm', 'lib/xterm.js')),
   read(packageFile('@xterm/addon-fit', 'lib/addon-fit.js')),
-  read(path.join(root, 'shared/terminal/webviewTouch.js')), read(path.join(root, 'shared/terminal/webview.js'))];
+  read(path.join(root, 'vendor/shared/terminal/webviewTouch.js')), read(path.join(root, 'vendor/shared/terminal/webview.js'))];
 const keys = [['Ctrl+C', '\x03'], ['Tab', '\t'], ['Esc', '\x1b'], ['↑', '\x1b[A'],
   ['↓', '\x1b[B'], ['←', '\x1b[D'], ['→', '\x1b[C']];
 const licenses = ['@xterm/xterm', '@xterm/addon-fit'].map(name => read(packageFile(name, 'LICENSE'))).join('\n');
@@ -39,10 +39,10 @@ nav[hidden]{display:none}
 ${keys.map(([label, key]) => `<button data-key='${JSON.stringify(key)}'>${label}</button>`).join('')}
 </nav>${scripts.map(script => `<script>${script.replace(/<\/script/gi, '<\\/script')}</script>`).join('')}
 </body></html>`;
-const target = path.join(root, 'apps/native/assets/terminal.html');
+const target = path.join(root, 'assets/terminal.html');
 if (process.argv.includes('--check')) {
   if (!fs.existsSync(target) || read(target) !== html) {
-    throw new Error('Terminal asset is outdated. Run node apps/native/scripts/build-terminal-document.cjs');
+    throw new Error('Terminal asset is outdated. Run node scripts/build-terminal-document.cjs');
   }
 } else {
   fs.mkdirSync(path.dirname(target), { recursive: true });

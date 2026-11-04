@@ -4,10 +4,10 @@ const marker = '// Shared chat sources are outside the native app root.';
 const inputs = `
 ${marker}
 tasks.withType(com.facebook.react.tasks.BundleHermesCTask).configureEach {
-    inputs.files(fileTree(new File(rootDir, "../../../shared")) {
+    inputs.files(fileTree(new File(rootDir, "../vendor/shared")) {
         include "**/*.ts", "**/*.tsx"
     }).withPropertyName("sharedChatSources").withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.files(fileTree(new File(rootDir, "../../desktop/src/pages/codexGui")) {
+    inputs.files(fileTree(new File(rootDir, "../vendor/apps/desktop/src/pages/codexGui")) {
         include "**/*.ts", "**/*.tsx"
     }).withPropertyName("sharedDesktopChatSources").withPathSensitivity(PathSensitivity.RELATIVE)
 }

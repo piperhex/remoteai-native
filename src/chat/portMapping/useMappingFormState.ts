@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ForwardingEntry, PortForwardingService } from '../../../../../shared/port-mapping/service';
-import type { MappingProtocol } from '../../../../../shared/port-mapping/settings';
+import type { ForwardingEntry, PortForwardingService } from '../../../vendor/shared/port-mapping/service';
+import type { MappingProtocol } from '../../../vendor/shared/port-mapping/settings';
 import { t } from '../../i18n';
 
 export interface MappingFormOptions {

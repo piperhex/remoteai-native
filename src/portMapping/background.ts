@@ -1,5 +1,5 @@
 import { AppState } from 'react-native';
-import type { MappingConnection } from '../../../../shared/port-mapping/deviceRuntime';
+import type { MappingConnection } from '../../vendor/shared/port-mapping/deviceRuntime';
 import { retainPortMappingConnection } from '../chat/backgroundConnection';
 
 /** Hold the Android background lease during reconnects as well as while a listener is running. */

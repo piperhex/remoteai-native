@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { normalizeMathDelimiters } from '../../../../shared/chat/mathMarkdown';
-import { markdownAnswer, markdownQuestion } from '../../../../shared/chat/markdownFixture.json';
+import { normalizeMathDelimiters } from '../../vendor/shared/chat/mathMarkdown';
+import { markdownAnswer, markdownQuestion } from '../../vendor/shared/chat/markdownFixture.json';
 import { hasMarkdownMath, parseMarkdown, renderMathParagraph, type MarkdownNode } from './markdownTree';
 import { mathDocument, mathHeight } from './mathDocument';
 

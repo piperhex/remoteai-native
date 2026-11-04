@@ -1,7 +1,7 @@
 import { displayText } from '../i18n/index';
 import { t } from '../i18n';
 import type { DownloadTask } from './types';
-import { archivePercent, archiveStatus } from '../../../../shared/remote-chat/archiveDownload';
+import { archivePercent, archiveStatus } from '../../vendor/shared/remote-chat/archiveDownload';
 
 const KIB = 1024;
 const MIB = KIB * KIB;

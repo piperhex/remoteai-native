@@ -1,8 +1,8 @@
 import { t } from '../i18n';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
-import type { FileClient } from '../../../../shared/remote-chat/fileDownload';
-import { useFileDownload } from '../../../../shared/remote-chat/useFileDownload';
+import type { FileClient } from '../../vendor/shared/remote-chat/fileDownload';
+import { useFileDownload } from '../../vendor/shared/remote-chat/useFileDownload';
 import { downloadDetail } from './presentation';
 import { nativeDownloadTarget } from '../chat/fileDownloadTarget';
 import { downloadManager } from './manager';

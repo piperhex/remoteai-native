@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { useStartupUpdate } from '../../../../shared/app-update/useStartupUpdate';
+import { useStartupUpdate } from '../../vendor/shared/app-update/useStartupUpdate';
 
 const hooks = vi.hoisted(() => ({
   release: null as { version: string } | null,

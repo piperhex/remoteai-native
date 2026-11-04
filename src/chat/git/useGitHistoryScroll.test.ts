@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { useGitHistoryScroll } from './useGitHistoryScroll';
-import type { RemoteGit } from '../../../../../shared/remote-chat/useRemoteGit';
+import type { RemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 
 const mock = vi.hoisted(() => ({ states: [] as unknown[], slot: 0, offset: { current: 0 }, nearEnd: false,
   checkNearEnd: (): boolean => false }));
@@ -14,8 +14,8 @@ vi.mock('react', () => ({
     return [mock.states[slot], (next: T) => { mock.states[slot] = next; }];
   },
 }));
-vi.mock('../../../../../shared/remote-chat/useGitHistoryPagination', async original => ({
-  ...await original<typeof import('../../../../../shared/remote-chat/useGitHistoryPagination')>(),
+vi.mock('../../../vendor/shared/remote-chat/useGitHistoryPagination', async original => ({
+  ...await original<typeof import('../../../vendor/shared/remote-chat/useGitHistoryPagination')>(),
   useGitHistoryPagination: (_panel: RemoteGit, _connected: boolean, checkNearEnd: () => boolean) => {
     mock.checkNearEnd = checkNearEnd;
     return { setNearEnd: (nearEnd: boolean) => { mock.nearEnd = nearEnd; } };

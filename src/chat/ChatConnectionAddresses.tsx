@@ -1,7 +1,7 @@
 import { displayText } from '../i18n/index';
 import { Text, View } from 'react-native';
-import { connectionEndpointRows } from '../../../../shared/remote-chat/connectionEndpoints';
-import { publicEndpointRows } from '../../../../shared/remote-chat/publicEndpoints';
+import { connectionEndpointRows } from '../../vendor/shared/remote-chat/connectionEndpoints';
+import { publicEndpointRows } from '../../vendor/shared/remote-chat/publicEndpoints';
 import { t } from '../i18n';
 import { useHealthStyles as useCss } from './connectionHealthStyles';
 import type { ChatState } from './types';

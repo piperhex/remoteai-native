@@ -1,4 +1,4 @@
-import { useDeviceScreenControl as useScreenControl } from '../../../../shared/remote-desktop/useDeviceScreenControl';
+import { useDeviceScreenControl as useScreenControl } from '../../vendor/shared/remote-desktop/useDeviceScreenControl';
 import { adminRequest } from '../api/client';
 import { Toast } from '../components/AppToast';
 import { t } from '../i18n';
