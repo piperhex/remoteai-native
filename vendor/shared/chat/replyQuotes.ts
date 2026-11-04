@@ -1,5 +1,5 @@
 import { MAX_QUOTE_CHARACTERS, MAX_REPLY_QUOTES, quoteKey, quotedReply,
-  type ReplyQuote } from '../../apps/desktop/src/pages/codexGui/replyQuotes';
+  type ReplyQuote } from '../conversation/replyQuotes';
 import { getInterfaceLanguage } from "../localization/interfaceLanguage";
 import { translateMessage } from "../localization/messages";
 

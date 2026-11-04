@@ -6,7 +6,7 @@ import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { projectFileReference, useProjectFileCandidates,
   type ProjectFileSearch } from '../../vendor/shared/chat/useProjectFileCandidates';
-import type { AttachmentReference } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../../vendor/shared/conversation/attachmentTypes';
 
 export function ComposerFileMenu(props: {
   query: string; threadId: string | null; cwd: string; ready: boolean; load: ProjectFileSearch;

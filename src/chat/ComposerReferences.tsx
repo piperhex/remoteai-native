@@ -4,7 +4,7 @@ import { t, useLanguage } from '../i18n';
 import { useRef } from 'react';
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import type { AttachmentReference } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../../vendor/shared/conversation/attachmentTypes';
 import { itemUploadProgress, type UploadProgress } from '../../vendor/shared/remote-chat/uploadProgress';
 import { ComposerUploadProgress } from './ComposerUploadProgress';
 

@@ -4,7 +4,7 @@ import { t, useLanguage } from '../i18n';
 import { useContext } from 'react';
 import {  Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import type { ReviewComment } from '../../vendor/apps/desktop/src/pages/codexGui/messageDirectives';
+import type { ReviewComment } from '../../vendor/shared/conversation/messageDirectives';
 import { ChatFileContext } from './ChatFilePreview';
 import { reviewLocation } from './markdownContent';
 import { palette, useStyles } from './styles';

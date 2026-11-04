@@ -1,7 +1,7 @@
-import type { DailyTokenUsage } from '../../apps/desktop/src/types';
+import type { DailyTokenUsage } from '../token-usage/dailyUsage';
 import type { OfficialUsageSummary } from '../officialUsage';
 import type { AccountQuotaHistory, DailyTokenUsageBreakdown } from
-  '../../apps/desktop/src/types/tokenUsageAnalytics';
+  '../token-usage/analytics';
 
 export const TOKEN_SUMMARY_OPERATION = 'tokenSummary';
 export const MIN_SUMMARY_WEEKS = 1;

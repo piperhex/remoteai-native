@@ -1,8 +1,8 @@
 import type { MessageEdit, MessageTarget, MessageChangeResult }
-  from '../../../apps/desktop/src/pages/codexGui/editMessage';
+  from '../../conversation/editMessage';
 import { lastUserMessage } from '../../chat/latestUserMessage';
-import { editedMessageDraft } from '../../../apps/desktop/src/pages/codexGui/editedMessageDraft';
-import type { MessageInput } from '../../../apps/desktop/src/pages/codexGui/types';
+import { editedMessageDraft } from '../../conversation/editedMessageDraft';
+import type { MessageInput } from '../../conversation/types';
 import type { ChatState, Request, Thread } from './types';
 import { threadActionReason } from './threadActions';
 import { mergeHistory } from './history';

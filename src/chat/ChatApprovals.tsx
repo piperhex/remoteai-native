@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ApprovalReply, GuiEvent } from './types';
-import type { Question } from '../../vendor/apps/desktop/src/pages/codexGui/types';
+import type { Question } from '../../vendor/shared/conversation/types';
 import { palette, useStyles } from './styles';
 import { useApprovalResponse } from './useApprovalResponse';
 

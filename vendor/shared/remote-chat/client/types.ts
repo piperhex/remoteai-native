@@ -1,9 +1,9 @@
 export type {
   AccessMode, ApprovalReply, GuiEvent, Item, ListResponse, Model, Request,
   Skill, SkillReference, SkillsResponse, Thread, ThreadTokenUsage, Turn,
-} from '../../../apps/desktop/src/pages/codexGui/types';
-import type { GuiEvent, Model, SkillReference, Thread } from '../../../apps/desktop/src/pages/codexGui/types';
-import type { AttachmentReference } from '../../../apps/desktop/src/pages/codexGui/attachmentTypes';
+} from '../../conversation/types';
+import type { GuiEvent, Model, SkillReference, Thread } from '../../conversation/types';
+import type { AttachmentReference } from '../../conversation/attachmentTypes';
 import type { ConnectionMode } from '../protocol';
 import { DEFAULT_COMPOSER, type ComposerSettings } from '../composer';
 import { emptySidebar, type SidebarSnapshot } from '../sidebar';
@@ -31,11 +31,11 @@ export interface ChatState {
   notificationError?: boolean;
   desktopOnly?: boolean;
   upload?: import('../uploadProgress').UploadProgress;
-  processing?: import('../../../apps/desktop/src/pages/codexGui/processing').ProcessingState;
+  processing?: import('../../conversation/processing').ProcessingState;
   cachedThreadIds?: string[];
   historyOffline?: boolean;
   cacheError?: string;
-  goals?: Record<string, import('../../../apps/desktop/src/pages/codexGui/goalTypes').ThreadGoal | null>;
+  goals?: Record<string, import('../../conversation/goalTypes').ThreadGoal | null>;
   goalBusy?: boolean;
   mode: ConnectionMode;
   ready: boolean;

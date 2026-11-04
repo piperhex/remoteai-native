@@ -1,4 +1,4 @@
-import type { FileChange } from "../../apps/desktop/src/pages/codexGui/types";
+import type { FileChange } from "../conversation/types";
 import type { DiffFile, DiffLine } from "./diff";
 
 function linesOf(text: string) {

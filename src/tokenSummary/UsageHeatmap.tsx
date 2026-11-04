@@ -4,7 +4,7 @@ import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
-import { chartPalette, formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
+import { chartPalette, formatTokens } from '../../vendor/shared/token-usage/chartUtils';
 import { TOKEN_FIELDS } from '../../vendor/shared/remote-chat/tokenSummaryLabels';
 import { useSummaryStyles as useS } from './styles';
 

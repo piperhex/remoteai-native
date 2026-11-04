@@ -15,7 +15,7 @@ import { getInterfaceLanguage, setInterfaceLanguage, subscribeInterfaceLanguage 
 import { systemLanguage } from "../../vendor/shared/localization/language";
 import { composerPatch, composerLabel } from '../../vendor/shared/remote-chat/composer';
 import { settingOptions, settingValue } from '../../vendor/shared/remote-chat/settingsMenu';
-import { collaborationSummary } from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
+import { collaborationSummary } from '../../vendor/shared/conversation/collaborationActivity';
 
 const placeholders = (text: string) => [...text.matchAll(/\{\w+\}/g)].map(match => match[0]).sort();
 const dictionaries: Readonly<Record<string, string>>[] = [english, russian, clientResources.ja];

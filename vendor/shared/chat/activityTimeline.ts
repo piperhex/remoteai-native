@@ -1,4 +1,4 @@
-import { groupConsecutiveActivities, latestActivity } from '../../apps/desktop/src/pages/codexGui/activityGroups';
+import { groupConsecutiveActivities, latestActivity } from '../conversation/activityGroups';
 import type { Item, Turn } from '../remote-chat/client/types';
 import type { TurnEntry, WorkEntry } from './turnPresentation';
 

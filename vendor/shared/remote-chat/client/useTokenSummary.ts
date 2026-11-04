@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MAX_SUMMARY_WEEKS, MIN_SUMMARY_WEEKS, type ReadTokenSummary, type TokenSummary } from '../tokenSummary';
-import { createDashboardLoader } from '../../../apps/desktop/src/components/TokenUsageDashboard/dashboardLoader';
+import { createDashboardLoader } from '../../token-usage/dashboardLoader';
 import { browserTokenSummaryStorage, TokenSummaryCache, type TokenSummaryStorage } from './tokenSummaryCache';
 
 const DEFAULT_SUMMARY_WEEKS = 2;

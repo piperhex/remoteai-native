@@ -1,5 +1,5 @@
 import type { Item } from '../remote-chat/client/types';
-import { referenceKind } from '../../apps/desktop/src/pages/codexGui/conversationReferences';
+import { referenceKind } from '../conversation/conversationReferences';
 import { visibleUserContent } from './conversationContext';
 
 const REFERENCE_LABELS = { conversation: "client.workspaceActions.referenceAConversation", coze: 'Coze', plugin: "client.chat.plugins", file: "client.mobile.attachments", folder: "client.mobile.attachments" };

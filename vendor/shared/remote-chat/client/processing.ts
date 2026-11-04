@@ -1,4 +1,4 @@
-import { processingApproval, restoreProcessing, trackProcessing } from '../../../apps/desktop/src/pages/codexGui/processing';
+import { processingApproval, restoreProcessing, trackProcessing } from '../../conversation/processing';
 import type { ChatState, GuiEvent } from './types';
 import { currentRunningTurn } from '../../chat/runningTurn';
 

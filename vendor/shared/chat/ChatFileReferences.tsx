@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useLayoutEffect, useRef, type ReactNode } from 'react';
-import type { AttachmentReference } from '../../apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../conversation/attachmentTypes';
 import type { ProjectFile } from '../remote-chat/projectFiles';
 import { projectFileReference } from './useProjectFileCandidates';
 import { fileSelectionQuote, type FileSelection } from '../project-browser/fileSelection';
-import { MAX_QUOTE_CHARACTERS, type ReplyQuote } from '../../apps/desktop/src/pages/codexGui/replyQuotes';
+import { MAX_QUOTE_CHARACTERS, type ReplyQuote } from '../conversation/replyQuotes';
 
 interface ReferenceTarget {
   scope: string;

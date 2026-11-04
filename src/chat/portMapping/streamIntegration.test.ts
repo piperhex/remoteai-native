@@ -2,9 +2,9 @@
 import net from 'node:net';
 import { randomBytes } from 'node:crypto';
 import { afterEach, expect, it, vi } from 'vitest';
-import { invoke } from '../../../vendor/apps/desktop/src/api/backend';
-import { LinkSocketFixture } from '../../../vendor/apps/desktop/src/pages/codexGui/terminal/linkTunnelSocketFixture';
-import { RemoteMappingStreams } from '../../../vendor/apps/desktop/src/remoteChat/mappingStreams';
+import { invoke } from '../../../vendor/shared/platform/localBackend';
+import { LinkSocketFixture } from '../../../vendor/shared/terminal/testing/linkSocketFixture';
+import { RemoteMappingStreams } from '../../../vendor/shared/port-mapping/remoteStreams';
 import { BulkCipher } from '../../../vendor/shared/remote-chat/bulkCipher';
 import { BulkTransport, type BinaryChannel } from '../../../vendor/shared/remote-chat/bulkTransport';
 import { MappingStreamClient } from '../../../vendor/shared/port-mapping/streamClient';
@@ -13,7 +13,7 @@ import type { ForwardingClient } from '../../../vendor/shared/port-mapping/servi
 import type { TerminalLinkRequest } from '../../../vendor/shared/terminal/links';
 import { bridgeSocket } from './socketBridge';
 
-vi.mock('../../../vendor/apps/desktop/src/api/backend', () => ({ invoke: vi.fn() }));
+vi.mock('../../../vendor/shared/platform/localBackend', () => ({ invoke: vi.fn() }));
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 afterEach(() => vi.clearAllMocks());
 

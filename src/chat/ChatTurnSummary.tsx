@@ -6,7 +6,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { DiffFile } from '../../vendor/shared/chat/diff';
 import { generatedImageSource } from '../../vendor/shared/chat/imageSources';
-import { formatTurnDuration, turnElapsedMs } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
+import { formatTurnDuration, turnElapsedMs } from '../../vendor/shared/conversation/turnTiming';
 import { ChatImage } from './ChatImage';
 import { completedTurnFiles } from './turnPresentation';
 import type { Turn } from './types';
@@ -15,7 +15,7 @@ import { useTaskReviewAvailable } from '../../vendor/shared/remote-chat/TaskRevi
 import { ReviewButton } from './review/ReviewButton';
 import { ChatRetryButton } from './ChatRetryButton';
 import { ChatCapacityErrorNotice } from './ChatCapacityErrorNotice';
-import { isModelCapacityError } from '../../vendor/apps/desktop/src/pages/codexGui/requestError';
+import { isModelCapacityError } from '../../vendor/shared/conversation/requestError';
 
 export type TurnPanel = 'plan' | 'changes' | 'error' | 'result';
 interface Props { turn: Turn; onOpen: (turnId: string, panel: TurnPanel) => void }

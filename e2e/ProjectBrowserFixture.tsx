@@ -9,7 +9,7 @@ import { browserRequest, browserRoot, seedLargeText } from '../vendor/apps/deskt
 import { ProjectBrowser } from '../src/chat/ProjectBrowser';
 import { setFileAutoSave } from '../src/settings/filePreferences';
 import { ChatFileReferencesProvider, useComposerFileReferences } from '../vendor/shared/chat/ChatFileReferences';
-import type { ReplyQuote } from '../vendor/apps/desktop/src/pages/codexGui/replyQuotes';
+import type { ReplyQuote } from '../vendor/shared/conversation/replyQuotes';
 
 setInterfaceLanguage('zh');
 seedLargeText();

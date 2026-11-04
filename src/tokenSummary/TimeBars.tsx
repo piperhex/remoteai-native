@@ -2,7 +2,7 @@ import { createThemedStyles } from '../theme/styles';
 import { t, useLanguage } from '../i18n';
 import { useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
-import { formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
+import { formatTokens } from '../../vendor/shared/token-usage/chartUtils';
 import { chartColors, useSummaryStyles as useS } from './styles';
 
 export interface TimeBarPoint { key?: string; label: string; values: Array<number | null> }

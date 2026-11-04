@@ -1,4 +1,4 @@
-import type { AttachmentReference } from '../../apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../conversation/attachmentTypes';
 import type { ConnectionMode } from './protocol';
 import { base64Bytes, checkFileUploadSize, fileUploadTotalByteLimit, getChatPolicy, MIB,
   UploadPolicyError } from './policy';

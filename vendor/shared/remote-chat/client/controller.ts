@@ -1,5 +1,5 @@
 import type { ChatConnection, ConnectionEvents } from './connection';
-import { modelSelectionError } from '../../../apps/desktop/src/pages/codexGui/modelSelection';
+import { modelSelectionError } from '../../conversation/modelSelection';
 import { openPreparedDownload } from '../archiveDownload';
 import { mergeTaskDelivery } from '../taskDelivery';
 import type { RemoteComposerCatalog } from '../composerCatalog';

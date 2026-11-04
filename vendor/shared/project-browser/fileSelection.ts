@@ -1,5 +1,5 @@
 import type { EditorState } from '@codemirror/state';
-import { MAX_QUOTE_CHARACTERS, type ReplyQuote } from '../../apps/desktop/src/pages/codexGui/replyQuotes';
+import { MAX_QUOTE_CHARACTERS, type ReplyQuote } from '../conversation/replyQuotes';
 
 export interface FilePosition { line: number; column: number }
 export interface FileSelection { path: string; start: FilePosition; end: FilePosition; text: string }

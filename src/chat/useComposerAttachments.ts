@@ -2,7 +2,7 @@ import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync, EncodingType } from 'expo-file-system';
-import type { AttachmentReference, ComposerPlugin } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference, ComposerPlugin } from '../../vendor/shared/conversation/attachmentTypes';
 import { remoteAttachments } from '../../vendor/shared/remote-chat/composerAttachments';
 import { checkFileUploadSize, UploadPolicyError } from '../../vendor/shared/remote-chat/policy';
 

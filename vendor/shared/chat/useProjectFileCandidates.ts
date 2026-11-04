@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ProjectFile, ProjectFilesRequest, ProjectFilesResponse } from '../remote-chat/projectFiles';
-import type { AttachmentReference } from '../../apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../conversation/attachmentTypes';
 
 const SEARCH_DELAY_MS = 180;
 export type ProjectFileSearch = (request: ProjectFilesRequest) => Promise<ProjectFilesResponse>;

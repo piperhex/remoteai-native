@@ -12,7 +12,7 @@ import type { ChatConnectionProps } from './ChatProfileMenu';
 import { ComposerGoal } from './ComposerGoal';
 import { useGoalMode } from '../../vendor/shared/remote-chat/client/useGoalMode';
 import type { RemoteGoals } from '../../vendor/shared/remote-chat/client/goals';
-import type { ThreadGoal } from '../../vendor/apps/desktop/src/pages/codexGui/goalTypes';
+import type { ThreadGoal } from '../../vendor/shared/conversation/goalTypes';
 import type { ReadUsage } from '../../vendor/shared/remote-chat/usage';
 import type { ReadConversationMetrics } from '../../vendor/shared/remote-chat/conversationMetrics';
 import type { ContextSettingsApi } from '../../vendor/shared/remote-chat/contextSettings';

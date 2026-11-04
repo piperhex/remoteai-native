@@ -1,4 +1,4 @@
-import type { Model, Request, Thread } from '../../apps/desktop/src/pages/codexGui/types';
+import type { Model, Request, Thread } from '../conversation/types';
 
 export type PromptSuggestionTarget = Omit<Extract<Request, { operation: 'suggestNextPrompt' }>, 'operation'>;
 export type RequestPromptSuggestion = (target: PromptSuggestionTarget) => Promise<{ suggestion: string | null }>;

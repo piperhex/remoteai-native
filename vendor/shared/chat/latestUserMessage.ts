@@ -1,5 +1,5 @@
-import type { Item, Turn } from '../../apps/desktop/src/pages/codexGui/types';
-import { followsStoppedTurn, visibleContinuationItems } from '../../apps/desktop/src/pages/codexGui/continuation';
+import type { Item, Turn } from '../conversation/types';
+import { followsStoppedTurn, visibleContinuationItems } from '../conversation/continuation';
 
 /** Hidden continuation prompts do not replace the last message written by the user. */
 export function lastUserMessage(value?: { turns: Turn[] }): { turnId: string; item: Item } | undefined {

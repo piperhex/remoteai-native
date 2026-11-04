@@ -1,4 +1,4 @@
-import type { FileChange } from "../../apps/desktop/src/pages/codexGui/types";
+import type { FileChange } from "../conversation/types";
 import { DiffCache } from "./diffCache";
 import { parseFileChange, parseUnifiedDiff } from "./diffParser";
 

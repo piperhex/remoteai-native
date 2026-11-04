@@ -5,8 +5,8 @@ import { t, useLanguage } from '../i18n';
 import Feather from '@expo/vector-icons/Feather';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { conversationCandidates,
-  conversationReference } from '../../vendor/apps/desktop/src/pages/codexGui/conversationReferences';
-import type { AttachmentReference } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+  conversationReference } from '../../vendor/shared/conversation/conversationReferences';
+import type { AttachmentReference } from '../../vendor/shared/conversation/attachmentTypes';
 import { useConversationCandidates, type ConversationSearch } from '../../vendor/shared/chat/useConversationCandidates';
 
 interface Props {

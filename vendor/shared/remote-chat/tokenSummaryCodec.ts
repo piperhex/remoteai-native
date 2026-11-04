@@ -1,5 +1,5 @@
 import type { AccountQuotaHistory, AccountQuotaPoint } from
-  '../../apps/desktop/src/types/tokenUsageAnalytics';
+  '../token-usage/analytics';
 import type { TokenSummary } from './tokenSummary';
 
 export const QUOTA_HISTORY_FORMAT = 'runs-v1';

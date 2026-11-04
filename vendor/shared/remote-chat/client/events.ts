@@ -1,5 +1,5 @@
 import type { ChatState, GuiEvent, Item, Thread, Turn } from './types';
-import { restoreTurnTiming } from '../../../apps/desktop/src/pages/codexGui/turnTiming';
+import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { acknowledgeMessage, MESSAGE_ACKNOWLEDGED } from '../../chat/acknowledgedMessages';
 import { syncChatProcessing } from './processing';
 

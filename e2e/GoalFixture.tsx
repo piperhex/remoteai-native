@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { setInterfaceLanguage } from "../vendor/shared/localization/interfaceLanguage";
-import type { ThreadGoal } from '../vendor/apps/desktop/src/pages/codexGui/goalTypes';
+import type { ThreadGoal } from '../vendor/shared/conversation/goalTypes';
 import { ComposerGoal } from '../src/chat/ComposerGoal';
 import { useStyles } from '../src/chat/styles';
 

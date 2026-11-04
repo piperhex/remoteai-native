@@ -1,4 +1,4 @@
-import { asyncAnswerText, pendingAsyncQuestions } from '../../../apps/desktop/src/pages/codexGui/asyncQuestionState';
+import { asyncAnswerText, pendingAsyncQuestions } from '../../conversation/asyncQuestionState';
 import type { Item, Thread } from './types';
 import { queueTextPreview, type QueueMessage, type QueueSnapshot } from '../queue';
 import { messageContent } from '../../chat/messageDetails';

@@ -5,7 +5,7 @@ import { t, useLanguage } from '../i18n';
 import { useEffect, useState } from 'react';
 import Feather from '@expo/vector-icons/Feather';
 import { FlatList, Pressable, Text, View } from 'react-native';
-import type { ComposerPlugin } from '../../vendor/apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { ComposerPlugin } from '../../vendor/shared/conversation/attachmentTypes';
 import type { RemoteComposerCatalog } from '../../vendor/shared/remote-chat/composerCatalog';
 import type { Skill } from './types';
 import { skillLabel, type SkillCatalogState } from './skillCatalog';

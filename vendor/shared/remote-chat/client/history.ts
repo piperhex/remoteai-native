@@ -1,5 +1,5 @@
 import type { Item, Thread, Turn } from './types';
-import { restoreTurnTiming } from '../../../apps/desktop/src/pages/codexGui/turnTiming';
+import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { reconcileAcknowledgedItems } from '../../chat/acknowledgedMessages';
 import { mergeItemOrder } from '../../chat/itemOrder';
 

@@ -1,5 +1,5 @@
-import type { QuotaChartData } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/quotaHistoryData';
-import { dateKey } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
+import type { QuotaChartData } from '../../vendor/shared/token-usage/quotaHistoryData';
+import { dateKey } from '../../vendor/shared/token-usage/chartUtils';
 
 /** The two quota windows insert gaps independently, so align by time rather than array index. */
 export function quotaPoints(chart: QuotaChartData) {

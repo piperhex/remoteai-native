@@ -1,7 +1,7 @@
 import type { Item, Turn } from '../remote-chat/client/types';
 import { changedFiles, parseDiff } from './diff';
-import { followsStoppedTurn, visibleContinuationItems } from '../../apps/desktop/src/pages/codexGui/continuation';
-import { turnElapsedMs } from '../../apps/desktop/src/pages/codexGui/turnTiming';
+import { followsStoppedTurn, visibleContinuationItems } from '../conversation/continuation';
+import { turnElapsedMs } from '../conversation/turnTiming';
 import { groupTurnItems } from './turnGroups';
 import { hasVisibleProcessContent } from './processContent';
 export { groupTurnItems } from './turnGroups';

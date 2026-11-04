@@ -1,4 +1,4 @@
-import type { Turn } from '../../apps/desktop/src/pages/codexGui/types';
+import type { Turn } from '../conversation/types';
 
 export interface TurnRetryTarget { threadId: string; turnId: string }
 

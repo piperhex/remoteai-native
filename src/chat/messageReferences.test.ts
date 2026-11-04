@@ -4,7 +4,7 @@ import { messageContent } from '../../vendor/shared/chat/messageDetails';
 import { updateThread } from '../../vendor/shared/remote-chat/client/events';
 import { mergeHistory } from '../../vendor/shared/remote-chat/client/history';
 import { MESSAGE_ACKNOWLEDGED } from '../../vendor/shared/chat/acknowledgedMessages';
-import type { Content } from '../../vendor/apps/desktop/src/pages/codexGui/types';
+import type { Content } from '../../vendor/shared/conversation/types';
 import type { Item, Thread } from './types';
 
 const mention = { type: 'mention', name: '设计讨论', path: 'codex-thread://design' };

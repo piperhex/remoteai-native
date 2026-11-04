@@ -1,4 +1,4 @@
-import type { ComposerText, Skill } from '../../../apps/desktop/src/pages/codexGui/types';
+import type { ComposerText, Skill } from '../../conversation/types';
 
 export interface TextSelection { start: number; end: number }
 export interface ComposerTrigger extends TextSelection { query: string; skillsOnly: boolean }

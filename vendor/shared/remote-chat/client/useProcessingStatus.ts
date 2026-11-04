@@ -1,6 +1,6 @@
-import { PROCESSING_LABELS, type PendingRequest } from '../../../apps/desktop/src/pages/codexGui/processing';
-import { uiText } from "../../../apps/desktop/src/i18n/uiText";
-import { formatTurnDuration, SECOND_MS } from '../../../apps/desktop/src/pages/codexGui/turnTiming';
+import { PROCESSING_LABELS, type PendingRequest } from '../../conversation/processing';
+import { uiText } from "../../localization/uiText";
+import { formatTurnDuration, SECOND_MS } from '../../conversation/turnTiming';
 import type { ChatState, Turn } from './types';
 import { useProcessingSeconds } from './useProcessingSeconds';
 

@@ -1,5 +1,5 @@
-import type { ThreadGoal } from '../../../apps/desktop/src/pages/codexGui/goalTypes';
-import { modelSelectionError } from '../../../apps/desktop/src/pages/codexGui/modelSelection';
+import type { ThreadGoal } from '../../conversation/goalTypes';
+import { modelSelectionError } from '../../conversation/modelSelection';
 import type { ChatState, Request, SendInput, Thread } from './types';
 import type { ComposerSettings } from '../composer';
 

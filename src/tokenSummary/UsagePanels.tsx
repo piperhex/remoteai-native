@@ -2,7 +2,7 @@ import { TOKEN_FIELDS } from '../../vendor/shared/remote-chat/tokenSummaryLabels
 import { t, useLanguage } from '../i18n';
 import { Text, View } from 'react-native';
 import type { TokenSummary, UsageRanking } from '../../vendor/shared/remote-chat/tokenSummary';
-import { formatTokens } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/chartUtils';
+import { formatTokens } from '../../vendor/shared/token-usage/chartUtils';
 import { TimeBars } from './TimeBars';
 import { useSummaryStyles as useS } from './styles';
 

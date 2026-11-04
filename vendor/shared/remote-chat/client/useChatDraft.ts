@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChatImageError, MAX_CHAT_IMAGES, validateChatImages, type DraftImage } from '../attachments';
 import type { SendInput } from './types';
-import type { AttachmentReference } from '../../../apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { AttachmentReference } from '../../conversation/attachmentTypes';
 import type { ComposerSettings } from '../composer';
 import type { Skill } from './types';
 import { draftSkills, editSkillDraft, emptySkillDraft, insertDraftSkill, type TextSelection } from './skillDraft';
-import { queuedMessageText } from '../../../apps/desktop/src/pages/codexGui/queuedMessageDraft';
+import { queuedMessageText } from '../../conversation/queuedMessageDraft';
 import { draftImage } from '../attachments';
 import type { QueueDraft } from '../queue';
 import { getInterfaceLanguage } from "../../localization/interfaceLanguage";

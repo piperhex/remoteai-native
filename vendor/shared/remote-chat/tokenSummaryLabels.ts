@@ -1,6 +1,6 @@
 import type { MessageKey } from '@remoteai/i18n';
-import type { DailyTokenUsage } from '../../apps/desktop/src/types';
-import type { DailyTokenUsageBreakdown } from '../../apps/desktop/src/types/tokenUsageAnalytics';
+import type { DailyTokenUsage } from '../token-usage/dailyUsage';
+import type { DailyTokenUsageBreakdown } from '../token-usage/analytics';
 
 export type ConsumptionField = readonly [MessageKey, Exclude<keyof DailyTokenUsageBreakdown, 'date'>];
 

@@ -41,7 +41,7 @@ const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   encoding: 'utf8', timeout: 60_000, windowsHide: true, maxBuffer: 4 * 1024 * 1024,
 })).stdout.trim();
 const image = 'data:image/png;base64,' + (await readFile(path.join(root,
-  'apps/desktop/src-tauri/icons', process.env.LOUNGE_SETTINGS_AVATAR_ONLY === '1'
+  'vendor/apps/desktop/src-tauri/icons', process.env.LOUNGE_SETTINGS_AVATAR_ONLY === '1'
     ? '128x128.png' : '32x32.png'))).toString('base64');
 const sent = [];
 const moderated = [];

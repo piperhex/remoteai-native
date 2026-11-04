@@ -1,5 +1,5 @@
-import type { SkillsResponse } from '../../apps/desktop/src/pages/codexGui/types';
-import type { ComposerPlugin, PluginsResponse } from '../../apps/desktop/src/pages/codexGui/attachmentTypes';
+import type { SkillsResponse } from '../conversation/types';
+import type { ComposerPlugin, PluginsResponse } from '../conversation/attachmentTypes';
 
 export interface RemoteComposerCatalog extends SkillsResponse {
   plugins?: ComposerPlugin[];

@@ -7,7 +7,7 @@ import { ChatComposer } from '../src/chat/ChatComposer';
 import { useStyles } from '../src/chat/styles';
 import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { createRemoteDictationClient } from '../vendor/shared/remote-chat/dictation';
-import { testModels } from '../vendor/apps/desktop/src/pages/codexGui/testModels';
+import { testModels } from '../vendor/shared/conversation/testing/models';
 import { updateThemeMode } from '../src/theme/store';
 
 setInterfaceLanguage('zh');

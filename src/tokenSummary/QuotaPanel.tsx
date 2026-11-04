@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import type { TokenSummary } from '../../vendor/shared/remote-chat/tokenSummary';
 import { buildQuotaChartData, type QuotaInterval, type QuotaView } from
-  '../../vendor/apps/desktop/src/components/TokenUsageDashboard/quotaHistoryData';
-import { quotaChartLabels } from '../../vendor/apps/desktop/src/components/TokenUsageDashboard/quotaChartLabels';
+  '../../vendor/shared/token-usage/quotaHistoryData';
+import { quotaChartLabels } from '../../vendor/shared/token-usage/quotaChartLabels';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { TimeBars } from './TimeBars';

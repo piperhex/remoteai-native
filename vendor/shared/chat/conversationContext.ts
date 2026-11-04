@@ -1,4 +1,4 @@
-import type { Content, Item } from '../../apps/desktop/src/pages/codexGui/types';
+import type { Content, Item } from '../conversation/types';
 
 const CONTEXT_START = '<codex_gui_conversation_context>';
 const CONTEXT_END = '</codex_gui_conversation_context>';

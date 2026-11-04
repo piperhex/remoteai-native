@@ -1,6 +1,6 @@
 import { displayText } from '../localization/messages';
-import { contextUsage } from '../../apps/desktop/src/pages/codexGui/contextUsage';
-import { formatCompactTokenCount } from '../../apps/desktop/src/utils/tokenContext';
+import { contextUsage } from '../conversation/contextUsage';
+import { formatCompactTokenCount } from '../context-usage/format';
 import type { ThreadTokenUsage } from './client/types';
 
 import type { Language } from "../localization/language";

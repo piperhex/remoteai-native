@@ -9,8 +9,8 @@ import { messageContent, messageSections } from '../../vendor/shared/chat/messag
 import { changedFiles } from '../../vendor/shared/chat/diff';
 import {
   collaborationStates, collaborationStatus, collaborationSummary, isCollaborationActivity,
-} from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
-import { formatTurnDuration } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
+} from '../../vendor/shared/conversation/collaborationActivity';
+import { formatTurnDuration } from '../../vendor/shared/conversation/turnTiming';
 import { ChatCodeBlock } from './ChatCodeBlock';
 import { ChatMarkdown } from './Markdown';
 import { ChatDiff } from './ChatDiff';

@@ -19,7 +19,7 @@ const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   encoding: 'utf8', timeout: 60_000, windowsHide: true, maxBuffer: 4 * 1024 * 1024,
 })).stdout.trim();
 const image = 'data:image/png;base64,' + (await readFile(path.join(root,
-  'apps/desktop/src-tauri/icons/128x128.png'))).toString('base64');
+  'vendor/apps/desktop/src-tauri/icons/128x128.png'))).toString('base64');
 const version = value => createHash('sha256').update(value).digest('hex');
 const avatars = new Map([['alice', image], ['bob', image]]);
 const transfers = [];

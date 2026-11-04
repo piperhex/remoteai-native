@@ -18,8 +18,8 @@ import { itemImageSources } from '../../vendor/shared/chat/imageSources';
 import { commandPreview } from '../../vendor/shared/chat/commandPreview';
 import {
   collaborationSummary, isCollaborationActivity,
-} from '../../vendor/apps/desktop/src/pages/codexGui/collaborationActivity';
-import { formatTurnDuration } from '../../vendor/apps/desktop/src/pages/codexGui/turnTiming';
+} from '../../vendor/shared/conversation/collaborationActivity';
+import { formatTurnDuration } from '../../vendor/shared/conversation/turnTiming';
 import type { Item } from './types';
 import { palette, useStyles } from './styles';
 

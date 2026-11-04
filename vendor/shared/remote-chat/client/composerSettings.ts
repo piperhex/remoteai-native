@@ -1,6 +1,6 @@
 import { COMPOSER_FIELDS, DEFAULT_COMPOSER, MODEL_CATALOG_ERROR, composerPatch, type ComposerModelsResponse,
   type ComposerSettings, type ComposerSnapshot } from '../composer';
-import { resolveModelSelection } from '../../../apps/desktop/src/pages/codexGui/modelSelection';
+import { resolveModelSelection } from '../../conversation/modelSelection';
 import type { ChatState } from './types';
 
 interface Host {

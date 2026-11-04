@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import { messageSections, type ReviewComment } from '../../vendor/apps/desktop/src/pages/codexGui/messageDirectives';
+import { messageSections, type ReviewComment } from '../../vendor/shared/conversation/messageDirectives';
 import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { parseMarkdown, type MarkdownNode } from './markdownTree';
 

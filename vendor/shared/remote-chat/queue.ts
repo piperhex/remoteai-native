@@ -25,5 +25,5 @@ export interface QueueEnqueueResult extends QueueSnapshot { enqueuedId?: string 
 export const emptyQueue = (): QueueSnapshot => ({ revision: -1, threads: {} });
 export type QueueAction = 'queueSendNow' | 'queueRemove' | 'queueFlush' | 'queueMoveUp' | 'queueMoveDown';
 
-export type QueueDraft = import('../../apps/desktop/src/pages/codexGui/types').MessageInput;
+export type QueueDraft = import('../conversation/types').MessageInput;
 export interface QueueEditResult extends QueueSnapshot { draft: QueueDraft }
