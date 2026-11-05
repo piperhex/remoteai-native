@@ -1,0 +1,9 @@
+// Keep the installed app and account data intact while testing the production chat page.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-relay-issue'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.relayissuetest'
+        project.extensions.getByName('react').entryFile = new File(project.rootDir, '../e2e/RelayIssueFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

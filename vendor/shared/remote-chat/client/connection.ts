@@ -6,7 +6,7 @@ import { ChatRpc } from '../rpc';
 import { HostIdentityError, type HostKeyVerifier } from '../trustedHost';
 import { browserChatSocket, type ChatSocket } from './socket';
 import { browserClientInfo, type ChatClientInfo } from './clientInfo';
-import { RelayQuota, RELAY_QUOTA_MESSAGE } from '../relayUsage';
+import { RelayQuota, RELAY_QUOTA_MESSAGE, type RelayIssue } from '../relayUsage';
 import { hasUpload, uploadProgress, type UploadProgress } from '../uploadProgress';
 import { authorizationError, CONNECTION_ERRORS, socketConnectionError } from '../connectionErrors';
 import { SessionRenewal } from './sessionRenewal';
@@ -22,6 +22,7 @@ import {
 } from '../protocol';
 
 export interface ConnectionEvents {
+  relayIssue?: (issue: RelayIssue | null) => void;
   directEndpoints?: (value?: import('../connectionEndpoints').ConnectionEndpoints) => void;
   publicEndpoints?: (value: import('../publicEndpoints').ConnectionPublicEndpoints) => void;
   stage?: (stage: import('../connectionHealth').ConnectionStage) => void;
@@ -269,12 +270,7 @@ export class ChatConnection {
       setChatPolicy(message.policy); return;
     }
     if (message.type === 'auth-renewed') { clearTimeout(this.authRenewalTimer); return; }
-    if (this.quota.receive(message)) {
-      this.link?.setRelayQuotaBlocked(this.quota.blocked);
-      if (this.quota.blocked && message.type === 'relay-quota') this.options.error(
-        this.quota.reason === 'quota' ? RELAY_QUOTA_MESSAGE : '服务器转发暂不可用，请稍后重试或使用 P2P 直连。');
-      return;
-    }
+    if (this.receiveQuota(message)) return;
     if (message.type === 'paired' && typeof message.sessionId === 'string') {
       this.options.stage?.('path');
       this.socketAuthenticated = true;
@@ -314,6 +310,16 @@ export class ChatConnection {
     if (message.type === 'peer-close') this.fail(CONNECTION_ERRORS.interrupted);
   }
 
+  private receiveQuota(message: Record<string, unknown>) {
+    if (!this.quota.receive(message)) return false;
+    this.link?.setRelayQuotaBlocked(this.quota.blocked);
+    this.options.relayIssue?.(this.quota.blocked ? this.quota.reason : null);
+    // Keep compatibility with consumers that do not expose route-specific notices.
+    if (!this.options.relayIssue && this.quota.blocked && message.type === 'relay-quota') this.options.error(
+      this.quota.reason === 'quota' ? RELAY_QUOTA_MESSAGE : '服务器转发暂不可用，请稍后重试或使用 P2P 直连。');
+    return true;
+  }
+
   private paired(input: {
     fileRelay?: unknown;
     tcp?: import('../tcp/types').TcpPunchConfig;
@@ -326,7 +332,7 @@ export class ChatConnection {
       fallback: { available: () => this.socket?.bulkAvailable === true,
         send: bytes => this.sendBulk(input.id, [bytes]), sendBatch: records => this.sendBulk(input.id, records) },
       record: bytes => this.link?.bulk?.receive(bytes, 'relay'), changed: () => this.link?.bulk?.relayChanged(),
-      quota: data => { if (this.quota.receive(JSON.parse(data))) this.link?.setRelayQuotaBlocked(this.quota.blocked); },
+      quota: data => { this.receiveQuota(JSON.parse(data)); },
     });
     this.rpc = new ChatRpc({ prefix: input.keys.publicKey.slice(0, 24),
       delivery: this.options.delivery,

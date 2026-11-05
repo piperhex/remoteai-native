@@ -11,7 +11,7 @@ export function gitFileMenuLabels(folder: boolean) {
 }
 
 export function deletableGitFiles(files: GitChange[]) {
-  return files.filter(file => file.status[1] !== 'D' && file.status !== 'D ');
+  return files.filter(file => !file.submodule && file.status[1] !== 'D' && file.status !== 'D ');
 }
 
 export const GIT_RESET_MODES: { value: GitResetMode; label: string; description: string }[] = [

@@ -23,7 +23,7 @@ export function useGitCommit(options: Options) {
   useEffect(() => { setMessage(''); setGeneratingMessage(false); }, [scope]);
   const canGenerateMessage = enabled && !busy && !settingsBusy && !!changes && Object.keys(selected).length > 0
     && !changes.files.some(file => file.conflict);
-  const canPush = !!changes?.branch && !!repository?.upstream && !!repository.remotes.length;
+  const canPush = !!client.commitAndPush || !!changes?.branch && !!repository?.upstream && !!repository.remotes.length;
   const canCommit = canGenerateMessage && (autoMessage || !!message.trim());
   const snapshot = () => ({ cwd, head: changes!.head,
     files: Object.entries(selected).map(([path, version]) => ({ path, version })) });
@@ -52,11 +52,20 @@ export function useGitCommit(options: Options) {
       const commitMessage = autoMessage ? await generate(input) : message.trim();
       if (!isCurrent() || !available.current) return;
       if (autoMessage) setMessage(commitMessage);
-      const result = await client.commit({ ...input, message: commitMessage });
+      let result: { hash: string };
+      try {
+        const submit = settings.push && client.commitAndPush ? client.commitAndPush : client.commit;
+        result = await submit({ ...input, message: commitMessage });
+      } catch (error) {
+        // A multi-repository submission can complete a child before a later repository fails.
+        await load();
+        throw error;
+      }
       if (!isCurrent()) return;
       onCommitted(); setMessage(''); setNotice(`已提交 ${result.hash.slice(0, 8)}`);
       let failure: unknown;
-      if (settings.push) {
+      if (settings.push && client.commitAndPush) setNotice('提交并推送完成');
+      if (settings.push && !client.commitAndPush) {
         try {
           await client.action({ cwd, action: 'push', head: result.hash, branch: changes!.branch });
           if (isCurrent()) setNotice('提交并推送完成');

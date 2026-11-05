@@ -4,6 +4,8 @@ export interface RelayUsage {
   resetAt: string;
 }
 
+export type RelayIssue = 'quota' | 'unavailable';
+
 export const RELAY_QUOTA_MESSAGE = '本月转发流量已达上限，可使用 P2P 直连，或联系管理员调整额度。';
 
 export function parseRelayUsage(value: unknown): RelayUsage | undefined {
@@ -19,7 +21,7 @@ export function parseRelayUsage(value: unknown): RelayUsage | undefined {
 export class RelayQuota {
   usage?: RelayUsage;
   blocked = false;
-  reason = 'quota';
+  reason: RelayIssue = 'quota';
 
   receive(message: Record<string, unknown>): boolean {
     if (message.type === 'relay-quota') {

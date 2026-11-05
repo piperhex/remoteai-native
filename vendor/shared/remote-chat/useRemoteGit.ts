@@ -26,20 +26,27 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
   const [repository, setRepository] = useState<GitRepository | null>(null);
   const [strategy, setStrategy] = useState<GitStrategy>('merge');
   const [changes, setChanges] = useState<GitChanges | null>(null);
-  const fileList = useGitFileList(changes?.files ?? []);
+  const fileList = useGitFileList(changes?.files ?? [], changes?.repositories);
+  const historyTarget = useMemo(() => ({ root: cwd }), [scope, cwd]);
+  const [historyRepository, setHistoryRepository] = useState(cwd);
   const [{ commits, hasMore }, setHistory] = useState<GitHistory>({ commits: [], hasMore: false });
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [tab, setTab] = useState<'changes' | 'history'>('changes');
   const [detail, setDetail] = useState<GitDetail | null>(null);
   const [fileAction, setFileAction] = useState<GitFileActionPrompt | null>(null);
   const load = useCallback(async () => {
-    const { changes: next, history, repository } = await readGitSnapshot(client, cwd);
+    const { changes: next, history, repository } = await readGitSnapshot(client, cwd, historyTarget.root);
     if (current.current !== scope) return;
+    const entries = repository.repositories;
+    historyTarget.root = entries?.find(entry => entry.available && entry.root === historyTarget.root)?.root
+      ?? entries?.[0]?.root ?? cwd;
+    setHistoryRepository(historyTarget.root);
     setChanges(next); setHistory(previous => refreshGitHistory(previous, history));
     setRepository(repository);
     setSelected(previous => Object.fromEntries(next.files.filter(file =>
-      !file.conflict && previous[file.path] === file.version).map(file => [file.path, file.version])));
-  }, [client, cwd, scope]);
+      !file.conflict && (previous[file.path] === file.version
+        || next.pendingSelection?.some(pending => pending.path === file.path && pending.version === file.version))).map(file => [file.path, file.version])));
+  }, [client, cwd, scope, historyTarget]);
   const { busy, error, notice, setNotice, run, refresh, clearActionError } = useGitRequests({
     scope, enabled: active && connected && !!cwd, load, refreshInterval,
   });
@@ -56,8 +63,16 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
     current.current = scope;
     setChanges(null); setHistory({ commits: [], hasMore: false }); setSelected({}); setDetail(null);
     setRepository(null); setFileAction(null);
+    setHistoryRepository(cwd);
     return () => { current.current = {}; };
-  }, [scope]);
+  }, [scope, cwd]);
+  const selectHistoryRepository = (root: string) => run(async () => {
+    const available = repository?.repositories?.some(entry => entry.available && entry.root === root);
+    if (root === historyTarget.root || !available) return;
+    historyTarget.root = root;
+    setHistoryRepository(root); setHistory({ commits: [], hasMore: false }); setDetail(null);
+    await load();
+  });
   const selectFiles = (files: GitChange[]) => {
     if (busy) return;
     setSelected(previous => toggleFiles(previous, files));
@@ -66,6 +81,7 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
   const selectAll = () => selectFiles(changes?.files ?? []);
   const requestFileAction = (action: GitFileActionPrompt['action'], target?: GitChange | GitChange[]) => {
     if (!changes || busy || !connected || changes.files.some(item => item.conflict)) return;
+    if (action !== 'commit' && changes.files.some(file => file.submodule && selected[file.path]) && !target) return;
     const targets = target ?? Object.entries(selected).map(([path, version]) => ({ path, version }));
     const files = (Array.isArray(targets) ? targets : [targets]).map(({ path, version }) => ({ path, version }));
     if (files.length) { clearActionError(); setFileAction({ action, head: changes.head, files }); }
@@ -105,15 +121,15 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
     if (failure) throw failure;
   });
   const more = () => run(async () => {
-    const page = await client.history(cwd, commits.length);
+    const page = await client.history(historyTarget.root, commits.length);
     if (current.current !== scope) return;
     setHistory(previous => ({ commits: [...previous.commits,
-      ...page.commits.filter(commit => !previous.commits.some(row => row.hash === commit.hash))],
+      ...page.commits.filter(commit => !previous.commits.some(row => row.hash === commit.hash && row.repository === commit.repository))],
     hasMore: page.hasMore }));
   });
   const loading = active && connected && !!cwd && !changes && !error;
   return { ...conflicts, ...revisions, ...submission, busy, loading, error: error || submission.settingsError,
-    notice, changes, commits, hasMore, selected, tab, setTab,
+    notice, changes, commits, hasMore, historyRepository, selectHistoryRepository, selected, tab, setTab,
     detail, setDetail, backDetail: () => setDetail(parentGitDetail), refresh, toggle, selectAll, selectFiles, more,
     repository, action, strategy, setStrategy, fileList, fileAction, requestFileAction, confirmFileAction,
     cancelFileAction: () => { if (!busy) { setFileAction(null); clearActionError(); } },

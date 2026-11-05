@@ -14,17 +14,18 @@ export function gitGraph(commits: GitCommit[]) {
   let colorIndex = 0;
   let width = GRAPH_LANE_WIDTH * 2;
   const rows = commits.map(commit => {
-    let lane = lanes.findIndex(entry => entry.hash === commit.hash);
+    const key = (hash: string) => `${commit.repository ?? ''}:${hash}`;
+    let lane = lanes.findIndex(entry => entry.hash === key(commit.hash));
     if (lane < 0) {
       lane = lanes.length;
-      lanes.push({ hash: commit.hash, color: COLORS[colorIndex++ % COLORS.length] });
+      lanes.push({ hash: key(commit.hash), color: COLORS[colorIndex++ % COLORS.length] });
     }
     const before = [...lanes];
     const node = lanes[lane];
     const next = lanes.filter((_, index) => index !== lane);
     commit.parents.forEach((hash, index) => {
-      if (!next.some(entry => entry.hash === hash)) next.splice(Math.min(lane + index, next.length), 0,
-        { hash, color: index === 0 ? node.color : COLORS[colorIndex++ % COLORS.length] });
+      if (!next.some(entry => entry.hash === key(hash))) next.splice(Math.min(lane + index, next.length), 0,
+        { hash: key(hash), color: index === 0 ? node.color : COLORS[colorIndex++ % COLORS.length] });
     });
     const lines: GraphLine[] = [];
     before.forEach((entry, index) => {
@@ -33,7 +34,7 @@ export function gitGraph(commits: GitCommit[]) {
         x2: x(next.findIndex(value => value.hash === entry.hash)), y2: GRAPH_ROW_HEIGHT, color: entry.color });
     });
     commit.parents.forEach(hash => {
-      const parent = next.findIndex(entry => entry.hash === hash);
+      const parent = next.findIndex(entry => entry.hash === key(hash));
       lines.push({ x1: x(lane), y1: GRAPH_ROW_HEIGHT / 2, x2: x(parent), y2: GRAPH_ROW_HEIGHT,
         color: next[parent].color });
     });

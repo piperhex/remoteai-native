@@ -4,7 +4,7 @@ import type { RemoteGit } from './useRemoteGit';
 export const GIT_HISTORY_LOAD_DISTANCE = 160;
 
 export function gitHistoryPageKey(panel: RemoteGit) {
-  return JSON.stringify([panel.changes?.root, panel.changes?.branch,
+  return JSON.stringify([panel.historyRepository, panel.changes?.root, panel.changes?.branch,
     panel.commits[0]?.hash, panel.commits.at(-1)?.hash, panel.commits.length]);
 }
 

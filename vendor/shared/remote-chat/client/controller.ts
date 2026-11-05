@@ -55,6 +55,7 @@ import { initialChatState, type ApprovalReply, type ChatProject, type ChatState,
   type ListResponse, type Request, type SendInput, type SkillsResponse, type Thread } from './types';
 
 const SYNCHRONIZATION_RETRY_MS = 3000;
+type ReadErrorSource = 'list' | 'history';
 
 export class ChatController {
   /** Enable before start only when the host UI supports loading individual tool details. */
@@ -82,6 +83,7 @@ export class ChatController {
     request: (body) => this.request(body), created: (id, settings) => this.composer.created(id, settings),
     generation: () => this.synchronization });
   private state = initialChatState();
+  private readErrorSource?: ReadErrorSource;
   private readonly listeners = new Set<() => void>();
   private readonly eventListeners = new Set<(event: GuiEvent) => void>();
   private readonly stream = new StreamFrame(events => {
@@ -167,6 +169,7 @@ export class ChatController {
     }), versions);
     if (offline) this.offlineWriter = new OfflineWriter(offline, this.cacheFailure);
     this.connection = createConnection({
+      relayIssue: (relayIssue) => this.update({ relayIssue }),
       mode: (mode) => this.changeMode(mode), error: (error) => {
         this.stream.flush();
         this.update({ error, connectionIssue: error });
@@ -216,7 +219,8 @@ export class ChatController {
     }
     for (const listener of this.listeners) listener();
   }
-  private update(patch: Partial<ChatState>) {
+  private update(patch: Partial<ChatState>, readErrorSource?: ReadErrorSource) {
+    if ('error' in patch) this.readErrorSource = readErrorSource;
     const previous = this.state;
     this.state = syncChatProcessing({ ...this.state, ...patch }, this.state);
     if (previous.selected?.id !== this.state.selected?.id) {
@@ -245,9 +249,13 @@ export class ChatController {
     });
     return this.viewSync;
   }
-  private failure(error: unknown) {
+  private failure(error: unknown, source?: ReadErrorSource) {
     this.stream.flush();
-    this.update({ error: error instanceof Error ? error.message : '操作未完成，请稍后重试。' });
+    this.update({ error: error instanceof Error ? error.message : '操作未完成，请稍后重试。' }, source);
+  }
+
+  private recoveredRead(source: ReadErrorSource): Partial<ChatState> {
+    return this.readErrorSource === source ? { error: '' } : {};
   }
 
   private changeMode(mode: ConnectionMode) {
@@ -596,8 +604,8 @@ export class ChatController {
       const { threads, summaries } = mergeThreadList({ before, current: this.state.threads,
         incoming: result.data, more });
       void this.offline?.updateSummaries?.(summaries, archived).catch(this.cacheFailure);
-      this.update({ threads, cursor: result.nextCursor });
-    } catch (error) { if (generation === this.listRequests.generation) this.failure(error); }
+      this.update({ threads, cursor: result.nextCursor, ...this.recoveredRead('list') });
+    } catch (error) { if (this.listRequests.accepts(generation, revision)) this.failure(error, 'list'); }
     finally {
       if (generation === this.listRequests.generation) this.update({ loading: false });
     }
@@ -660,13 +668,13 @@ export class ChatController {
         this.loadedThreadId = selected.id;
         if (result.page) this.historyPages.set(selected.id, result.page);
         this.update({ selected: mergeHistory(result.thread, this.state.selected, selected, this.state.historyOffline),
-          error: '', historyOffline: false,
+          ...this.recoveredRead('history'), historyOffline: false,
           historyHasMore: result.page.hasMore,
           ...(older && { historyLoad: historyLoadResult(selected, result.thread, startedAt) }) });
         this.rememberHistory();
         this.markViewed();
       }
-    } catch (error) { if (generation === this.readGeneration) this.failure(error); }
+    } catch (error) { if (generation === this.readGeneration) this.failure(error, 'history'); }
     finally {
       if (generation === this.readGeneration) {
         this.refreshThreadId = null;

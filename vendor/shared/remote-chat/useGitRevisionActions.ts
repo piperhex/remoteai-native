@@ -13,16 +13,17 @@ export function useGitRevisionActions(options: Options) {
   useEffect(() => { setRevisionAction(null); }, [scope]);
   const requestRevisionAction = (action: GitRevisionPrompt['action'], commit: GitCommit) => {
     if (!changes || busy || !connected || changes.files.some(file => file.conflict)) return;
-    if (action === 'reset' && !changes.branch) return;
-    setRevisionAction({ action, commit: commit.hash, subject: commit.subject, head: changes.head,
-      branch: changes.branch, files: changes.files.map(({ path, version }) => ({ path, version })) });
+    const state = changes.workspaces?.find(state => state.root === commit.repository) ?? changes;
+    if (action === 'reset' && !state.branch) return;
+    setRevisionAction({ action, commit: commit.hash, subject: commit.subject, cwd: commit.repository ?? cwd, head: state.head,
+      branch: state.branch, files: state.files.map(({ path, version }) => ({ path, version })) });
   };
   const confirmRevisionAction = (mode: GitResetMode) => run(async () => {
     if (!revisionAction) return;
     const { subject: _subject, ...request } = revisionAction;
     let failure: unknown;
     try {
-      await client.revision({ ...request, cwd, ...(request.action === 'reset' && { mode }) });
+      await client.revision({ ...request, cwd: request.cwd ?? cwd, ...(request.action === 'reset' && { mode }) });
       if (!isCurrent()) return;
       setRevisionAction(null); onDone();
       setNotice(request.action === 'checkout' ? '已检出所选提交' : '当前分支已重置');

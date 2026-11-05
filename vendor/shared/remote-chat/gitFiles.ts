@@ -1,4 +1,4 @@
-import type { GitChange } from './gitTypes';
+import type { GitChange, GitRepositoryEntry } from './gitTypes';
 
 export const GIT_AREAS = [
   { id: 'conflict', label: "client.git.conflict", color: '#bf3945', background: '#fff0f1' },
@@ -16,8 +16,9 @@ export function fileArea(file: GitChange): GitArea['id'] {
 }
 export interface GitFileNode {
   path: string; name: string; files: GitChange[]; children: GitFileNode[]; file?: GitChange;
+  repository?: GitRepositoryEntry;
 }
-export function fileTree(files: GitChange[]): GitFileNode[] {
+export function fileTree(files: GitChange[], repositories: GitRepositoryEntry[] = []): GitFileNode[] {
   const root: GitFileNode = { path: '', name: '', files: [], children: [] };
   for (const file of files) {
     let parent = root;
@@ -29,11 +30,23 @@ export function fileTree(files: GitChange[]): GitFileNode[] {
         node = { path, name, files: [], children: [], file: index === parts.length - 1 ? file : undefined };
         parent.children.push(node);
       }
+      if (index === parts.length - 1) node.file = file;
       node.files.push(file); parent = node;
     });
   }
+  for (const repository of repositories.filter(entry => entry.path)) {
+    let parent = root;
+    const parts = repository.path.split('/');
+    parts.forEach((name, index) => {
+      const path = parts.slice(0, index + 1).join('/');
+      let node = parent.children.find(node => node.path === path);
+      if (!node) { node = { path, name, files: [], children: [] }; parent.children.push(node); }
+      if (index === parts.length - 1) node.repository = repository;
+      parent = node;
+    });
+  }
   const sort = (nodes: GitFileNode[]): GitFileNode[] => nodes.sort((a, b) =>
-    Number(!!a.file) - Number(!!b.file) || a.name.localeCompare(b.name)).map(node =>
+    Number(!!a.file && !a.repository && !a.children.length) - Number(!!b.file && !b.repository && !b.children.length) || a.name.localeCompare(b.name)).map(node =>
     ({ ...node, children: sort(node.children) }));
   return sort(root.children);
 }

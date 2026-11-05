@@ -91,7 +91,8 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
       generateMessage: (input: GitMessageRequest) =>
         request<{ message: string }>({ ...input, operation: 'guiGitGenerateMessage' }),
       revision: (input: GitRevisionRequest) => request<void>({ ...input, operation: 'guiGitRevision' }),
-      repository: (cwd: string) => request<GitRepository>({ operation: 'guiGitRepository', cwd }),
+      repository: (cwd: string, includeChildren?: boolean) =>
+        request<GitRepository>({ operation: 'guiGitRepository', cwd, includeChildren }),
       action: (input: GitActionRequest) => request<void>({ ...input, operation: 'guiGitAction' }),
       changes: (cwd: string) => request<GitChanges>({ operation: 'guiGitChanges', cwd }),
       diff: (cwd: string, path: string, commit?: string) =>

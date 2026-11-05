@@ -121,7 +121,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
     drawerRef.current?.closeDrawer(); setPickingDevice(false); setSearching(false);
   }, [notification]);
   const ready = state.ready;
-  const error = visibleChatError(state.error);
+  const error = visibleChatError(state.error, state);
   const runningTurn = ready ? currentRunningTurn(state.selected?.turns) : undefined;
   const running = Boolean(runningTurn);
   const openDrawer = useCallback(() => { Keyboard.dismiss(); setDrawer(true); drawerRef.current?.openDrawer(); }, []);

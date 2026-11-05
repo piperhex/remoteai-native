@@ -7,7 +7,7 @@ const commit = (id: number, parents: number[], subject: string, refs: string[] =
 });
 
 /** Local UI fixtures never read or mutate a real repository. */
-type SyncGitClient = { [Key in keyof GitClient]:
+type SyncGitClient = { [Key in keyof Omit<GitClient, 'commitAndPush'>]:
   (...args: Parameters<GitClient[Key]>) => Awaited<ReturnType<GitClient[Key]>> };
 
 export function createGitFixture(): SyncGitClient {

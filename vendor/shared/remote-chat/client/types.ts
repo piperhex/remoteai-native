@@ -27,6 +27,7 @@ export interface ChatState {
   publicEndpoints?: import('../publicEndpoints').ConnectionPublicEndpoints;
   connectionStage?: import('../connectionHealth').ConnectionStage;
   connectionIssue?: string;
+  relayIssue?: import('../relayUsage').RelayIssue | null;
   deliveries?: Record<string, import('../taskDelivery').TaskDelivery>;
   notificationError?: boolean;
   desktopOnly?: boolean;
