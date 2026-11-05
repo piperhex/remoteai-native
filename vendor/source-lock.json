@@ -3,7 +3,7 @@
   "revision": "7511b856494f24d7f5673fc47b69d91c03906241",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "7fbae818e71aced199fae1b7df1764f0af982b9d"
+    "revision": "31d1d88df41a81f23c658a5173633f6f18b37b4d"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
   "files": {
@@ -103,7 +103,7 @@
     "shared/chat/useComposerSuggestion.ts": "a70a5ba70ec54a2dbf67d9de99f3ea5863847291c250308788008da5e8f6ccdd",
     "shared/chat/nextPromptSuggestion.ts": "ee1c040d3b9b2d3adc52e348a396153085232ffbb0154ecd713fd2aec1fb8146",
     "shared/remote-chat/client/useGoalMode.ts": "e12cc381abb74c7453e45051127c8384a8adb1f09679cbf2e0caee9df421db08",
-    "shared/remote-chat/client/goals.ts": "ac740faafabdcd751657b6972cb0c6f973f3ede22f60bd631c89f532660ac566",
+    "shared/remote-chat/client/goals.ts": "7b8ec8f0e317b083f3e3950f0cd0bb82e42e37ad80e0e25ba40c7c0e2c6c92b3",
     "shared/remote-chat/usage.ts": "f754d482e581c544e3eef749323cbe571437b695368eaefa98159d82a72d8c50",
     "shared/remote-chat/conversationMetrics.ts": "2b9369318775ca345667be4504ee862d4351ee5edf86b53bc43e0658fd6d9f60",
     "shared/remote-chat/contextSettings.ts": "91c9eefd9ada7bdab9478bfd3173977aa856a7af57ab22f46acf5b8287f1e365",

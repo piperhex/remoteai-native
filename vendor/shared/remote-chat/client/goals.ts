@@ -59,7 +59,8 @@ export class RemoteGoals {
     const state = this.host.snapshot();
     if (modelSelectionError(state.models, { model: input.model ?? state.settings.model,
       effort: input.effort ?? state.settings.effort })) return false;
-    if (state.selected && state.queue.threads[state.selected.id]?.length) {
+    const local = state.localQueue?.[state.draftScope ?? state.selected?.id ?? ''];
+    if (local?.length || (state.selected && state.queue.threads[state.selected.id]?.length)) {
       this.host.update({ error: '请先处理待发送消息，再开始目标。' }); return false;
     }
     if (!input.text.trim() || input.text.length > 4000 || input.images?.length
