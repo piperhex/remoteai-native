@@ -91,10 +91,13 @@ it('preserves live replies during a legacy read and ignores an old selection arr
   await pending;
   expect(controller.snapshot().error).toBe('');
   expect(controller.snapshot().selected?.turns?.at(-1)?.items[0].text).toBe('实时回复');
+  const previousFinish = finish;
   const oldRead = controller.refreshSelected();
+  await vi.waitFor(() => expect(finish).not.toBe(previousFinish));
   const finishOld = finish;
   const newer = { ...selected, id: 'newer' };
   const newRead = controller.select(newer);
+  await vi.waitFor(() => expect(finish).not.toBe(finishOld));
   finish({ thread: newer }); await newRead;
   finishOld({ thread }); await oldRead;
   expect(controller.snapshot().selected?.id).toBe('newer');

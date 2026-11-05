@@ -8,6 +8,7 @@ const MAX_QUEUED_MESSAGES = 512;
 const INTERLEAVED_RESPONSES = 4;
 const UI_WORK_SLICE_MS = 8;
 interface Pending {
+  awaitingAck?: boolean;
   progress?: TransferProgress;
   parts: Generator<string>;
   resolve: () => void;
@@ -24,6 +25,7 @@ export class SendQueue {
 
   constructor(private readonly transport: {
     capacity: () => Promise<void>; send: (part: string, delivered?: () => void) => void;
+    acknowledgedResponses?: boolean;
     mode?: () => ConnectionMode;
     prefix?: string;
   }) {}
@@ -53,7 +55,7 @@ export class SendQueue {
       while (!this.closed && (this.ordered.length || this.responses.length)) {
         await this.transport.capacity();
         if (this.closed) break;
-        this.sendNext();
+        if (!this.sendNext()) break;
         // Yield only after actual CPU work, never impose a delay on every fragment.
         if (performance.now() - started >= UI_WORK_SLICE_MS) {
           await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -67,16 +69,34 @@ export class SendQueue {
 
   private sendNext() {
     const queue = this.ordered.length ? this.ordered : this.responses;
-    const pending = queue[0];
+    const pending = queue === this.ordered ? queue[0]
+      : queue.slice(0, INTERLEAVED_RESPONSES).find(entry => !entry.awaitingAck);
+    if (!pending) return false;
     try {
       const part = pending.parts.next();
-      if (part.done) { queue.shift(); pending.resolve(); return; }
-      this.transport.send(part.value, this.deliveryProgress(part.value, pending.progress));
-      if (queue === this.responses) {
-        queue.shift();
+      if (part.done) { this.remove(queue, pending); pending.resolve(); return true; }
+      const delivered = this.deliveryProgress(part.value, pending.progress);
+      const tracked = queue === this.responses && this.transport.acknowledgedResponses;
+      const frame = tracked ? JSON.parse(part.value) as { index: number; total: number } : undefined;
+      // Enqueueing the last fragment does not free the receiver's assembly. Keep its slot
+      // until cumulative delivery acknowledges it, including every earlier fragment.
+      pending.awaitingAck = !!frame && frame.index === frame.total - 1;
+      this.transport.send(part.value, pending.awaitingAck ? () => {
+        delivered?.(); this.remove(queue, pending);
+        if (!this.running && !this.closed) void this.drain();
+      } : delivered);
+      if (pending.awaitingAck) pending.resolve();
+      if (queue === this.responses && queue.includes(pending)) {
+        this.remove(queue, pending);
         queue.splice(Math.min(INTERLEAVED_RESPONSES - 1, queue.length), 0, pending);
       }
-    } catch (error) { queue.shift(); pending.reject(error); }
+    } catch (error) { this.remove(queue, pending); pending.reject(error); }
+    return true;
+  }
+
+  private remove(queue: Pending[], pending: Pending) {
+    const index = queue.indexOf(pending);
+    if (index !== -1) queue.splice(index, 1);
   }
 
   private deliveryProgress(part: string, progress?: TransferProgress) {

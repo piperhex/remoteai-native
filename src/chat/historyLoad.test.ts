@@ -48,8 +48,10 @@ it('reports actual page sizes and elapsed time, including the final and empty pa
   expect(controller.snapshot().historyLoad).toBeUndefined();
   for (const count of [10, 5, 0]) {
     pause = true;
+    resume = undefined;
     const loading = controller.loadOlder();
     expect(controller.snapshot().historyLoad).toBeUndefined();
+    await vi.waitFor(() => expect(resume).toBeTypeOf('function'));
     clock += 1250;
     resume!();
     await loading;
@@ -82,6 +84,7 @@ it('does not announce a failed or obsolete read', async () => {
   expect(controller.snapshot().historyLoad).toBeUndefined();
   fail = false; pause = true;
   const loading = controller.loadOlder();
+  await vi.waitFor(() => expect(resume).toBeTypeOf('function'));
   const oldResume = resume!;
   pause = false;
   await controller.select({ ...history, id: 'other', turns: [] });

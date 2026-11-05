@@ -11,6 +11,8 @@ export function downloadBulkClient(options: {
   const cancel = (transferId: string, epoch: string) =>
     request<void>({ operation: BULK_OPERATION, action: 'cancel', transferId, epoch });
   return {
+    prepare: signal => getChatPolicy().fileBulkEnabled === 1 && options.supported()
+      ? options.link()?.bulk?.prepare(signal) ?? Promise.resolve() : Promise.resolve(),
     get peer() { return options.peer(); },
     available: () => getChatPolicy().fileBulkEnabled === 1 && options.supported()
       && !!options.link()?.bulk?.path,

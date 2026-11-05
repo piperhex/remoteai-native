@@ -2,6 +2,9 @@ import { BULK_LIMITS, BulkError, bulkAssert } from './bulkLimits';
 import { decodeBulkRecord } from './bulkProtocol';
 import type { ConnectionMode } from './protocol';
 
+const PATH_READY_TIMEOUT_MS = 15_000;
+const PATH_READY_POLL_MS = 25;
+
 export type BulkPath = 'direct' | 'relay';
 export interface BinaryChannel {
   readonly maxRecordBytes?: number;
@@ -21,6 +24,8 @@ interface StreamReceiver {
   epoch: string; record: (bytes: Uint8Array) => void; changed: () => void; closed: () => void;
 }
 export interface BulkRelay {
+  readonly independent?: boolean;
+  close?: () => void;
   available: () => boolean;
   send: (bytes: Uint8Array) => Promise<void>;
   sendBatch?: (records: readonly Uint8Array[]) => Promise<void>;
@@ -36,19 +41,53 @@ export class BulkTransport {
   private readonly invalidated = new Set<() => void>();
   private outgoing = Promise.resolve();
   private generation = 0;
+  private independent = false;
+  private relayBlocked = false;
+  private closed = false;
   constructor(private readonly relay?: BulkRelay) {}
 
   get recordBytes() {
-    const limit = this.mode === 'direct' ? this.channel?.maxRecordBytes : undefined;
+    const limit = this.path === 'direct' ? this.channel?.maxRecordBytes : undefined;
     return limit && Number.isFinite(limit) ? Math.min(limit, BULK_LIMITS.recordBytes) : BULK_LIMITS.recordBytes;
   }
 
   get path(): BulkPath | undefined {
+    if (this.closed) return undefined;
+    if (this.independent) {
+      if (this.channel?.readyState === 'open') return 'direct';
+      if (!this.relayBlocked && this.relay?.available()) return 'relay';
+      return undefined;
+    }
     if (this.mode === 'direct' && this.channel?.readyState === 'open') return 'direct';
     if (this.mode === 'relay' && this.relay?.available()) return 'relay';
     return undefined;
   }
+  isolate() {
+    if (this.independent) return;
+    this.independent = true;
+    for (const channel of this.channels.values()) channel.close();
+    this.channels.clear(); this.channel = undefined;
+    this.invalidate(); this.notifyStreams();
+  }
+  relayChanged() {
+    if (this.path !== 'direct') this.invalidate();
+    this.notifyStreams();
+  }
+  setRelayBlocked(blocked: boolean) {
+    if (this.relayBlocked === blocked) return;
+    this.relayBlocked = blocked; this.relayChanged();
+  }
+  async prepare(signal?: AbortSignal) {
+    if (!this.independent && !this.relay?.independent) return;
+    const started = Date.now();
+    while (!this.path) {
+      bulkAssert(!signal?.aborted, 'CANCELLED');
+      bulkAssert(!this.closed && this.mode !== 'offline' && Date.now() - started < PATH_READY_TIMEOUT_MS, 'PATH_UNAVAILABLE');
+      await new Promise(resolve => setTimeout(resolve, PATH_READY_POLL_MS));
+    }
+  }
   attach(channel: BinaryChannel, source: 'rtc' | 'native' = 'rtc') {
+    if (this.closed) { channel.close(); return; }
     if (this.channels.get(source) === channel) return;
     const previous = this.channels.get(source);
     this.channels.set(source, channel);
@@ -56,7 +95,10 @@ export class BulkTransport {
     previous?.close();
     channel.onOpen?.(() => this.selectChannel());
     // Each peer can select a different live direct transport; authenticated epochs fence old records.
-    channel.onMessage(bytes => { if (this.channels.get(source) === channel) this.receive(bytes, 'direct'); });
+    channel.onMessage(bytes => {
+      if (this.channels.get(source) !== channel) return;
+      try { this.receive(bytes, 'direct'); } catch { channel.close(); }
+    });
     channel.onClose(() => {
       if (this.channels.get(source) !== channel) return;
       this.channels.delete(source); this.selectChannel();
@@ -69,12 +111,12 @@ export class BulkTransport {
     if (this.channel === selected) return;
     this.channel = selected;
     // Background RTC retries must not replace a healthy native or relay file channel.
-    if (this.mode === 'direct') this.invalidate();
+    if (this.independent || this.mode === 'direct') this.invalidate();
     this.notifyStreams();
   }
   setMode(mode: ConnectionMode) {
     const changed = this.mode !== mode;
-    if (changed) this.invalidate();
+    if (changed && !this.independent) this.invalidate();
     this.mode = mode;
     if (changed) this.notifyStreams();
   }
@@ -172,10 +214,13 @@ export class BulkTransport {
     for (const callback of [...this.invalidated]) callback();
   }
   close() {
+    if (this.closed) return;
+    this.closed = true;
     this.invalidate(); this.mode = 'offline';
     for (const stream of this.streams.values()) stream.closed();
     this.streams.clear();
     for (const channel of this.channels.values()) channel.close();
     this.channels.clear(); this.channel = undefined;
+    this.relay?.close?.();
   }
 }

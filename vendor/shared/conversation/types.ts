@@ -36,6 +36,8 @@ export interface Item {
   content?: Content[] | string[];
   summary?: string[];
   command?: string;
+  commandPreview?: string;
+  detailsRef?: { threadId: string; turnId: string; itemId: string };
   commandActions?: { type: string; name?: string; path?: string | null; query?: string | null }[];
   cwd?: string;
   status?: string;
@@ -152,6 +154,7 @@ export interface EventParams {
 export type AutomaticSetupStatus = "installing" | "ready" | "failed";
 export interface GuiEvent { method: string; params: EventParams; id?: string | number | null }
 export interface Conversation {
+  historyPage?: import('../remote-chat/historyPage').HistoryPage;
   processing?: ProcessingState;
   thread: Thread;
   turns: Turn[];
@@ -206,6 +209,7 @@ export type ApprovalReply = {
   answers?: Record<string, { answers: string[] }>;
 };
 export type Request =
+  | ({ operation: 'toolDetails' } & NonNullable<Item['detailsRef']>)
   | Exclude<import('../project-browser/protocol').ProjectBrowserRequest, { operation: 'projectFiles' }>
   | { operation: 'suggestNextPrompt'; threadId: string; sourceTurnId: string; model: string;
       effort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max' | 'ultra' }
@@ -235,15 +239,18 @@ export type Request =
   | { operation: "skills"; cwd?: string }
   | { operation: "models"; cursor?: string; cacheOnly?: boolean }
   | { operation: "list"; cursor?: string; archived: boolean; search?: string; limit?: number; force?: boolean }
+  | { operation: "groupThreadSummaries"; threadIds: string[]; archived: boolean }
   | ({ operation: "groupMembersPage"; projects: { path: string; name: string }[];
       projectOverrides: Record<string, string> } & import('../chat/groups/model').GroupMembersQuery)
   | { operation: "start"; cwd?: string; model?: string; access: AccessMode }
   | { operation: "fork"; threadId: string; turnId: string; access: AccessMode; cwd?: string }
-  | { operation: "resume"; threadId: string; access: AccessMode; cwd?: string }
+  | { operation: "resume"; threadId: string; access: AccessMode; cwd?: string; summaryOnly?: boolean }
   | { operation: "send"; threadId: string; text: string; images: string[]; access: AccessMode;
       transferMode?: 'direct' | 'relay';
       model?: string; effort?: string; cwd?: string; skills?: SkillReference[]; attachments?: AttachmentReference[] }
-  | { operation: "read" | "archive" | "unarchive" | "compact"; threadId: string }
+  | { operation: "read"; threadId: string; includeToolDetails?: boolean;
+      window?: import('../remote-chat/historyPage').HistoryWindow & { pageSize?: number } }
+  | { operation: "archive" | "unarchive" | "compact"; threadId: string }
   | { operation: "rename"; threadId: string; name: string }
   | { operation: "generateTitle"; threadId: string; prompt: string;
       settings: import('../chat/titleSettings').TitleSettings }

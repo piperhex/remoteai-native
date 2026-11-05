@@ -30,6 +30,7 @@ export class MobileChatConnection extends ChatConnection {
       binaryBulk: Platform.OS === 'ios'
         || Platform.OS === 'android' && NativeModules.FileDownloads?.bulkBinaryAvailable === true,
       createSocket: Platform.OS === 'android' && NativeModules.DownloadChatSocket ? nativeDownloadSocket : undefined,
+      createFileSocket: Platform.OS === 'android' && NativeModules.DownloadChatSocket ? nativeDownloadSocket : undefined,
       bulkFailure: (id, epoch, code) => { void NativeModules.FileDownloads?.failBulk(id, epoch, code); },
       verifyHostKey: trustedHost({ read: SecureStore.getItemAsync, save: SecureStore.setItemAsync },
         trustScope(session.baseUrl, options.deviceId)),

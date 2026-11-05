@@ -41,7 +41,7 @@ export function nativeDownloadSocket(url: string): ChatSocket {
     if (event.type === 'message') {
       try {
         const value = JSON.parse(event.data) as { type?: string; fileBulkV1?: boolean };
-        if (value.type === 'chat-policy') bulk = value.fileBulkV1 === true;
+        if (value.type === 'chat-policy' || value.type === 'file-relay-ready') bulk = value.fileBulkV1 === true;
         socket.onmessage?.({ data: event.data });
       } catch { socket.close(); socket.onerror?.(); }
     }

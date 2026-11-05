@@ -22,6 +22,7 @@ export interface BulkRequest {
   block: number; granted: number;
 }
 export interface BulkClient {
+  prepare?: (signal?: AbortSignal) => Promise<void>;
   readonly peer: string;
   available: () => boolean;
   path: () => BulkPath | undefined;

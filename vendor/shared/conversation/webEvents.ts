@@ -1,5 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke, isDesktopApp } from "../platform/localBackend";
+import { viewedThreadIds } from './viewedThreads';
 
 const POLL_INTERVAL_MS = 250;
 const RETRY_INTERVAL_MS = 1500;
@@ -31,7 +32,7 @@ async function poll() {
   let delay = POLL_INTERVAL_MS;
   pending = (async () => {
     try {
-      const batch = await invoke<Batch>("codex_gui_events", { cursor });
+      const batch = await invoke<Batch>("codex_gui_events", { cursor, viewedThreads: viewedThreadIds() });
       if (!subscribers.size) return;
       cursor = batch.cursor;
       if (batch.reset || interrupted) {

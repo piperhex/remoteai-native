@@ -29,6 +29,7 @@ async function openFile(options: {
   let bulk: Awaited<ReturnType<typeof import('./bulkOpen')['openNativeBulk']>> | undefined;
   try {
     bulkAssert(!signal.aborted, 'CANCELLED');
+    await client.bulk?.prepare?.(signal);
     if (native.bulkBinaryAvailable && client.bulk?.available()) {
       const { openNativeBulk } = await import('./bulkOpen');
       bulk = await openNativeBulk({ taskId, id: info.id, client: client.bulk, native, signal });

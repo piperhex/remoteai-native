@@ -1,5 +1,6 @@
 import { invoke, isHostedWebApp } from "../platform/localBackend";
 import { subscribeGuiEvent } from "./webEvents";
+import { viewedThreadIds } from './viewedThreads';
 import type { ApprovalReply, GuiEvent, Request } from "./types";
 import { validateUploadedFiles } from "../remote-chat/composerAttachments";
 import { chatMessageCharLimit } from "../remote-chat/framing";
@@ -9,6 +10,9 @@ export const guiApi = {
   connect: (options?: { reuseExisting: boolean }) => options
     ? invoke<GuiEvent[]>("codex_gui_connect", options) : invoke<GuiEvent[]>("codex_gui_connect"),
   async request<T>(request: Request) {
+    if (request.operation === 'resume' && !viewedThreadIds().includes(request.threadId)) {
+      request = { ...request, summaryOnly: true };
+    }
     if (request.operation === 'send' || request.operation === 'steer') {
       validateUploadedFiles(request.attachments ?? [], request.transferMode ?? 'relay');
     } else if (request.operation === 'sendBatch') {
@@ -23,6 +27,6 @@ export const guiApi = {
     return response.data;
   },
   respond: (reply: ApprovalReply) => invoke<void>("codex_gui_respond", { reply }),
-  subscribe: (callback: (event: GuiEvent) => void) =>
-    subscribeGuiEvent<GuiEvent>("codex-gui-event", callback),
+  subscribe: (callback: (event: GuiEvent) => void, transport = false) =>
+    subscribeGuiEvent<GuiEvent>(transport ? "codex-gui-transport-event" : "codex-gui-event", callback),
 };

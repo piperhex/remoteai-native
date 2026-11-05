@@ -79,6 +79,6 @@ function supportsBinary(data: string) {
 function supportsBulk(data: string) {
   try {
     const frame = JSON.parse(data) as { type?: string; fileBulkV1?: boolean } | null;
-    return frame?.type === 'chat-policy' && frame.fileBulkV1 === true;
+    return (frame?.type === 'chat-policy' || frame?.type === 'file-relay-ready') && frame.fileBulkV1 === true;
   } catch { return false; }
 }

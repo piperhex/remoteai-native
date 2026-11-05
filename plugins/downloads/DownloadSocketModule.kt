@@ -34,7 +34,8 @@ class DownloadSocketModule(private val context: ReactApplicationContext) : React
     try {
       UUID.fromString(id)
       val request = Request.Builder().url(url).build()
-      require(request.url.encodedPath.endsWith("/device-chat") && request.url.query == null)
+      require(request.url.encodedPath.endsWith("/device-chat") &&
+        (request.url.query == null || request.url.query == "channel=file"))
       val slot = Slot()
       synchronized(sockets) { require(sockets.size < 16 && sockets.putIfAbsent(id, slot) == null) }
       reserved = slot
@@ -47,8 +48,12 @@ class DownloadSocketModule(private val context: ReactApplicationContext) : React
           if (text.length > 65_536) { webSocket.cancel(); return }
           try {
             val frame = JSONObject(text)
-            if (frame.optString("type") == "chat-policy") slot.bulk = frame.optBoolean("fileBulkV1")
-            if (frame.optString("type") in listOf("paired", "resumed")) slot.session = frame.getString("sessionId")
+            if (frame.optString("type") in listOf("chat-policy", "file-relay-ready")) {
+              slot.bulk = frame.optBoolean("fileBulkV1")
+            }
+            if (frame.optString("type") in listOf("paired", "resumed", "file-relay-ready")) {
+              slot.session = frame.getString("sessionId")
+            }
           } catch (_: Exception) { webSocket.cancel(); return }
           event(id, "message", text)
         }

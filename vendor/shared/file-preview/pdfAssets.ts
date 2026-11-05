@@ -1,8 +1,8 @@
-// Vite emits local assets with hashes; factories retain PDF.js's original lookup names.
+// The host resolves this alias to its installed PDF.js; Vite emits hashed, same-origin assets.
 const assets = import.meta.glob<string>([
-  '../../node_modules/pdfjs-dist/cmaps/*.bcmap',
-  '../../node_modules/pdfjs-dist/standard_fonts/*.{pfb,ttf}',
-  '../../node_modules/pdfjs-dist/wasm/*.wasm',
+  '@remoteai/pdfjs-assets/cmaps/*.bcmap',
+  '@remoteai/pdfjs-assets/standard_fonts/*.{pfb,ttf}',
+  '@remoteai/pdfjs-assets/wasm/*.wasm',
 ], { eager: true, query: '?url&no-inline', import: 'default' });
 const urls = new Map(Object.entries(assets).map(([path, url]) => [path.split('/').at(-1), url]));
 

@@ -7,6 +7,7 @@ import { fitsRelayChunkLimit } from './framing';
 import { LinkDelivery } from './linkDelivery';
 import type { TransferProgress } from './uploadProgress';
 import { HotPeer } from './hotPeer';
+import { FilePeer } from './filePeer';
 import { DirectPackets, directPackets } from './directPackets';
 import { connectionDiagnostic } from './diagnostics';
 import { getChatPolicy } from './policy';
@@ -31,6 +32,7 @@ export class HotLink {
   readonly bulk: BulkTransport;
   private readonly diagnostic;
   private readonly peer: HotPeer;
+  private filePeer?: FilePeer;
   private readonly delivery: LinkDelivery;
   private readonly timer: ReturnType<typeof setInterval>;
   private cipher?: SessionCipher;
@@ -77,7 +79,9 @@ export class HotLink {
     this.delivery.setAvailable(false);
     if (options.publicKey) this.setKey(options.publicKey);
     this.peer = new HotPeer({ ...options,
-      bulkChannel: options.binaryBulk ? (channel, source) => this.bulk.attach(channel, source) : undefined,
+      bulkChannel: options.binaryBulk ? (channel, source) => {
+        if (this.filePeer) channel.close(); else this.bulk.attach(channel, source);
+      } : undefined,
       diagnostic: this.diagnostic,
       signal: (payload) => this.signal({ type: 'signal', payload }),
       channel: (channel) => this.attach(channel), disconnected: () => this.fallback(),
@@ -112,7 +116,16 @@ export class HotLink {
   async acceptSignal(signal: Signal) {
     if (this.closed) return;
     if (signal.kind === 'key') { this.setKey(signal.key); return; }
+    if ('lane' in signal && signal.lane === 'file') {
+      this.enableFilePeer(); await this.filePeer?.accept(signal); return;
+    }
     await this.peer.accept(signal);
+  }
+
+  private enableFilePeer() {
+    if (this.filePeer || !this.options.binaryBulk) return;
+    this.bulk.isolate();
+    this.filePeer = new FilePeer(this.options, this.bulk);
   }
 
   private signal(message: object): boolean {
@@ -188,6 +201,7 @@ export class HotLink {
     // A very large configured timeout must not retain unanswered probes indefinitely.
     if (this.probes.size > MAX_PENDING_PROBES) this.probes.delete(this.probes.keys().next().value!);
     const frame = { kind: 'ping', id, packetBatching: true, parallelResponses: true,
+      fileConnectionV1: this.options.binaryBulk === true,
       packetCompression: this.compressed ? PACKET_COMPRESSION : undefined };
     if (!this.transmit(path, frame)) this.probes.delete(id);
   }
@@ -226,11 +240,13 @@ export class HotLink {
       this.compressionEnabled = Boolean(this.compressed);
     }
     if (frame.kind === 'close') { this.close(false); return; }
+    if ((frame.kind === 'ping' || frame.kind === 'pong') && frame.fileConnectionV1 === true) this.enableFilePeer();
     if (frame.kind === 'ping') {
       if (!Number.isSafeInteger(frame.id)) throw new Error('Invalid probe');
       if (frame.parallelResponses === true) this.delivery.enableResponses();
       if (path === 'direct' && frame.packetBatching === true) this.directPackets.enable();
       this.transmit(path, { kind: 'pong', id: frame.id, packetBatching: true, parallelResponses: true,
+        fileConnectionV1: this.options.binaryBulk === true,
         packetCompression: this.compressed ? PACKET_COMPRESSION : undefined,
         observedEndpoint: path === 'direct' ? endpoints?.remote : undefined });
     } else if (frame.kind === 'pong') {
@@ -307,6 +323,7 @@ export class HotLink {
       this.choose();
       this.delivery.flush();
       this.peer.recover(this.healthy('direct'), this.relay);
+      this.filePeer?.tick(this.relay);
       // Relay probes traverse the coordinator and the remote UI; brief stalls must not reset that socket.
       const relaySilence = now - Math.max(this.relaySince, this.lastPong.relay);
       if (this.relay && !this.quotaBlocked && !this.relayTimedOut
@@ -344,6 +361,7 @@ export class HotLink {
   setRelayQuotaBlocked(blocked: boolean) {
     if (this.closed || this.quotaBlocked === blocked) return;
     this.quotaBlocked = blocked;
+    this.bulk.setRelayBlocked(blocked);
     this.lastPong.relay = 0;
     this.relaySince = Date.now();
     if (!blocked) this.probe('relay');
@@ -380,6 +398,7 @@ export class HotLink {
     this.directPackets.clear();
     clearInterval(this.timer);
     this.peer.close();
+    this.filePeer?.close();
     this.channel?.close();
     this.compressed?.close();
     this.cipher?.destroy();

@@ -13,6 +13,7 @@ import { SessionRenewal } from './sessionRenewal';
 import { ReconnectBackoff } from '../../realtime/reconnectBackoff';
 import { PublicEndpointObserver } from '../publicEndpointObserver';
 import { downloadBulkClient } from './bulkClient';
+import { FileRelay, type FileSocketFactory } from '../fileRelay';
 import { MappingStreamClient } from '../../port-mapping/streamClient';
 import { BULK_ERROR_EVENT } from '../bulkControl';
 import { BulkError, type BulkErrorCode } from '../bulkLimits';
@@ -46,6 +47,7 @@ interface ConnectionOptions extends ConnectionEvents {
   createNativePath?: import('../nativePath').NativePathFactory;
   clientInfo?: ChatClientInfo;
   createSocket?: (url: string) => ChatSocket;
+  createFileSocket?: FileSocketFactory;
   deviceId: string;
   authorize: () => Promise<{ baseUrl: string; accessToken: string }>;
   renewAuthorization?: () => Promise<void>;
@@ -81,6 +83,8 @@ export class ChatConnection {
   private readonly publicEndpoints = new PublicEndpointObserver(value => this.options.publicEndpoints?.(value));
   private readonly quota = new RelayQuota();
   private socket?: ChatSocket;
+  private socketUrl = '';
+  private fileRelay?: FileRelay;
   private link?: ChatLink;
   private rpc?: ChatRpc;
   private timer?: ReturnType<typeof setTimeout>;
@@ -137,6 +141,7 @@ export class ChatConnection {
       this.options.stage?.('computer');
       const keys = keyPair(this.options.randomBytes);
       const url = chatSocketUrl(session.baseUrl);
+      this.socketUrl = url;
       const socket = (this.options.createSocket ?? browserChatSocket)(url);
       this.socket = socket;
       this.bindSocket({ socket, keys, generation, accessToken: session.accessToken });
@@ -154,7 +159,7 @@ export class ChatConnection {
       if (generation !== this.generation) { socket.close(); return; }
       socket.send(JSON.stringify({ type: 'authenticate', role: 'mobile',
         accessToken, deviceId: this.options.deviceId, publicKey: keys.publicKey,
-        transportVersion: 2, binaryRelay: true, fileBulkV1: true,
+        transportVersion: 2, binaryRelay: true, fileBulkV1: true, fileConnectionV1: true,
         tcpPunch: this.options.tcpPunch === true, resume: this.resume,
         nativeTraversal: Boolean(this.options.createNativePath),
         clientInfo: this.options.clientInfo ?? browserClientInfo() }));
@@ -277,6 +282,7 @@ export class ChatConnection {
         this.resume = { sessionId: message.sessionId, resumeToken: message.resumeToken };
       }
       this.paired({ id: message.sessionId, iceServers: message.iceServers as IceServer[], keys,
+        fileRelay: message.fileRelay,
         tcp: message.tcpPunch as import('../tcp/types').TcpPunchConfig | undefined,
         nativeTraversal: message.nativeTraversal as import('../nativePath').NativeTraversalConfig | undefined,
         transportVersion: Number(message.transportVersion) });
@@ -284,6 +290,9 @@ export class ChatConnection {
       return;
     }
     if (this.resume && message.sessionId !== this.resume.sessionId) return;
+    if (message.type === 'resumed' || message.type === 'file-relay-reset') {
+      this.fileRelay?.configure(message.fileRelay);
+    }
     if (message.type === 'resumed' && this.resume) {
       this.socketAuthenticated = true;
       this.resumeUnavailableReplies = 0;
@@ -306,19 +315,25 @@ export class ChatConnection {
   }
 
   private paired(input: {
+    fileRelay?: unknown;
     tcp?: import('../tcp/types').TcpPunchConfig;
     nativeTraversal?: import('../nativePath').NativeTraversalConfig;
     id: string; iceServers: IceServer[]; keys: ReturnType<typeof keyPair>; transportVersion: number;
   }) {
     if (this.link) throw new Error('Already paired');
+    this.fileRelay = new FileRelay({ url: () => this.socketUrl, sessionId: input.id,
+      createSocket: this.options.createFileSocket,
+      fallback: { available: () => this.socket?.bulkAvailable === true,
+        send: bytes => this.sendBulk(input.id, [bytes]), sendBatch: records => this.sendBulk(input.id, records) },
+      record: bytes => this.link?.bulk?.receive(bytes, 'relay'), changed: () => this.link?.bulk?.relayChanged(),
+      quota: data => { if (this.quota.receive(JSON.parse(data))) this.link?.setRelayQuotaBlocked(this.quota.blocked); },
+    });
     this.rpc = new ChatRpc({ prefix: input.keys.publicKey.slice(0, 24),
       delivery: this.options.delivery,
       send: (message, progress) => this.link!.send(message, progress), event: this.options.event });
     this.link = new ChatLink({
       binaryBulk: this.options.binaryBulk ?? typeof document !== 'undefined',
-      bulkRelay: { available: () => this.socket?.bulkAvailable === true,
-        send: bytes => this.sendBulk(input.id, [bytes]),
-        sendBatch: records => this.sendBulk(input.id, records) },
+      bulkRelay: this.fileRelay,
       sessionId: input.id, desktop: false, secret: input.keys.secret, iceServers: input.iceServers, tcp: input.tcp,
       transportVersion: input.transportVersion, reconnectRelay: () => this.fail(CONNECTION_ERRORS.network, true),
       diagnosticsEnabled: () => this.diagnosticsEnabled,
@@ -359,6 +374,7 @@ export class ChatConnection {
         this.sessionReady = true;
       },
     });
+    this.fileRelay.configure(input.fileRelay);
     if (this.quota.blocked) this.link.setRelayQuotaBlocked(true);
     void this.link.offer();
   }
@@ -409,6 +425,7 @@ export class ChatConnection {
     const link = this.link;
     this.link = undefined;
     link?.close();
+    this.fileRelay?.close(); this.fileRelay = undefined;
     this.publicEndpoints.reset();
     this.rpc?.close();
     this.rpc = undefined;

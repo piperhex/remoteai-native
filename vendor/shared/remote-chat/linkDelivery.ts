@@ -42,6 +42,7 @@ export class LinkDelivery {
     });
     const outgoing = new SendQueue({
       capacity: () => this.capacity(lane), mode: this.options.mode,
+      acknowledgedResponses: true,
       prefix: `${lane}:`,
       send: (part, delivered) => delivery.enqueue(part, delivered),
     });

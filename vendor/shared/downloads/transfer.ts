@@ -27,6 +27,7 @@ export async function transferDownload({ task, client, signal, update, mode }: O
     validateFileInfo(info, mode?.(), client.checkSize);
     checkCancelled(signal);
     task = { ...task, preparation: undefined };
+    await client.bulk?.prepare?.(signal);
     if (client.bulk?.available()) {
       await transferBulkDownload({ task: { ...task, name: info.name, size: info.size, mimeType: info.mimeType },
         info, client: client.bulk, signal, update, mode });
