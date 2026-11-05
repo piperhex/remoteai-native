@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "7511b856494f24d7f5673fc47b69d91c03906241",
+  "revision": "f7cf05033b075b66984294144c8e92978923f3ad",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "31d1d88df41a81f23c658a5173633f6f18b37b4d"
+    "revision": "e5d6f25a5aa39ca744004671dc6968b65d137481"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
   "files": {
@@ -46,6 +46,7 @@
     "shared/file-preview/htmlPreviewFixture.ts": "835af175e68e630b2a7a2da042cdbcbf032656f8a797c7b4586c706d047cf795",
     "apps/desktop/e2e/android-chat-driver.mjs": "43424278ec019d3d48596a8ed8feefade193dfc2ef1204bb576563a354a94a94",
     "shared/remote-chat/testing/gitFixture.ts": "ed48011ce762e99c65d44d6ae825b84ef19457f34adc02d012da204f61b69fd2",
+    "shared/remote-chat/testing/gitRepositoriesFixture.ts": "e23506999c139dcfa08ac587171c95826c2efa35a95766f55cfd9eaed59465f2",
     "shared/conversation/goalTypes.ts": "3605e071acae4b4a0039fe4cf09c3d2e4b799735d8fe2349ced048158d0c6c5c",
     "shared/remote-chat/historySync.ts": "4a39afaaac8151ae96397ebf27dfd0d0c7161f38c9812a533c6ff8c71afa0a6d",
     "shared/remote-chat/client/historyPreparation.ts": "edd50dd384405fab513399d71946fab899c85df5cd74246563b51fc9b0b6f560",
@@ -236,10 +237,11 @@
     "shared/remote-chat/nativeBulkChannel.ts": "eca338da9f7ae04f5e801b53b7c0323dd4a702dc30e1dfe8b864b190510dab03",
     "shared/remote-chat/client/socket.ts": "926f30863b6a200a900038b4cbb15dffc852630c2dee43476c3cb776633bd5b2",
     "shared/remote-chat/gitTypes.ts": "546afaa74674408643b9a206f02ddf7fada5c03f4837da43517d30be5a279144",
-    "shared/remote-chat/useRemoteGit.ts": "261cb425206e47618cbedf98f239db216d66589d8070f5b6f62d18dad3a347e8",
+    "shared/remote-chat/useRemoteGit.ts": "9d6d5fce149e65df9d9802e70b3e3afb826e74f23c80db37145fe5d7f840e13a",
     "shared/remote-chat/useGitCommitFiles.ts": "e2ffe063cca070d244ffac7e8a43839210d788f5c903ccf492bfcae3dc70d684",
+    "shared/remote-chat/gitWorkspaceClient.ts": "e0c306bd2bd07c2eda3b0d2476128786ba311e4ada6e83f713b4fff304b9be22",
     "shared/remote-chat/gitMenu.ts": "8e0f12e2b51ed3c5337f8c041a03d9da5e52eb3f0744c031f9616ea3c83f8231",
-    "shared/remote-chat/gitFiles.ts": "39fe30bcb74fb3bc7e9f099fbea8f82c455571347802935cb76b6fff6ba4b3c5",
+    "shared/remote-chat/gitFiles.ts": "5a96527e1c5baf7d9bf02bdda95a944fe0a4b307593f0ae7d8dba4e614ebc19c",
     "shared/remote-chat/useGitFileList.ts": "42f671a0ace441084eb581018aa2f80e47fee0ce980cd668c7f1844365ef118a",
     "shared/remote-chat/gitCommitFiles.ts": "9ac87da150350daa598dc13ac52cc2fcf8a1a232df80444cdf7f927788680d07",
     "shared/remote-chat/gitGraph.ts": "518f40a7895c5997fbee7c0b2ab13e66368baabea17da0cb21fec9e831e0a5d7",
@@ -521,11 +523,13 @@
     "shared/remote-desktop/receiver.ts": "25865d202ff2578eba5f54343a0065aa5e9145267664e9f8af39a343135b8dfe",
     "shared/remote-desktop/fileClipboard.ts": "37eb273feb90cbfee59773c334dec50c113739a18c0b74ff435c8b694764a447",
     "shared/remote-chat/bulkRelayWire.ts": "f129947fec6f825dd21aa9f2f0420d663a66b3f8087250299eb8c439e7dc5f2f",
-    "shared/remote-chat/useGitRequests.ts": "b8639fe49d1d643d45b01866f7e0be318f98b7917261e488c1a7658df0d2f0d3",
+    "shared/remote-chat/useGitRequests.ts": "1f7640185ae537649b843bfe7f97d4aab4f2b6e6e7ee5296a2e6d2ebc440b715",
     "shared/remote-chat/gitSnapshot.ts": "2a794fe34800f56c4c1667148754d3328ab0adbb98901112f07f1414ce47d9ca",
     "shared/remote-chat/useGitRevisionActions.ts": "9c7c16996d31459dc2b82dfd9ec9fb001ce863f49debaabcf4d40ef3d83ecd5f",
     "shared/remote-chat/useGitCommit.ts": "fb33fa6d84b720d622dabdb7f2eeb7556afbde55ae0d8d2d5efa09ce70423132",
     "shared/remote-chat/useGitConflicts.ts": "e91e7cb7f030a773e2aaf3b515b9ea52601c8bcb20921abc2ecf0eb98aa9bbbb",
+    "shared/remote-chat/gitWorkspaceModel.ts": "63e0acad4f88838ab6d4f8b1176fbafd5a6714294b46da28d7acbad34ba0cf14",
+    "shared/remote-chat/gitWorkspaceCommit.ts": "9be84ad54909250f87bf1f4aa5e7c1e8cb4dd4bb9b3417be18ee426a43151cb0",
     "shared/remote-chat/framing.ts": "643d1303d7588fa983e8870b5f2d17834a9ff4603c80e197d60664e9ec5ddf86",
     "shared/remote-chat/downloadMetrics.ts": "d1ee62329723b3821a98e4a0f72a9eddbf2d296fd32051ede1b5221061628129",
     "shared/remote-chat/uploadMode.ts": "75a268dbcc8a773cb83a58abc2e4fc31e578bf04cc4b1279375f167556ec8622",

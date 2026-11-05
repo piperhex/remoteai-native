@@ -99,6 +99,22 @@ it('copies the full hash and offers patch, checkout and reset for the held commi
   expect(git.confirmRevisionAction).not.toHaveBeenCalled();
 });
 
+it('protects submodule references and checks the selected commit repository branch', () => {
+  const reference = { ...file, path: 'child', submodule: true };
+  const folder = { ...row, kind: 'folder' as const, files: [reference] };
+  const menu = renderMenu({ kind: 'file', row: folder }).tree;
+  expect(action(menu, '回退文件夹内改动').props.disabled).toBe(true);
+  expect(action(menu, '删除文件夹内改动文件').props.disabled).toBe(true);
+  expect(action(menu, '提交文件夹内改动').props.disabled).toBe(false);
+  const git = panel();
+  git.changes!.workspaces = [{ ...git.changes!, root: '/child', branch: null }];
+  const target = { kind: 'commit' as const, commit: { ...commit, repository: '/child' } };
+  expect(action(renderMenu(target, git).tree, '重置当前分支到此提交…').props.disabled).toBe(true);
+  git.changes!.branch = null;
+  git.changes!.workspaces[0].branch = 'feature';
+  expect(action(renderMenu(target, git).tree, '重置当前分支到此提交…').props.disabled).toBe(false);
+});
+
 it('disables mutations for conflicts and reset for detached HEAD', () => {
   const git = panel();
   git.changes!.files = [{ ...file, conflict: true }];

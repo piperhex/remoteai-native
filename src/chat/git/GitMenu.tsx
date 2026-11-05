@@ -24,12 +24,14 @@ function menuItems({ target, panel, connected, onPatch, patchNotice }: Props): M
     const deletable = deletableGitFiles(row.files);
     return [
       { label: labels.commit, disabled: mutationDisabled, run: () => panel.requestFileAction('commit', row.files) },
-      { label: labels.rollback, disabled: mutationDisabled, run: () => panel.requestFileAction('rollback', row.files) },
+      { label: labels.rollback, disabled: mutationDisabled || row.files.some(file => file.submodule),
+        run: () => panel.requestFileAction('rollback', row.files) },
       { label: labels.delete, danger: true, disabled: mutationDisabled || !deletable.length,
         run: () => panel.requestFileAction('delete', deletable) },
     ];
   }
   const { commit } = target;
+  const state = panel.changes?.workspaces?.find(state => state.root === commit.repository) ?? panel.changes;
   return [
     { label: "client.git.copyRevisionNumber", disabled: panel.busy,
       run: () => void panel.performHistoryAction(async () => { await setStringAsync(commit.hash); }, '已复制') },
@@ -37,7 +39,7 @@ function menuItems({ target, panel, connected, onPatch, patchNotice }: Props): M
       run: () => { if (onPatch) void panel.performHistoryAction(() => onPatch(commit), patchNotice); } },
     { label: "client.git.checkoutRevision", disabled: mutationDisabled,
       run: () => panel.requestRevisionAction('checkout', commit) },
-    { label: "client.git.resetCurrentBranchToHere", disabled: mutationDisabled || !panel.changes?.branch,
+    { label: "client.git.resetCurrentBranchToHere", disabled: mutationDisabled || !state?.branch,
       run: () => panel.requestRevisionAction('reset', commit) },
   ];
 }

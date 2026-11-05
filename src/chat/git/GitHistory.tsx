@@ -10,6 +10,7 @@ import { useGitHistoryScroll } from './useGitHistoryScroll';
 import { SheetGestureScrollView as ScrollView } from '../../components/SheetScrollGesture';
 import { GIT_LONG_PRESS_MS } from '../../../vendor/shared/remote-chat/gitMenu';
 import type { GitCommit } from '../../../vendor/shared/remote-chat/gitTypes';
+import { GitHistoryRepository } from './GitHistoryRepository';
 
 function Line({ line }: { line: GraphLine }) {
   useLanguage();
@@ -31,21 +32,22 @@ function Graph({ row }: { row: GraphRow }) {
   </View>;
 }
 
-export function GitHistory({ panel, connected, onMenu }: {
-  panel: RemoteGit; connected: boolean; onMenu: (commit: GitCommit) => void;
+export function GitHistory({ panel, connected, onMenu, onRepositories }: {
+  panel: RemoteGit; connected: boolean; onMenu: (commit: GitCommit) => void; onRepositories?: () => void;
 }) {
   const styles = useStyles();
   useLanguage();
   const [width, setWidth] = useState(0);
   const graph = useMemo(() => gitGraph(panel.commits), [panel.commits]);
   const { failed, loadingMore, retry, onLayout, ...scrollProps } = useGitHistoryScroll(panel, connected);
-  return <ScrollView style={styles.fill} {...scrollProps} onLayout={event => {
+  return <><GitHistoryRepository panel={panel} connected={connected} open={onRepositories} />
+    <ScrollView key={panel.historyRepository} style={styles.fill} {...scrollProps} onLayout={event => {
     setWidth(event.nativeEvent.layout.width); onLayout(event);
   }}>
     {panel.changes && !panel.busy && !panel.commits.length &&
       <Text style={styles.notice}>{t("client.git.noCommitsYet")}</Text>}
     <ScrollView horizontal>
-      <View>{graph.rows.map(row => <Pressable key={row.commit.hash} accessibilityRole="button"
+      <View>{graph.rows.map(row => <Pressable key={`${row.commit.repository ?? ''}:${row.commit.hash}`} accessibilityRole="button"
         accessibilityLabel={`${row.commit.hash.slice(0, 8)} ${row.commit.subject}`}
         style={[styles.historyRow, { width: Math.max(width, row.width + GIT_HISTORY_CONTENT_WIDTH) }]}
         delayLongPress={GIT_LONG_PRESS_MS} onLongPress={() => onMenu(row.commit)}
@@ -71,5 +73,5 @@ export function GitHistory({ panel, connected, onMenu }: {
       {failed && <Pressable accessibilityRole="button" disabled={panel.busy || !connected} onPress={retry}>
         <Text style={styles.buttonText}>{t("client.terminal.retry")}</Text></Pressable>}
     </View>}
-  </ScrollView>;
+  </ScrollView></>;
 }

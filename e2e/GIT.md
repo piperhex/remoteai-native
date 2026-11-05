@@ -46,3 +46,12 @@ For named file-conflict prompts on a physical Android device, build the isolated
 Set `ANDROID_SERIAL` and run `node apps/native/e2e/git-file-conflicts-test.mjs` from the repository root.
 It installs a separate test package, checks font scales 1.0 and 1.3, verifies unrelated rollback and back navigation,
 and restores the original font scale. Inspect `.codex-tmp/git-file-conflicts-android/` screenshots for glyph clipping.
+
+For submodule management, build `assembleDebug -I ../e2e/git-repositories.init.gradle
+-PreactNativeArchitectures=arm64-v8a` with the same environment, then set `ANDROID_SERIAL` and run
+`node apps/native/e2e/git-repositories-test.mjs` from the parent root. The isolated package
+`com.codexswitch.mobile.gitrepositoriesspec` uses generated shared fixtures and its own build directory.
+It verifies mixed repository selection, child-before-parent commit/push, repository-specific history and diff
+routing, long-press actions, empty-tree filtering and back navigation at font scales 1.0 and 1.3.
+Inspect `apps/native/.codex-tmp/git-repositories-android/` screenshots; the script restores the original font scale.
+Desktop and mobile Web parity lives in the parent's `git-repositories*.pw.ts` tests.

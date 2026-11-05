@@ -20,6 +20,7 @@ export interface GitFileNode {
 }
 export function fileTree(files: GitChange[], repositories: GitRepositoryEntry[] = []): GitFileNode[] {
   const root: GitFileNode = { path: '', name: '', files: [], children: [] };
+  const repositoryByPath = new Map(repositories.map(entry => [entry.path, entry]));
   for (const file of files) {
     let parent = root;
     const parts = file.path.split('/');
@@ -27,22 +28,12 @@ export function fileTree(files: GitChange[], repositories: GitRepositoryEntry[] 
       const path = parts.slice(0, index + 1).join('/');
       let node = parent.children.find(node => node.path === path);
       if (!node) {
-        node = { path, name, files: [], children: [], file: index === parts.length - 1 ? file : undefined };
+        node = { path, name, files: [], children: [], repository: repositoryByPath.get(path),
+          file: index === parts.length - 1 ? file : undefined };
         parent.children.push(node);
       }
       if (index === parts.length - 1) node.file = file;
       node.files.push(file); parent = node;
-    });
-  }
-  for (const repository of repositories.filter(entry => entry.path)) {
-    let parent = root;
-    const parts = repository.path.split('/');
-    parts.forEach((name, index) => {
-      const path = parts.slice(0, index + 1).join('/');
-      let node = parent.children.find(node => node.path === path);
-      if (!node) { node = { path, name, files: [], children: [] }; parent.children.push(node); }
-      if (index === parts.length - 1) node.repository = repository;
-      parent = node;
     });
   }
   const sort = (nodes: GitFileNode[]): GitFileNode[] => nodes.sort((a, b) =>

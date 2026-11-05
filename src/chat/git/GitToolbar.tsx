@@ -13,7 +13,9 @@ const ACTION_ICONS = {
   fetch: 'download-outline', pull: 'arrow-down', update: 'swap-vertical-outline', push: 'arrow-up',
 } as const;
 
-export function GitToolbar({ panel, connected }: { panel: RemoteGit; connected: boolean }) {
+export function GitToolbar({ panel, connected, onRefresh }: {
+  panel: RemoteGit; connected: boolean; onRefresh?: () => void;
+}) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
@@ -49,7 +51,7 @@ export function GitToolbar({ panel, connected }: { panel: RemoteGit; connected: 
         </Pressable>;
       })}
       <Pressable accessibilityRole="button" accessibilityLabel={t("client.git.refreshGit")} disabled={disabled} style={styles.button}
-        onPress={() => { panel.setDetail(null); void panel.refresh(); }}>
+        onPress={() => { panel.setDetail(null); onRefresh?.(); void panel.refresh(); }}>
         <Ionicons name="refresh-outline" size={18} color={color("#587267", 'muted')} />
       </Pressable>
       </View>

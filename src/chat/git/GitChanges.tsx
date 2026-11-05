@@ -28,12 +28,12 @@ export function GitChanges({ panel, connected, onMenu }: {
         disabled={panel.busy || !files.some(file => !file.conflict)}
         onPress={panel.selectAll} style={styles.checkButton}>
         <GitSelectionMark checked={all} /><Text style={styles.meta}>{t("client.projectBrowser.selectAll")}</Text></Pressable>
-      <Text style={styles.meta}>{t("client.mobile.selected")}{' '}{count}{' '}{t("client.chat.files.2d4a2a")}</Text>
-      <View style={styles.viewToggle}>{(['tree', 'flat'] as const).map(mode =>
+      <Text style={styles.meta}>{t('client.git.filesSelected', { count })}</Text>
+      {!panel.changes?.repositories?.length && <View style={styles.viewToggle}>{(['tree', 'flat'] as const).map(mode =>
         <Pressable key={mode} accessibilityRole="button" accessibilityState={{ selected: mode === list.mode }}
           onPress={() => list.setMode(mode)} style={[styles.modeButton, mode === list.mode && styles.activeViewMode]}>
           <Text style={[styles.meta, mode === list.mode && styles.selectedTabText]}>
-            {mode === 'tree' ? t("client.git.folders") : t("client.git.flat")}</Text></Pressable>)}</View>
+            {mode === 'tree' ? t("client.git.folders") : t("client.git.flat")}</Text></Pressable>)}</View>}
     </View>
     <ScrollView style={styles.fill} keyboardShouldPersistTaps="handled">
       {panel.changes && !files.length && <Text style={styles.notice}>{t("client.git.thereAreNoUncommittedChanges")}</Text>}
@@ -77,7 +77,8 @@ export function GitRow({ row, panel, connected, flat, onToggle, onMenu }: {
         onPress={() => folder ? onToggle() : panel.setDetail({ kind: 'diff', path: row.path, title: row.path })}>
         {!flat && <View style={styles.chevronSlot}>{folder && <Ionicons
           name={row.collapsed ? 'chevron-forward' : 'chevron-down'} size={12} color={themedColor(palette.muted, 'muted')} />}</View>}
-        <GitTreeIcon folder={folder} />
+        {row.repository ? <Ionicons name="git-branch-outline" size={16} color={tone.color} />
+          : <GitTreeIcon folder={folder} />}
         <View style={styles.fill}><Text numberOfLines={1} style={[styles.path, color]}>{row.name}</Text>
           {flat && row.path !== row.name && <Text numberOfLines={1} style={styles.meta}>{row.path}</Text>}
           {row.file?.originalPath && <Text style={styles.meta}>{row.file.originalPath} → {row.path}</Text>}</View>

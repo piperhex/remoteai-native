@@ -17,6 +17,7 @@ export function useGitHistoryScroll(panel: RemoteGit, connected: boolean) {
       && content.height - offset.current - viewportHeight <= GIT_HISTORY_LOAD_DISTANCE;
   }, [content, pageKey, viewportHeight]);
   const { setNearEnd, ...pagination } = useGitHistoryPagination(panel, connected, checkNearEnd);
+  useEffect(() => { offset.current = 0; setNearEnd(false); }, [panel.historyRepository, setNearEnd]);
   useEffect(() => { setNearEnd(checkNearEnd()); }, [checkNearEnd, setNearEnd]);
 
   return { ...pagination, scrollEventThrottle: SCROLL_EVENT_THROTTLE,

@@ -15,11 +15,12 @@ export function useGitRequests({ scope, enabled, load, refreshInterval }: {
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState('');
-  const run = useCallback(async (action: () => Promise<void>) => {
+  const run = useCallback(async (action: () => Promise<void>, options?: { waitForBackground?: boolean }) => {
     if (gate.busy || !available.current || current.current !== gate) return;
     gate.busy = true; setBusy(true); setError(''); setNotice('');
     try {
-      await gate.background;
+      // Independent reads fence their own results; mutations still wait for the workspace snapshot.
+      if (options?.waitForBackground !== false) await gate.background;
       if (available.current && current.current === gate) await action();
     } catch (error) { if (current.current === gate) setError(gitErrorText(error)); }
     finally { gate.busy = false; if (current.current === gate) setBusy(false); }

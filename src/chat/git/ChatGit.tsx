@@ -3,7 +3,7 @@ import { displayError } from '../../i18n/index';
 import { useThemeColor } from '../../theme/store';
 import { t, useLanguage } from '../../i18n';
 import { ActivityIndicator, Pressable, Text, View, useWindowDimensions } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GitClient } from '../../../vendor/shared/remote-chat/gitTypes';
 import { useGitDiff, useRemoteGit } from '../../../vendor/shared/remote-chat/useRemoteGit';
 import { useGitCommitFiles } from '../../../vendor/shared/remote-chat/useGitCommitFiles';
@@ -18,6 +18,8 @@ import type { DownloadClient } from '../../../vendor/shared/remote-chat/download
 import { gitPatchNotice, saveGitPatch } from '../../downloads/gitPatch';
 import { GitMenu, type GitMenuTarget } from './GitMenu';
 import { GitFileActionConfirmation, GitRevisionConfirmation } from './GitActionConfirmations';
+import { createGitWorkspaceClient } from '../../../vendor/shared/remote-chat/gitWorkspaceClient';
+import { GitRepositoryMenu } from './GitHistoryRepository';
 
 interface Props {
   client: GitClient; cwd: string; active: boolean; connected: boolean; onClose: () => void;
@@ -28,32 +30,40 @@ export function ChatGit(props: Props) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
-  const panel = useRemoteGit(props);
+  const workspace = useMemo(() => createGitWorkspaceClient(props.client, props.cwd), [props.client, props.cwd]);
+  const client = workspace.client;
+  const panel = useRemoteGit({ ...props, client });
   const [menu, setMenu] = useState<GitMenuTarget | null>(null);
-  useEffect(() => { setMenu(null); }, [props.active, props.cwd, props.client]);
+  const [repositoriesOpen, setRepositoriesOpen] = useState(false);
+  useEffect(() => { setMenu(null); setRepositoriesOpen(false); }, [props.active, props.cwd, props.client]);
   const close = () => {
     if (panel.fileAction) panel.cancelFileAction();
     else if (panel.revisionAction) panel.cancelRevisionAction();
     else if (menu) setMenu(null);
+    else if (repositoriesOpen) setRepositoriesOpen(false);
     else props.onClose();
   };
   const detail = panel.detail;
-  const commitFiles = useGitCommitFiles(props.client, props.cwd, detail?.commit?.hash, props.active && props.connected);
-  const diff = useGitDiff(props.client, props.cwd, panel.detail, props.active && props.connected);
+  const detailCwd = detail?.commit?.repository ?? props.cwd;
+  const commitFiles = useGitCommitFiles(client, detailCwd, detail?.commit?.hash, props.active && props.connected);
+  const diff = useGitDiff(client, detailCwd, panel.detail, props.active && props.connected);
   const { height } = useWindowDimensions();
-  const hasOverlay = Boolean(menu || panel.fileAction || panel.revisionAction);
+  const hasOverlay = Boolean(menu || repositoriesOpen || panel.fileAction || panel.revisionAction);
   return <BottomSheet visible={props.active} title="Git" onClose={close}
     onBack={detail && !hasOverlay ? panel.backDetail : undefined}
     tall fullWidthContent compactHeader
     overlay={hasOverlay ? <>
       {menu && !panel.fileAction && !panel.revisionAction && <GitMenu target={menu} panel={panel}
         connected={props.connected} close={() => setMenu(null)} patchNotice={gitPatchNotice}
-        onPatch={props.downloads ? commit => saveGitPatch(props.downloads!, props.cwd, commit.hash) : undefined} />}
+        onPatch={props.downloads ? commit => saveGitPatch(props.downloads!,
+          commit.repository ?? props.cwd, commit.hash) : undefined} />}
+      {repositoriesOpen && <GitRepositoryMenu panel={panel} connected={props.connected}
+        close={() => setRepositoriesOpen(false)} />}
       {panel.fileAction && <GitFileActionConfirmation panel={panel} connected={props.connected} />}
       {panel.revisionAction && <GitRevisionConfirmation panel={panel} connected={props.connected} />}
     </> : undefined}>
     <View style={{ height: height * .80, flexShrink: 1 }}>
-      <GitToolbar panel={panel} connected={props.connected} />
+      <GitToolbar panel={panel} connected={props.connected} onRefresh={workspace.refreshRepositories} />
       {!props.cwd && <Text style={styles.notice}>{t("client.git.chooseAProjectFirst")}</Text>}
       {!props.connected && <Text style={styles.notice}>{t("client.git.connectToYourComputerToUseGit")}</Text>}
       {!!panel.error && <Text accessibilityRole="alert" style={styles.error}>{displayError(panel.error)}</Text>}
@@ -97,6 +107,7 @@ export function ChatGit(props: Props) {
         {!panel.loading && panel.tab === 'changes' && <GitChanges panel={panel} connected={props.connected}
           onMenu={row => setMenu({ kind: 'file', row })} />}
         {!panel.loading && panel.tab === 'history' && <GitHistory panel={panel} connected={props.connected}
+          onRepositories={() => setRepositoriesOpen(true)}
           onMenu={commit => setMenu({ kind: 'commit', commit })} />}
       </>}
     </View>
