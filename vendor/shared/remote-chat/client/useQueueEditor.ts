@@ -15,14 +15,14 @@ export function useQueueEditor({ threadId, queue, disabled, restore }: Options) 
   const fetching = useRef(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (!threadId || disabled || loading) return;
+    if (threadId === null || disabled || loading) return;
     const message = pending.current.get(threadId);
     if (!message) return;
     restore(message);
     pending.current.delete(threadId);
   }, [threadId, disabled, loading, restore]);
   const edit = async (id: string) => {
-    if (!queue || !threadId || disabled || fetching.current || pending.current.has(threadId)) return;
+    if (!queue || threadId === null || disabled || fetching.current || pending.current.has(threadId)) return;
     fetching.current = true; setLoading(true);
     try {
       const message = await queue.take(id);

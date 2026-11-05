@@ -1,6 +1,7 @@
 import { displayError } from '../i18n/index';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
+import { textMetrics } from '../theme/text';
 import { t, useLanguage } from '../i18n';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { QueueProps } from '../../vendor/shared/remote-chat/client/queueProps';
@@ -17,7 +18,7 @@ export function ChatQueue({ messages, running, disabled, act, edit, editDisabled
   useLanguage();
   const { selected, select, canMoveUp, canMoveDown } = useQueueSelection(messages, disabled);
   if (!messages.length) return null;
-  const sending = messages.some((message) => message.busy);
+  const sending = messages.some((message) => message.busy || message.local);
   return <View style={queueStyles.queue} accessibilityLabel={t("client.chat.queuedMessages")}>
     <View style={queueStyles.heading}><Text style={styles.subtitle}>{t("client.chat.queued")}{' '}{messages.length}</Text>
       <View style={queueStyles.actions}>
@@ -50,9 +51,10 @@ export function ChatQueue({ messages, running, disabled, act, edit, editDisabled
           {message.busy && <Text accessibilityLiveRegion="polite" style={styles.subtitle}>{t("client.chat.sending")}</Text>}
           {message.error && <Text accessibilityRole="alert" style={queueStyles.error}>{displayError(message.error)}</Text>}
         </Pressable>
-        <Pressable accessibilityRole="button" disabled={disabled || sending} style={queueStyles.action}
+        <Pressable accessibilityRole="button" disabled={disabled || sending || message.local} style={queueStyles.action}
           onPress={() => void act('queueSendNow', message.id)}>
-          <Text style={[styles.buttonText, (disabled || sending) && styles.disabled]}>{t("client.chat.sendNow")}</Text></Pressable>
+          <Text style={[styles.buttonText, (disabled || sending || message.local) && styles.disabled]}>
+            {t("client.chat.sendNow")}</Text></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.deleteQueuedMessage")}
           disabled={disabled || message.busy} style={queueStyles.action}
           onPress={() => void act('queueRemove', message.id)}>
@@ -72,7 +74,7 @@ const useQueueStyles = createThemedStyles((color) => ({
   list: { maxHeight: 180, flexGrow: 0, flexShrink: 1, paddingHorizontal: 8 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1,
     borderColor: color(palette.border, 'border'), paddingVertical: 6 },
-  text: { color: color(palette.ink, 'ink'), fontSize: 13, lineHeight: 20 },
+  text: { color: color(palette.ink, 'ink'), ...textMetrics(13, 20) },
   action: { minHeight: 40, minWidth: 32, paddingHorizontal: 6, justifyContent: 'center', alignItems: 'center' },
-  error: { color: color(palette.danger, 'danger'), fontSize: 12, lineHeight: 18, maxWidth: 400 },
+  error: { color: color(palette.danger, 'danger'), ...textMetrics(12, 18), maxWidth: 400 },
 }));

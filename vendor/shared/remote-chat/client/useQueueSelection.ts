@@ -7,6 +7,8 @@ export function useQueueSelection(messages: QueueMessage[], disabled: boolean) {
   useEffect(() => { select(selected?.id ?? null); }, [selected?.id]);
   const index = messages.indexOf(selected);
   return { selected, select,
-    canMoveUp: !disabled && !selected?.busy && index > 0 && !messages[index - 1].busy,
-    canMoveDown: !disabled && !selected?.busy && index < messages.length - 1 && !messages[index + 1]?.busy };
+    canMoveUp: !disabled && !selected?.busy && !selected?.local
+      && index > 0 && !messages[index - 1].busy && !messages[index - 1].local,
+    canMoveDown: !disabled && !selected?.busy && !selected?.local
+      && index < messages.length - 1 && !messages[index + 1]?.busy && !messages[index + 1]?.local };
 }

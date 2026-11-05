@@ -8,6 +8,9 @@ export function queueTextPreview(text: string): string {
 
 /** Phone previews omit image data and PC-only attachment paths. The PC owns all pending messages. */
 export interface QueueMessage {
+  /** A local draft is retained until its remote submission is acknowledged. */
+  local?: boolean;
+  clientId?: string;
   id: string;
   text: string;
   imageCount: number;

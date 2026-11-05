@@ -257,6 +257,8 @@ export type Request =
   | { operation: "interrupt"; threadId: string; turnId: string };
 
 export interface MessageInput {
+  /** Correlates the originating client's optimistic queue preview with the accepted message. */
+  clientId?: string;
   /** Assigned by the desktop host when it accepts a remote message. */
   transferMode?: 'direct' | 'relay';
   text: string; images: string[]; skills: SkillReference[]; attachments?: AttachmentReference[];

@@ -1,0 +1,9 @@
+// Install a separate test app without changing the user's application or account data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-local-outbox'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.localoutboxtest'
+        project.extensions.getByName('react').entryFile = new File(project.rootDir, '../e2e/LocalOutboxFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

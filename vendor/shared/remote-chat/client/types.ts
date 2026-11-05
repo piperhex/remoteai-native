@@ -10,6 +10,7 @@ import { emptySidebar, type SidebarSnapshot } from '../sidebar';
 import { emptyQueue, type QueueSnapshot } from '../queue';
 
 export interface SendInput {
+  clientId?: string;
   goalMode?: boolean;
   text: string;
   images?: string[];
@@ -23,6 +24,8 @@ export interface SendInput {
 export interface ChatProject { cwd: string; label: string }
 
 export interface ChatState {
+  draftScope?: string;
+  localQueue?: Record<string, import('../queue').QueueMessage[]>;
   directEndpoints?: import('../connectionEndpoints').ConnectionEndpoints;
   publicEndpoints?: import('../publicEndpoints').ConnectionPublicEndpoints;
   connectionStage?: import('../connectionHealth').ConnectionStage;
@@ -72,7 +75,7 @@ export interface ChatState {
 }
 
 export function initialChatState(): ChatState {
-  return { mode: 'offline', ready: false, connecting: false, retryAt: null,
+  return { mode: 'offline', ready: false, connecting: false, retryAt: null, draftScope: '',
     threads: [], selected: null, draftProject: null, selectedArchived: false,
     models: [], approvals: [], cursor: null, queue: emptyQueue(), queueBusy: false,
     settings: { ...DEFAULT_COMPOSER }, settingsBusy: false, settingsError: '', sidebar: emptySidebar(),

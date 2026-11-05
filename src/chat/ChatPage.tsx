@@ -158,7 +158,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
     foreground={foreground} deviceName={device?.name} onBack={closeTokenSummary} />}
   <View style={[styles.fill, tokenSummary && styles.hidden]}>
   <ChatFileReferencesProvider enabled={active && !state.selectedArchived}>
-  <ChatQuotesProvider active={active} scope={state.selected?.id ?? null}
+  <ChatQuotesProvider active={active} scope={state.draftScope ?? state.selected?.id ?? null}
     enabled={active && !state.selectedArchived}>
   <ChatDrawer ref={drawerRef} enabled={active && !pickingDevice}
     onOpen={() => { setDrawer(true); setDrawerMoving(false); }}
@@ -239,7 +239,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
       connection={{ client: controller.guiAccounts, deviceName: device?.name,
         chooseDevice: () => setPickingDevice(true) }}
       goals={controller.goals} goal={state.selected ? state.goals?.[state.selected.id] : null} goalBusy={state.goalBusy}
-      threadId={state.selected?.id ?? null} models={state.models} selection={state.settings}
+      threadId={state.selected?.id ?? null} draftScope={state.draftScope} models={state.models} selection={state.settings}
       contextSettings={controller.contextSettings}
       readUsage={controller.readUsage} usageActive={active && foreground && ready}
       tokenUsage={state.selected?.tokenUsage}
@@ -254,7 +254,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
       refreshModels={controller.refreshModels}
       active={active} ready={ready} sending={state.sending} running={running}
       upload={state.upload} reconnecting={state.mode === 'connecting' || state.mode === 'offline'}
-      send={(input) => controller.send(input)} interrupted={state.selected?.turns?.at(-1)?.status === 'interrupted'}
+      send={(input) => controller.enqueueMessage(input)} interrupted={state.selected?.turns?.at(-1)?.status === 'interrupted'}
       interrupt={() => controller.interrupt()} />
     {active && pickingDevice && <ChatDevices devices={devices} onClose={() => setPickingDevice(false)}
       choose={(id) => { chooseDevice(id); setPickingDevice(false); }} />}

@@ -73,6 +73,7 @@ interface Props {
   updateSettings: (settings: Partial<ComposerSettings>) => Promise<void>;
   refreshModels: () => Promise<void>;
   threadId: string | null;
+  draftScope?: string | null;
   active: boolean;
   ready: boolean;
   sending: boolean;
@@ -93,7 +94,8 @@ interface Props {
 export function ChatComposer({ dictation, projectPicker, suggestions, models, selection, settingsBusy, settingsError,
   updateSettings, refreshModels,
   readUsage, readConversationMetrics, usageActive, tokenUsage, contextSettings, connection, queue, goals, goal, goalBusy,
-  threadId, active, ready, sending, running, upload, reconnecting = false, interrupted = false, send, interrupt,
+  threadId, draftScope = threadId, active, ready, sending, running, upload,
+  reconnecting = false, interrupted = false, send, interrupt,
   catalog, cwd, compactReason, compacting, compact, loadCatalog, loadFiles, loadConversations }: Props) {
   const styles = useStyles();
   useLanguage();
@@ -107,12 +109,12 @@ export function ChatComposer({ dictation, projectPicker, suggestions, models, se
   const [attachmentError, setAttachmentError] = useState('');
   const anchor = useRef<View>(null);
   const [anchorHeight, setAnchorHeight] = useState(0);
-  const attachments = useComposerAttachments({ threadId, sending });
+  const attachments = useComposerAttachments({ threadId: draftScope, sending });
   const readCatalog = useCallback(() => loadCatalog(cwd), [loadCatalog, cwd]);
-  const photos = useChatPhotos({ threadId, sending });
+  const photos = useChatPhotos({ threadId: draftScope, sending });
   const quoteDraft = useChatQuotes();
   const disabled = !ready || settingsBusy || compacting;
-  const draft = useChatDraft({ threadId, sending,
+  const draft = useChatDraft({ threadId: draftScope, sending,
     disabled: disabled || photos.busy || attachments.busy || dictationBusy, selection, send });
   const menu = useComposerMenu({ draft, scope: `${threadId ?? ''}:${cwd}`, active,
     refresh: catalog.refresh, compact });
@@ -127,7 +129,7 @@ export function ChatComposer({ dictation, projectPicker, suggestions, models, se
   }, [quoteCount, active, menu.input]);
   const hasDraft = draft.hasContent || photos.photos.length > 0 || attachments.items.length > 0
     || Boolean(quoteDraft?.quotes.length);
-  const queueEditor = useQueueEditor({ threadId, queue,
+  const queueEditor = useQueueEditor({ threadId: draftScope, queue,
     disabled: !active || disabled || sending || photos.busy || attachments.busy || hasDraft || dictationBusy,
     restore: (message) => {
       draft.restore({ ...message, images: [], attachments: [] });

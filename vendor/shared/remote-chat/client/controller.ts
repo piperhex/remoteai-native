@@ -38,6 +38,8 @@ import { RemoteGoals } from './goals';
 import { SIDEBAR_EVENT, type SidebarSnapshot } from '../sidebar';
 import { emptyQueue, QUEUE_EVENT, type QueueAction, type QueueSnapshot } from '../queue';
 import { QueueConnection } from './queueConnection';
+import { LocalOutbox, type OutboxMessage } from './localOutbox';
+import { uiText } from '../../localization/uiText';
 import { AsyncAnswers } from './asyncAnswers';
 import { createGuiAccountsClient } from './guiAccounts';
 import { createRemoteDictationClient } from '../dictation';
@@ -95,6 +97,8 @@ export class ChatController {
     & Partial<Pick<ChatConnection, 'confirmHostIdentity' | 'reportDiagnostic' | 'retryNow' | 'openNativeMedia'
       | 'downloadsBulk' | 'setBulkSupport' | 'mappingStreams'>>;
   private readonly queueConnection = new QueueConnection((body) => this.connection.request('request', body));
+  private readonly localOutbox = new LocalOutbox({ deliver: message => this.deliverLocalMessage(message),
+    changed: localQueue => this.update({ localQueue }) });
   private readonly asyncAnswers = new AsyncAnswers({ snapshot: () => this.state,
     request: (body) => this.connection.request('request', body), update: (patch) => this.update(patch),
     applyQueue: (queue) => this.applyQueue(queue), refresh: () => this.refreshSelected() });
@@ -488,6 +492,7 @@ export class ChatController {
   private applyQueue(queue: QueueSnapshot) {
     if (!queue || !Number.isSafeInteger(queue.revision) || queue.revision < this.state.queue.revision
       || !queue.threads) return;
+    this.localOutbox.observe(queue);
     this.update({ queue });
   }
 
@@ -499,6 +504,10 @@ export class ChatController {
   }
 
   async queueAction(operation: QueueAction, id?: string) {
+    if (id && this.localOutbox.has(id)) {
+      if (operation === 'queueRemove') this.localOutbox.remove(id);
+      return;
+    }
     const threadId = this.state.selected?.id;
     if (!threadId || !this.state.ready || this.state.queueBusy) return;
     const generation = this.synchronization;
@@ -512,6 +521,7 @@ export class ChatController {
   }
 
   async takeQueuedMessage(id: string) {
+    if (this.localOutbox.has(id)) return this.localOutbox.remove(id);
     const threadId = this.state.selected?.id;
     if (!threadId || !this.state.ready || this.state.queueBusy || this.state.sending) return;
     const generation = this.synchronization;
@@ -624,7 +634,7 @@ export class ChatController {
     const cached = this.histories.get(thread.id);
     if (cached) this.historyPages.set(thread.id, cached.page);
     else this.historyPages.delete(thread.id);
-    this.update({ selected: cached?.thread ?? thread, draftProject: null,
+    this.update({ selected: cached?.thread ?? thread, draftProject: null, draftScope: thread.id,
       selectedArchived: this.state.archived, error: '', historyOffline: Boolean(this.offline),
       historyHasMore: this.historyPages.get(thread.id)?.hasMore ?? false, historyLoad: undefined });
     if (this.offline && !this.state.ready) await this.readOffline(false);
@@ -738,6 +748,7 @@ export class ChatController {
     this.refreshThreadId = null;
     this.loadedThreadId = null;
     this.update({ selected: null, draftProject: project ? { cwd: project.cwd, label: project.label } : null,
+      draftScope: `draft:${this.selectionGeneration}`,
       selectedArchived: false, error: '', historyHasMore: false, historyLoading: false, historyLoadingMore: false });
     void this.flushCache();
     if (!this.offline || this.transportConnected) void this.composer.select(inherit);
@@ -748,37 +759,19 @@ export class ChatController {
     if (this.state.desktopOnly) { this.update({ error: '请先登录电脑并打开聊天，再发送消息。' }); return false; }
     if (this.state.threadActionBusy || this.state.workspaceBusy) return false;
     if (input.goalMode) return this.goals.start(input);
+    const prepared = this.prepareMessage(input);
+    if (!prepared) return false;
+    const { message, selection } = prepared;
     const images = input.images ?? [];
-    if (this.state.selectedArchived) { this.update({ error: '请先恢复聊天，再发送消息。' }); return false; }
-    if (this.state.sending || this.state.settingsBusy || (this.state.compacting
-      && this.state.compacting === this.state.selected?.id)
-      || (!input.text.trim() && !images.length && !input.skills?.length && !input.attachments?.length)) return false;
-    try { validateChatImages(images); }
-    catch (error) { this.failure(error); return false; }
-    if (!this.state.ready) { this.update({ error: '正在连接电脑，请稍候再发送。' }); return false; }
     const generation = this.synchronization;
-    const selection = { ...this.state.settings, model: input.model ?? this.state.settings.model,
-      effort: input.effort ?? this.state.settings.effort, access: input.access };
-    if (modelSelectionError(this.state.models, selection)) return false;
-    const message = { ...input, ...(selection.model ? { model: selection.model } : {}),
-      ...(selection.effort ? { effort: selection.effort } : {}) };
     this.update({ sending: true, error: '',
       upload: hasUpload(input) ? { phase: 'preparing', percent: 0 } : undefined });
     try {
       let thread = this.state.selected;
       const created = !thread;
       if (!thread) {
-        const result = await this.request<{ thread: Thread }>({ operation: 'start', model: selection.model || undefined,
-          access: input.access, cwd: this.state.draftProject?.cwd });
-        thread = result.thread;
-        this.threadList.upsert(thread, false);
-        this.listRequests.reset();
-        const cached = this.threadList.peek({ archived: false, search: '' });
-        const threads = cached?.data ?? (this.state.archived || this.state.search ? [] : this.state.threads);
-        this.update({ selected: thread, draftProject: null, selectedArchived: false,
-          threads: [thread, ...threads.filter((entry) => entry.id !== result.thread.id)],
-          archived: false, search: '', cursor: cached?.nextCursor ?? null, loading: false, listRefreshing: false });
-        await this.composer.created(thread.id, selection);
+        thread = await this.createMessageThread({ selection, cwd: this.state.draftProject?.cwd,
+          selectionGeneration: this.selectionGeneration, synchronization: generation });
       }
       this.ensureCurrent(generation);
       if (!created) {
@@ -792,6 +785,82 @@ export class ChatController {
       return true;
     } catch (error) { this.failure(error); return false; }
     finally { this.update({ sending: false, upload: undefined }); }
+  }
+
+  /** Composer acceptance is local; network completion must not hold its input or send button. */
+  async enqueueMessage(input: SendInput) {
+    if (input.goalMode) return this.send(input);
+    const prepared = this.prepareMessage(input);
+    if (!prepared) return false;
+    this.update({ error: '' });
+    const accepted = this.localOutbox.enqueue({ scope: this.state.draftScope ?? this.state.selected?.id ?? '',
+      thread: this.state.selected, cwd: this.state.draftProject?.cwd,
+      selectionGeneration: this.selectionGeneration, synchronization: this.synchronization },
+    prepared.message, prepared.selection);
+    if (!accepted) this.failure(new Error(uiText('client.conversation.theMessageQueueIsFullWaitForMessagesToSend')));
+    return accepted;
+  }
+
+  private async deliverLocalMessage({ target, input, settings, id }: OutboxMessage) {
+    this.ensureCurrent(target.synchronization);
+    const created = !target.thread;
+    if (!target.thread) {
+      target.thread = await this.createMessageThread({ selection: settings, cwd: target.cwd,
+        selectionGeneration: target.selectionGeneration, synchronization: target.synchronization,
+        created: thread => { target.thread = thread; } });
+    }
+    this.ensureCurrent(target.synchronization);
+    const thread = this.state.selected?.id === target.thread.id ? this.state.selected : target.thread;
+    const message = { ...input, images: input.images ?? [], clientId: id };
+    if (created) await this.request({ operation: 'send', threadId: thread.id, ...message });
+    else {
+      const queue = await this.queueConnection.enqueue(thread, message);
+      if (queue && target.synchronization === this.synchronization) this.applyQueue(queue);
+    }
+    if (target.synchronization === this.synchronization && this.state.selected?.id === thread.id) {
+      void this.refreshSelected();
+    }
+  }
+
+  private async createMessageThread({ selection, cwd, selectionGeneration, synchronization, created }: {
+    selection: ComposerSettings; cwd?: string; selectionGeneration: number; synchronization: number;
+    created?: (thread: Thread) => void;
+  }) {
+    const { thread } = await this.request<{ thread: Thread }>({ operation: 'start',
+      model: selection.model || undefined, access: selection.access, cwd });
+    created?.(thread);
+    this.ensureCurrent(synchronization);
+    this.threadList.upsert(thread, false);
+    if (this.selectionGeneration === selectionGeneration) {
+      this.listRequests.reset();
+      const cached = this.threadList.peek({ archived: false, search: '' });
+      const threads = cached?.data ?? (this.state.archived || this.state.search ? [] : this.state.threads);
+      this.update({ selected: thread, draftProject: null, selectedArchived: false,
+        draftScope: this.state.draftScope ?? '',
+        threads: [thread, ...threads.filter(entry => entry.id !== thread.id)],
+        archived: false, search: '', cursor: cached?.nextCursor ?? null, loading: false, listRefreshing: false });
+    }
+    await this.composer.created(thread.id, selection);
+    return thread;
+  }
+
+  private prepareMessage(input: SendInput) {
+    if (this.state.desktopOnly) { this.update({ error: '请先登录电脑并打开聊天，再发送消息。' }); return false; }
+    if (this.state.threadActionBusy || this.state.workspaceBusy) return false;
+    const images = input.images ?? [];
+    if (this.state.selectedArchived) { this.update({ error: '请先恢复聊天，再发送消息。' }); return false; }
+    if (this.state.sending || this.state.settingsBusy || (this.state.compacting
+      && this.state.compacting === this.state.selected?.id)
+      || (!input.text.trim() && !images.length && !input.skills?.length && !input.attachments?.length)) return false;
+    try { validateChatImages(images); }
+    catch (error) { this.failure(error); return false; }
+    if (!this.state.ready) { this.update({ error: '正在连接电脑，请稍候再发送。' }); return false; }
+    const selection = { ...this.state.settings, model: input.model ?? this.state.settings.model,
+      effort: input.effort ?? this.state.settings.effort, access: input.access };
+    if (modelSelectionError(this.state.models, selection)) return false;
+    const message = { ...input, ...(selection.model ? { model: selection.model } : {}),
+      ...(selection.effort ? { effort: selection.effort } : {}) };
+    return { message, selection };
   }
 
   answerAsyncQuestion = (item: import('./types').Item, answers: string[]) => this.asyncAnswers.submit(item, answers);
