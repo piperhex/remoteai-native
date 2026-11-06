@@ -101,7 +101,7 @@ export function LoungeMessage({ message, own, manage, preview, onImageLoad, repl
       </Pressable>
       <View style={history ? historyStyles.footer : styles.messageFooter}>
         <Text style={history ? historyStyles.time : styles.messageTime}>{timestamp}</Text>
-        <LoungeDeliveryStatus delivery={message.delivery} inline />
+        <LoungeDeliveryStatus delivery={message.delivery} message={message} controller={controller} inline />
       </View>
     </View>
     {menu && reply && <LoungeMessageActions anchor={menu} message={message} reply={reply} close={() => setMenu(undefined)}

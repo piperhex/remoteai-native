@@ -25,6 +25,7 @@ import { historyKey } from '../../vendor/shared/lounge/archive';
 import { useLoungeListFocus } from './useLoungeListFocus';
 import { useLoungeListScroll } from './useLoungeListScroll';
 import type { LoungeComposerHandle } from '../../vendor/shared/lounge/mention';
+import { useLoungeReadViewability } from './useLoungeReadViewability';
 
 export function LoungePage({ controller, onBack }: { controller: LoungeController; onBack: () => void }) {
   useLanguage();
@@ -35,6 +36,8 @@ export function LoungePage({ controller, onBack }: { controller: LoungeControlle
   const list = useRef<FlatList<Message>>(null);
   const composer = useRef<LoungeComposerHandle>(null);
   const messages = [...model.navigation.messages].reverse();
+  const readViewability = useLoungeReadViewability<Message>({ controller, message: item => item,
+    scope: `${state.conversation}:${model.chats}` });
   const focus = useLoungeListFocus({ list, messages, focus: model.navigation.focus });
   const scroll = useLoungeListScroll({ list, model, reveal: focus.reveal });
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -52,6 +55,7 @@ export function LoungePage({ controller, onBack }: { controller: LoungeControlle
       <LoungeHeading model={model} back={back} />
       <View style={styles.spacer}>
         <FlatList key={`thread:${state.conversation}`} ref={list} inverted data={messages}
+          {...readViewability}
           contentContainerStyle={styles.list} style={styles.spacer} keyExtractor={item => `${item.sender.id}:${item.id}`}
           keyboardShouldPersistTaps="handled" scrollEventThrottle={32} onScrollToIndexFailed={focus.failed}
           onContentSizeChange={scroll.onContentSizeChange} onLayout={scroll.onLayout}

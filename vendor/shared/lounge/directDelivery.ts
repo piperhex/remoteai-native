@@ -2,10 +2,12 @@ import { historyKey, type HistoryPage, type HistoryQuery } from './archive';
 import { DIRECT_RETRY_MS, isReceiptStatus, needsDeliveryWork, receiptRank, type ReceiptStatus } from './delivery';
 import type { LoungeAccount, LoungeDraft, LoungeMessage } from './types';
 import { AWAITING_REPLY, checkDirectPermission, type DirectPermission } from './directPermission';
+import { applyGroupReceipt, initialGroupDelivery } from './groupReceipts';
 
 interface DeliveryHost {
   self(): LoungeAccount | undefined;
   enabled(): boolean;
+  groupEnabled?(): boolean;
   online(id: string): boolean;
   readable(message: LoungeMessage): boolean;
   allowed(message: LoungeMessage): boolean;
@@ -18,7 +20,7 @@ interface DeliveryHost {
   generation?(peer: string): number;
   ready?(peer: string): boolean;
 }
-interface DeliveryJob { peer: string; due: number }
+interface DeliveryJob { peer: string; due: number; group: boolean }
 
 /** Endpoint-owned delivery state. Jobs retain keys only; image payloads stay in the local archive. */
 export class LoungeDirectDelivery {
@@ -52,7 +54,10 @@ export class LoungeDirectDelivery {
     this.active = false; this.generation++;
     clearInterval(this.timer); this.jobs.clear(); this.ticking = false;
   }
-  peers() { return [...new Set([...this.jobs.values()].map(job => job.peer))]; }
+  peers() { return [...new Set([...this.jobs.values()].filter(job => !job.group).map(job => job.peer))]; }
+  restoreGroups(messages: LoungeMessage[]) {
+    for (const message of messages) if (message.groupReceipt && !message.recipient) this.track(message);
+  }
 
   remove(peer: string, erase: () => Promise<void>) {
     return this.run(async () => {
@@ -75,8 +80,13 @@ export class LoungeDirectDelivery {
   }
   private track(message: LoungeMessage) {
     const key = historyKey(message);
-    if (!message.recipient || !needsDeliveryWork(message.delivery)) { this.jobs.delete(key); return; }
-    this.jobs.set(key, { peer: message.delivery?.direction === 'incoming' ? message.sender.id : message.recipient.id,
+    if ((!message.recipient && !message.groupReceipt) || !needsDeliveryWork(message.delivery)) {
+      this.jobs.delete(key); return;
+    }
+    const peer = message.delivery?.direction === 'incoming' ? message.sender.id : message.recipient?.id;
+    if (!peer) { this.jobs.delete(key); return; }
+    this.jobs.set(key, { peer,
+      group: !message.recipient,
       due: (message.delivery?.attemptedAt ?? 0) + DIRECT_RETRY_MS });
   }
 
@@ -124,12 +134,16 @@ export class LoungeDirectDelivery {
           await this.host.publish({ ...previous, attachments: message.attachments }, false);
         }
         if (!previous) await this.host.publish({ ...message,
-          delivery: { direction: 'outgoing', status: 'pending' } }, true);
+          delivery: initialGroupDelivery(message, message.sender.id)
+            ?? { direction: 'outgoing', status: 'pending' } }, true);
         return;
       }
-      const received = previous ?? { ...message, delivery: { direction: 'incoming' as const, status: 'delivered' as const } };
+      const received = previous ?? { ...message,
+        delivery: initialGroupDelivery(message, this.host.self()?.id ?? '')
+          ?? { direction: 'incoming' as const, status: 'delivered' as const } };
       if (!received.delivery || !this.host.allowed(received)) return;
-      const status = received.delivery.status === 'read' || this.host.readable(received) ? 'read' : 'delivered';
+      const status = received.delivery.status === 'read' || !!message.recipient && this.host.readable(received)
+        ? 'read' : 'delivered';
       const updated: LoungeMessage = { ...received, delivery: { ...received.delivery, status, attemptedAt: Date.now() } };
       await this.host.publish(updated, !previous);
       if (!current()) return;
@@ -155,6 +169,7 @@ export class LoungeDirectDelivery {
   }
 
   receipt(frame: Record<string, unknown>) {
+    if (frame.type === 'group-read' || frame.type === 'group-read-confirm') { this.groupReceipt(frame); return; }
     if (typeof frame.id !== 'string' || typeof frame.from !== 'string' || !isReceiptStatus(frame.status)
       || frame.to !== this.host.self()?.id) return;
     const id = frame.id; const from = frame.from; const status = frame.status;
@@ -177,10 +192,29 @@ export class LoungeDirectDelivery {
     });
   }
 
+  private groupReceipt(frame: Record<string, unknown>) {
+    const self = this.host.self();
+    if (!self || frame.to !== self.id || typeof frame.id !== 'string' || typeof frame.from !== 'string') return;
+    const confirmation = frame.type === 'group-read-confirm';
+    const key = JSON.stringify([confirmation ? frame.from : self.id, frame.id]);
+    this.background(async current => {
+      const saved = await this.host.find(key);
+      if (!current() || !saved) return;
+      const message = applyGroupReceipt({ message: saved, frame, self: this.host.self() ?? self });
+      if (!message) return;
+      await this.host.publish(message, false);
+      if (!current()) return;
+      this.track(message);
+      if (!confirmation) this.host.transmit({ type: 'group-read-confirm', id: frame.id, to: frame.from,
+        groupReceipt: message.groupReceipt });
+    });
+  }
+
   private async retry(current: () => boolean) {
     for (const [key, job] of this.jobs) {
       if (!current() || !this.host.enabled()) return;
-      if (job.due > Date.now() || !this.host.online(job.peer)) continue;
+      if (job.group && this.host.groupEnabled?.() === false) continue;
+      if (job.due > Date.now() || !job.group && !this.host.online(job.peer)) continue;
       const saved = await this.host.find(key);
       if (!current()) return;
       if (!saved?.delivery || !needsDeliveryWork(saved.delivery)) { this.jobs.delete(key); continue; }
@@ -201,6 +235,12 @@ export class LoungeDirectDelivery {
   }
   private transmitReceipt(message: LoungeMessage) {
     if (message.delivery?.status === 'pending') return;
+    if (!message.recipient && message.groupReceipt) {
+      if (this.host.groupEnabled?.() === false) return;
+      if (message.delivery?.status === 'read') this.host.transmit({ type: 'group-read', id: message.id,
+        to: message.sender.id, groupReceipt: message.groupReceipt });
+      return;
+    }
     this.host.transmit({ type: 'receipt', id: message.id, to: message.sender.id, status: message.delivery?.status });
   }
 }

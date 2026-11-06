@@ -77,9 +77,12 @@ export function useMobileLounge(controller: LoungeController) {
   const latest = () => { navigation.clear(); setAtBottom(true); setFollowing(true); setShowLatest(false); };
   const cancelReply = () => change({ ...draft, reply: undefined });
   useEffect(() => {
+    controller.setGroupViewing({ thread: !chats && !sheet && !history && !avatar && !preview
+      && !moderating && !blocking && !profile && !deleting && !composerOverlay,
+    history: history && !preview && !profile });
     controller.setViewing(atBottom && !chats && !sheet && !history && !avatar && !preview
       && !moderating && !blocking && !profile && !deleting && !composerOverlay && !navigation.focus);
-    return () => controller.setViewing(false);
+    return () => { controller.setViewing(false); controller.setGroupViewing({ thread: false, history: false }); };
   }, [controller, atBottom, chats, sheet, history, avatar, preview, moderating, blocking,
     profile, deleting, composerOverlay, conversation, navigation.focus]);
   useEffect(() => {

@@ -4,7 +4,9 @@ import { mergeDelivery, receiptRank } from './delivery';
 import { parseMessage, type LoungeMessage } from './types';
 
 export const SYNC_PAGE_SIZE = 25;
-export interface HistoryEntry { key: string; conversation: string; generation: number; status: string }
+export interface HistoryEntry {
+  key: string; conversation: string; generation: number; status: string; readers?: string[];
+}
 export interface HistoryManifest { entries: HistoryEntry[]; next?: HistoryCursor }
 export interface HistorySyncAccess {
   generations: (peers: string[]) => Promise<Record<string, number>>;
@@ -12,7 +14,7 @@ export interface HistorySyncAccess {
 
 export function syncEntry(message: LoungeMessage): HistoryEntry {
   return { key: historyKey(message), conversation: message.conversation ?? '', generation: message.generation ?? 0,
-    status: message.delivery?.status ?? '' };
+    status: message.delivery?.status ?? '', readers: message.delivery?.readers?.map(reader => reader.id) };
 }
 
 export function validHistoryKey(value: unknown): value is string {
@@ -44,6 +46,10 @@ export function parseManifest(value: unknown): HistoryManifest {
       || !['', 'pending', 'rejected', 'delivered', 'read'].includes(entry.status)) {
       throw new Error('invalid-history-entry');
     }
+    if (entry.readers !== undefined && (!Array.isArray(entry.readers)
+      || entry.readers.some(id => typeof id !== 'string' || !id || id.length > 80))) {
+      throw new Error('invalid-history-entry');
+    }
   }
   return { entries: manifest.entries, next: historyCursor(manifest.next) };
 }
@@ -55,7 +61,10 @@ export function syncMessage(value: unknown, owner: string): LoungeMessage | unde
   if (message.recipient && message.sender.id !== owner && message.recipient.id !== owner) return;
   const conversation = messageConversation(message, owner);
   const delivery = message.delivery;
-  if (!message.recipient) return { ...message, conversation: undefined, delivery: undefined };
+  if (!message.recipient) return { ...message, conversation: undefined,
+    delivery: message.groupReceipt && delivery ? { ...delivery, retry: false,
+      direction: message.sender.id === owner ? 'outgoing' : 'incoming',
+      readers: message.sender.id === owner ? delivery.readers : undefined } : undefined };
   const direction = message.sender.id === owner ? 'outgoing' : 'incoming';
   const status = direction === 'incoming' ? (delivery?.status === 'read' ? 'read' : 'delivered')
     : delivery?.status ?? 'delivered';
@@ -90,8 +99,11 @@ export class SyncArchive {
     for (const entry of entries) {
       if (entry.conversation && generations[entry.conversation] !== entry.generation) continue;
       const previous = await this.read(entry.key);
+      const readers = new Set(previous?.delivery?.readers?.map(reader => reader.id));
+      const missingReaders = entry.readers?.some(id => !readers.has(id));
       if (!previous || receiptRank(entry.status) > receiptRank(previous.delivery?.status)
-        || entry.status === 'rejected' && previous.delivery?.status === 'pending') missing.push(entry.key);
+        || entry.status === 'rejected' && previous.delivery?.status === 'pending'
+        || missingReaders) missing.push(entry.key);
     }
     return missing;
   }
@@ -108,7 +120,8 @@ export class SyncArchive {
     if (!this.options.current() || !this.options.accept(incoming)) return;
     const message = previous ? { ...previous, delivery: mergeDelivery(previous.delivery, incoming.delivery) } : incoming;
     if (previous && previous.delivery?.status === message.delivery?.status
-      && previous.delivery?.confirmed === message.delivery?.confirmed) return;
+      && previous.delivery?.confirmed === message.delivery?.confirmed
+      && JSON.stringify(previous.delivery?.readers) === JSON.stringify(message.delivery?.readers)) return;
     await this.options.store.save(message);
     if (!this.options.accept(incoming) && incoming.conversation) {
       await this.options.store.deleteConversation?.(incoming.conversation, (incoming.generation ?? 0) + 1);

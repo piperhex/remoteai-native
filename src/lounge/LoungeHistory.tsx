@@ -14,6 +14,7 @@ import { LoungeMessage } from './LoungeMessage';
 import { LoungePreview } from './LoungePreview';
 import { useHistoryStyles } from './historyStyles';
 import { useLoungeColor } from './theme';
+import { useLoungeReadViewability } from './useLoungeReadViewability';
 
 export function LoungeHistory({ controller, close, reply, direct, profile, mention, locate, navigationError }: {
   controller: LoungeController; close: () => void; reply: (message: Message) => void;
@@ -27,6 +28,8 @@ export function LoungeHistory({ controller, close, reply, direct, profile, menti
   const locale = getLocale();
   const rows = useMemo(() => historyTimelineRows(history.messages, locale), [history.messages, locale]);
   const [preview, setPreview] = useState<string>();
+  const readViewability = useLoungeReadViewability<(typeof rows)[number]>({ controller,
+    message: item => item.message, scope: history.key, history: true, suspended: !!preview });
   const nearLatest = useRef(true);
   useEffect(() => {
     if (nearLatest.current && history.hasNewer && !history.loading) history.newer();
@@ -37,6 +40,7 @@ export function LoungeHistory({ controller, close, reply, direct, profile, menti
     {history.error && rows.length > 0 && <HistoryStatus history={history} />}
     {!rows.length && <HistoryStatus history={history} />}
     <FlatList key={history.key} inverted data={rows} keyExtractor={item => item.key}
+      {...readViewability}
       contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       initialNumToRender={12} maxToRenderPerBatch={12} windowSize={7}
       maintainVisibleContentPosition={{ minIndexForVisible: 0 }}

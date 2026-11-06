@@ -31,6 +31,7 @@ import { verifyNativePrivateScroll } from './lounge-private-scroll-check.mjs';
 import { verifyNativeHistory } from './lounge-history-check.mjs';
 import { verifyNativeClientVersions } from './lounge-client-version-check.mjs';
 import { verifyNativeModeratorOpening } from './lounge-moderator-opening-check.mjs';
+import { verifyNativeGroupReads } from './lounge-group-reads-check.mjs';
 
 const exec = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -57,6 +58,8 @@ const image = 'data:image/png;base64,' + (await readFile(path.join(root,
     ? '128x128.png' : '32x32.png'))).toString('base64');
 const sent = [];
 const moderated = [];
+const groupReadFrames = [];
+const groupReadsMode = process.env.LOUNGE_GROUP_READS_ONLY === '1';
 let online = true;
 let blocked = false;
 let avatar = '';
@@ -117,7 +120,7 @@ sockets.on('connection', socket => socket.on('message', raw => {
       names: namesEnabled,
       user: { id: 'alice', account: 'alice@example.test', avatar, nickname: names.nicknames.get('alice') ?? '',
         moderator },
-      policy: { moderator, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true,
+      policy: { moderator, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true, groupReads: true,
       directReset: resetAvailable,
       blocked: blocked ? [{ id: 'bob', account: 'bob@example.test' }] : [] }));
     socket.send(JSON.stringify(incoming('真机中文测试：忙里偷闲，聊点轻松的 ☕', [image])));
@@ -173,13 +176,18 @@ sockets.on('connection', socket => socket.on('message', raw => {
   if (frame.type === 'message') {
     if (frame.to && resetAvailable && directState === 'new') directState = 'waiting';
     sent.push(frame);
-    socket.send(JSON.stringify({ ...frame, sender: { id: 'alice', account: 'alice@example.test', avatar: frame.avatar,
+    socket.send(JSON.stringify({ ...frame,
+      groupReceipt: groupReadsMode && !frame.to && moderator ? `fixture-group-${frame.id}` : undefined,
+      sender: { id: 'alice', account: 'alice@example.test', avatar: frame.avatar,
       moderator },
       ...(frame.to ? { recipient: { id: frame.to, account: `${frame.to}@example.test` } } : {}),
       sentAt: new Date().toISOString() }));
     if (frame.to) socket.send(JSON.stringify({ type: 'receipt', id: frame.id, from: frame.to,
       to: 'alice', status: 'delivered' }));
   }
+  if (frame.type === 'group-read' || frame.type === 'group-read-confirm') groupReadFrames.push(frame);
+  if (frame.type === 'group-read') socket.send(JSON.stringify({ type: 'group-read-confirm', id: frame.id,
+    from: frame.to, to: 'alice', groupReceipt: frame.groupReceipt }));
   if (frame.type === 'receipt') socket.send(JSON.stringify({ type: 'receipt-confirm', id: frame.id,
     from: frame.to, to: 'alice', status: frame.status }));
   if (frame.type === 'moderate') {
@@ -301,6 +309,17 @@ try {
       continue;
     }
     await tap('在线交流'); await find('搜索聊天');
+    if (groupReadsMode) {
+      await verifyNativeGroupReads({ adb, tap, find, nodes, screenshot, hideKeyboard, scale,
+        broadcast, incoming, sent, groupReadFrames, assertEventually,
+        restart: async () => {
+          await adb('shell', 'am', 'force-stop', app);
+          await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+          await find('在线交流'); await tap('在线交流'); await tap('群聊');
+        },
+      });
+      continue;
+    }
     if (process.env.LOUNGE_MODERATOR_OPENING_ONLY === '1') {
       await verifyNativeModeratorOpening({ adb, tap, find, nodes, screenshot, hideKeyboard, scale,
         broadcast, incoming, sent, assertEventually });

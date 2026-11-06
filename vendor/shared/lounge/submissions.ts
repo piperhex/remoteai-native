@@ -1,5 +1,6 @@
 import { MAX_FRAME_BYTES, type LoungeAccount, type LoungeDraft, type LoungeMessage } from './types';
 import { parseAttachments } from './attachments';
+import { initialGroupDelivery, parseGroupReceipt } from './groupReceipts';
 
 const SEND_TIMEOUT_MS = 20_000;
 interface Pending {
@@ -39,9 +40,13 @@ export class LoungeSubmissions {
       || !Number.isFinite(Date.parse(frame.sentAt))) return;
     const group = this.pending.get(frame.id)?.group;
     if (!group) return;
-    return { type: 'message', id: frame.id, sender: group.sender, text: group.draft.text,
+    const groupReceipt = parseGroupReceipt(frame.groupReceipt);
+    const message: LoungeMessage = { type: 'message', id: frame.id,
+      sender: groupReceipt ? { ...group.sender, moderator: true } : group.sender, text: group.draft.text,
+      groupReceipt,
       attachments: parseAttachments(frame.attachments),
       images: group.draft.images, reply: group.draft.reply, sentAt: frame.sentAt };
+    return { ...message, delivery: initialGroupDelivery(message, group.sender.id) };
   }
 
   has(id: string) { return this.pending.has(id); }
