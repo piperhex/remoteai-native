@@ -132,6 +132,8 @@ function sameContact(previous: LoungeContact | undefined, contact: LoungeContact
     && (contact.user.remark === undefined || previous.user.remark === contact.user.remark)
     && (contact.user.clientVersions === undefined
       || JSON.stringify(previous.user.clientVersions) === JSON.stringify(contact.user.clientVersions))
+    && (contact.user.clients === undefined
+      || JSON.stringify(previous.user.clients) === JSON.stringify(contact.user.clients))
     && (contact.lastMessageAt ?? 0) <= (previous.lastMessageAt ?? 0)
     && (contact.pinned === undefined || previous.pinned === contact.pinned);
 }

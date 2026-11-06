@@ -213,7 +213,8 @@ export class LoungeController {
       socket.onopen = () => {
         if (this.socket === socket) socket.send(JSON.stringify({
           type: 'authenticate', ticket: credentials.ticket, direct: true, receipts: true,
-          groupAcks: true, avatarCache: true, clientVersion: parseClientVersion(this.session?.clientVersion) }));
+          groupAcks: true, avatarCache: true, clientVersion: parseClientVersion(this.session?.clientVersion),
+          clientPlatform: this.session?.clientPlatform }));
       };
       socket.onmessage = event => { if (this.socket === socket) this.receive(event.data); };
       socket.onerror = () => { if (this.socket === socket) { this.disconnect(); this.schedule(); } };
@@ -230,7 +231,7 @@ export class LoungeController {
       if (socket !== this.socket || !this.running) return;
       socket.send(JSON.stringify({ type: 'authenticate', ticket: credentials.ticket,
         direct: true, receipts: true, groupAcks: true, avatarCache: true,
-        clientVersion: parseClientVersion(this.session.clientVersion) }));
+        clientVersion: parseClientVersion(this.session.clientVersion), clientPlatform: this.session.clientPlatform }));
       this.renewalStarted = Date.now();
     } catch { if (this.socket === socket) { this.disconnect(); this.schedule(); } }
     finally { this.renewing = false; }

@@ -8,6 +8,7 @@ export interface CommandMetricItem {
   type: string;
   status?: string;
   exitCode?: number | null;
+  processCommandMetrics?: CommandMetrics;
 }
 
 export interface CommandMetricTurn { id: string; items: readonly CommandMetricItem[] }
@@ -43,6 +44,11 @@ function summarizeTurnCommands(items: readonly CommandMetricItem[]): CommandMetr
     else outcomes.set(item.id, outcome);
   }
   const result = countCommandOutcomes(outcomes.values());
+  for (const item of items) {
+    if (!item.processCommandMetrics) continue;
+    result.successfulCommandCount += item.processCommandMetrics.successfulCommandCount;
+    result.completedCommandCount += item.processCommandMetrics.completedCommandCount;
+  }
   // Immutable history arrays let streamed text reuse counts from completed turns.
   turnMetrics.set(items, result);
   return result;

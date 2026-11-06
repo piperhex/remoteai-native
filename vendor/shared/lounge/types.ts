@@ -18,6 +18,7 @@ export interface LoungeAccount {
   moderator?: boolean;
   /** Versions reported by this account's connected clients; older clients may omit them. */
   clientVersions?: string[];
+  clients?: import('./clientVersion').LoungeClientInfo[];
   /** Private label for the current account; presentation/cache only, never transmitted to other users. */
   remark?: string;
 }
@@ -38,6 +39,7 @@ export interface LoungeDraft {
 export interface LoungePolicy { moderator: boolean; mutedUntil: string | null }
 export interface LoungeSession {
   clientVersion?: string;
+  clientPlatform?: import('./clientVersion').LoungeClientPlatform;
   attachmentImages?: import('./attachmentCache').AttachmentImageStore;
   sync?: import('./syncConnection').LoungeSyncTransport;
   baseUrl: string;

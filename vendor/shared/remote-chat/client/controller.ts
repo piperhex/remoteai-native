@@ -62,6 +62,7 @@ type ReadErrorSource = 'list' | 'history';
 export class ChatController {
   /** Enable before start only when the host UI supports loading individual tool details. */
   deferToolDetails = false;
+  deferProcessDetails = false;
   readonly groups = createRemoteGroups({ ready: () => this.state.ready, generation: () => this.synchronization,
     request: body => this.connection.request('request', body), apply: sidebar => this.applySidebar(sidebar) });
   readonly projectActions = new ProjectActions({ snapshot: () => this.state, update: patch => this.update(patch),
@@ -170,6 +171,9 @@ export class ChatController {
     if (sshProfiles) this.guiTools.terminal.ssh.profiles = sshProfiles;
     this.historyReader = new HistoryReader((body) => this.connection.request('request', {
       ...body, ...(this.deferToolDetails ? { deferToolDetails: true } : {}),
+      ...(this.deferProcessDetails ? { window: {
+        ...('window' in body ? body.window : {}), deferProcesses: true,
+      } } : {}),
     }), versions);
     if (offline) this.offlineWriter = new OfflineWriter(offline, this.cacheFailure);
     this.connection = createConnection({
@@ -241,6 +245,8 @@ export class ChatController {
   }
   toolDetails = (target: NonNullable<import('./types').Item['detailsRef']>) =>
     this.request<{ item: import('./types').Item }>({ operation: 'toolDetails', ...target });
+  processDetails = (target: NonNullable<import('./types').Item['processRef']>) =>
+    this.request<{ items: import('./types').Item[] }>({ operation: 'processDetails', ...target });
   private syncConversationView() {
     if (!this.conversationViewsSupported || !this.transportConnected) return Promise.resolve();
     const threadId = this.state.selected?.id ?? null;

@@ -4,6 +4,7 @@ import { followsStoppedTurn, visibleContinuationItems } from '../conversation/co
 import { turnElapsedMs } from '../conversation/turnTiming';
 import { groupTurnItems } from './turnGroups';
 import { hasVisibleProcessContent } from './processContent';
+import { processOutputs } from '../conversation/processDetails';
 export { groupTurnItems } from './turnGroups';
 
 export type MessageEntry = { id: string; kind: 'message' | 'process'; turn: Turn; item: Item };
@@ -18,7 +19,7 @@ const entryCache = new WeakMap<Turn, Map<string, TurnEntry[]>>();
 export function completedTurnFiles(turn: Turn) {
   const netFiles = parseDiff(turn.diff ?? '');
   if (netFiles.length) return netFiles;
-  return changedFiles(turn.items.filter((item) => item.type === 'fileChange'
+  return changedFiles(processOutputs(turn.items).filter((item) => item.type === 'fileChange'
     && !['declined', 'failed', 'inProgress'].includes(item.status ?? ''))
     .flatMap((item) => item.changes ?? []));
 }
@@ -26,7 +27,8 @@ export function completedTurnFiles(turn: Turn) {
 function hasSummary(turn: Turn) {
   return Boolean(turn.plan?.length || turn.diff?.trim() || turn.error || turn.retryError
     || turn.status === 'interrupted' || turn.status === 'failed' || completedTurnFiles(turn).length
-    || turn.items.some((item) => item.type === 'imageGeneration' && item.status === 'completed' && !item.failure));
+    || processOutputs(turn.items).some((item) => item.type === 'imageGeneration'
+      && item.status === 'completed' && !item.failure));
 }
 
 /** Stable group IDs keep open drawers and measured list cells attached during streamed updates. */

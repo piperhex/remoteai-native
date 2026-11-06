@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 
 export async function verifyNativeClientVersions({ tap, find, nodes, screenshot, longPress, scale, broadcast, incoming }) {
-  const versions = values => broadcast({ type: 'client-versions', users: [{ id: 'bob', clientVersions: values }] });
+  const versions = clients => broadcast({ type: 'client-versions',
+    users: [{ id: 'bob', clientVersions: clients.map(client => client.version), clients }] });
   const nickname = scale > 1 ? '这是一位名字很长的联系人' : 'Jia';
   const profile = `查看 ${nickname} 的资料`;
   await tap('群聊');
@@ -13,17 +14,18 @@ export async function verifyNativeClientVersions({ tap, find, nodes, screenshot,
   await screenshot(`versions-group-menu-${scale}`);
   await tap('个人资料');
   assert.ok(!(await nodes()).some(node => node.text?.includes('v2.2.7')));
-  versions(['2.2.7', '2.2.4', '2.2.7']);
-  await find('当前版本 v2.2.4 · v2.2.7');
+  versions([{ version: '2.2.7', platform: 'desktop' }, { version: '1.5.3', platform: 'mobile' },
+    { version: '2.2.7', platform: 'desktop' }]);
+  await find('当前版本 v2.2.7 · v1.5.3');
   await screenshot(`versions-profile-${scale}`);
   await tap('返回');
   await find('群聊版本测试');
   await tap(profile);
-  await find('当前版本 v2.2.4 · v2.2.7');
+  await find('当前版本 v2.2.7 · v1.5.3');
   await tap('发消息');
-  await find('v2.2.4 · v2.2.7');
+  await find('v2.2.7 · v1.5.3');
   await screenshot(`versions-private-${scale}`);
-  versions(['2.2.8']);
+  versions([{ version: '2.2.8', platform: 'desktop' }]);
   await find('v2.2.8');
   await tap(profile);
   await find('当前版本 v2.2.8');

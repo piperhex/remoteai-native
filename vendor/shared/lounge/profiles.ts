@@ -3,7 +3,7 @@ import type { LoungeAccount, LoungeMessage, LoungeSnapshot } from './types';
 import { LoungeNames } from './names';
 import { accountLabel } from './accountLabel';
 import { LoungeAvatarCache } from './avatarCache';
-import { parseClientVersions } from './clientVersion';
+import { parseClients, parseClientVersions } from './clientVersion';
 
 const MAX_PROFILES = 200;
 
@@ -19,7 +19,7 @@ export class LoungeProfiles {
   private readonly avatars: LoungeAvatarCache;
   private cached = false;
   private watched = '';
-  private versions = new Map<string, string[]>();
+  private versions = new Map<string, Pick<LoungeAccount, 'clientVersions' | 'clients'>>();
 
   constructor(store?: LoungeAvatarStore) { this.avatars = new LoungeAvatarCache(store); }
 
@@ -42,8 +42,10 @@ export class LoungeProfiles {
   }
   user(user: LoungeAccount): LoungeAccount {
     user = this.names.user(user);
-    const clientVersions = this.versions.get(user.id);
-    if (clientVersions && clientVersions !== user.clientVersions) user = { ...user, clientVersions };
+    const metadata = this.versions.get(user.id);
+    if (metadata && (metadata.clientVersions !== user.clientVersions || metadata.clients !== user.clients)) {
+      user = { ...user, ...metadata };
+    }
     const account = accountLabel(user.account);
     if (account !== user.account) user = { ...user, account };
     const cached = this.avatars.get(user.id);
@@ -88,8 +90,11 @@ export class LoungeProfiles {
     if (!this.available || !Array.isArray(input) || input.length > MAX_PROFILES) return false;
     for (const value of input) {
       const versions = parseClientVersions(value?.clientVersions);
+      const clients = parseClients(value?.clients);
       if (typeof value?.id === 'string' && value.id.length > 0 && value.id.length <= 80 && versions) {
-        if (this.versions.has(value.id) || this.versions.size < MAX_PROFILES) this.versions.set(value.id, versions);
+        if (this.versions.has(value.id) || this.versions.size < MAX_PROFILES) {
+          this.versions.set(value.id, { clientVersions: versions, clients });
+        }
       }
     }
     return true;

@@ -27,6 +27,7 @@ export function useNativeLounge(session: AuthSession | null) {
   const controller = useMemo(() => new LoungeController(session ? {
     sync: nativeLoungeSync,
     clientVersion: Application.nativeApplicationVersion ?? appConfig.expo.version,
+    clientPlatform: 'mobile',
     attachmentImages: nativeAttachmentImages(JSON.stringify([session.baseUrl, session.email])),
     baseUrl: session.baseUrl, userId: session.profile?.id, account: session.email,
     avatars: nativeLoungeAvatars(session.baseUrl),

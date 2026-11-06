@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 import { useFonts } from 'expo-font';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { BackHandler, Pressable, Text, View } from 'react-native';
@@ -27,7 +27,7 @@ setInterfaceLanguage('zh');
 updateThemeMode('dark');
 function LoungeFixture() {
   const color = useThemeColor();
-  const [fonts] = useFonts(Ionicons.font);
+  const [fonts] = useFonts({ ...Ionicons.font, ...Feather.font });
   const [page, setPage] = useState('discover');
   const [signedIn, setSignedIn] = useState(true);
   const [sessionReady, setSessionReady] = useState(false);

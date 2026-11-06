@@ -4,7 +4,7 @@ import type { Item } from "./types";
 export function groupConsecutiveActivities(items: Item[]) {
   const groups: { key: string; items: Item[]; activity: boolean }[] = [];
   for (const item of items) {
-    const activity = !["userMessage", "agentMessage", "reasoning"].includes(item.type);
+    const activity = !["userMessage", "agentMessage", "reasoning", "processSummary"].includes(item.type);
     const previous = groups.at(-1);
     if (activity && previous?.activity) previous.items.push(item);
     else groups.push({ key: item.id, items: [item], activity });
