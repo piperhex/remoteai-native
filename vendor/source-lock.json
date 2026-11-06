@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "ff6ed2f5c5a4c01c6719493fe3f849469bc2f57c",
+  "revision": "7d9e2817fec14c026586dd7e322b57ba1732eca5",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "077a501d0778681b725eb28001e9442d68e120e1"
+    "revision": "b6d0e672fd85687f8d3087e82962487a387bbc51"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
   "files": {
@@ -355,7 +355,7 @@
     "shared/lounge/avatar.ts": "868fd169419c516c042badb7d9ab0c18e93e2923694f27f8538a0f40aadfcb6f",
     "shared/lounge/conversationRows.ts": "3e5a40719507bf099771d1ce24324e425dbab551ec2d48f8872e07cb144c225b",
     "shared/lounge/conversationPreview.ts": "dd7996edb9baa7086ffd5fab1a5ef1eed94e3bb529989198eccc56e27da617eb",
-    "shared/lounge/directPermission.ts": "3190167d726d44cc8709d97471d461f0229329dfc37c6a970fb704695d13891d",
+    "shared/lounge/directPermission.ts": "e334bcd1a0df5c1a0938929c712593e957070c3cadc3f3c42d7b4edc36eb56d3",
     "shared/lounge/contacts.ts": "0e714ae8250c1a2fe0869e445515e39985b55209e7a21ba71d13dfa4f918f61b",
     "shared/lounge/names.ts": "778bd95737e23505bf77424829c150d99fcdc0f7b8e806955fefe20d7af51482",
     "shared/lounge/conversationActions.ts": "c0bb499081800b29eee9946cf47eca96a4834769a0fbda4a6d2ade033fc4c5ad",
@@ -453,7 +453,7 @@
     "shared/chat/chatPolicy.ts": "690646d2f974fffd466e1192fb2a440eaa74468e98a5344e527027cef29ca15d",
     "shared/lounge/history.ts": "0968d5082ebf7bbcef215693d6d6881d491e76d7508509b3a705eb00178486b2",
     "shared/lounge/contactSync.ts": "c011d8b687f47213acc3604beae056981edd172db91dc52c13b09a4daa4b0f76",
-    "shared/lounge/directDelivery.ts": "2a93d083e4aa4dac7b10431071782da9d1857e7b47e3ae4fce5ea9180d0e1ab3",
+    "shared/lounge/directDelivery.ts": "cc296af88a9ca13cc0a186d95a54824215f15cfc8274306d2f112cfba9c2663d",
     "shared/lounge/deliveryTransport.ts": "aee4e3591912efae69eca755c0ecd79327f93309ea8bb55e82afe7a97262dd96",
     "shared/lounge/directState.ts": "47ad0b0c044d242f3dbcf6a0b8584daf1c5106db1ba00085cbcdf65645c17ae4",
     "shared/lounge/authorize.ts": "ee3ef4440df2141936ac9a44b0e50e6d517eb972af450b93f92e496f2686802b",

@@ -87,6 +87,7 @@ export class LoungeDirectDelivery {
     }
     await this.run(async current => {
       await checkDirectPermission({ self: sender.id, peer: recipient.id,
+        moderator: this.host.self()?.moderator,
         permission: this.host.permission?.(recipient.id), generation: this.host.generation?.(recipient.id),
         page: query => this.host.page(query) });
       if (!current()) return;

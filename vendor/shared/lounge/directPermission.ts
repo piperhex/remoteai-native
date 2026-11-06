@@ -14,11 +14,11 @@ export function mergeDirectPermissions(permissions: Map<string, DirectPermission
 
 /** Only local history is inspected. Read receipts and group messages never count as a reply. */
 export async function checkDirectPermission(options: {
-  self: string; peer: string; permission?: DirectPermission;
+  self: string; peer: string; permission?: DirectPermission; moderator?: boolean;
   page: (query: HistoryQuery) => Promise<HistoryPage>;
   generation?: number;
 }) {
-  if (options.permission === 'open') return;
+  if (options.moderator === true || options.permission === 'open') return;
   if (options.permission === 'waiting') throw new Error(AWAITING_REPLY);
   let before: HistoryQuery['before'];
   let sent = false;

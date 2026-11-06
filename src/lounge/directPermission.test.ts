@@ -26,3 +26,11 @@ it('finds an older reply beyond the current history page and keeps other convers
   await expect(checkDirectPermission({ self: self.id, peer: peer.id, page, permission: 'waiting' }))
     .rejects.toThrow('awaitingReply');
 });
+
+it('allows native moderators to continue without a reply and restores the limit after revocation', async () => {
+  const page = vi.fn(async (): Promise<HistoryPage> => ({ messages: [sent] }));
+  const options = { self: self.id, peer: peer.id, page, permission: 'waiting' as const };
+  await checkDirectPermission({ ...options, moderator: true });
+  expect(page).not.toHaveBeenCalled();
+  await expect(checkDirectPermission({ ...options, moderator: false })).rejects.toThrow('awaitingReply');
+});

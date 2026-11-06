@@ -30,6 +30,7 @@ import { verifyNativeLoungeScroll } from './lounge-scroll-check.mjs';
 import { verifyNativePrivateScroll } from './lounge-private-scroll-check.mjs';
 import { verifyNativeHistory } from './lounge-history-check.mjs';
 import { verifyNativeClientVersions } from './lounge-client-version-check.mjs';
+import { verifyNativeModeratorOpening } from './lounge-moderator-opening-check.mjs';
 
 const exec = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -61,9 +62,11 @@ let blocked = false;
 let avatar = '';
 let rejectAvatar = false;
 const avatarSaves = [];
-const resetAvailable = process.env.LOUNGE_PROFILE_ONLY === '1' || process.env.LOUNGE_CHAT_ACTIONS_ONLY === '1';
+const resetAvailable = process.env.LOUNGE_PROFILE_ONLY === '1' || process.env.LOUNGE_CHAT_ACTIONS_ONLY === '1'
+  || process.env.LOUNGE_MODERATOR_OPENING_ONLY === '1';
 let generation = 0;
 let directState = 'new';
+let moderator = true;
 let failDelete = false;
 let lookupReply = true;
 const lookups = [];
@@ -94,7 +97,10 @@ function incoming(text, images = []) {
   return { type: 'message', id: crypto.randomUUID(), text, images,
     sender: { id: 'bob', account: 'bob@example.test' }, sentAt: new Date().toISOString() };
 }
-function broadcast(frame) { for (const socket of sockets.clients) socket.send(JSON.stringify(frame)); }
+function broadcast(frame) {
+  if (frame.type === 'policy') moderator = frame.policy.moderator;
+  for (const socket of sockets.clients) socket.send(JSON.stringify(frame));
+}
 const notifications = { muted: new Set(), fail: false, update(conversation, muted) {
   if (muted) this.muted.add(conversation); else this.muted.delete(conversation);
   broadcast({ type: 'notification-settings', conversation, muted });
@@ -110,8 +116,8 @@ sockets.on('connection', socket => socket.on('message', raw => {
       notificationSettings: true, mutedConversations: [...notifications.muted],
       names: namesEnabled,
       user: { id: 'alice', account: 'alice@example.test', avatar, nickname: names.nicknames.get('alice') ?? '',
-        moderator: true },
-      policy: { moderator: true, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true,
+        moderator },
+      policy: { moderator, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true,
       directReset: resetAvailable,
       blocked: blocked ? [{ id: 'bob', account: 'bob@example.test' }] : [] }));
     socket.send(JSON.stringify(incoming('真机中文测试：忙里偷闲，聊点轻松的 ☕', [image])));
@@ -168,7 +174,7 @@ sockets.on('connection', socket => socket.on('message', raw => {
     if (frame.to && resetAvailable && directState === 'new') directState = 'waiting';
     sent.push(frame);
     socket.send(JSON.stringify({ ...frame, sender: { id: 'alice', account: 'alice@example.test', avatar: frame.avatar,
-      moderator: true },
+      moderator },
       ...(frame.to ? { recipient: { id: frame.to, account: `${frame.to}@example.test` } } : {}),
       sentAt: new Date().toISOString() }));
     if (frame.to) socket.send(JSON.stringify({ type: 'receipt', id: frame.id, from: frame.to,
@@ -276,7 +282,7 @@ try {
     savedContacts = [{ id: 'bob', account: 'bob@example.test' }];
     online = true;
     blocked = false;
-    generation = 0; directState = 'new'; failDelete = false;
+    generation = 0; directState = 'new'; failDelete = false; moderator = true;
     const unique = `Hello-native-${Date.now()}`;
     const sentBefore = sent.length;
     const moderatedBefore = moderated.length;
@@ -295,6 +301,11 @@ try {
       continue;
     }
     await tap('在线交流'); await find('搜索聊天');
+    if (process.env.LOUNGE_MODERATOR_OPENING_ONLY === '1') {
+      await verifyNativeModeratorOpening({ adb, tap, find, nodes, screenshot, hideKeyboard, scale,
+        broadcast, incoming, sent, assertEventually });
+      continue;
+    }
     if (process.env.LOUNGE_VERSIONS_ONLY === '1') {
       assert.match(reportedVersions.at(-1), /^\d+\.\d+\.\d+/);
       await verifyNativeClientVersions({ tap, find, nodes, screenshot, longPress, scale, broadcast, incoming });
@@ -375,6 +386,7 @@ try {
       continue;
     }
     if (resetAvailable) {
+      broadcast({ type: 'policy', policy: { moderator: false, mutedUntil: null } });
       await verifyNativeProfile({ adb, tap, find, nodes, screenshot, hideKeyboard, longPress, scale, sent,
         failDelete: value => { failDelete = value; },
         reply: text => { directState = 'open'; broadcast({ ...incoming(text), generation, receipts: true,
@@ -452,6 +464,7 @@ try {
     await find('查看原消息');
     await tap('返回聊天'); await find('Draft');
     broadcast(incoming('私聊入口测试'));
+    broadcast({ type: 'policy', policy: { moderator: false, mutedUntil: null } });
     await longPress('私聊入口测试'); await tap('发起私聊');
     await tap('聊天'); await screenshot(`people-${scale}`);
     await longPress('与 bob 私聊'); await tap('发起私聊'); await find('在线');
@@ -486,6 +499,7 @@ try {
     await tap('聊天'); await tap('群聊');
     assert.ok(!(await nodes()).some(node => node.text === 'blocked-group'), 'Block filters new group messages');
     broadcast(incoming('管理入口测试')); await find('管理入口测试');
+    broadcast({ type: 'policy', policy: { moderator: true, mutedUntil: null } });
     await tap('管理 bob 的发言权限'); await find('禁言时长（分钟）');
     await screenshot(`moderation-${scale}`); await tap('禁言');
     await assertEventually(() => moderated.length > moderatedBefore, 'Moderation ack');
