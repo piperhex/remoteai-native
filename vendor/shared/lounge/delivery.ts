@@ -1,4 +1,4 @@
-import { parseGroupReaders, mergeGroupReaders } from './groupReceipts';
+import { INVALID_GROUP_RECEIPT, parseGroupReaders, mergeGroupReaders } from './groupReceipts';
 import type { LoungeAccount } from './types';
 
 export type ReceiptStatus = 'delivered' | 'read';
@@ -9,6 +9,8 @@ export interface LoungeDelivery {
   confirmed?: ReceiptStatus;
   attemptedAt?: number;
   readers?: LoungeAccount[];
+  /** A permanent capability failure, separate from actual read/confirmation status. */
+  groupReceiptError?: typeof INVALID_GROUP_RECEIPT;
 }
 export const DIRECT_RETRY_MS = 5000;
 export const receiptRank = (status?: string) => status === 'read' ? 2 : status === 'delivered' ? 1 : 0;
@@ -20,13 +22,14 @@ export function parseDelivery(value: unknown): LoungeDelivery | undefined {
   if (!['incoming', 'outgoing'].includes(item.direction ?? '')
     || item.status !== 'pending' && item.status !== 'rejected' && !isReceiptStatus(item.status)) return;
   return { direction: item.direction!, status: item.status, retry: item.retry === true,
+    groupReceiptError: item.groupReceiptError === INVALID_GROUP_RECEIPT ? INVALID_GROUP_RECEIPT : undefined,
     readers: parseGroupReaders(item.readers),
     confirmed: isReceiptStatus(item.confirmed) ? item.confirmed : undefined,
     attemptedAt: typeof item.attemptedAt === 'number' && Number.isFinite(item.attemptedAt) ? item.attemptedAt : undefined };
 }
 
 export function needsDeliveryWork(delivery?: LoungeDelivery) {
-  if (!delivery) return false;
+  if (!delivery || delivery.groupReceiptError) return false;
   return delivery.direction === 'outgoing' ? delivery.retry === true && delivery.status === 'pending'
     : receiptRank(delivery.status) > receiptRank(delivery.confirmed);
 }
@@ -36,6 +39,7 @@ export function mergeDelivery(previous: LoungeDelivery | undefined, incoming: Lo
   if (!previous || !incoming || previous.direction !== incoming.direction) return incoming ?? previous;
   const rejected = previous.status === 'rejected' && incoming.status === 'pending';
   return { ...incoming,
+    groupReceiptError: previous.groupReceiptError ?? incoming.groupReceiptError,
     readers: mergeGroupReaders(previous.readers, incoming.readers),
     status: rejected || receiptRank(previous.status) > receiptRank(incoming.status) ? previous.status : incoming.status,
     confirmed: receiptRank(previous.confirmed) > receiptRank(incoming.confirmed) ? previous.confirmed : incoming.confirmed,

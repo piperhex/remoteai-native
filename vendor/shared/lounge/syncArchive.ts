@@ -2,10 +2,12 @@ import { historyKey, type HistoryCursor, type LoungeHistoryStore } from './archi
 import { messageConversation } from './contacts';
 import { mergeDelivery, receiptRank } from './delivery';
 import { parseMessage, type LoungeMessage } from './types';
+import { INVALID_GROUP_RECEIPT } from './groupReceipts';
 
 export const SYNC_PAGE_SIZE = 25;
 export interface HistoryEntry {
   key: string; conversation: string; generation: number; status: string; readers?: string[];
+  groupReceiptError?: typeof INVALID_GROUP_RECEIPT;
 }
 export interface HistoryManifest { entries: HistoryEntry[]; next?: HistoryCursor }
 export interface HistorySyncAccess {
@@ -14,7 +16,8 @@ export interface HistorySyncAccess {
 
 export function syncEntry(message: LoungeMessage): HistoryEntry {
   return { key: historyKey(message), conversation: message.conversation ?? '', generation: message.generation ?? 0,
-    status: message.delivery?.status ?? '', readers: message.delivery?.readers?.map(reader => reader.id) };
+    status: message.delivery?.status ?? '', readers: message.delivery?.readers?.map(reader => reader.id),
+    groupReceiptError: message.delivery?.groupReceiptError };
 }
 
 export function validHistoryKey(value: unknown): value is string {
@@ -43,6 +46,7 @@ export function parseManifest(value: unknown): HistoryManifest {
   for (const entry of manifest.entries) {
     if (!entry || !validHistoryKey(entry.key) || typeof entry.conversation !== 'string'
       || entry.conversation.length > 80 || !Number.isSafeInteger(entry.generation) || entry.generation < 0
+      || entry.groupReceiptError !== undefined && entry.groupReceiptError !== INVALID_GROUP_RECEIPT
       || !['', 'pending', 'rejected', 'delivered', 'read'].includes(entry.status)) {
       throw new Error('invalid-history-entry');
     }
@@ -103,7 +107,7 @@ export class SyncArchive {
       const missingReaders = entry.readers?.some(id => !readers.has(id));
       if (!previous || receiptRank(entry.status) > receiptRank(previous.delivery?.status)
         || entry.status === 'rejected' && previous.delivery?.status === 'pending'
-        || missingReaders) missing.push(entry.key);
+        || missingReaders || entry.groupReceiptError && !previous.delivery?.groupReceiptError) missing.push(entry.key);
     }
     return missing;
   }
@@ -121,6 +125,7 @@ export class SyncArchive {
     const message = previous ? { ...previous, delivery: mergeDelivery(previous.delivery, incoming.delivery) } : incoming;
     if (previous && previous.delivery?.status === message.delivery?.status
       && previous.delivery?.confirmed === message.delivery?.confirmed
+      && previous.delivery?.groupReceiptError === message.delivery?.groupReceiptError
       && JSON.stringify(previous.delivery?.readers) === JSON.stringify(message.delivery?.readers)) return;
     await this.options.store.save(message);
     if (!this.options.accept(incoming) && incoming.conversation) {

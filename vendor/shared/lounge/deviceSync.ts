@@ -35,7 +35,8 @@ export class LoungeDeviceSync {
 
   changed(message: LoungeMessage) {
     const key = historyKey(message);
-    const version = `${message.generation ?? 0}:${message.delivery?.status ?? ''}`;
+    const version = JSON.stringify([message.generation ?? 0, message.delivery?.status,
+      message.delivery?.groupReceiptError]);
     if (this.versions.get(key) === version) return;
     this.versions.delete(key); this.versions.set(key, version);
     if (this.versions.size > 512) this.versions.delete(this.versions.keys().next().value!);

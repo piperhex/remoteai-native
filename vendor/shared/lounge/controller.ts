@@ -299,7 +299,7 @@ export class LoungeController {
     if (frame.type === 'privacy' || frame.type === 'ready') this.contactSync.privacy(frame.blocked);
     if (frame.type === 'contacts') this.contactSync.presence(frame.contacts);
     if (frame.type === 'receipt' || frame.type === 'receipt-confirm'
-      || frame.type === 'group-read' || frame.type === 'group-read-confirm') {
+      || frame.type === 'group-read' || frame.type === 'group-read-confirm' || frame.type === 'group-receipt-rejected') {
       this.delivery.receipt(frame); return;
     }
     if (frame.type === 'moderated' || frame.type === 'updated' || frame.type === 'rejected') {

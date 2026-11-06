@@ -2,6 +2,13 @@ import type { Item, Thread, Turn } from './types';
 import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { reconcileAcknowledgedItems } from '../../chat/acknowledgedMessages';
 import { mergeItemOrder } from '../../chat/itemOrder';
+import { reconcileProcessHistory } from './processHistory';
+
+interface HistoryMergeOptions {
+  authoritative?: boolean;
+  /** The host keeps notified items that app-server has not persisted to its snapshot yet. */
+  retainCached?: boolean;
+}
 
 function mergeItem(snapshot: Item, live: Item, before?: Item): Item {
   const merged = { ...snapshot, ...live };
@@ -14,15 +21,16 @@ function mergeItem(snapshot: Item, live: Item, before?: Item): Item {
   return merged;
 }
 
-function mergeTurn(snapshot: Turn, live: Turn, before?: Turn, authoritative = false): Turn {
+function mergeTurn(snapshot: Turn, live: Turn, before: Turn | undefined, options: HistoryMergeOptions): Turn {
+  ({ snapshot, live } = reconcileProcessHistory(snapshot, live, before));
   const original = new Map(before?.items.map((item) => [item.id, item]));
   const hasAcknowledgements = snapshot.items.some((item) => item.localEcho) || live.items.some((item) => item.localEcho);
   const snapshotItems = reconcileAcknowledgedItems(snapshot.items, live.items);
   const liveItems = reconcileAcknowledgedItems(live.items, snapshot.items);
   const items = new Map(snapshotItems.map((item) => [item.id, item]));
   for (const item of liveItems) {
-    if (item === original.get(item.id)
-      && (authoritative || (live.status !== 'inProgress' && !hasAcknowledgements))) continue;
+    if (!options.retainCached && item === original.get(item.id)
+      && (options.authoritative || (live.status !== 'inProgress' && !hasAcknowledgements))) continue;
     const existing = items.get(item.id);
     items.set(item.id, existing ? mergeItem(existing, item, original.get(item.id)) : item);
   }
@@ -45,16 +53,19 @@ export function discardStaleRunningTurns(snapshot: Thread, live: Thread, before:
 }
 
 /** Preserve notifications received while a history snapshot was in flight. */
-export function mergeHistory(snapshot: Thread, live: Thread, before: Thread, authoritative = false): Thread {
+export function mergeHistory(snapshot: Thread, live: Thread, before: Thread,
+  settings: boolean | HistoryMergeOptions = false): Thread {
   if (snapshot.id !== live.id) return snapshot;
+  const options = typeof settings === 'boolean' ? { authoritative: settings } : settings;
   live = discardStaleRunningTurns(snapshot, live, before);
   const original = new Map(before.turns?.map((turn) => [turn.id, turn]));
   const turns = new Map(snapshot.turns?.map((turn) => [turn.id, turn]));
   for (const turn of live.turns ?? []) {
     const existing = turns.get(turn.id);
-    if (turn === original.get(turn.id) && (authoritative || (turn.status !== 'inProgress'
+    if (!options.retainCached && turn === original.get(turn.id)
+      && (options.authoritative || (turn.status !== 'inProgress'
       && !turn.items.some((item) => item.localEcho) && !existing?.items.some((item) => item.localEcho)))) continue;
-    turns.set(turn.id, existing ? mergeTurn(existing, turn, original.get(turn.id), authoritative) : turn);
+    turns.set(turn.id, existing ? mergeTurn(existing, turn, original.get(turn.id), options) : turn);
   }
   const previous = new Map(live.turns?.map((turn) => [turn.id, turn]));
   // Notifications received during a history read take precedence, including decreases after compaction.

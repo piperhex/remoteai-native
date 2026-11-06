@@ -169,7 +169,9 @@ export class LoungeDirectDelivery {
   }
 
   receipt(frame: Record<string, unknown>) {
-    if (frame.type === 'group-read' || frame.type === 'group-read-confirm') { this.groupReceipt(frame); return; }
+    if (frame.type === 'group-read' || frame.type === 'group-read-confirm' || frame.type === 'group-receipt-rejected') {
+      this.groupReceipt(frame); return;
+    }
     if (typeof frame.id !== 'string' || typeof frame.from !== 'string' || !isReceiptStatus(frame.status)
       || frame.to !== this.host.self()?.id) return;
     const id = frame.id; const from = frame.from; const status = frame.status;
@@ -195,7 +197,8 @@ export class LoungeDirectDelivery {
   private groupReceipt(frame: Record<string, unknown>) {
     const self = this.host.self();
     if (!self || frame.to !== self.id || typeof frame.id !== 'string' || typeof frame.from !== 'string') return;
-    const confirmation = frame.type === 'group-read-confirm';
+    const confirmation = frame.type === 'group-read-confirm'
+      || frame.type === 'group-receipt-rejected' && frame.receiptType === 'group-read';
     const key = JSON.stringify([confirmation ? frame.from : self.id, frame.id]);
     this.background(async current => {
       const saved = await this.host.find(key);
@@ -205,7 +208,7 @@ export class LoungeDirectDelivery {
       await this.host.publish(message, false);
       if (!current()) return;
       this.track(message);
-      if (!confirmation) this.host.transmit({ type: 'group-read-confirm', id: frame.id, to: frame.from,
+      if (frame.type === 'group-read') this.host.transmit({ type: 'group-read-confirm', id: frame.id, to: frame.from,
         groupReceipt: message.groupReceipt });
     });
   }
@@ -234,7 +237,7 @@ export class LoungeDirectDelivery {
       generation: message.generation ?? 0 });
   }
   private transmitReceipt(message: LoungeMessage) {
-    if (message.delivery?.status === 'pending') return;
+    if (message.delivery?.status === 'pending' || message.delivery?.groupReceiptError) return;
     if (!message.recipient && message.groupReceipt) {
       if (this.host.groupEnabled?.() === false) return;
       if (message.delivery?.status === 'read') this.host.transmit({ type: 'group-read', id: message.id,
