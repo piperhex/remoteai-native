@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { useLoungeStyles } from './styles';
 import { useLoungeColor } from './theme';
 import { LoungeAvatar } from './LoungeMessage';
+import { LoungeClientVersion } from './LoungeClientVersion';
 
 export function LoungeHeading({ model, back }: { model: MobileLounge; back: () => void }) {
   const styles = useLoungeStyles();
@@ -27,7 +28,8 @@ export function LoungeHeading({ model, back }: { model: MobileLounge; back: () =
       <View style={[styles.headerIdentity, contact && styles.privateIdentity]}>
         {contact ? <Pressable accessibilityRole="button" style={styles.headerAccount}
           accessibilityLabel={t('client.lounge.viewProfile', { account: accountName(contact.user) })}
-          onPress={() => model.setProfile(contact.user)}>{title}</Pressable> : title}
+          onPress={() => model.setProfile(contact.user)}>{title}
+          <LoungeClientVersion user={contact.user} /></Pressable> : title}
         <Pressable accessibilityRole="button" style={[styles.memberTrigger, contact && styles.privateStatus]}
           onPress={() => model.setSheet('members')}>
           <View style={[styles.onlineDot, (state.status !== 'connected' || contact && contact.online !== true)

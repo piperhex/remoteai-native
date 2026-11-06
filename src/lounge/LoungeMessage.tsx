@@ -105,6 +105,6 @@ export function LoungeMessage({ message, own, manage, preview, onImageLoad, repl
       </View>
     </View>
     {menu && reply && <LoungeMessageActions anchor={menu} message={message} reply={reply} close={() => setMenu(undefined)}
-      direct={direct} block={block} blocked={blocked} />}
+      direct={direct} block={block} blocked={blocked} profile={!own ? profile : undefined} />}
   </View>;
 }

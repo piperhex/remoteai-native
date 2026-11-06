@@ -11,6 +11,8 @@ import { nativeLoungeHistory } from './historyStore';
 import { nativeLoungeSync } from './syncTransport';
 import { nativeAttachmentImages } from './attachments';
 import { useLoungeDownloads } from './useLoungeDownloads';
+import * as Application from 'expo-application';
+import appConfig from '../../app.json';
 
 export const nativeLoungeRuntime: LoungeRuntime = {
   randomId: randomUUID,
@@ -24,6 +26,7 @@ export const nativeLoungeRuntime: LoungeRuntime = {
 export function useNativeLounge(session: AuthSession | null) {
   const controller = useMemo(() => new LoungeController(session ? {
     sync: nativeLoungeSync,
+    clientVersion: Application.nativeApplicationVersion ?? appConfig.expo.version,
     attachmentImages: nativeAttachmentImages(JSON.stringify([session.baseUrl, session.email])),
     baseUrl: session.baseUrl, userId: session.profile?.id, account: session.email,
     avatars: nativeLoungeAvatars(session.baseUrl),

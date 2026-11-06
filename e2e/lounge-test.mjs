@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { verifyNativeAvatar } from './lounge-avatar-check.mjs';
 import { verifyNativeSettingsAvatar } from './settings-avatar-check.mjs';
 import { verifyNativeImage } from './lounge-image-check.mjs';
@@ -29,6 +29,7 @@ import { verifyNativeGestures } from './lounge-gestures-check.mjs';
 import { verifyNativeLoungeScroll } from './lounge-scroll-check.mjs';
 import { verifyNativePrivateScroll } from './lounge-private-scroll-check.mjs';
 import { verifyNativeHistory } from './lounge-history-check.mjs';
+import { verifyNativeClientVersions } from './lounge-client-version-check.mjs';
 
 const exec = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -37,9 +38,19 @@ assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
 const output = path.join(root, process.env.LOUNGE_TEST_OUTPUT ?? (process.env.LOUNGE_TEXT_ONLY === '1'
   ? `.codex-tmp/lounge-text-${serial}` : '.codex-tmp/lounge-android'));
 const app = process.env.LOUNGE_TEST_APP ?? 'com.codexswitch.mobile.loungetest';
-const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
-  encoding: 'utf8', timeout: 60_000, windowsHide: true, maxBuffer: 4 * 1024 * 1024,
-})).stdout.trim();
+const adb = async (...args) => {
+  const run = async () => (await exec('adb', ['-s', serial, ...args], {
+    encoding: 'utf8', timeout: 60_000, windowsHide: true, maxBuffer: 4 * 1024 * 1024,
+  })).stdout.trim();
+  try { return await run(); }
+  catch (error) {
+    // A daemon interruption may be retried for inspection, never for taps or other mutations.
+    if (args[0] !== 'shell' || !['cat', 'uiautomator'].includes(args[1])
+      || !/daemon|device offline|device.*not found/i.test(String(error))) throw error;
+    await delay(1000);
+    return run();
+  }
+};
 const image = 'data:image/png;base64,' + (await readFile(path.join(root,
   'vendor/apps/desktop/src-tauri/icons', process.env.LOUNGE_SETTINGS_AVATAR_ONLY === '1'
     ? '128x128.png' : '32x32.png'))).toString('base64');
@@ -61,12 +72,14 @@ const syncMode = process.env.LOUNGE_DEVICE_SYNC_ONLY === '1';
 if (syncMode) globalThis.WebSocket = WebSocket;
 const syncSource = syncMode ? await loadHistorySource(root) : undefined;
 let savedContacts = [];
+const reportedVersions = [];
+const namesEnabled = process.env.LOUNGE_NAMES_ONLY === '1' || process.env.LOUNGE_VERSIONS_ONLY === '1';
 const server = createServer((request, response) => {
   response.writeHead(online ? 200 : 503, { 'content-type': 'application/json' });
   response.end(JSON.stringify({ ticket: 'fixture-ticket' }));
 });
-const sockets = new WebSocket.Server({ noServer: true });
-const syncSockets = new WebSocket.Server({ noServer: true });
+const sockets = new WebSocketServer({ noServer: true });
+const syncSockets = new WebSocketServer({ noServer: true });
 server.on('upgrade', (request, socket, head) => {
   const target = request.url === '/device-chat' && syncSource ? syncSockets : sockets;
   target.handleUpgrade(request, socket, head, client => target.emit('connection', client));
@@ -89,12 +102,13 @@ const notifications = { muted: new Set(), fail: false, update(conversation, mute
 const names = createNamesFixture(broadcast);
 sockets.on('connection', socket => socket.on('message', raw => {
   const frame = JSON.parse(String(raw));
-  if (process.env.LOUNGE_NAMES_ONLY === '1') names.handle(socket, frame);
+  if (namesEnabled) names.handle(socket, frame);
   if (frame.type === 'authenticate') {
+    if (typeof frame.clientVersion === 'string') reportedVersions.push(frame.clientVersion);
     socket.send(JSON.stringify({ type: 'ready', profiles: true, accountLookup: true,
       savedContacts: contactsMode, deviceSync: syncMode,
       notificationSettings: true, mutedConversations: [...notifications.muted],
-      names: process.env.LOUNGE_NAMES_ONLY === '1',
+      names: namesEnabled,
       user: { id: 'alice', account: 'alice@example.test', avatar, nickname: names.nicknames.get('alice') ?? '',
         moderator: true },
       policy: { moderator: true, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true,
@@ -256,6 +270,9 @@ try {
   for (const scale of [1, 1.3]) {
     notifications.muted.clear(); notifications.fail = false;
     names.reset();
+    if (process.env.LOUNGE_VERSIONS_ONLY === '1') {
+      names.nicknames.set('bob', scale > 1 ? '这是一位名字很长的联系人' : 'Jia');
+    }
     savedContacts = [{ id: 'bob', account: 'bob@example.test' }];
     online = true;
     blocked = false;
@@ -278,6 +295,11 @@ try {
       continue;
     }
     await tap('在线交流'); await find('搜索聊天');
+    if (process.env.LOUNGE_VERSIONS_ONLY === '1') {
+      assert.match(reportedVersions.at(-1), /^\d+\.\d+\.\d+/);
+      await verifyNativeClientVersions({ tap, find, nodes, screenshot, longPress, scale, broadcast, incoming });
+      continue;
+    }
     if (process.env.LOUNGE_HISTORY_ONLY === '1') {
       await verifyNativeHistory({ tap, find, nodes, adb, screenshot, broadcast, scale, longPress, hideKeyboard, image, sent });
       continue;

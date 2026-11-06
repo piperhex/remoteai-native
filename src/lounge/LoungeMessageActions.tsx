@@ -12,20 +12,20 @@ import { t } from '../i18n';
 import { textMetrics } from '../theme/text';
 
 const icons = { copy: 'copy-outline', reply: 'chatbox-ellipses-outline',
-  direct: 'chatbubbles-outline', block: 'ban-outline' } as const;
+  direct: 'chatbubbles-outline', block: 'ban-outline', profile: 'person-outline' } as const;
 const MENU_MARGIN = 12;
 const MENU_COLOR = '#5b5b5b';
 
-export function LoungeMessageActions({ message, reply, close, direct, block, blocked, anchor }: {
+export function LoungeMessageActions({ message, reply, close, direct, block, blocked, profile, anchor }: {
   message: LoungeMessage; reply: (message: LoungeMessage) => void; close: () => void; anchor: MenuAnchor;
-  direct?: () => void; block?: () => void; blocked?: boolean;
+  direct?: () => void; block?: () => void; blocked?: boolean; profile?: () => void;
 }) {
   const { width, height, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [menuHeight, setMenuHeight] = useState(0);
   const [error, setError] = useState(false);
   const [copying, setCopying] = useState(false);
-  const actions = messageMenuActions({ direct, block, blocked });
+  const actions = messageMenuActions({ direct, block, blocked, profile });
   const { width: menuWidth, columns } = messageMenuSize({ actionCount: actions.length, viewportWidth: width, fontScale });
   const viewport = { x: 0, y: insets.top, width, height: height - insets.top - insets.bottom };
   const position = messageMenuPosition({ anchor, menu: { width: menuWidth, height: menuHeight }, viewport });
@@ -48,6 +48,7 @@ export function LoungeMessageActions({ message, reply, close, direct, block, blo
     close();
     if (key === 'direct') direct?.();
     else if (key === 'block') block?.();
+    else if (key === 'profile') profile?.();
     else reply(message);
   };
   // The modal and measureInWindow must share the same visible-window origin.

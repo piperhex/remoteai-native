@@ -3,6 +3,7 @@ import type { LoungeAccount, LoungeMessage, LoungeSnapshot } from './types';
 import { LoungeNames } from './names';
 import { accountLabel } from './accountLabel';
 import { LoungeAvatarCache } from './avatarCache';
+import { parseClientVersions } from './clientVersion';
 
 const MAX_PROFILES = 200;
 
@@ -18,10 +19,11 @@ export class LoungeProfiles {
   private readonly avatars: LoungeAvatarCache;
   private cached = false;
   private watched = '';
+  private versions = new Map<string, string[]>();
 
   constructor(store?: LoungeAvatarStore) { this.avatars = new LoungeAvatarCache(store); }
 
-  clear() { this.avatars.clear(); this.names.clear(); this.disconnect(); }
+  clear() { this.avatars.clear(); this.names.clear(); this.versions.clear(); this.disconnect(); }
   disconnect() { this.watched = ''; this.available = false; this.names.available = false; }
   ready(user: LoungeAccount, available: boolean, namesAvailable = false, avatarCache = false) {
     this.names.ready(user, namesAvailable);
@@ -40,6 +42,8 @@ export class LoungeProfiles {
   }
   user(user: LoungeAccount): LoungeAccount {
     user = this.names.user(user);
+    const clientVersions = this.versions.get(user.id);
+    if (clientVersions && clientVersions !== user.clientVersions) user = { ...user, clientVersions };
     const account = accountLabel(user.account);
     if (account !== user.account) user = { ...user, account };
     const cached = this.avatars.get(user.id);
@@ -74,8 +78,20 @@ export class LoungeProfiles {
     const serialized = JSON.stringify(ids);
     if (serialized === this.watched || !ids.length && !this.watched) return;
     this.avatars.retain([...ids, state.user?.id ?? '']);
+    for (const id of this.versions.keys()) if (!ids.includes(id) && id !== state.user?.id) this.versions.delete(id);
     socket.send(JSON.stringify({ type: 'profile-watch', watch: ids,
+      clientVersions: true,
       ...(this.cached ? { avatarVersions: this.avatars.versions(ids) } : {}) }));
     this.watched = serialized;
+  }
+  receiveVersions(input: unknown) {
+    if (!this.available || !Array.isArray(input) || input.length > MAX_PROFILES) return false;
+    for (const value of input) {
+      const versions = parseClientVersions(value?.clientVersions);
+      if (typeof value?.id === 'string' && value.id.length > 0 && value.id.length <= 80 && versions) {
+        if (this.versions.has(value.id) || this.versions.size < MAX_PROFILES) this.versions.set(value.id, versions);
+      }
+    }
+    return true;
   }
 }

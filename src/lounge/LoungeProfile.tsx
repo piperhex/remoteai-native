@@ -14,6 +14,7 @@ import { LoungeAvatarSettings } from './LoungeDialogs';
 import { LoungeNameFields } from './LoungeNameFields';
 import { accountName } from '../../vendor/shared/lounge/names';
 import { useLoungeNameNavigation } from '../../vendor/shared/lounge/useLoungeNameNavigation';
+import { LoungeClientVersion } from './LoungeClientVersion';
 
 const useProfileStyles = createLoungeStyles(color => ({
   cover: { height: 100, backgroundColor: color('#deebf7', 'infoSoft') },
@@ -54,6 +55,7 @@ export function LoungeProfile({ model, controller }: { model: MobileLounge; cont
         <View style={profileStyles.details}><LoungeAvatar user={user} size="profile"
           onProfile={own ? () => leave(() => model.setAvatar(true)) : undefined} />
           <Text style={profileStyles.account}>{accountName(user)}</Text>
+          <LoungeClientVersion user={user} profile />
           {accountName(user) !== user.account && <Text style={profileStyles.email}>{user.account}</Text>}
           {contact?.direct && <View style={profileStyles.status}>
             <View style={[styles.onlineDot, (model.state.status !== 'connected' || contact.online !== true)

@@ -16,6 +16,8 @@ export interface LoungeAccount {
   id: string; account: string; avatar?: string; nickname?: string;
   /** Server-confirmed lounge role, retained with messages for offline history. */
   moderator?: boolean;
+  /** Versions reported by this account's connected clients; older clients may omit them. */
+  clientVersions?: string[];
   /** Private label for the current account; presentation/cache only, never transmitted to other users. */
   remark?: string;
 }
@@ -35,6 +37,7 @@ export interface LoungeDraft {
 }
 export interface LoungePolicy { moderator: boolean; mutedUntil: string | null }
 export interface LoungeSession {
+  clientVersion?: string;
   attachmentImages?: import('./attachmentCache').AttachmentImageStore;
   sync?: import('./syncConnection').LoungeSyncTransport;
   baseUrl: string;

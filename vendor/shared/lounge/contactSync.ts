@@ -130,6 +130,8 @@ function sameContact(previous: LoungeContact | undefined, contact: LoungeContact
     && (!contact.user.avatar || previous.user.avatar === contact.user.avatar)
     && (contact.user.nickname === undefined || previous.user.nickname === contact.user.nickname)
     && (contact.user.remark === undefined || previous.user.remark === contact.user.remark)
+    && (contact.user.clientVersions === undefined
+      || JSON.stringify(previous.user.clientVersions) === JSON.stringify(contact.user.clientVersions))
     && (contact.lastMessageAt ?? 0) <= (previous.lastMessageAt ?? 0)
     && (contact.pinned === undefined || previous.pinned === contact.pinned);
 }

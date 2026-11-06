@@ -22,6 +22,7 @@ import { synchronizedSnapshot } from './syncSnapshot';
 import { notificationSettingsUpdate, notificationUnread } from './notificationSettings';
 import { LoungeAttachmentManager } from './attachmentManager';
 import { ReconnectBackoff } from '../realtime/reconnectBackoff';
+import { parseClientVersion } from './clientVersion';
 
 const HEARTBEAT_MS = 20_000;
 const STALE_MS = 65_000;
@@ -212,7 +213,7 @@ export class LoungeController {
       socket.onopen = () => {
         if (this.socket === socket) socket.send(JSON.stringify({
           type: 'authenticate', ticket: credentials.ticket, direct: true, receipts: true,
-          groupAcks: true, avatarCache: true }));
+          groupAcks: true, avatarCache: true, clientVersion: parseClientVersion(this.session?.clientVersion) }));
       };
       socket.onmessage = event => { if (this.socket === socket) this.receive(event.data); };
       socket.onerror = () => { if (this.socket === socket) { this.disconnect(); this.schedule(); } };
@@ -228,7 +229,8 @@ export class LoungeController {
       const credentials = await authorize(this.session);
       if (socket !== this.socket || !this.running) return;
       socket.send(JSON.stringify({ type: 'authenticate', ticket: credentials.ticket,
-        direct: true, receipts: true, groupAcks: true, avatarCache: true }));
+        direct: true, receipts: true, groupAcks: true, avatarCache: true,
+        clientVersion: parseClientVersion(this.session.clientVersion) }));
       this.renewalStarted = Date.now();
     } catch { if (this.socket === socket) { this.disconnect(); this.schedule(); } }
     finally { this.renewing = false; }
@@ -265,6 +267,10 @@ export class LoungeController {
     }
     if (this.accountLookup.receive(frame)) return;
     if (this.contactSync.receive(frame)) return;
+    if (frame.type === 'client-versions') {
+      if (this.profiles.receiveVersions(frame.users)) this.update({});
+      return;
+    }
     if (frame.type === 'profiles') { this.receiveProfiles(frame.profiles); return; }
     if (frame.type === 'names') { this.receiveProfiles(frame, true); return; }
     if (frame.type === 'direct-permissions') { this.directState.receive(frame); return; }

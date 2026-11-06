@@ -15,6 +15,7 @@ import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLan
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import { SettingsPage } from '../src/settings/SettingsPage';
 import type { TotpManagerState } from '../src/totp/types';
+import { activateSession, sessionEpoch } from '../src/api/sessionStore';
 
 const totpManager: TotpManagerState = { entries: [], initialized: true, syncing: false, cloudSyncEnabled: false,
   addEntry() {}, deleteEntry() {}, updateEntry() {}, setCloudSyncEnabled: async () => {},
@@ -29,7 +30,9 @@ function LoungeFixture() {
   const [fonts] = useFonts(Ionicons.font);
   const [page, setPage] = useState('discover');
   const [signedIn, setSignedIn] = useState(true);
-  const lounge = useNativeLounge(signedIn ? session : null);
+  const [sessionReady, setSessionReady] = useState(false);
+  useEffect(() => { void activateSession(session, sessionEpoch()).then(() => setSessionReady(true)); }, []);
+  const lounge = useNativeLounge(signedIn && sessionReady ? session : null);
   useEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { setPage('discover'); return true; });
     return () => listener.remove();
