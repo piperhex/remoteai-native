@@ -8,11 +8,13 @@ import { useLoungeStyles } from './styles';
 import { useLoungeColor } from './theme';
 import { LoungeAvatar } from './LoungeMessage';
 import { LoungeClientVersion } from './LoungeClientVersion';
+import { hasOnlineClientDevices } from '../../vendor/shared/lounge/clientPresence';
 
 export function LoungeHeading({ model, back }: { model: MobileLounge; back: () => void }) {
   const styles = useLoungeStyles();
   const color = useLoungeColor();
   const { state, contact } = model;
+  const devicePresence = hasOnlineClientDevices(contact, state.status);
   const status = state.status !== 'connected' ? t(`client.lounge.${state.status}`)
     : contact ? t(contactStatus(contact)) : state.onlineCount !== undefined
       ? t('client.lounge.mobileOnlineCount', { count: state.onlineCount }) : t('client.lounge.membersShort');
@@ -28,12 +30,14 @@ export function LoungeHeading({ model, back }: { model: MobileLounge; back: () =
       <View style={[styles.headerIdentity, contact && styles.privateIdentity]}>
         {contact ? <Pressable accessibilityRole="button" style={styles.headerAccount}
           accessibilityLabel={t('client.lounge.viewProfile', { account: accountName(contact.user) })}
+          accessibilityHint={devicePresence ? t('client.lounge.userOnline') : undefined}
           onPress={() => model.setProfile(contact.user)}>{title}
-          <LoungeClientVersion user={contact.user} /></Pressable> : title}
-        <Pressable accessibilityRole="button" style={[styles.memberTrigger, contact && styles.privateStatus]}
+          <LoungeClientVersion user={contact.user} online={devicePresence} /></Pressable> : title}
+        {!devicePresence && <Pressable accessibilityRole="button"
+          style={[styles.memberTrigger, contact && styles.privateStatus]}
           onPress={() => model.setSheet('members')}>
           <View style={[styles.onlineDot, (state.status !== 'connected' || contact && contact.online !== true)
-            && styles.offlineDot]} /><Text style={styles.headerStatus}>{status}</Text></Pressable>
+            && styles.offlineDot]} /><Text style={styles.headerStatus}>{status}</Text></Pressable>}
       </View>
     </View>
     <Pressable accessibilityRole="button" accessibilityLabel={t('client.lounge.chats')} style={styles.chatsTrigger}

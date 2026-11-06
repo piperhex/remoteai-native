@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "7d9e2817fec14c026586dd7e322b57ba1732eca5",
+  "revision": "d4c2947525c00c0b4f02063f06bf6097d1019a87",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "b6d0e672fd85687f8d3087e82962487a387bbc51"
+    "revision": "58cb2f082ec14db0c58cc92aeebfddb2d837dba4"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.2/remoteai-i18n-0.1.2.tgz",
   "files": {
@@ -370,6 +370,7 @@
     "shared/lounge/useFileActions.ts": "41570a0a43e52b2cc87942fb4b752b40eafc8a0a6a608cb2abb303c4fc94f16f",
     "shared/lounge/previewAttachment.ts": "6c62980f9daff1fffa7f5ec1b157034a27d3a81c148e501b404eca7182769dd9",
     "shared/file-preview/jsonHighlightLimit.ts": "e1efccf14b19a4726ee6d2090f02d3975fec08dbfa0ab642481db80663a66d0f",
+    "shared/lounge/clientPresence.ts": "7357d40173fefb7041ceb13495db98ba1373373b87118ecb7f0668da763e8c69",
     "shared/lounge/useHistoryTimeline.ts": "dc377837733e1bb98a31c75e743c26c723a4fa7b01cbb73742a8ae0ed55cd05e",
     "shared/lounge/historyTimelineRows.ts": "d0a1423c5557baaf502e81dbb6ff8623ba813347b61e07f5c68e455d0d2dc738",
     "shared/lounge/useLoungeNavigation.ts": "7ede9b25183a32c96f67f5c1817a8ff7a3a566fac30570c5ded52b2e7e8459e9",

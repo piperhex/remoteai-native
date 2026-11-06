@@ -1,13 +1,9 @@
-import { createLoungeStyles } from './theme';
+import { createLoungeStyles, ONLINE_COLOR, OFFLINE_COLOR } from './theme';
 import { textMetrics } from '../theme/text';
 import { BUBBLE_HORIZONTAL_PADDING, MESSAGE_FONT_SIZE } from './messageLayout';
 
 export const UNREAD_BADGE_FONT_SIZE = 10;
 export const UNREAD_BADGE_HORIZONTAL_PADDING = 4;
-
-// Keep presence vivid in both themes instead of mapping it to muted accent colors.
-const ONLINE_COLOR = '#22c55e';
-const OFFLINE_COLOR = '#ef4444';
 
 export const useLoungeStyles = createLoungeStyles(color => ({
   page: { flex: 1, minHeight: 0, backgroundColor: color('#f5f7f8', 'canvas') },

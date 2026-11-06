@@ -15,6 +15,7 @@ import { LoungeNameFields } from './LoungeNameFields';
 import { accountName } from '../../vendor/shared/lounge/names';
 import { useLoungeNameNavigation } from '../../vendor/shared/lounge/useLoungeNameNavigation';
 import { LoungeClientVersion } from './LoungeClientVersion';
+import { hasOnlineClientDevices } from '../../vendor/shared/lounge/clientPresence';
 
 const useProfileStyles = createLoungeStyles(color => ({
   cover: { height: 100, backgroundColor: color('#deebf7', 'infoSoft') },
@@ -40,6 +41,7 @@ export function LoungeProfile({ model, controller }: { model: MobileLounge; cont
   if (!user) return null;
   const own = user.id === model.state.user?.id;
   const contact = model.state.contacts.find(value => value.user.id === user.id);
+  const devicePresence = hasOnlineClientDevices(contact, model.state.status);
   const canDelete = model.state.directResetAvailable && model.state.status === 'connected';
   return <Modal animationType="slide" onRequestClose={() => leave(() => model.setProfile(undefined))}>
     <SafeAreaView style={styles.page}>
@@ -55,9 +57,9 @@ export function LoungeProfile({ model, controller }: { model: MobileLounge; cont
         <View style={profileStyles.details}><LoungeAvatar user={user} size="profile"
           onProfile={own ? () => leave(() => model.setAvatar(true)) : undefined} />
           <Text style={profileStyles.account}>{accountName(user)}</Text>
-          <LoungeClientVersion user={user} profile />
+          <LoungeClientVersion user={user} profile online={devicePresence} />
           {accountName(user) !== user.account && <Text style={profileStyles.email}>{user.account}</Text>}
-          {contact?.direct && <View style={profileStyles.status}>
+          {contact?.direct && !devicePresence && <View style={profileStyles.status}>
             <View style={[styles.onlineDot, (model.state.status !== 'connected' || contact.online !== true)
               && styles.offlineDot]} /><Text style={profileStyles.statusText}>{t(contactStatus(contact))}</Text></View>}
           <LoungeNameFields key={user.id} user={user} state={model.state} controller={controller}
