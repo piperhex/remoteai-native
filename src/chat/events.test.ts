@@ -7,6 +7,19 @@ const thread: Thread = { id: 'chat', preview: 'test', cwd: 'project', updatedAt:
   turns: [{ id: 'turn', status: 'inProgress', items: [{ id: 'item', type: 'agentMessage', text: 'hello' }] }] };
 
 describe('mobile conversation synchronization', () => {
+  it('keeps reply failures in the affected turn and off the page header', () => {
+    const error = { message: 'unexpected status 502 Bad Gateway', additionalDetails: 'upstream disconnected' };
+    const event = { method: 'error', params: { threadId: 'chat', turnId: 'turn', error, willRetry: false } };
+    const state = applyChatEvent({ ...initialChatState(), selected: thread }, event);
+    expect(state.error).toBe('');
+    expect(state.selected?.turns?.[0].error).toEqual(error);
+    expect(applyChatEvent(initialChatState(), event).error).toBe('');
+    const other = { ...thread, id: 'other' };
+    const unrelated = applyChatEvent({ ...initialChatState(), selected: other }, event);
+    expect(unrelated.selected).toBe(other);
+    expect(unrelated.error).toBe('');
+  });
+
   it('streams deltas once and preserves content when completion notifications contain no items', () => {
     let state = { ...initialChatState(), selected: thread };
     state = applyChatEvent(state, { method: 'item/agentMessage/delta',

@@ -2,6 +2,8 @@ import type { ChatState, GuiEvent, Item, Thread, Turn } from './types';
 import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { acknowledgeMessage, MESSAGE_ACKNOWLEDGED } from '../../chat/acknowledgedMessages';
 import { syncChatProcessing } from './processing';
+import { recordRequestError, restoreRequestErrors } from '../../conversation/turnRequestErrors';
+import { currentRunningTurn } from '../../chat/runningTurn';
 
 function mergeItems(previous: Item[], incoming: Item[]) {
   const items = [...previous];
@@ -24,7 +26,8 @@ export function updateThread(thread: Thread, event: GuiEvent): Thread {
   if (method === 'thread/tokenUsage/updated' && params.tokenUsage) {
     return { ...thread, tokenUsage: params.tokenUsage };
   }
-  const id = params.turnId ?? params.turn?.id;
+  const id = params.turnId ?? params.turn?.id
+    ?? (method === 'error' ? currentRunningTurn(thread.turns ?? [])?.id : undefined);
   if (!id) return thread;
   const turns = [...(thread.turns ?? [])];
   const index = turns.findIndex((turn) => turn.id === id);
@@ -37,10 +40,11 @@ export function updateThread(thread: Thread, event: GuiEvent): Thread {
   }
   if (method === MESSAGE_ACKNOWLEDGED) turn = acknowledgeMessage(turn, event);
   else if (params.item) turn = { ...turn, items: mergeItems(turn.items, [params.item]) };
+  if (method === 'error') turn = recordRequestError(turn, params.error ?? { message: '' }, Boolean(params.willRetry));
   if (method === 'turn/diff/updated') turn = { ...turn, diff: params.diff };
   if (method === 'turn/plan/updated') turn = { ...turn, plan: params.plan, planExplanation: params.explanation };
   if (method.endsWith('Delta') || method.endsWith('/delta')) turn = applyDelta(turn, event);
-  turn = restoreTurnTiming(turn, turns[index]);
+  turn = restoreRequestErrors(restoreTurnTiming(turn, turns[index]), turns[index]);
   if (index < 0) turns.push(turn);
   else turns[index] = turn;
   return { ...thread, turns };
@@ -95,9 +99,8 @@ function reduceChatEvent(state: ChatState, event: GuiEvent): ChatState {
   if (selected && selected.id === threadId) selected = updateThread(selected, event);
   const approvals = method === 'turn/completed'
     ? state.approvals.filter((entry) => entry.params.turnId !== params.turn?.id) : state.approvals;
-  const error = method === 'error' && !params.willRetry ? (params.error?.message ?? '本次回复未完成。') : state.error;
   const compactFinished = method === 'turn/completed' || method === 'thread/compacted'
     || (method === 'error' && !params.willRetry);
   const compacting = state.compacting === threadId && compactFinished ? undefined : state.compacting;
-  return { ...state, threads, selected, approvals, error, compacting };
+  return { ...state, threads, selected, approvals, compacting };
 }

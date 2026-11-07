@@ -14,6 +14,8 @@ import { requestErrorDetails } from '../../vendor/shared/conversation/requestErr
 import { palette, useStyles } from './styles';
 import type { Turn } from './types';
 import { TaskReviewPanel } from './review/TaskReviewPanel';
+import { useEffect } from 'react';
+import { visibleTurnRequestErrors } from '../../vendor/shared/conversation/turnRequestErrors';
 
 interface Props { turn: Turn; panel: TurnPanel; onClose: () => void }
 const PANEL_TITLES: Record<TurnPanel, string> = { get plan() { return t("client.chat.taskPlan"); },
@@ -43,7 +45,7 @@ function ErrorDetails({ turn }: { turn: Turn }) {
   const detailStyles = useDetailStyles();
   const styles = useStyles();
   useLanguage();
-  const error = turn.error ?? turn.retryError;
+  const error = visibleTurnRequestErrors(turn).at(-1)?.error;
   const text = error ? requestErrorDetails(error) : turnErrorNotice(turn);
   return <View style={detailStyles.error}>
     <SelectableChatText style={styles.messageText} copy={{ text, label: t("client.chat.copyErrorDetails") }}>{text}</SelectableChatText>
@@ -53,6 +55,11 @@ function ErrorDetails({ turn }: { turn: Turn }) {
 export function ChatTurnDetails({ turn, panel, onClose }: Props) {
   const detailStyles = useDetailStyles();
   useLanguage();
+  const requestError = visibleTurnRequestErrors(turn).at(-1);
+  useEffect(() => {
+    if (panel === 'error' && !requestError) onClose();
+  }, [panel, requestError, onClose]);
+  if (panel === 'error' && !requestError) return null;
   return <BottomSheet fullWidthContent visible tall title={PANEL_TITLES[panel]} onClose={onClose}>
     <SheetScrollView style={detailStyles.scroll} contentContainerStyle={detailStyles.content}>
       {panel === 'result' && <TaskReviewPanel key={turn.id} turn={turn} />}

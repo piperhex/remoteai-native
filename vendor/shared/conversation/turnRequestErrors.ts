@@ -35,7 +35,8 @@ export function restoreRequestErrors(turn: Turn, previous?: Turn): Turn {
     return recordRequestError(restored, turn.error, false);
   }
   if (turn.status === "failed" && last?.willRetry !== false) {
-    return { ...restored, requestErrors: [...(restored.requestErrors ?? []), errorAtEnd(restored, undefined, false)] };
+    const error = turn.retryError ?? last?.error;
+    return { ...restored, requestErrors: [...(restored.requestErrors ?? []), errorAtEnd(restored, error, false)] };
   }
   return restored;
 }

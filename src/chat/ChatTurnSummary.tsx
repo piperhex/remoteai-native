@@ -16,6 +16,7 @@ import { ReviewButton } from './review/ReviewButton';
 import { ChatRetryButton } from './ChatRetryButton';
 import { ChatCapacityErrorNotice } from './ChatCapacityErrorNotice';
 import { isModelCapacityError } from '../../vendor/shared/conversation/requestError';
+import { visibleTurnRequestErrors } from '../../vendor/shared/conversation/turnRequestErrors';
 
 export type TurnPanel = 'plan' | 'changes' | 'error' | 'result';
 interface Props { turn: Turn; onOpen: (turnId: string, panel: TurnPanel) => void }
@@ -23,7 +24,6 @@ const PREVIEW_FILES = 3;
 
 export function turnErrorNotice(turn: Turn) {
   if (turn.status === 'failed' || turn.error) return t("client.chat.thisReplyStoppedBecauseOfAProblem");
-  if (turn.status === 'completed') return t("client.chat.theConnectionWasInterruptedAndHasRecovered");
   if (turn.status === 'interrupted') return t("client.chat.theConnectionWasInterruptedDuringThisReply");
   return t("client.chat.connectionInterruptedCodexIsRetrying");
 }
@@ -109,7 +109,8 @@ export function ChatTurnSummary({ turn, onOpen }: Props) {
   const reviewAvailable = useTaskReviewAvailable(turn.status);
   const files = useMemo(() => completedTurnFiles(turn), [turn.diff, turn.items]);
   const completed = turn.plan?.filter((step) => step.status === 'completed').length ?? 0;
-  const capacityError = isModelCapacityError(turn.error ?? turn.retryError);
+  const requestError = visibleTurnRequestErrors(turn).at(-1);
+  const capacityError = isModelCapacityError(requestError?.error);
   const generated = [...new Set(turn.items.filter((item) => item.type === 'imageGeneration'
     && item.status === 'completed' && !item.failure).map(generatedImageSource).filter((src) => !!src))];
   return <View style={summaryStyles.summary}>
@@ -125,7 +126,7 @@ export function ChatTurnSummary({ turn, onOpen }: Props) {
       onResult={reviewAvailable ? () => onOpen(turn.id, 'result') : undefined} />}
     {turn.status === 'interrupted' && <Text style={styles.subtitle}>{t("client.chat.generationStopped")}</Text>}
     {capacityError && <ChatCapacityErrorNotice turnId={turn.id} />}
-    {!capacityError && (turn.error || turn.retryError || turn.status === 'failed') && <View style={summaryStyles.error}>
+    {!capacityError && requestError && <View style={summaryStyles.error}>
       <Text style={summaryStyles.notice}>{turnErrorNotice(turn)}{' '}</Text>
       <View style={summaryStyles.errorActions}>
         <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.viewErrorDetails")}

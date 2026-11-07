@@ -45,6 +45,18 @@ const turn: Turn = { id: 'turn', status: 'inProgress', items: [
   { id: 'command', type: 'commandExecution', status: 'inProgress', command: 'npm test' },
 ] };
 
+it.each([
+  { status: 'completed', error: { message: 'HTTP 502' } },
+  { status: 'completed', retryError: { message: 'HTTP 502' } },
+  { status: 'completed', retryError: { message: MODEL_CAPACITY_MESSAGE } },
+])('omits recovered error notices and details from successful replies (%j)', error => {
+  const tree = ChatTurnSummary({ turn: { ...turn, ...error }, onOpen: vi.fn() });
+  expect(content(tree)).not.toContain('查看报错详情');
+  expect(content(tree)).not.toContain('现已恢复');
+  expect(content(tree)).not.toContain('HTTP 502');
+  expect(content(tree)).not.toContain(t('client.chat.modelAtCapacity'));
+});
+
 it('keeps running file edits compact and opens the turn changes when pressed', () => {
   const onOpen = vi.fn();
   const tree = ChatTurnSummary({ turn, onOpen });

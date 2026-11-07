@@ -1,0 +1,13 @@
+// Exercise the production chat page with an isolated package and local test data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(gradle.startParameter.projectProperties.get('requestErrorSourceRoot')
+            ?: new File(project.rootDir, '..').path)
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-request-errors'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.requesterrortest'
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/RequestErrorFixture.tsx')
+        react.debuggableVariants = []
+    }
+}
