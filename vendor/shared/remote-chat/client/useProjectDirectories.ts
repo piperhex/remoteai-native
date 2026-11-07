@@ -19,5 +19,5 @@ export function useProjectDirectories({ load, cwd = '' }: Pick<ProjectPickerProp
   const browse = (path: string) => {
     setResult(undefined); setLoading(true); setDirectory(path); setRevision((value) => value + 1);
   };
-  return { result, loading, error, browse, retry: () => browse(directory) };
+  return { directory: result?.directory ?? directory, result, loading, error, browse, retry: () => browse(directory) };
 }

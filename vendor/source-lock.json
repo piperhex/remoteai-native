@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "76e3931bc8ae948e461d7916ceb34a8925d15d83",
+  "revision": "bb67c82b6cc6b617c8409b44f28cb79d3175ca70",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "684b534edbd6b8eed82b20b6232c844fe270b1b7"
+    "revision": "9283e0f1285b34e094fe1ead957c7ae74e12ea38"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.6/remoteai-i18n-0.1.6.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.7/remoteai-i18n-0.1.7.tgz",
   "files": {
     "shared/dependencies.json": "7baf05672d7fd2f5452e0d100068f91c69034684aca1b05436e408fa48ca969f",
     "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",
@@ -75,6 +75,7 @@
     "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
     "shared/chat/ChatFileReferences.tsx": "11c0697f551233c21fcfc34b143a8c2c5ebbe17bdfc168e87ab8f04acb8269e0",
     "shared/conversation/replyQuotes.ts": "fb8d762fb715f6aa915869948c0e5b056c1e9b1fd7837f60a24ca0c718211e4d",
+    "shared/testing/mobileProjectPickerFixture.ts": "d8dadaa3546e94864306ff428c4a024303729acdba0393cc2a8b1f2e5ac82504",
     "shared/remote-chat/nativePath.ts": "de3d65fb38a1028dd6a952a1bfea223fc028df0658ffc04aec0d48b85efffc09",
     "shared/terminal/ssh.ts": "1c4c1bfcf392f492889b8ef9e5a75c71a54d06255040e0c1543d52f7cebfca10",
     "shared/remote-chat/tcp/peer.ts": "263d092b22b94ad9430105ec3c9b1a75de40dc7a6c830ad966c4b74e93833676",
@@ -169,9 +170,10 @@
     "shared/remote-chat/client/useProcessingStatus.ts": "8a23a702dc093685d55f76bc953089f6fcb7bd4e368a833f7a63a06dd1f99d9b",
     "shared/remote-chat/client/useProjectActions.ts": "f54a354776f797a04f7a7fd3caafe7fe3789856de52a7ddc414b8fa766278faf",
     "shared/chat/groups/context.tsx": "1dbfd8af033a7579b90e37f8bc83bcee2c88402dae48d430a189ce34f8e8d9d2",
-    "shared/remote-chat/projectDirectories.ts": "dfac79de42b4404f4e1bf391ab4a5446ba4b8c5f3577b35878c3d3671e83ea49",
-    "shared/remote-chat/client/useProjectDirectories.ts": "822aa9149d337b42d8f58cfc34143f1cb50ef4c18cfd9106bef832075553abfd",
-    "shared/remote-chat/client/useProjectSwitch.ts": "42fda402584b986bd69da4d67516aa9f2dc027f2be820568a517d176459f69f3",
+    "shared/remote-chat/projectDirectories.ts": "b82f5da4c71bbea6cbc4541e0953d77d82dcf5d48fa4dff7f617200303b476b4",
+    "shared/remote-chat/client/useMobileProjectPicker.ts": "0d2ae014950d5529a8dade41a43e07b59de9982ce436cbce29e165bfb7e418ba",
+    "shared/project-explorer/model.ts": "2e0ca731c1f69555a6cb138bf0f128b87779f4077af88e6bee46fc9ac1ed8522",
+    "shared/remote-chat/client/useProjectSwitch.ts": "e5e05e6fc2d5dc21a3f58d3ed70c7de55fd8fb38ce735854c50220463d9629a7",
     "shared/remote-chat/client/useQueueSelection.ts": "de1886e18ffd2830338911582591ba07c4e35ab0a7603820711f5525125981be",
     "shared/chat/TurnRetryContext.tsx": "8a335368d650ca29f21fd6369f70e3a4bf22c15034f34a87a61c60bd230c92bd",
     "shared/remote-chat/settingsMenu.ts": "34b94d1277a21a2f97aa97441cdbd46e34a26fc35960d7eedc76b4a432602b9b",
@@ -506,6 +508,7 @@
     "shared/chat/imageEditorDesktop.ts": "d632154281492659a99fee1d3b4ea5aef7ec10512a1ed60a10419fe8e3a48a7b",
     "shared/chat/imageEditorDesktopStyles.ts": "569897cc4ce0721ae903e5950c9d2af03271eb34d61e656454b8da311512fb21",
     "shared/remote-chat/client/useProcessingSeconds.ts": "6be5e52d4fdd802bfa00a04ca0ba1ec847366bf0f9099332781c37a3129d94bf",
+    "shared/remote-chat/client/useProjectDirectories.ts": "97a7c4d5bb825875b092244fb99ea062d8b202329f0c59c9ecfcb2fd1f6a67e3",
     "shared/remote-chat/terminalProject.ts": "ec714291a79387460dcc9e43982e676ca4082d845af192cae7cfe0c22510af69",
     "shared/chat/threadGroupPreview.ts": "c2c804deb7128ff8465023606245998c23829bfa0b28c20bb70706e5f9c1733c",
     "shared/chat/groups/tree.ts": "ccccfcb92e33fa6a163a1f1d2de732908e67432a0929d4c3be1b4b19df3fc094",

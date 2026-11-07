@@ -4,6 +4,7 @@ import { ActivityIndicator, Keyboard, Pressable, Text, View } from 'react-native
 import { t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
+import { textMetrics } from '../theme/text';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetFlatList, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
 import { useProjectSwitch, type ProjectSwitchProps } from '../../vendor/shared/remote-chat/client/useProjectSwitch';
@@ -20,7 +21,8 @@ export function ChatProjectSwitch(props: ProjectSwitchProps) {
       style={[styles.trigger, picker.disabled && styles.disabled]}
       onPress={() => { Keyboard.dismiss(); picker.open(); }}>
       <Feather name="folder" size={16} color={color('#6f8177', 'muted')} />
-      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.label}>{picker.label || t("client.chat.noProjectSelected")}</Text>
+      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.label}>
+        {picker.label || t("client.chat.noProjectSelected")}</Text>
       <Feather name="chevron-down" size={14} color={color('#6f8177', 'muted')} />
     </Pressable>
     {picker.screen === 'projects' && !picker.disabled && <BottomSheet visible fullWidthContent
@@ -28,12 +30,22 @@ export function ChatProjectSwitch(props: ProjectSwitchProps) {
       actions={[{ label: t("client.conversation.newProject"), tone: 'primary', onPress: picker.create }]}>
       <SheetInset style={styles.readable}>
         {picker.loading && <ActivityIndicator accessibilityLabel={t("client.projectBrowser.loading")} />}
-        {!!picker.error && <View><Text accessibilityRole="alert" style={styles.message}>{displayError(picker.error)}</Text>
-          <Pressable accessibilityRole="button" onPress={picker.retry}><Text style={styles.message}>{t("client.terminal.retry")}</Text>
+        {!!picker.error && <View>
+          <Text accessibilityRole="alert" style={styles.message}>{displayError(picker.error)}</Text>
+          <Pressable accessibilityRole="button" onPress={picker.retry}>
+            <Text style={styles.message}>{t("client.terminal.retry")}</Text>
           </Pressable></View>}
       </SheetInset>
       <SheetFlatList data={picker.projects} keyExtractor={project => project.cwd} style={styles.list}
         contentContainerStyle={styles.readable} keyboardShouldPersistTaps="handled" nestedScrollEnabled
+        ListHeaderComponent={<Pressable accessibilityRole="button"
+          accessibilityLabel={t('client.projectPicker.workWithoutProject')}
+          accessibilityState={{ selected: !picker.cwd }} onPress={() => picker.choose(null)}
+          style={[styles.option, !picker.cwd && styles.selected]}>
+          <Feather name="folder-minus" size={18} color={color('#6f8177', 'muted')} />
+          <Text style={[styles.name, styles.details]}>{t('client.projectPicker.workWithoutProject')}</Text>
+          {!picker.cwd && <Feather name="check" size={18} color={color('#14806f', 'accent')} />}
+        </Pressable>}
         ListEmptyComponent={!picker.loading && !picker.error
           ? <Text style={styles.message}>{t("client.conversation.noProjectsYet")}</Text> : null}
         renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={item.label}
@@ -46,7 +58,9 @@ export function ChatProjectSwitch(props: ProjectSwitchProps) {
         </Pressable>} />
     </BottomSheet>}
     {picker.screen === 'create' && !picker.disabled && <ChatProjectPicker cwd={picker.cwd}
-      title={t("client.conversation.newProject")} load={props.controller.loadProjectDirectories} close={picker.close} choose={picker.choose} />}
+      title={t("client.conversation.newProject")} load={props.controller.loadProjectDirectories}
+      projects={picker.projects} mutate={props.controller.guiTools.projectBrowser.mutate}
+      close={picker.close} choose={picker.choose} />}
   </View>;
 }
 
@@ -54,14 +68,14 @@ const useStyles = createThemedStyles(color => ({
   bar: { maxWidth: 400, marginHorizontal: 24 },
   trigger: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7,
     maxWidth: '100%', minHeight: 36, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 10 },
-  label: { flexShrink: 1, color: color('#6f8177', 'muted'), fontSize: 13, lineHeight: 20 },
+  label: { flexShrink: 1, color: color('#6f8177', 'muted'), ...textMetrics(13, 20) },
   disabled: { opacity: 0.5 },
   readable: { width: '100%', maxWidth: SHEET_READABLE_WIDTH, alignSelf: 'center' },
   list: { maxHeight: 340, flexGrow: 0 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, padding: 10, borderRadius: 10 },
   selected: { backgroundColor: color('#e6f8f1', 'canvas') },
   details: { flex: 1, minWidth: 0 },
-  name: { color: color('#13231c', 'ink'), fontSize: 14, lineHeight: 22 },
-  path: { color: color('#6f8177', 'muted'), fontSize: 12, lineHeight: 18, marginTop: 4 },
-  message: { color: color('#6f8177', 'muted'), fontSize: 13, lineHeight: 20, padding: 12 },
+  name: { color: color('#13231c', 'ink'), ...textMetrics(14, 22) },
+  path: { color: color('#6f8177', 'muted'), ...textMetrics(12, 18), marginTop: 4 },
+  message: { color: color('#6f8177', 'muted'), ...textMetrics(13, 20), padding: 12 },
 }));

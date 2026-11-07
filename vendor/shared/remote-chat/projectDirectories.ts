@@ -11,7 +11,7 @@ export interface ProjectDirectoriesResponse {
   entries: ProjectDirectory[];
   truncated: boolean;
   /** Known folders on the host computer; older hosts may omit them. */
-  shortcuts?: Partial<Record<'home' | 'desktop' | 'downloads', string | null>>;
+  shortcuts?: Partial<Record<'home' | 'desktop' | 'downloads' | 'documents', string | null>>;
 }
 export interface ProjectPickerProps {
   title?: string;

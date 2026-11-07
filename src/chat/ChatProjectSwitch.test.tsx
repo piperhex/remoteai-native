@@ -29,7 +29,8 @@ vi.mock('react', async original => ({ ...await original<typeof React>(),
   },
 }));
 vi.mock('react-native', () => ({ Text: 'Text', View: 'View', Pressable: 'Pressable',
-  ActivityIndicator: 'Spinner', Keyboard: { dismiss: vi.fn() }, StyleSheet: { create: <T,>(styles: T) => styles } }));
+  ActivityIndicator: 'Spinner', Keyboard: { dismiss: vi.fn() }, Platform: { OS: 'android' },
+  StyleSheet: { create: <T,>(styles: T) => styles } }));
 vi.mock('@expo/vector-icons/Feather', () => ({ default: 'Icon' }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'Sheet' }));
 vi.mock('../components/SheetScrollView', () => ({
@@ -41,6 +42,7 @@ interface Props {
   children?: ReactNode; accessibilityLabel?: string; disabled?: boolean; onPress?: () => void;
   data?: ChatProject[]; renderItem?: (input: { item: ChatProject }) => ReactElement<Props>;
   actions?: Array<{ label: string; onPress: () => void }>;
+  ListHeaderComponent?: ReactNode;
 }
 function descendants(node: ReactNode): ReactElement<Props>[] {
   return Children.toArray(node).flatMap(child => isValidElement<Props>(child)
@@ -112,4 +114,44 @@ it('prevents switching while a conversation is running', () => {
   trigger().props.onPress!();
   expect(render().some(node => node.type === SheetFlatList)).toBe(false);
   expect(request).not.toHaveBeenCalled();
+});
+
+it('clears the draft project without starting a conversation or changing saved projects', async () => {
+  Object.assign(controller.snapshot(), { draftProject: saved });
+  const list = (await open()).find(node => node.type === SheetFlatList)!;
+  const option = descendants(list.props.ListHeaderComponent)
+    .find(node => node.props.accessibilityLabel === '未归属项目')!;
+  request.mockClear();
+  option.props.onPress!();
+  await Promise.resolve();
+  expect(controller.snapshot().draftProject).toBeNull();
+  expect(request).not.toHaveBeenCalled();
+  expect(render().some(node => node.type === SheetFlatList)).toBe(false);
+});
+
+it('moves an existing conversation out of its project while preserving the selected conversation', async () => {
+  Object.assign(controller.snapshot(), { selected: { id: 'old', ...saved, preview: '', updatedAt: 1 } });
+  const list = (await open()).find(node => node.type === SheetFlatList)!;
+  const option = descendants(list.props.ListHeaderComponent)
+    .find(node => node.props.accessibilityLabel === '未归属项目')!;
+  option.props.onPress!();
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  expect(request).toHaveBeenCalledWith('request', {
+    operation: 'guiProjectSelect', threadId: 'old', cwd: '', removeFromGroup: true,
+  });
+  expect(controller.snapshot().selected).toMatchObject({ id: 'old', cwd: '' });
+  expect(controller.snapshot().threads.find(thread => thread.id === 'old')?.cwd).toBe('');
+});
+
+it('keeps the conversation in its project and shows the error when leaving the project fails', async () => {
+  Object.assign(controller.snapshot(), { selected: { id: 'old', ...saved, preview: '', updatedAt: 1 } });
+  const list = (await open()).find(node => node.type === SheetFlatList)!;
+  request.mockRejectedValueOnce(new Error('Cannot move this conversation'));
+  descendants(list.props.ListHeaderComponent).find(node => node.props.accessibilityLabel === '未归属项目')!
+    .props.onPress!();
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  render();
+  await Promise.resolve(); await Promise.resolve();
+  expect(controller.snapshot().selected).toMatchObject({ id: 'old', cwd: saved.cwd });
+  expect(render().some(node => node.props.children === 'Cannot move this conversation')).toBe(true);
 });

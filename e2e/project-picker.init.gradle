@@ -1,0 +1,9 @@
+// Keep fixture installs separate from the user's app and signed-in account.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-project-picker'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.projectpickertest'
+        project.extensions.getByName('react').entryFile = new File(project.rootDir, '../e2e/ProjectPickerFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

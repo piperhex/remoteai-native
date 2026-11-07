@@ -16,6 +16,7 @@ export function useProjectSwitch({ state, controller, active }: ProjectSwitchPro
   const [saved, setSaved] = useState<ChatProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectionError, setSelectionError] = useState('');
   const [revision, setRevision] = useState(0);
   const cwd = state.selected?.cwd ?? state.draftProject?.cwd ?? '';
   const disabled = !active || !canSelectProject(state);
@@ -39,14 +40,22 @@ export function useProjectSwitch({ state, controller, active }: ProjectSwitchPro
     }
     return [...unique.values()];
   }, [saved, state.threads, state.draftProject, cwd]);
-  const choose = (project: ChatProject) => {
+  const choose = (project: ChatProject | null) => {
     if (disabled) return;
+    setSelectionError('');
     setScreen(null);
+    if (!project && state.selected) {
+      void controller.moveThreadToProject(state.selected.id, '').catch(cause => {
+        setSelectionError(cause instanceof Error ? cause.message : String(cause));
+        setScreen('projects');
+      });
+      return;
+    }
     void controller.selectProject(project);
   };
-  return { cwd, disabled, screen, projects, loading, error, choose,
+  return { cwd, disabled, screen, projects, loading, error: selectionError || error, choose,
     label: projects.find(project => project.cwd === cwd)?.label ?? '',
-    open: () => { if (!disabled) setScreen('projects'); },
+    open: () => { if (!disabled) { setSelectionError(''); setScreen('projects'); } },
     create: () => { if (!disabled) setScreen('create'); },
-    close: () => setScreen(null), retry: () => setRevision(value => value + 1) };
+    close: () => setScreen(null), retry: () => { setSelectionError(''); setRevision(value => value + 1); } };
 }
