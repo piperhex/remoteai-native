@@ -49,6 +49,20 @@ export function useMobileLounge(controller: LoungeController) {
   const change = (draft: LoungeDraft) => setDrafts(current => ({ ...current, [conversation]: draft }));
   const draft = drafts[conversation] ?? EMPTY_DRAFT;
   const contact = state.contacts.find(value => value.user.id === conversation);
+  const previousConversation = useRef(conversation);
+  const previousDeletions = useRef<Record<string, number>>({});
+  useEffect(() => {
+    const entries = state.deletedConversations ?? {};
+    const peers = Object.keys(entries).filter(peer => entries[peer] > (previousDeletions.current[peer] ?? 0));
+    previousDeletions.current = entries;
+    const active = previousConversation.current;
+    previousConversation.current = conversation;
+    if (!peers.length) return;
+    setDrafts(current => Object.fromEntries(Object.entries(current).filter(([peer]) => !peers.includes(peer))));
+    for (const peer of peers) { offsets.current.delete(peer); scrollPositions.current.delete(peer); }
+    if (!peers.includes(active)) return;
+    navigation.clear(); setProfile(undefined); setHistory(false); setSheet(undefined); setChats(true);
+  }, [conversation, state.deletedConversations]);
   const select = (user?: LoungeAccount) => {
     navigation.clear();
     controller.setViewing(false);

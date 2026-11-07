@@ -52,6 +52,7 @@ export interface LoungeSession {
   history?: LoungeHistoryStore;
 }
 export interface LoungeSnapshot {
+  deletedConversations?: Record<string, number>;
   groupReadsAvailable?: boolean;
   attachmentsAvailable?: boolean;
   status: 'signed-out' | 'connecting' | 'connected';

@@ -1,9 +1,10 @@
 import type { LoungeMessage, LoungeSnapshot } from './types';
 
-export function removedConversation({ state, peer, generation, recent }: {
-  state: LoungeSnapshot; peer: string; generation: number; recent: LoungeMessage[];
+export function removedConversation({ state, peer, generation, deletedAt, recent }: {
+  state: LoungeSnapshot; peer: string; generation?: number; deletedAt?: number; recent: LoungeMessage[];
 }) {
-  const keep = (message: LoungeMessage) => message.conversation !== peer || (message.generation ?? 0) >= generation;
+  const keep = (message: LoungeMessage) => message.conversation !== peer
+    || (deletedAt !== undefined ? Date.parse(message.sentAt) > deletedAt : (message.generation ?? 0) >= generation!);
   const retained = recent.filter(keep);
   const newer = retained.filter(message => message.conversation === peer);
   const unreadByConversation = { ...state.unreadByConversation };
@@ -14,7 +15,8 @@ export function removedConversation({ state, peer, generation, recent }: {
     contacts: state.contacts.filter(contact => contact.user.id !== peer || newer.length > 0), unreadByConversation,
     unread: Object.values(unreadByConversation).reduce((sum, count) => sum + count, 0),
     conversation: state.conversation === peer ? '' : state.conversation,
-    messages: state.conversation === peer ? [] : state.messages, historyRevision: state.historyRevision + 1 } };
+    messages: state.conversation === peer ? retained.filter(message => !message.conversation) : state.messages,
+    historyRevision: state.historyRevision + 1 } };
 }
 
 export function isCurrentDirect(message: LoungeMessage, generation: (peer: string) => number) {

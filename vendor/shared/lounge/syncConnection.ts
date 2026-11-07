@@ -43,7 +43,7 @@ export class HistorySyncConnection {
 
   start() { if (!this.active) { this.active = true; void this.connect(); } }
   retryNow() { if (this.active && this.retry) { this.reset(); void this.connect(); } }
-  changed(key: string) { for (const peer of this.peers.values()) peer.exchange.changedHere(key); }
+  changed(key?: string) { for (const peer of this.peers.values()) peer.exchange.changedHere(key); }
 
   private async connect() {
     if (!this.active) return;

@@ -2,6 +2,7 @@ import { ChatRpc } from '../remote-chat/rpc';
 import type { RpcMessage, RpcRequest } from '../remote-chat/protocol';
 import type { HistoryCursor } from './archive';
 import { historyCursor, parseManifest, validHistoryKey, type SyncArchive, type HistorySyncAccess } from './syncArchive';
+import { parseDeletionPage, type LoungeDeletionPage } from './deletions';
 
 const PROTOCOL = 'lounge-history-v1';
 const MAX_CHANGED_KEYS = 100;
@@ -32,15 +33,18 @@ export class HistoryExchange {
 
   start() { void this.pull(); }
 
-  changedHere(key: string) {
-    if (!this.closed) void this.options.send({ kind: 'event', event: { protocol: PROTOCOL, key } })
+  changedHere(key?: string) {
+    if (!this.closed) void this.options.send({ kind: 'event',
+      event: { protocol: PROTOCOL, ...(key ? { key } : { deletions: true }) } })
       .catch(() => { if (!this.closed) this.options.failed(); });
   }
 
   private event(value: unknown) {
     if (!value || typeof value !== 'object') return;
-    const event = value as { protocol?: unknown; key?: unknown };
-    if (event.protocol !== PROTOCOL || !validHistoryKey(event.key)) return;
+    const event = value as { protocol?: unknown; key?: unknown; deletions?: unknown };
+    if (event.protocol !== PROTOCOL) return;
+    if (event.deletions === true) { this.scanning = true; void this.pull(); return; }
+    if (!validHistoryKey(event.key)) return;
     if (this.changed.size < MAX_CHANGED_KEYS) this.changed.add(event.key);
     else this.scanning = true;
     void this.pull();
@@ -73,9 +77,12 @@ export class HistoryExchange {
 
   private answer(value: unknown) {
     if (!value || typeof value !== 'object') throw new Error('invalid-history-request');
-    const body = value as { protocol?: unknown; operation?: unknown; before?: unknown; key?: unknown };
+    const body = value as { protocol?: unknown; operation?: unknown; before?: unknown; key?: unknown; after?: unknown };
     if (body.protocol !== PROTOCOL) throw new Error('invalid-history-protocol');
     if (body.operation === 'manifest') return this.options.archive.manifest(historyCursor(body.before));
+    if (body.operation === 'deletions' && typeof body.after === 'string' && body.after.length <= 80) {
+      return this.options.archive.deletions(body.after);
+    }
     if (body.operation === 'record' && validHistoryKey(body.key)) return this.options.archive.read(body.key);
     throw new Error('invalid-history-operation');
   }
@@ -90,12 +97,23 @@ export class HistoryExchange {
     do {
       const page = parseManifest(await this.rpc.request('request', { protocol: PROTOCOL, operation: 'manifest', before }));
       if (this.closed) return;
+      if (!before && page.deletions) await this.syncDeletions(page.deletions);
       if (page.next && before && (page.next.time > before.time
         || page.next.time === before.time && page.next.key >= before.key)) throw new Error('invalid-history-pagination');
       const keys = await this.options.archive.missing(page.entries, this.options.access);
       for (const key of keys) { if (this.closed) return; await this.record(key); }
       before = page.next;
     } while (before && !this.closed);
+  }
+  private async syncDeletions(first: LoungeDeletionPage) {
+    let page = first;
+    while (!this.closed) {
+      await this.options.archive.applyDeletions(page);
+      if (!page.next) return;
+      const after = page.next;
+      page = parseDeletionPage(await this.rpc.request('request', { protocol: PROTOCOL, operation: 'deletions', after }));
+      if (Object.keys(page.entries).some(peer => peer <= after)) throw new Error('invalid-deletion-pagination');
+    }
   }
 
   private async pull() {

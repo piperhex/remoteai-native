@@ -132,8 +132,17 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
     setImages((current) => current.map((image) => image === original ? { ...image, url } : image));
     setError('');
   };
+  const addAnnotatedImage = (url: string) => {
+    if (disabled || sending || busy.current || submitting.current) {
+      throw new ChatImageError(translateMessage(getInterfaceLanguage(),
+        'client.chat.imageNotSavedTryFewerAnnotationsOrImages'));
+    }
+    validateChatImages([...images.map(image => image.url), url]);
+    setImages(current => [...current, draftImage(url)]);
+    setError('');
+  };
   return { text, setText, appendDictation, insertSkill, removeText, images, error, picking,
-    addImages, removeImage, replaceImage, submit,
+    addImages, removeImage, replaceImage, addAnnotatedImage, submit,
     restore, references, removeReference: (item: AttachmentReference) =>
       setReferences((value) => value.filter((reference) => reference !== item)),
     hasContent: Boolean(text.trim() || images.length || references.length) };

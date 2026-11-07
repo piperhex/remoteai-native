@@ -5,6 +5,7 @@ import { turnElapsedMs } from '../conversation/turnTiming';
 import { groupTurnItems } from './turnGroups';
 import { hasVisibleProcessContent } from './processContent';
 import { processOutputs } from '../conversation/processDetails';
+import { visibleTurnRequestErrors } from '../conversation/turnRequestErrors';
 export { groupTurnItems } from './turnGroups';
 
 export type MessageEntry = { id: string; kind: 'message' | 'process'; turn: Turn; item: Item };
@@ -25,7 +26,7 @@ export function completedTurnFiles(turn: Turn) {
 }
 
 function hasSummary(turn: Turn) {
-  return Boolean(turn.plan?.length || turn.diff?.trim() || turn.error || turn.retryError
+  return Boolean(turn.plan?.length || turn.diff?.trim() || visibleTurnRequestErrors(turn).length
     || turn.status === 'interrupted' || turn.status === 'failed' || completedTurnFiles(turn).length
     || processOutputs(turn.items).some((item) => item.type === 'imageGeneration'
       && item.status === 'completed' && !item.failure));

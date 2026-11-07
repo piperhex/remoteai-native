@@ -10,7 +10,7 @@ export interface ImagePreviewOptions {
   save?: (url: string) => Promise<void>;
 }
 
-export function useChatImage(source: string | undefined, options: ImagePreviewOptions | null) {
+export function useChatImage(source: string | undefined, options: ImagePreviewOptions | null, thumbnail?: string) {
   const network = source && /^https?:\/\//i.test(source) ? source : undefined;
   const local = source ? (localImageSource(source)
     ?? (options?.load && network ? source : undefined)) : undefined;
@@ -21,7 +21,7 @@ export function useChatImage(source: string | undefined, options: ImagePreviewOp
   const { threadId, ready, offline, load } = options ?? {};
   const key = JSON.stringify([threadId, source, attempt]);
   useEffect(() => {
-    if (!local || !threadId || (!ready && !offline) || !load) return;
+    if (!local || !threadId || (!ready && !offline) || !load || thumbnail) return;
     let cancelled = false;
     setResult(undefined);
     void load(threadId, local).then((url) => {
@@ -29,14 +29,14 @@ export function useChatImage(source: string | undefined, options: ImagePreviewOp
       if (!cancelled) setResult(isInlineImage(url) || cached ? { key, url } : { key, failed: true });
     }, () => { if (!cancelled) setResult({ key, failed: true }); });
     return () => { cancelled = true; };
-  }, [local, threadId, ready, offline, load, key]);
+  }, [local, threadId, ready, offline, load, key, thumbnail]);
   const current = result?.key === key ? result : undefined;
   const supported = Boolean(remote || (local && threadId && load));
   return {
     // Inline attachments already belong to the device; only remote previews have a managed transfer to export.
     save: remote ? undefined : options?.save,
-    key, url: remote || current?.url, failed: current?.failed || failedKey === key || !supported,
-    loading: Boolean(local && supported && !current),
+    key, url: remote || thumbnail || current?.url, failed: current?.failed || failedKey === key || !supported,
+    loading: Boolean(local && supported && !thumbnail && !current),
     original: async (progress?: PreviewLoadOptions) => {
       if (remote) return remote;
       if (!threadId || !local || !load) throw new Error('图片暂时无法加载，请重试。');

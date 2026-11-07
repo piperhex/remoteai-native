@@ -3,13 +3,14 @@ import { messageConversation } from './contacts';
 import { mergeDelivery, receiptRank } from './delivery';
 import { parseMessage, type LoungeMessage } from './types';
 import { INVALID_GROUP_RECEIPT } from './groupReceipts';
+import { parseDeletionPage, type LoungeDeletionPage } from './deletions';
 
 export const SYNC_PAGE_SIZE = 25;
 export interface HistoryEntry {
   key: string; conversation: string; generation: number; status: string; readers?: string[];
   groupReceiptError?: typeof INVALID_GROUP_RECEIPT;
 }
-export interface HistoryManifest { entries: HistoryEntry[]; next?: HistoryCursor }
+export interface HistoryManifest { entries: HistoryEntry[]; next?: HistoryCursor; deletions?: LoungeDeletionPage }
 export interface HistorySyncAccess {
   generations: (peers: string[]) => Promise<Record<string, number>>;
 }
@@ -55,7 +56,8 @@ export function parseManifest(value: unknown): HistoryManifest {
       throw new Error('invalid-history-entry');
     }
   }
-  return { entries: manifest.entries, next: historyCursor(manifest.next) };
+  return { entries: manifest.entries, next: historyCursor(manifest.next),
+    ...(manifest.deletions ? { deletions: parseDeletionPage(manifest.deletions) } : {}) };
 }
 
 /** Validates ownership again inside the encrypted channel; remote fields never choose a local account/archive. */
@@ -82,19 +84,25 @@ export class SyncArchive {
     owner: string; store: LoungeHistoryStore; flush: () => Promise<void>;
     restored: (messages: LoungeMessage[]) => void; current: () => boolean;
     accept: (message: LoungeMessage) => boolean;
+    deletions?: { page: (after?: string) => LoungeDeletionPage;
+      apply: (entries: Record<string, number>) => Promise<void> };
   }) {}
 
   async manifest(before?: HistoryCursor): Promise<HistoryManifest> {
     await this.options.flush();
     const page = await this.options.store.page({ query: '', before, limit: SYNC_PAGE_SIZE });
     return { entries: page.messages.map(message => syncMessage(message, this.options.owner))
-      .filter((message): message is LoungeMessage => !!message).map(syncEntry), next: page.next };
+      .filter((message): message is LoungeMessage => !!message && this.options.accept(message)).map(syncEntry),
+      next: page.next, deletions: this.options.deletions?.page() };
   }
+  deletions(after?: string) { return this.options.deletions?.page(after) ?? { entries: {} }; }
+  async applyDeletions(page: LoungeDeletionPage) { await this.options.deletions?.apply(page.entries); }
 
   async read(key: string) {
     await this.options.flush();
     const message = await this.options.store.get?.(key);
-    return syncMessage(message, this.options.owner) ?? null;
+    const parsed = syncMessage(message, this.options.owner);
+    return parsed && this.options.accept(parsed) ? parsed : null;
   }
 
   async missing(entries: HistoryEntry[], access: HistorySyncAccess) {
@@ -129,7 +137,10 @@ export class SyncArchive {
       && JSON.stringify(previous.delivery?.readers) === JSON.stringify(message.delivery?.readers)) return;
     await this.options.store.save(message);
     if (!this.options.accept(incoming) && incoming.conversation) {
-      await this.options.store.deleteConversation?.(incoming.conversation, (incoming.generation ?? 0) + 1);
+      // Timestamp-aware stores reject stale saves atomically; legacy generation stores need explicit cleanup.
+      if (!this.options.store.deleteBefore) {
+        await this.options.store.deleteConversation?.(incoming.conversation, (incoming.generation ?? 0) + 1);
+      }
       return;
     }
     const saved = await this.options.store.get?.(key);

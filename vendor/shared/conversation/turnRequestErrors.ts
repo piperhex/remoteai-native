@@ -53,3 +53,16 @@ export function turnRequestErrors(turn: Turn): TurnRequestError[] {
   return error || turn.status === "failed"
     ? [errorAtEnd(turn, error, !turn.error && turn.status !== "failed")] : [];
 }
+
+/** Recovered retries remain diagnostic history, but no longer interrupt the conversation. */
+export function isRequestErrorVisible(turn: Turn, record: TurnRequestError): boolean {
+  if (turn.status === "completed") return false;
+  if (!record.willRetry) return true;
+  if (turn.status !== "inProgress") return false;
+  return !turn.items.slice(requestErrorPosition(turn, record))
+    .some(item => item.type !== "userMessage" && item.type !== "modelChange");
+}
+
+export function visibleTurnRequestErrors(turn: Turn): TurnRequestError[] {
+  return turnRequestErrors(restoreRequestErrors(turn)).filter(record => isRequestErrorVisible(turn, record));
+}

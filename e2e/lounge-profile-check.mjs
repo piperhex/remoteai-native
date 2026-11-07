@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
 
 export async function verifyNativeProfile({ adb, tap, find, nodes, screenshot, hideKeyboard,
-  longPress, scale, sent, reply, restart, failDelete }) {
+  longPress, scale, sent, reply, restart }) {
   const profile = '查看 bob 的资料';
   const direct = '与 bob 私聊';
   await tap('群聊'); await tap('消息'); await adb('shell', 'input', 'text', 'group-draft'); await hideKeyboard();
@@ -22,8 +22,7 @@ export async function verifyNativeProfile({ adb, tap, find, nodes, screenshot, h
   await adb('shell', 'input', 'swipe', String(x), String(y), String(x + 240), String(y), '300');
   await find('删除'); await screenshot(`profile-swipe-${scale}`);
   await tap('删除'); await find('删除这段私聊？');
-  failDelete(true); await tap('删除'); await find('删除失败，请稍后重试。');
-  await screenshot(`profile-delete-error-${scale}`); await tap('取消'); failDelete(false);
+  await tap('取消');
   await tap(direct); await tap(profile); await tap('删除'); await find('删除这段私聊？');
   await screenshot(`profile-delete-confirm-${scale}`); await tap('删除'); await find('搜索聊天');
   assert.ok(!(await nodes()).some(node => node['content-desc'] === direct), 'Profile deletion removes the row');
@@ -34,11 +33,10 @@ export async function verifyNativeProfile({ adb, tap, find, nodes, screenshot, h
   await tap('消息'); await adb('shell', 'input', 'text', 'fresh-opening'); await tap('发送');
   await delay(500); const count = sent.length;
   assert.equal(sent.at(-1).text, 'fresh-opening');
-  await tap('消息'); await adb('shell', 'input', 'text', 'waiting-for-reply'); await tap('发送');
-  await find('对方回复后才能继续发送。'); assert.equal(sent.length, count);
-  await hideKeyboard(); await screenshot(`profile-fresh-limit-${scale}`);
-  reply('新私聊回复'); await find('新私聊回复'); await tap('发送'); await delay(500);
-  assert.equal(sent.length, count + 1); await hideKeyboard();
+  await tap('消息'); await adb('shell', 'input', 'text', 'continue-new-chat'); await tap('发送');
+  await delay(500); assert.equal(sent.length, count + 1);
+  await hideKeyboard(); await screenshot(`profile-fresh-chat-${scale}`);
+  reply('新私聊回复'); await find('新私聊回复');
   await tap('返回聊天列表');
   const freshRow = await find(direct);
   const [, freshTop, , freshBottom] = [...freshRow.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));

@@ -13,6 +13,7 @@ interface ContactSyncOptions {
   profile: (user: LoungeAccount) => LoungeAccount;
   send: (frame: Record<string, unknown>) => boolean;
   account?: string;
+  deleted?: (peer: string) => boolean;
 }
 
 /** Owns contact merging and paged cloud restoration; chat content remains in the device archive. */
@@ -115,6 +116,7 @@ export class LoungeContactSync {
     const changed = new Set<string>();
     for (const user of users) {
       if (user.id === state.user?.id || user.account === this.options.account) continue;
+      if (this.options.deleted?.(user.id)) continue;
       const contact = { user: this.options.profile(user), direct: true };
       if (sameContact(contacts.find(value => value.user.id === user.id), contact)) continue;
       contacts = mergeContact(contacts, contact); changed.add(user.id);

@@ -114,6 +114,26 @@ it('persists receipt state and selects unfinished local jobs without resending c
   expect((await history.page({ query: '', pendingOnly: true })).messages).toHaveLength(0);
 });
 
+it('keeps deletion times after restart, merges the latest cutoff and blocks stale device imports', async () => {
+  const history = nativeLoungeHistory('https://cloud.test', 'timestamp-delete');
+  const other = nativeLoungeHistory('https://cloud.test', 'timestamp-other');
+  const old = { ...message('deleted'), conversation: 'bob', recipient: { id: 'alice', account: 'Alice' } };
+  const cutoff = Date.parse(old.sentAt);
+  const fresh = { ...old, id: 'fresh-after-delete', sentAt: new Date(cutoff + 1).toISOString() };
+  await history.save(old); await other.save(old); await history.save(message('group-kept'));
+  await history.saveContact!({ user: old.sender, direct: true });
+  await history.deleteBefore!('bob', cutoff);
+  const data = state.db!.export(); state.db!.close(); state.db = new SQL.Database(data);
+  expect(await history.deletions!()).toEqual({ bob: cutoff });
+  expect(await history.contacts!()).toEqual([]);
+  await history.save(old); await history.save(fresh);
+  await history.deleteBefore!('bob', cutoff - 1);
+  expect(await history.deletions!()).toEqual({ bob: cutoff });
+  expect((await history.page({ query: '', conversation: 'bob' })).messages).toEqual([fresh]);
+  expect((await history.page({ query: '', conversation: '' })).messages.map(row => row.id)).toEqual(['group-kept']);
+  expect((await other.page({ query: '' })).messages).toEqual([old]);
+});
+
 it('keeps group and private searches separate and persists contacts without their online status', async () => {
   const history = nativeLoungeHistory('https://cloud.test', 'direct');
   const privateMessage = { ...message('secret'), conversation: 'bob', recipient: { id: 'alice', account: 'Alice' } };

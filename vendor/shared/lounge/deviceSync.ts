@@ -3,6 +3,7 @@ import { authorize } from './authorize';
 import { SyncArchive } from './syncArchive';
 import { HistorySyncConnection } from './syncConnection';
 import type { LoungeMessage, LoungeSession } from './types';
+import type { LoungeDeletionPage } from './deletions';
 
 export class LoungeDeviceSync {
   private connection?: HistorySyncConnection;
@@ -15,6 +16,8 @@ export class LoungeDeviceSync {
     session?: LoungeSession; deviceId: () => string; flush: () => Promise<void>;
     restored: (messages: LoungeMessage[]) => void; error: (failed: boolean) => void;
     accept: (message: LoungeMessage) => boolean;
+    deletions?: { page: (after?: string) => LoungeDeletionPage;
+      apply: (entries: Record<string, number>) => Promise<void> };
   }) {}
 
   ready(owner: string, available: boolean) {
@@ -27,7 +30,7 @@ export class LoungeDeviceSync {
     const lifecycle = this.lifecycle;
     const archive = new SyncArchive({ owner, store: session.history, flush: this.options.flush,
       current: () => this.running && this.lifecycle === lifecycle,
-      restored: this.options.restored, accept: this.options.accept });
+      restored: this.options.restored, accept: this.options.accept, deletions: this.options.deletions });
     this.connection = new HistorySyncConnection({ baseUrl: session.baseUrl, deviceId: this.options.deviceId(),
       transport: session.sync, authorize: () => authorize(session), archive, error: this.options.error });
     this.connection.start();
@@ -44,6 +47,7 @@ export class LoungeDeviceSync {
   }
 
   retry = () => this.connection?.retryNow();
+  deleted() { this.connection?.changed(); }
   stop() {
     this.lifecycle++; this.running = false; this.owner = undefined; this.versions.clear();
     this.connection?.stop(); this.connection = undefined;

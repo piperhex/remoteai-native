@@ -16,6 +16,7 @@ const GIT_MESSAGE_TIMEOUT_MS = 120_000;
 const MODEL_CATALOG_TIMEOUT_MS = 150_000;
 function requestTimeout(body: unknown) {
   const operation = (body as { operation?: unknown } | null)?.operation;
+  if (operation === 'conversationSync') return GIT_ACTION_TIMEOUT_MS;
   if (operation === DICTATION_OPERATION) return DICTATION_TIMEOUT_MS;
   if (operation === 'guiGitGenerateMessage') return GIT_MESSAGE_TIMEOUT_MS;
   if (operation === 'guiGitAction' || operation === 'guiGitWorkspace'

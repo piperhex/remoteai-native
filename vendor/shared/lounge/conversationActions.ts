@@ -35,7 +35,6 @@ export function conversationActions({ row, model, controller, close }: {
     label: model.state.blocked.includes(row.id) ? 'client.lounge.unblockUser' : 'client.lounge.blockUser',
     active: model.state.blocked.includes(row.id), onPress: dismissThen(() => model.setBlocking(user)) });
   actions.push({ key: 'delete', label: 'client.lounge.deleteChat',
-    disabled: !model.state.directResetAvailable || model.state.status !== 'connected',
     onPress: dismissThen(() => model.setDeleting(user)) });
   return actions;
 }

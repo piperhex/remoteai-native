@@ -15,7 +15,7 @@ export function LoungeChatRow({ row, model, actions }: {
   row: ConversationRow; model: MobileLounge; actions: () => void;
 }) {
   const styles = useLoungeStyles(); const color = useLoungeColor();
-  return <LoungeSwipeRow enabled={!!row.user && !!model.state.directResetAvailable && model.state.status === 'connected'}
+  return <LoungeSwipeRow enabled={!!row.user}
     remove={() => model.setDeleting(row.user)}>
     <View style={styles.chatRow}>
       <Pressable accessibilityRole="button" style={styles.chatRowMain}

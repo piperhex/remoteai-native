@@ -18,6 +18,7 @@ export const CHAT_POLICY_FIELDS = {
   relayHeartbeatTimeoutSeconds: { min: 1, max: undefined, default: 30 },
   relayMaxMbPerSecond: { min: -1, max: undefined, default: -1 },
   relayMaxFramesPerSecond: { min: -1, max: undefined, default: -1 },
+  conversationSyncRelayKbps: { min: 1, max: undefined, default: 200 },
   threadPageSize: { min: 1, max: undefined, default: 50 },
   historyPageSize: { min: 1, max: undefined, default: 10 },
   imageSourceMaxMb: { min: 1, max: undefined, default: 20 },
@@ -53,7 +54,7 @@ export function parseChatPolicy(value: unknown): ChatPolicy {
       || key === 'fileUploadMaxMb' || key === 'fileUploadTotalMaxMb' || key === 'chatSessionLimit'
       || key === 'relayHeartbeatTimeoutSeconds' || key === 'fileDownloadWindowSize'
       || key === 'remoteCommandConcurrencyLimit' || key === 'fileBulkEnabled'
-      || key.startsWith('lounge') || key in P2P_POLICY_FIELDS;
+      || key === 'conversationSyncRelayKbps' || key.startsWith('lounge') || key in P2P_POLICY_FIELDS;
     const number = optional && record[key] === undefined ? field.default : record[key];
     if (typeof number !== 'number' || !Number.isSafeInteger(number) || number < field.min
       || (field.default === -1 && number === 0) || (field.max !== undefined && number > field.max)) {

@@ -17,6 +17,8 @@ export interface LoungeHistoryStore {
   saveContact?(contact: LoungeContact): Promise<void>;
   get?(key: string): Promise<LoungeMessage | undefined>;
   deleteConversation?(peer: string, generation?: number): Promise<void>;
+  deletions?(): Promise<Record<string, number>>;
+  deleteBefore?(peer: string, deletedAt: number): Promise<void>;
 }
 
 export const historyScope = (baseUrl: string, account: string) =>

@@ -42,7 +42,6 @@ export function LoungeProfile({ model, controller }: { model: MobileLounge; cont
   const own = user.id === model.state.user?.id;
   const contact = model.state.contacts.find(value => value.user.id === user.id);
   const devicePresence = hasOnlineClientDevices(contact, model.state.status);
-  const canDelete = model.state.directResetAvailable && model.state.status === 'connected';
   return <Modal animationType="slide" onRequestClose={() => leave(() => model.setProfile(undefined))}>
     <SafeAreaView style={styles.page}>
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -70,9 +69,9 @@ export function LoungeProfile({ model, controller }: { model: MobileLounge; cont
         {own ? <Pressable accessibilityRole="button" style={profileStyles.send}
           onPress={() => leave(() => model.setAvatar(true))}>
           <Text style={profileStyles.sendText}>{t('client.lounge.editAvatar')}</Text>
-        </Pressable> : <><Pressable accessibilityRole="button" disabled={!canDelete}
+        </Pressable> : <><Pressable accessibilityRole="button"
           onPress={() => leave(() => model.setDeleting(user))}
-          style={[profileStyles.delete, !canDelete && styles.disabled]}>
+          style={profileStyles.delete}>
           <Text style={profileStyles.deleteText}>{t('client.lounge.deleteChat')}</Text></Pressable>
         <Pressable accessibilityRole="button" disabled={!model.state.directAvailable}
           onPress={() => leave(() => model.select(user))}

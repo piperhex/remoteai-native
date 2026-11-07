@@ -5,6 +5,7 @@ import { historyKey, historyPage, historyPageLimit, historyScope, historyText, h
 import { parseMessage, type LoungeMessage } from '../../vendor/shared/lounge/types';
 import { mergeContact, parseContact, type LoungeContact } from '../../vendor/shared/lounge/contacts';
 import { mergeDelivery } from '../../vendor/shared/lounge/delivery';
+import { deleteBefore, deletionTimes } from './historyDeletions';
 
 let database: Promise<SQLiteDatabase> | undefined;
 let pending: Promise<unknown> = Promise.resolve();
@@ -16,7 +17,9 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS timeline ON messages(scope, time, key);
 CREATE TABLE IF NOT EXISTS contacts(scope TEXT NOT NULL, id TEXT NOT NULL, content TEXT NOT NULL,
-  PRIMARY KEY(scope, id));`;
+  PRIMARY KEY(scope, id));
+CREATE TABLE IF NOT EXISTS deletions(scope TEXT NOT NULL, peer TEXT NOT NULL, deleted_at INTEGER NOT NULL,
+  PRIMARY KEY(scope, peer));`;
 
 async function open() {
   const { openDatabaseAsync } = await import('expo-sqlite');
@@ -81,6 +84,9 @@ export function nativeLoungeHistory(baseUrl: string, account: string): LoungeHis
   const scope = historyScope(baseUrl, account);
   return {
     save: message => withDatabase(async db => {
+      const deletion = await db.getFirstAsync<{ deleted_at: number }>(
+        'SELECT deleted_at FROM deletions WHERE scope = ? AND peer = ?', scope, message.conversation ?? '');
+      if (Date.parse(message.sentAt) <= (deletion?.deleted_at ?? 0)) return;
       const previous = message.delivery ? await db.getFirstAsync<{ content: string }>(
         'SELECT content FROM messages WHERE scope = ? AND key = ?', scope, historyKey(message)) : undefined;
       const delivery = mergeDelivery(previous ? parseMessage(JSON.parse(previous.content))?.delivery : undefined,
@@ -89,6 +95,8 @@ export function nativeLoungeHistory(baseUrl: string, account: string): LoungeHis
         scope, historyKey(message), Date.parse(message.sentAt), historyText(message), JSON.stringify({ ...message, delivery }));
     }),
     page: query => withDatabase(db => search(db, scope, query)),
+    deletions: () => withDatabase(db => deletionTimes(db, scope)),
+    deleteBefore: (peer, time) => withDatabase(db => deleteBefore(db, { scope, peer, time })),
     deleteConversation: (peer, generation = Number.MAX_SAFE_INTEGER) => withDatabase(async db => {
       await db.execAsync('BEGIN IMMEDIATE');
       try {

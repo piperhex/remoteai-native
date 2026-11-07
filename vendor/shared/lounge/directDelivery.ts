@@ -19,6 +19,7 @@ interface DeliveryHost {
   permission?(peer: string): DirectPermission | undefined;
   generation?(peer: string): number;
   ready?(peer: string): boolean;
+  createdAt?(peer: string): number;
 }
 interface DeliveryJob { peer: string; due: number; group: boolean }
 
@@ -103,7 +104,8 @@ export class LoungeDirectDelivery {
       if (!current()) return;
       const message: LoungeMessage = { type: 'message', id, sender, recipient, text: draft.text,
         attachments: draft.attachments,
-        images: draft.images, reply: draft.reply, sentAt: new Date().toISOString(), conversation: recipient.id,
+        images: draft.images, reply: draft.reply,
+        sentAt: new Date(this.host.createdAt?.(recipient.id) ?? Date.now()).toISOString(), conversation: recipient.id,
         generation: this.host.generation?.(recipient.id),
         receipts: true, delivery: { direction: 'outgoing', status: 'pending', retry: true, attemptedAt: Date.now() } };
       await this.host.publish(message, true);

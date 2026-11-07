@@ -407,7 +407,6 @@ try {
     if (resetAvailable) {
       broadcast({ type: 'policy', policy: { moderator: false, mutedUntil: null } });
       await verifyNativeProfile({ adb, tap, find, nodes, screenshot, hideKeyboard, longPress, scale, sent,
-        failDelete: value => { failDelete = value; },
         reply: text => { directState = 'open'; broadcast({ ...incoming(text), generation, receipts: true,
           recipient: { id: 'alice', account: 'alice@example.test' } }); },
         restart: async () => {
