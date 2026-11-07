@@ -95,17 +95,23 @@ export function ProjectEditor(props: Props) {
   useEffect(() => {
     const editor = view.current;
     if (!editor) return;
-    const { features, language } = settings.current;
+    editor.dispatch({ effects: settings.current.features.reconfigure(editorExtensions(props.t, plainText)) });
+  }, [plainText, props.t]);
+  useEffect(() => {
+    const editor = view.current;
+    if (!editor) return;
+    const { language } = settings.current;
     const syntax = plainText ? null : editorLanguage(props.path);
     setLanguageError(false);
-    editor.dispatch({ effects: [features.reconfigure(editorExtensions(props.t, plainText)),
-      language.reconfigure(plainText ? [] : [editorHighlighting, ...(syntax ? [] : [textFolding])])] });
     let cancelled = false;
+    // Host settings and translated controls must not discard the existing parse tree.
+    // Replace a grammar atomically after loading instead of briefly reverting to plain text.
     if (syntax) void syntax.load().then(support => {
       if (!cancelled) editor.dispatch({ effects: language.reconfigure([editorHighlighting, support]) });
     }).catch(() => { if (!cancelled) setLanguageError(true); });
+    else editor.dispatch({ effects: language.reconfigure(plainText ? [] : [editorHighlighting, textFolding]) });
     return () => { cancelled = true; };
-  }, [plainText, props.path, props.t]);
+  }, [plainText, props.path]);
   useEffect(() => {
     const editor = view.current;
     if (!editor || editor.state.sliceDoc() === props.text) return;

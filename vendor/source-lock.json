@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "4a8bdaf69c0bef22ae05b1dff836d9b61f4d9086",
+  "revision": "5252bb2ec713c33b412bdf0d24749a3f97797164",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "c65fc0d809fe5b8b7b4fcd197d170d2e85b40f82"
+    "revision": "0425cc08f161fcf2add2deab6260a538d8f7d0e6"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.9/remoteai-i18n-0.1.9.tgz",
   "files": {
@@ -24,7 +24,7 @@
     "shared/navigation/discovery.ts": "d2372a414e460e2a0159f295cd0edabd5c3e32164cd4029bf77f9fdc311b43b0",
     "shared/legal/useAgreementConsent.ts": "27e80e0c8b705249e25bc04a3c0a9280b7ab44cbf01f566d46769f9fe65eefd1",
     "shared/project-browser/protocol.ts": "856045ba45999c1b0db067439b3ee7c01dbc27bdd4ad13cd4e216ae71839e90d",
-    "apps/desktop/e2e/project-browser-fixture.ts": "9ebf6785204c40be839fbdf51e1a512dfcdd754c977a6830b7e7979ee2b0144a",
+    "apps/desktop/e2e/project-browser-fixture.ts": "94bef3f05bfa825f0d9577fc64eeb59d2791c85e157629c4031d623b2ac87cc4",
     "apps/desktop/e2e/android-hierarchy.mjs": "9ab90f7470f71237d18608f812d7b06847ffcbbe718be8d615d7e6927ecccc8e",
     "shared/remote-chat/client/historyLoad.ts": "b74d39fd3369d839bfbe876b4e135663943cf2b807e10b6e57be1a7a3f5798a1",
     "shared/localization/interfaceLanguage.ts": "98119adb9b96f720c785ce6d9580d25b599c73c62ad4b988fad1f2e1c083de62",
@@ -697,7 +697,7 @@
     "shared/project-browser/useTabOverflow.ts": "d2b582201602f267162b47e58bcc65645a9a0ba8ab97fda438b8c2eb8af5c985",
     "shared/project-browser/TabOverflowMenu.tsx": "459ae5681db020d05cdad81f9a1757977bd26428b9e866d85fbf7c33453c585a",
     "shared/project-browser/ProjectWindowNavigation.tsx": "5fb51fcf511bd71445f2df026c79519b8c1812b0e3e55f1d80bf285bca07ca0b",
-    "shared/project-browser/ProjectEditor.tsx": "1314886a76e9ade71b913a2ac0b623268dc44ad35171f53a40b6bf756eac035a",
+    "shared/project-browser/ProjectEditor.tsx": "6642b11b8c870fa90880f65a94ac6ee87b11b003bbd5394fbe9c5a9ae45ac06d",
     "shared/project-browser/editorExtensions.ts": "650f55da9c751fe1201e9e70173521246a4f7a8be0867b5add6a24b37110c07f",
     "shared/project-browser/useEditorSelectionMenu.ts": "841f9c945e4d4fcb3cb77688f5ff1e91391f58478392538e75c548a0f652db52",
     "shared/project-browser/EditorSelectionMenu.tsx": "d70c047368eff51d5eb37db9f2b050727edbd4ee3486236f81775007e6631cd4",
