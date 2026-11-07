@@ -148,14 +148,14 @@ npm run check -w @codex-switch/native
 npx vitest run --root apps/native src/lounge
 npm run check:i18n
 Push-Location apps/desktop
-npx playwright test --config playwright.lounge.config.ts
+npx playwright test --config scripts/playwright.lounge.config.ts
 Pop-Location
 ```
 
 The browser suite uses bundled Chromium and includes 320px/390px mobile Web discovery, multiline
 input, mixed messages, history, moderation and a reduced viewport for keyboard layout. It also
 regresses desktop local/remote/Web chat because the controller and browser composer are shared.
-`playwright.lounge-compat.config.ts` also checks repeated emoji opening, caret insertion,
+`scripts/playwright.lounge-compat.config.ts` also checks repeated emoji opening, caret insertion,
 keyboard dismissal and touch selection in bundled Chromium and WebKit. This does not replace
 testing the reported macOS Chrome version on macOS hardware.
 Native unit tests cover image byte limits, temporary image cleanup, 48px avatar crops, picker

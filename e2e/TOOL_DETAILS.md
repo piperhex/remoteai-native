@@ -28,7 +28,7 @@ font scale on exit. Screenshots and measurements go to
 Web coverage uses the same reported payload. From `apps/web` run:
 
 ```text
-npx playwright test --config playwright.chat.config.ts tool-details.pw.ts
+npx playwright test --config scripts/playwright.chat.config.ts tool-details.pw.ts
 ```
 
 This covers 390px mobile and 1280px desktop layouts, direct structured results, raw copy,

@@ -14,7 +14,7 @@ suite uses the same content at phone and desktop widths.
 
 ```powershell
 npm test -w @codex-switch/native
-npx playwright test --config apps/web/playwright.markdown.config.ts
+npx playwright test --config apps/web/scripts/playwright.markdown.config.ts
 
 $env:NODE_ENV = 'production'
 $env:NODE_PATH = (Resolve-Path apps/native/node_modules).Path

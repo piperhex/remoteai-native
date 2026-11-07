@@ -6,5 +6,5 @@ export default defineConfig({ test: {
   exclude: [...configDefaults.exclude, 'vendor/**', '.codex-tmp*/**'],
 }, resolve: { alias: {
   // Shared hooks must use the same React instance as the native renderer and its test mocks.
-  react: fileURLToPath(new URL('./node_modules/react', import.meta.url)),
+  react: fileURLToPath(new URL('../node_modules/react', import.meta.url)),
 } } });

@@ -22,6 +22,6 @@ desktop Web and 320px/390px mobile Web are covered by `lounge-image-annotation.p
 
 ```powershell
 Push-Location apps/desktop
-npx playwright test --config playwright.lounge.config.ts lounge-image-annotation.pw.ts
+npx playwright test --config scripts/playwright.lounge.config.ts lounge-image-annotation.pw.ts
 Pop-Location
 ```
