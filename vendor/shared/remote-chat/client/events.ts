@@ -4,6 +4,7 @@ import { acknowledgeMessage, MESSAGE_ACKNOWLEDGED } from '../../chat/acknowledge
 import { syncChatProcessing } from './processing';
 import { recordRequestError, restoreRequestErrors } from '../../conversation/turnRequestErrors';
 import { currentRunningTurn } from '../../chat/runningTurn';
+import { mergeItemLifecycle } from '../../conversation/itemStatus';
 
 function mergeItems(previous: Item[], incoming: Item[]) {
   const items = [...previous];
@@ -13,7 +14,7 @@ function mergeItems(previous: Item[], incoming: Item[]) {
       const echo = items.findIndex((entry) => entry.localEcho);
       items[echo] = item;
     } else if (index < 0) items.push(item);
-    else items[index] = { ...items[index], ...item };
+    else items[index] = mergeItemLifecycle(items[index], item);
   }
   return items;
 }

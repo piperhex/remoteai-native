@@ -1,6 +1,6 @@
 import { defaultText } from '../localization/messages';
 import type { Thread } from './client/types';
-import { prioritizeRunningThreads } from '../chat/threadOrder';
+import { orderThreadsByActivity } from '../chat/threadOrder';
 
 export const SIDEBAR_EVENT = 'chat/sidebar/updated';
 export interface ThreadReadReceipt { turnId: string; unread: boolean }
@@ -32,6 +32,13 @@ export function threadPresentation(thread: Thread, sidebar: SidebarSnapshot, tra
   };
 }
 
+export function orderSidebarThreads(threads: readonly Thread[], sidebar: SidebarSnapshot) {
+  return orderThreadsByActivity(threads, {
+    isRunning: thread => threadPresentation(thread, sidebar).running,
+    isPinned: thread => Boolean(sidebar.pins?.includes(thread.id)),
+  });
+}
+
 export function projectThreadGroups(threads: Thread[], sidebar: SidebarSnapshot) {
   const groups = new Map<string, { cwd: string; label: string; data: Thread[] }>();
   for (const thread of threads) {
@@ -41,9 +48,7 @@ export function projectThreadGroups(threads: Thread[], sidebar: SidebarSnapshot)
     groups.set(cwd, group);
   }
   return [...groups.values()].map(group => ({ ...group,
-    data: prioritizeRunningThreads(group.data, thread => threadPresentation(thread, sidebar).running)
-      .sort((left, right) => Number(Boolean(sidebar.pins?.includes(right.id)))
-        - Number(Boolean(sidebar.pins?.includes(left.id)))),
+    data: orderSidebarThreads(group.data, sidebar),
   })).sort((left, right) => Number(Boolean(sidebar.pinnedProjects?.includes(right.cwd)))
     - Number(Boolean(sidebar.pinnedProjects?.includes(left.cwd))));
 }

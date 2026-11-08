@@ -1,0 +1,12 @@
+// Render the production native conversation list in an isolated test application.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-thread-activity'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.threadactivitytest'
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/ThreadActivityFixture.tsx')
+        react.debuggableVariants = []
+    }
+}

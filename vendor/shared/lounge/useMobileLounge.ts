@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type SetStateAction } from 'react';
 import type { LoungeController } from './controller';
 import type { LoungeAccount, LoungeDraft, LoungeMessage } from './types';
 import { quoteMessage, type LoungeReply } from './reply';
@@ -46,7 +46,8 @@ export function useMobileLounge(controller: LoungeController) {
     // Following new messages and offering a one-page shortcut have different thresholds.
     setShowLatest(viewportHeight > 0 && offset >= viewportHeight);
   }, [conversation, navigation.focus]);
-  const change = (draft: LoungeDraft) => setDrafts(current => ({ ...current, [conversation]: draft }));
+  const change = (update: SetStateAction<LoungeDraft>) => setDrafts(current => ({ ...current,
+    [conversation]: typeof update === 'function' ? update(current[conversation] ?? EMPTY_DRAFT) : update }));
   const draft = drafts[conversation] ?? EMPTY_DRAFT;
   const contact = state.contacts.find(value => value.user.id === conversation);
   const previousConversation = useRef(conversation);

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { previewThreads, THREAD_GROUP_PREVIEW_COUNT } from '../../chat/threadGroupPreview';
-import { projectThreadGroups } from '../sidebar';
+import { orderSidebarThreads, projectThreadGroups } from '../sidebar';
 import type { ChatState } from './types';
 import { groupingTree, flattenGroupingTree } from '../../chat/groups/tree';
 
@@ -20,7 +20,9 @@ export function useThreadGroups(state: ChatState) {
     filtering ? new Set() : collapsed).map((group) => {
     const showAll = filtering || expanded.has(group.id);
     const isCollapsed = !filtering && collapsed.has(group.id);
-    const visibleThreads = showAll ? group.data : previewThreads(group.data, state.selected?.id ?? null);
+    // Custom groups can combine conversations from several project sections.
+    const ordered = orderSidebarThreads(group.data, state.sidebar);
+    const visibleThreads = showAll ? ordered : previewThreads(ordered, state.selected?.id ?? null);
     return { ...group, expanded: showAll, collapsed: isCollapsed,
       canToggle: !isCollapsed && !filtering && group.data.length > THREAD_GROUP_PREVIEW_COUNT,
       data: isCollapsed ? [] : visibleThreads };

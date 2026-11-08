@@ -166,8 +166,8 @@ export class ThreadListCache {
       this.upsert(current, method === 'thread/archived');
     }
     if (method === 'turn/started' || method === 'turn/completed') {
-      const updatedAt = method === 'turn/completed'
-        ? Math.max(current.updatedAt, params.turn?.completedAt ?? Math.floor(Date.now() / 1000)) : current.updatedAt;
+      const activity = method === 'turn/completed' ? params.turn?.completedAt : params.turn?.startedAt;
+      const updatedAt = Math.max(current.updatedAt, activity ?? Math.floor(Date.now() / 1000));
       this.upsert({ ...current, updatedAt, status: { type: method === 'turn/started' ? 'active' : 'idle' } });
     }
     if (!current.preview && params.item?.type === 'userMessage') {

@@ -81,3 +81,29 @@ it.each(['/project', ''])('moves running native rows to the front of %j and rest
   ) };
   expect(ids(render(state).sections[0])).toEqual(state.threads.map(thread => thread.id));
 });
+
+it('sorts unsorted native rows by activity before folding, with running rows ahead of pins', () => {
+  const threads: Thread[] = [1, 7, 3, 5, 6, 2, 4].map((updatedAt, index) => ({
+    id: `chat-${index}`, cwd: '/project', preview: '', updatedAt,
+  }));
+  const state = { ...initialChatState(), ready: true, threads, sidebar: {
+    revision: 1, threads: {}, readState: {}, pins: ['chat-2'],
+  } };
+  state.threads[0] = { ...threads[0], status: { type: 'active' } };
+  expect(ids(render(state).sections[0])).toEqual(['chat-0', 'chat-2', 'chat-1', 'chat-4', 'chat-3']);
+  state.threads = threads.map(thread => thread.id === 'chat-0'
+    ? { ...thread, updatedAt: 8, status: { type: 'idle' } } : thread);
+  expect(ids(render(state).sections[0])).toEqual(['chat-2', 'chat-0', 'chat-1', 'chat-4', 'chat-3']);
+  expect(threads.map(thread => thread.updatedAt)).toEqual([1, 7, 3, 5, 6, 2, 4]);
+});
+
+it('sorts a native custom group after combining conversations from multiple projects', () => {
+  const state = { ...initialChatState(), ready: true, threads: [
+    { id: 'old', cwd: '/first', preview: '', updatedAt: 1 },
+    { id: 'latest', cwd: '/second', preview: '', updatedAt: 9 },
+    { id: 'running', cwd: '/first', preview: '', updatedAt: 2, status: { type: 'active' } },
+  ] };
+  state.sidebar.grouping = { groups: [{ id: 'custom', name: 'Custom', parentId: null }], projects: {},
+    threads: { old: 'custom', latest: 'custom', running: 'custom' } };
+  expect(ids(render(state).sections[0])).toEqual(['running', 'latest', 'old']);
+});

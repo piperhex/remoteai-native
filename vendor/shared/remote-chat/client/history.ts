@@ -3,6 +3,7 @@ import { restoreTurnTiming } from '../../conversation/turnTiming';
 import { reconcileAcknowledgedItems } from '../../chat/acknowledgedMessages';
 import { mergeItemOrder } from '../../chat/itemOrder';
 import { reconcileProcessHistory } from './processHistory';
+import { mergeItemLifecycle } from '../../conversation/itemStatus';
 
 interface HistoryMergeOptions {
   authoritative?: boolean;
@@ -11,7 +12,7 @@ interface HistoryMergeOptions {
 }
 
 function mergeItem(snapshot: Item, live: Item, before?: Item): Item {
-  const merged = { ...snapshot, ...live };
+  const merged = mergeItemLifecycle(snapshot, live);
   for (const field of ['text', 'aggregatedOutput'] as const) {
     const readValue = snapshot[field];
     const liveValue = live[field];

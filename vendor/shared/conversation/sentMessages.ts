@@ -1,5 +1,6 @@
 import type { Content, Item, MessageInput, Turn } from "./types";
 import { visibleUserMessage } from "../chat/conversationContext";
+import { mergeItemLifecycle } from './itemStatus';
 
 /** Replace local echoes in submission order; server IDs handle repeated lifecycle notifications. */
 export function mergeMessageItems(previous: Item[], incoming: Item[]): Item[] {
@@ -18,7 +19,7 @@ export function mergeMessageItems(previous: Item[], incoming: Item[]): Item[] {
     }
     indices.delete(items[index].id);
     indices.set(item.id, index);
-    items[index] = { ...items[index], ...item, localEcho: item.localEcho };
+    items[index] = { ...mergeItemLifecycle(items[index], item), localEcho: item.localEcho };
   }
   return items;
 }
