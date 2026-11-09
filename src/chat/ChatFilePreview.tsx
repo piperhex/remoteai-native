@@ -45,9 +45,11 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState<PreviewProgress>();
+  const [source, setSource] = useState(false);
   const binary = isDownloadOnlyFile(file.path);
   const html = isHtmlPath(file.path);
   const markdown = isMarkdownPath(file.path);
+  const sourceLabel = t(html ? 'client.downloads.source' : 'client.chat.source');
   const rendered = Boolean(result && (html || markdown));
   const download = useManagedDownload({ client: files, threadId, ready, path: file.path });
   const transferIcon = Platform.OS === 'android' ? 'pause' : 'close';
@@ -65,6 +67,11 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
   }, [threadId, ready, load, file.path, attempt, binary]);
   return <FilePreviewSheet path={file.path} previewable={!binary} close={close}
     actions={[
+      ...(html || markdown ? [{
+        label: source ? t('client.chat.preview') : sourceLabel,
+        icon: source ? 'eye-outline' as const : 'code-tags' as const,
+        onPress: () => setSource(value => !value), disabled: !result,
+      }] : []),
       ...(download.share ? [{ label: t("client.downloads.shareFile"), onPress: download.share, icon: 'share-variant' as const,
         loading: download.sharing, disabled: download.busy }] : []),
       { label: download.label, onPress: download.busy ? download.cancel : download.start,
@@ -90,9 +97,9 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
           lineNumbers copyLabel={t("client.chat.copyFileContents")} />
       </>}
     </SheetScrollView>}
-    {result && html && <ChatHtmlPreview text={result.text}
+    {result && html && <ChatHtmlPreview text={result.text} source={source}
       context={threadId ? { path: result.path, client: files, threadId } : undefined} />}
-    {result && markdown && <ChatMarkdownPreview text={result.text} line={file.line} />}
+    {result && markdown && <ChatMarkdownPreview text={result.text} line={file.line} source={source} />}
   </FilePreviewSheet>;
 }
 

@@ -25,8 +25,8 @@ const matches = (node, label) => node['content-desc'] === label || node.text ===
 
 async function nodes() {
   const focus = await adb('shell', 'dumpsys', 'window');
-  assert.ok(focus.split('\n').some(line => line.includes('mCurrentFocus') && line.includes(app)),
-    'Preview test lost focus; another task may be using the device');
+  const focusedWindow = focus.split('\n').find(line => line.includes('mCurrentFocus=')) ?? '';
+  assert.ok(focusedWindow.includes(`${app}/`), `Preview fixture lost window focus: ${focusedWindow}`);
   await adb('shell', 'uiautomator', 'dump', '/sdcard/file-preview-layout.xml').catch(error => {
     // Some vendor ROMs kill the helper after it has successfully written the snapshot.
     if (error.code !== 137 || !error.stdout?.includes('UI hierchary dumped to:')) throw error;
@@ -38,7 +38,7 @@ async function nodes() {
 async function waitForFocus() {
   for (let attempt = 0; attempt < 10; attempt++) {
     const focus = await adb('shell', 'dumpsys', 'window');
-    if (focus.split('\n').some(line => line.includes('mCurrentFocus') && line.includes(app))) return;
+    if (focus.split('\n').some(line => line.includes('mCurrentFocus=') && line.includes(`${app}/`))) return;
     await delay(300);
   }
   assert.fail('The preview fixture did not acquire window focus after launch');
@@ -69,6 +69,10 @@ async function verifyHtml(scale) {
   const initialBounds = bounds(initial);
   await screenshot(`html-layout-${scale}`);
   const download = bounds(await find('下载'));
+  const toggle = bounds(await find('源码'));
+  assert.ok(Math.abs(toggle[1] - download[1]) < 10, 'The mode icon shares the download header row');
+  assert.ok(initialBounds[1] - download[3] < (download[3] - download[1]) / 2,
+    'The document starts directly below the single header row');
   assert.ok(title[1] < 180, 'The filename sits near the top of the phone');
   assert.ok(Math.abs(title[1] - download[1]) < 100, 'Download is beside the filename');
   assert.ok(initialBounds[3] - initialBounds[1] > initialBounds[3] * 0.8,
@@ -83,19 +87,26 @@ async function verifyHtml(scale) {
   assert.ok(!(await nodes()).some(node => node.class === 'android.webkit.WebView'), 'Source mode is retained');
   await find('下载');
   await screenshot(`html-source-${scale}`);
+  await tap('预览');
+  await find('保留预览状态');
+  await screenshot(`html-returned-${scale}`);
   await adb('shell', 'input', 'keyevent', '4');
   await find('页面预览.html');
   await tap('页面预览.html');
-  await find('预览');
+  await find('源码');
   await tap('关闭页面预览.html');
   await find('页面预览.html');
-  return { title, initialBounds, download };
+  return { title, initialBounds, download, toggle };
 }
 async function verifyText(scale, name, source) {
   await tap(name);
   const download = bounds(await find('下载'));
   assert.ok(download[1] < 200, 'Download stays in the compact header');
-  if (source) { await tap(source); await find('自动换行'); }
+  if (source) {
+    const toggle = bounds(await find(source));
+    assert.ok(Math.abs(toggle[1] - download[1]) < 10, 'Markdown mode icon stays in the header');
+    await tap(source); await find('自动换行');
+  }
   await screenshot(`${name.split('.').at(-1)}-fullscreen-${scale}`);
   await adb('shell', 'input', 'swipe', '500', '1800', '500', '700', '400');
   await find('下载');

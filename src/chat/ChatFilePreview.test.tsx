@@ -184,7 +184,9 @@ it.each(['./index.html', './INDEX.HTM'])('renders HTML files directly while reta
     path: state.text.path, client: fileClient, threadId: providerProps.threadId,
   });
   expect(nodes.some(node => node.type === 'Code')).toBe(false);
-  expect((sheet.props as { actions: { label: string }[] }).actions[0].label).toBe('下载');
+  expect((sheet.props as { actions: { label: string }[] }).actions.map(action => action.label))
+    .toEqual(['源码', '下载']);
+  expect(nodes.find(node => node.type === 'Html')?.props.source).toBe(false);
 });
 
 it.each(['./verification.md', 'C:/docs/README.MARKDOWN'])('opens Markdown with rendering and download: %s', path => {
@@ -195,7 +197,9 @@ it.each(['./verification.md', 'C:/docs/README.MARKDOWN'])('opens Markdown with r
   const nodes = descendants(sheet);
   expect(nodes.find(node => node.type === 'MarkdownPreview')?.props).toMatchObject({ text: state.text.text, line: 3 });
   expect(nodes.some(node => node.type === 'Code' || node.type === 'Html')).toBe(false);
-  expect((sheet.props as { actions: { label: string }[] }).actions[0].label).toBe('下载');
+  expect((sheet.props as { actions: { label: string }[] }).actions.map(action => action.label))
+    .toEqual(['原文', '下载']);
+  expect(nodes.find(node => node.type === 'MarkdownPreview')?.props.source).toBe(false);
 });
 
 it('offers original loading without starting it and allows an explicit save before it loads', () => {

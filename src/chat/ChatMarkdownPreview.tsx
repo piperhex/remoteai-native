@@ -11,13 +11,16 @@ import { textMetrics } from '../theme/text';
 
 const PREVIEW_MODES = [{ value: 'preview', get label() { return t("client.chat.preview"); } }, { value: 'source', get label() { return t("client.chat.source"); } }] as const;
 
-export function ChatMarkdownPreview({ text, line }: { text: string; line?: number }) {
+export function ChatMarkdownPreview({ text, line, source: controlledSource }: {
+  text: string; line?: number; source?: boolean;
+}) {
   const previewStyles = usePreviewStyles();
   const styles = useStyles();
   useLanguage();
   const [mode, setMode] = useState<'preview' | 'source'>('preview');
+  const source = controlledSource ?? mode === 'source';
   return <View style={previewStyles.container}>
-    <SheetInset style={previewStyles.toolbar}>
+    {controlledSource === undefined && <SheetInset style={previewStyles.toolbar}>
       <View style={previewStyles.tabs} accessibilityRole="tablist">
         {PREVIEW_MODES.map(item => <Pressable key={item.value} accessibilityRole="tab"
           accessibilityState={{ selected: mode === item.value }} onPress={() => setMode(item.value)}
@@ -26,12 +29,12 @@ export function ChatMarkdownPreview({ text, line }: { text: string; line?: numbe
         </Pressable>)}
       </View>
       <CopyTextButton text={text} label={t("client.chat.copySource")} variant="labeled" />
-    </SheetInset>
-    <SheetScrollView key={mode} style={previewStyles.scroll} contentContainerStyle={previewStyles.content}>
+    </SheetInset>}
+    <SheetScrollView key={String(source)} style={previewStyles.scroll} contentContainerStyle={previewStyles.content}>
       {!!line && <Text style={styles.subtitle}>{t("client.shared.referencedLine", { line })}</Text>}
-      {mode === 'source' && <ChatCodeBlock text={text} label={t("client.chat.source")} language="markdown"
+      {source && <ChatCodeBlock text={text} label={t("client.chat.source")} language="markdown"
         lineNumbers copyLabel={t("client.chat.copySource")} />}
-      {mode === 'preview' && (text.trim()
+      {!source && (text.trim()
         ? <ChatMarkdown text={text} /> : <Text style={styles.subtitle}>{t("client.chat.emptyFile")}</Text>)}
     </SheetScrollView>
   </View>;

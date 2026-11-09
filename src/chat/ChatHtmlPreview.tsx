@@ -14,29 +14,32 @@ export function isHtmlPath(path: string) {
   return /\.html?$/i.test(path);
 }
 
-export function ChatHtmlPreview({ text, context }: { text: string; context?: HtmlFileContext }) {
+export function ChatHtmlPreview({ text, context, source: controlledSource }: {
+  text: string; context?: HtmlFileContext; source?: boolean;
+}) {
   const styles = useStyles();
   useLanguage();
   const [mode, setMode] = useState<'preview' | 'source'>('preview');
+  const source = controlledSource ?? mode === 'source';
   const [failed, setFailed] = useState(false);
   return <View style={styles.container}>
-    <View style={styles.tabs} accessibilityRole="tablist">
+    {controlledSource === undefined && <View style={styles.tabs} accessibilityRole="tablist">
       {PREVIEW_MODES.map(item => <Pressable key={item.value} accessibilityRole="tab"
         accessibilityState={{ selected: mode === item.value }} onPress={() => setMode(item.value)}
         style={[styles.tab, mode === item.value && styles.selectedTab]}>
         <Text style={styles.tabText}>{item.label}</Text>
       </Pressable>)}
-    </View>
-    {mode === 'source' && <SheetScrollView style={styles.content}>
+    </View>}
+    {source && <SheetScrollView style={styles.content}>
       <ChatCodeBlock text={text} label={t("client.mobile.fullText")} language="html" lineNumbers copyLabel={t("client.chat.copyFileContents")} />
     </SheetScrollView>}
-    {mode === 'preview' && failed && <View style={styles.notice}>
+    {!source && failed && <View style={styles.notice}>
       <Text accessibilityRole="alert" style={styles.message}>{t("client.mobile.pageUnavailableTryAgainOrViewTheSource")}</Text>
       <Pressable accessibilityRole="button" onPress={() => setFailed(false)} style={styles.tab}>
         <Text style={styles.tabText}>{t("client.mobile.retryPreview")}</Text>
       </Pressable>
     </View>}
-    {mode === 'preview' && !failed && <HtmlPreviewDocument text={text} context={context}
+    {!source && !failed && <HtmlPreviewDocument text={text} context={context}
       onError={() => setFailed(true)} />}
   </View>;
 }
