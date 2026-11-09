@@ -40,10 +40,11 @@ export function ChatMarkdownPreview({ text, line }: { text: string; line?: numbe
 const usePreviewStyles = createThemedStyles((color) => ({
   container: { flex: 1, minHeight: 0 },
   scroll: { flex: 1 },
-  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
+    gap: 4, paddingHorizontal: 12 },
   tabs: { flexDirection: 'row', gap: 4 },
-  tab: { minHeight: 44, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 12 },
+  tab: { minHeight: 44, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 10 },
   selectedTab: { backgroundColor: color('#e3f3ed', 'canvas') },
   tabText: { ...textMetrics(14, 21), color: color(palette.green, 'accent'), fontWeight: '700' },
-  content: { paddingTop: 12, paddingBottom: 20 },
+  content: { paddingTop: 4, paddingBottom: 20 },
 }));

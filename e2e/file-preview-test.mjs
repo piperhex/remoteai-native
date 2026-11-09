@@ -10,8 +10,9 @@ const exec = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/file-preview-android');
 const serial = process.env.ANDROID_SERIAL;
-assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
+assert.ok(serial, 'Set ANDROID_SERIAL to a test device');
 const assetsOnly = process.argv.includes('--assets-only');
+const layoutOnly = process.argv.includes('--layout-only');
 const scaleArgument = process.argv.slice(2).find(value => !value.startsWith('--'));
 const scales = scaleArgument ? [scaleArgument] : ['1.0', '1.3'];
 assert.ok(scales.every(scale => ['1.0', '1.3'].includes(scale)), 'Supported font scales: 1.0 and 1.3');
@@ -34,6 +35,14 @@ async function nodes() {
   return [...xml.matchAll(/<node\b([^>]*)>/g)].map(match => Object.fromEntries(
     [...match[1].matchAll(/([\w-]+)="([^"]*)"/g)].map(attribute => [attribute[1], attribute[2]])));
 }
+async function waitForFocus() {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const focus = await adb('shell', 'dumpsys', 'window');
+    if (focus.split('\n').some(line => line.includes('mCurrentFocus') && line.includes(app))) return;
+    await delay(300);
+  }
+  assert.fail('The preview fixture did not acquire window focus after launch');
+}
 async function find(label) {
   for (let attempt = 0; attempt < 8; attempt++) {
     const node = (await nodes()).find(value => matches(value, label));
@@ -53,45 +62,44 @@ async function screenshot(name) {
 }
 async function verifyHtml(scale) {
   await tap('页面预览.html');
-  const title = bounds(await find('文件'));
+  const title = bounds(await find('页面预览.html'));
+  await find('保留预览状态');
   const initial = (await nodes()).find(node => node.class === 'android.webkit.WebView');
   assert.ok(initial, 'HTML WebView is visible');
   const initialBounds = bounds(initial);
-  assert.ok(title[1] < 400, 'The drawer expands near the top of the phone');
-  await screenshot(`html-drawer-${scale}`);
-  await tap('全屏浏览');
-  await find('退出全屏');
+  await screenshot(`html-layout-${scale}`);
+  const download = bounds(await find('下载'));
+  assert.ok(title[1] < 180, 'The filename sits near the top of the phone');
+  assert.ok(Math.abs(title[1] - download[1]) < 100, 'Download is beside the filename');
+  assert.ok(initialBounds[3] - initialBounds[1] > initialBounds[3] * 0.8,
+    'The document fills over 80% of the phone height');
   const tree = await nodes();
-  const expanded = bounds(tree.find(node => node.class === 'android.webkit.WebView'));
-  assert.ok(expanded[3] - expanded[1] > initialBounds[3] - initialBounds[1], 'Fullscreen enlarges HTML');
-  assert.ok(!tree.some(node => matches(node, '下载')), 'Fullscreen hides the download footer');
+  assert.ok(!tree.some(node => matches(node, '全屏浏览') || matches(node, '退出全屏')),
+    'The preview opens fullscreen without a redundant toggle');
   await tap('保留预览状态');
   await find('已点击');
   await screenshot(`html-fullscreen-${scale}`);
-  await tap('退出全屏');
-  await find('已点击');
   await tap('源码');
-  await tap('全屏浏览');
   assert.ok(!(await nodes()).some(node => node.class === 'android.webkit.WebView'), 'Source mode is retained');
+  await find('下载');
   await screenshot(`html-source-${scale}`);
   await adb('shell', 'input', 'keyevent', '4');
-  await find('全屏浏览');
-  await tap('预览');
-  await tap('关闭文件');
   await find('页面预览.html');
-  return { title, initialBounds, expanded };
+  await tap('页面预览.html');
+  await find('预览');
+  await tap('关闭页面预览.html');
+  await find('页面预览.html');
+  return { title, initialBounds, download };
 }
 async function verifyText(scale, name, source) {
   await tap(name);
-  await tap('全屏浏览');
-  await find('退出全屏');
+  const download = bounds(await find('下载'));
+  assert.ok(download[1] < 200, 'Download stays in the compact header');
   if (source) { await tap(source); await find('自动换行'); }
   await screenshot(`${name.split('.').at(-1)}-fullscreen-${scale}`);
   await adb('shell', 'input', 'swipe', '500', '1800', '500', '700', '400');
-  await find('退出全屏');
-  await tap('退出全屏');
   await find('下载');
-  await tap('关闭文件');
+  await tap(`关闭${name}`);
   await find(name);
 }
 
@@ -109,16 +117,16 @@ async function verifyHtmlAssets(scale) {
   await find('自动换行');
   assert.ok(!(await nodes()).some(node => node.class === 'android.webkit.WebView'), 'Source replaces HTML');
   await screenshot(`html-assets-source-${scale}`);
-  await tap('关闭文件');
+  await tap('关闭相对资源.html');
   await tap('缺失资源.html');
   await find('部分图片或媒体未能加载，可以重新打开预览再试。');
   await screenshot(`html-assets-missing-${scale}`);
-  await tap('关闭文件');
+  await tap('关闭缺失资源.html');
   await tap('PNG 资源.html');
   await find('资源加载成功');
   await tap('保留预览状态');
   await verifyImageLink(`png-${scale}`);
-  await tap('关闭文件');
+  await tap('关闭PNG 资源.html');
 }
 
 async function verifyImageLink(scale) {
@@ -145,6 +153,8 @@ async function verifyImageLink(scale) {
 
 await mkdir(output, { recursive: true });
 const previousScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
+const previousActivity = (await adb('shell', 'dumpsys', 'activity', 'activities'))
+  .match(/mResumedActivity:.*? u\d+ ([\w.]+\/[\w.$]+)/)?.[1];
 if (!process.argv.includes('--skip-install')) {
   await adb('install', '-r', path.join(root, 'android/app/build-file-preview/outputs/apk/debug/app-debug.apk'));
 }
@@ -154,8 +164,9 @@ try {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
     await adb('shell', 'am', 'force-stop', app);
     await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+    await waitForFocus();
     if (!assetsOnly) results[scale] = await verifyHtml(scale);
-    await verifyHtmlAssets(scale);
+    if (!layoutOnly) await verifyHtmlAssets(scale);
     if (assetsOnly) { results[scale] = { assets: 'passed' }; continue; }
     await verifyText(scale, '说明文档.md', '原文');
     await verifyText(scale, '代码预览.ts');
@@ -166,11 +177,13 @@ try {
   }
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ passed: true, results }, null, 2));
   console.log(`PASS: ${assetsOnly ? 'HTML assets, loading, source and missing-file states'
-    : 'filled drawer, HTML/source state, fullscreen, scrolling, close/back'} at font scales ${scales.join(', ')}`);
+    : 'fullscreen preview, compact download header, HTML/source, scrolling, close/back'} at font scales ${scales.join(', ')}`);
 } finally {
   const focus = await adb('shell', 'dumpsys', 'window');
   const focused = focus.split('\n').some(line => line.includes('mCurrentFocus') && line.includes(app));
   await adb('shell', 'settings', 'put', 'system', 'font_scale', previousScale);
   await adb('shell', 'am', 'force-stop', app);
-  if (focused) await adb('shell', 'am', 'start', '-W', '-n', 'com.codexswitch.mobile/com.codexswitch.mobile.MainActivity');
+  if (focused && previousActivity && !previousActivity.startsWith(app)) {
+    await adb('shell', 'am', 'start', '-W', '-n', previousActivity);
+  } else if (focused) await adb('shell', 'input', 'keyevent', '3');
 }

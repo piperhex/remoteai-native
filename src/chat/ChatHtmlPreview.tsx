@@ -44,8 +44,8 @@ export function ChatHtmlPreview({ text, context }: { text: string; context?: Htm
 const useStyles = createThemedStyles((color) => ({
   container: { flex: 1, minHeight: 0 },
   content: { flex: 1, backgroundColor: color('#fff', 'surface') },
-  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 12 },
-  tab: { minHeight: 44, paddingHorizontal: 20, justifyContent: 'center', borderRadius: 12 },
+  tabs: { flexDirection: 'row', gap: 4, paddingHorizontal: 12, paddingBottom: 4 },
+  tab: { minHeight: 44, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 10 },
   selectedTab: { backgroundColor: color('#e3f3ed', 'canvas') },
   tabText: { ...textMetrics(14, 21), color: color('#0b8065', 'accent'), fontWeight: '700' },
   notice: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },

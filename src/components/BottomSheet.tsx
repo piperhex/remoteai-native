@@ -36,6 +36,7 @@ interface BottomSheetProps {
   title: string;
   titleIcon?: ReactNode;
   titleAction?: ReactNode;
+  headerAction?: ReactNode;
   truncateTitle?: boolean;
   subtitle?: string;
   onClose: () => void;
@@ -60,6 +61,7 @@ export function BottomSheet({
   title,
   titleIcon,
   titleAction,
+  headerAction,
   truncateTitle = false,
   subtitle,
   onClose,
@@ -95,7 +97,7 @@ export function BottomSheet({
   };
 
   const headingTitle = <Text style={[styles.title, compactHeader && styles.compactTitle,
-    titleAction ? styles.actionTitle : undefined]}
+    (titleAction || headerAction) ? styles.actionTitle : undefined]}
     numberOfLines={truncateTitle ? 1 : undefined} ellipsizeMode="tail">{title}</Text>;
 
   return <Modal
@@ -137,7 +139,7 @@ export function BottomSheet({
             <View pointerEvents="none" style={styles.handle} />
           </View>}
           {!hideHeader && <View style={[styles.header, compactHeader && styles.compactHeader,
-            fullscreen && styles.fullscreenHeader]}>
+            fullscreen && styles.fullscreenHeader, Boolean(headerAction) && styles.actionHeader]}>
             {onBack && <Pressable accessibilityRole="button" accessibilityLabel={t("client.app.goBackOneLevel")}
               hitSlop={8} onPress={onBack} style={styles.closeButton}>
               <Text style={styles.closeText}>‹</Text>
@@ -148,12 +150,14 @@ export function BottomSheet({
               {subtitle ? <Text style={[styles.subtitle, compactHeader && styles.compactSubtitle]}
                 numberOfLines={compactHeader ? 1 : 2}>{subtitle}</Text> : null}
             </View>
+            {headerAction}
             {dismissible ? <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("client.mobile.close", { value1: title })}
               hitSlop={8}
               onPress={onClose}
-              style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.closeButton, Boolean(headerAction) && styles.actionClose,
+                pressed && styles.pressed]}
             >
               <Text style={styles.closeText}>×</Text>
             </Pressable> : null}
@@ -217,6 +221,8 @@ const useStyles = createThemedStyles((color) => ({
   sheetTall: { maxHeight: '92%' },
   sheetFullscreen: { height: '100%', maxHeight: '100%', borderTopLeftRadius: 0, borderTopRightRadius: 0 },
   fullscreenHeader: { paddingTop: 8 },
+  actionHeader: { paddingTop: 4, gap: 8 },
+  actionClose: { width: 44, height: 44 },
   fill: { flex: 1, minHeight: 0 },
   gestureSurface: { flexShrink: 1 },
   handleArea: { minHeight: 32, paddingTop: 9, paddingBottom: 17, alignItems: 'center' },

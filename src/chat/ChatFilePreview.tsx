@@ -1,7 +1,7 @@
 import { displayError } from '../i18n/index';
 import { t, useLanguage } from '../i18n';
 import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Keyboard, Text } from 'react-native';
+import { Keyboard, Platform, Text } from 'react-native';
 import type { FileReference } from '../../vendor/shared/chat/fileReference';
 import { localImageSource } from '../../vendor/shared/chat/imageSources';
 import { isMarkdownPath, type TextPreview } from '../../vendor/shared/remote-chat/textPreview';
@@ -50,6 +50,8 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
   const markdown = isMarkdownPath(file.path);
   const rendered = Boolean(result && (html || markdown));
   const download = useManagedDownload({ client: files, threadId, ready, path: file.path });
+  const transferIcon = Platform.OS === 'android' ? 'pause' : 'close';
+  const downloadIcon = download.completed ? 'file-outline' : 'download';
   useEffect(() => {
     if (!threadId || !ready || binary) return;
     const observer = new AbortController();
@@ -63,12 +65,14 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
   }, [threadId, ready, load, file.path, attempt, binary]);
   return <FilePreviewSheet path={file.path} previewable={!binary} close={close}
     actions={[
-      ...(download.share ? [{ label: t("client.downloads.shareFile"), onPress: download.share,
+      ...(download.share ? [{ label: t("client.downloads.shareFile"), onPress: download.share, icon: 'share-variant' as const,
         loading: download.sharing, disabled: download.busy }] : []),
       { label: download.label, onPress: download.busy ? download.cancel : download.start,
+        icon: download.busy ? transferIcon : downloadIcon,
         tone: 'primary',
         disabled: download.sharing || (!download.busy && !download.completed && (!ready || !threadId)) },
-    ...(error ? [{ label: t("client.mobile.retryPreview"), onPress: () => setAttempt(attempt + 1), disabled: !ready }] : [])]}>
+    ...(error ? [{ label: t("client.mobile.retryPreview"), onPress: () => setAttempt(attempt + 1),
+      icon: 'reload' as const, disabled: !ready }] : [])]}>
     {(!rendered || download.message || download.busy && download.detail) && <SheetScrollView
       style={rendered || binary ? { flexGrow: 0, flexShrink: 1 } : { flex: 1 }}
       contentContainerStyle={{ paddingBottom: rendered ? 0 : 20 }}>

@@ -32,8 +32,10 @@ export function LoungeFilePreview({ file, controller, close }: {
     return () => abort.abort();
   }, [file, controller, attempt]);
   return <FilePreviewSheet path={file.name} previewable close={close} actions={[
-    { label: t('client.projectBrowser.download'), onPress: actions.download, loading: actions.busy, tone: 'primary' },
-    ...(error ? [{ label: t('client.mobile.retryPreview'), onPress: () => setAttempt(value => value + 1) }] : []),
+    { label: t('client.projectBrowser.download'), icon: 'download', onPress: actions.download,
+      loading: actions.busy, tone: 'primary' },
+    ...(error ? [{ label: t('client.mobile.retryPreview'), icon: 'reload' as const,
+      onPress: () => setAttempt(value => value + 1) }] : []),
   ]}>
     {!!actions.notice && <Text style={styles.notice} accessibilityLiveRegion="polite">{t(actions.notice)}</Text>}
     {bytes ? <LoungeFilePreviewContent file={file} bytes={bytes} />
