@@ -24,6 +24,8 @@ import { ComposerAddMenu, type ComposerAddAction } from './ComposerAddMenu';
 import { ComposerPopover } from './ComposerPopover';
 import { ComposerPluginMenu } from './ComposerPluginMenu';
 import { ComposerConversationMenu } from './ComposerConversationMenu';
+import { ComposerSshMenu } from './ComposerSshMenu';
+import type { ComposerSshProfiles } from '../../vendor/shared/chat/useSshCandidates';
 import type { ConversationSearch } from '../../vendor/shared/chat/useConversationCandidates';
 import { ComposerReferences } from './ComposerReferences';
 import type { UploadProgress } from '../../vendor/shared/remote-chat/uploadProgress';
@@ -51,6 +53,7 @@ import type { QueueProps } from '../../vendor/shared/remote-chat/client/queuePro
 import { useQueueEditor } from '../../vendor/shared/remote-chat/client/useQueueEditor';
 
 interface Props {
+  sshProfiles?: ComposerSshProfiles;
   dictation?: DictationClient;
   projectPicker?: ReactNode;
   suggestions?: PromptSuggestionSource;
@@ -91,7 +94,8 @@ interface Props {
   loadConversations: ConversationSearch;
 }
 
-export function ChatComposer({ dictation, projectPicker, suggestions, models, selection, settingsBusy, settingsError,
+export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestions, models, selection,
+  settingsBusy, settingsError,
   updateSettings, refreshModels,
   readUsage, readConversationMetrics, usageActive, tokenUsage, contextSettings, connection, queue, goals, goal, goalBusy,
   threadId, draftScope = threadId, active, ready, sending, running, upload,
@@ -194,6 +198,9 @@ export function ChatComposer({ dictation, projectPicker, suggestions, models, se
   };
   const menuContent = () => {
     if (adding) return <ComposerAddMenu busy={attachmentBusy} choose={chooseAdd} />;
+    if (menu.ssh) return <ComposerSshMenu query={menu.query} profiles={sshProfiles}
+      ready={ready && !attachmentBusy} close={menu.close}
+      choose={reference => { if (attachments.add(reference)) menu.consumeTrigger(); }} />;
     if (menu.files) return <ComposerFileMenu key={`${threadId}:${cwd}`} query={menu.query}
       threadId={threadId} cwd={cwd} ready={ready && !attachmentBusy} load={loadFiles} close={menu.close}
       choose={reference => { if (attachments.add(reference)) menu.consumeTrigger(); }} />;

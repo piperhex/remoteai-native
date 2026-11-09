@@ -234,6 +234,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
     <ChatComposer suggestions={remotePromptSuggestion(state, controller.suggestNextPrompt, {
       scope: JSON.stringify([session.baseUrl, session.email, device?.deviceId]), storage: Storage,
     })}
+      sshProfiles={controller.guiTools.terminal.ssh.profiles}
       dictation={controller.dictation} queue={queueProps(state, controller)}
       projectPicker={<ChatProjectSwitch state={state} controller={controller} active={active} />}
       connection={{ client: controller.guiAccounts, deviceName: device?.name,

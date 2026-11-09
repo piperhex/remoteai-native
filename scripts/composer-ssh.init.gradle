@@ -1,0 +1,10 @@
+// Isolate the fixture from the user's installed application and account data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-composer-ssh'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.composersshtest'
+        project.extensions.getByName('react').entryFile =
+            new File(project.rootDir, '../e2e/ComposerSshFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}
