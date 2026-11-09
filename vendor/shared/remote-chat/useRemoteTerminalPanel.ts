@@ -103,15 +103,18 @@ export function useRemoteTerminalPanel(options: {
       else await create(current);
     });
   };
-  const remove = (id: string) => { void run(async current => {
-    await client.close(id);
-    if (!current()) return;
-    update(previous => {
-      const tabs = previous.tabs.filter(tab => tab.id !== id);
-      return { tabs, selected: previous.selected === id ? tabs.at(-1)?.id ?? '' : previous.selected,
-        open: tabs.length > 0 && previous.open };
-    });
+  const removeTabs = (ids: string[]) => { void run(async current => {
+    for (const id of ids) {
+      await client.close(id);
+      if (!current()) return;
+      update(previous => {
+        const tabs = previous.tabs.filter(tab => tab.id !== id);
+        return { tabs, selected: previous.selected === id ? tabs.at(-1)?.id ?? '' : previous.selected,
+          open: tabs.length > 0 && previous.open };
+      });
+    }
   }); };
+  const remove = (id: string) => removeTabs([id]);
   const select = (selected: SetStateAction<string>) => update(previous => ({
     selected: typeof selected === 'function' ? selected(previous.selected) : selected,
   }));
@@ -122,6 +125,6 @@ export function useRemoteTerminalPanel(options: {
   const exited = (id: string) => update(previous => ({
     tabs: previous.tabs.map(tab => tab.id === id ? { ...tab, exited: true } : tab),
   }));
-  return { ...panel, add, adopt, projectCwd: cwd, addInDirectory, remove, toggle, select, exited,
+  return { ...panel, add, adopt, projectCwd: cwd, addInDirectory, remove, removeTabs, toggle, select, exited,
     hide: () => update({ open: false }) };
 }

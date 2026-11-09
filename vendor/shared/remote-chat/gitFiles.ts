@@ -20,17 +20,19 @@ export interface GitFileNode {
 }
 export function fileTree(files: GitChange[], repositories: GitRepositoryEntry[] = []): GitFileNode[] {
   const root: GitFileNode = { path: '', name: '', files: [], children: [] };
+  const nodes = new Map<string, GitFileNode>();
   const repositoryByPath = new Map(repositories.map(entry => [entry.path, entry]));
   for (const file of files) {
     let parent = root;
     const parts = file.path.split('/');
     parts.forEach((name, index) => {
-      const path = parts.slice(0, index + 1).join('/');
-      let node = parent.children.find(node => node.path === path);
+      const path = parent.path ? `${parent.path}/${name}` : name;
+      let node = nodes.get(path);
       if (!node) {
         node = { path, name, files: [], children: [], repository: repositoryByPath.get(path),
           file: index === parts.length - 1 ? file : undefined };
         parent.children.push(node);
+        nodes.set(path, node);
       }
       if (index === parts.length - 1) node.file = file;
       node.files.push(file); parent = node;

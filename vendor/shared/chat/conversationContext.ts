@@ -22,6 +22,10 @@ function reference(payload: string): Content[] {
     const data: unknown = JSON.parse(payload);
     if (!data || typeof data !== 'object') return [];
     const value = data as Record<string, unknown>;
+    if (value.kind === 'ssh' && typeof value.name === 'string' && typeof value.id === 'string'
+      && /^[A-Za-z0-9_-]{1,128}$/u.test(value.id)) {
+      return [{ type: 'mention', name: value.name, path: `ssh-profile://${value.id}` }];
+    }
     if (value.kind === 'coze' && typeof value.name === 'string' && typeof value.id === 'string'
       && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(value.id)) {
       return [{ type: 'mention', name: value.name, path: `coze://${value.id}` }];

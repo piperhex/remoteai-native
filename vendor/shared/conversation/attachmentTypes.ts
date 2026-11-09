@@ -1,5 +1,5 @@
 export interface AttachmentReference {
-  kind: "file" | "folder" | "plugin" | "conversation" | "coze";
+  kind: "file" | "folder" | "plugin" | "conversation" | "coze" | "ssh";
   name: string;
   path: string;
   /** Uploaded file bytes; materialized on the target computer before sending. */

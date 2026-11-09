@@ -2,7 +2,9 @@ import type { Item } from '../remote-chat/client/types';
 import { referenceKind } from '../conversation/conversationReferences';
 import { visibleUserContent } from './conversationContext';
 
-const REFERENCE_LABELS = { conversation: "client.workspaceActions.referenceAConversation", coze: 'Coze', plugin: "client.chat.plugins", file: "client.mobile.attachments", folder: "client.mobile.attachments" };
+const REFERENCE_LABELS = { conversation: 'client.workspaceActions.referenceAConversation', coze: 'Coze',
+  plugin: 'client.chat.plugins', file: 'client.mobile.attachments', folder: 'client.mobile.attachments',
+  ssh: 'client.ssh.connection' };
 
 /** Read both live mentions and context envelopes retained in older conversation history. */
 export function messageReferences(item: Item) {

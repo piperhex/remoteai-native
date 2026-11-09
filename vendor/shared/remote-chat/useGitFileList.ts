@@ -22,22 +22,27 @@ function treeRows(nodes: GitFileNode[], options: {
 export function useGitFileList(files: GitChange[], repositories?: GitRepositoryEntry[]) {
   const [mode, setMode] = useState<'tree' | 'flat'>('tree');
   const [collapsed, setCollapsed] = useState(new Set<string>());
+  const groups = useMemo(() => GIT_AREAS.map(area => {
+    const group = files.filter(file => fileArea(file) === area.id);
+    return { area, files: group, tree: fileTree(group) };
+  }), [files]);
+  const unifiedTree = useMemo(() => repositories?.length ? fileTree(files, repositories) : null,
+    [files, repositories]);
   const rows = useMemo(() => {
-    if (repositories?.length) return treeRows(fileTree(files, repositories), {
+    if (unifiedTree) return treeRows(unifiedTree, {
       area: GIT_AREAS[1], collapsed, depth: 0, unified: true,
     });
-    return GIT_AREAS.flatMap(area => {
-      const group = files.filter(file => fileArea(file) === area.id);
+    return groups.flatMap(({ area, files: group, tree }) => {
       if (!group.length) return [];
       const heading: GitFileRow = { id: area.id, name: area.label, path: area.label, depth: 0,
         kind: 'area', area, files: group };
-      const children: GitFileRow[] = mode === 'tree' ? treeRows(fileTree(group), { area, collapsed, depth: 0 })
+      const children: GitFileRow[] = mode === 'tree' ? treeRows(tree, { area, collapsed, depth: 0 })
         : [...group].sort((a, b) => a.path.localeCompare(b.path)).map(file => ({
           id: `${area.id}:${file.path}`, name: file.path.split('/').pop()!, path: file.path,
           depth: 0, kind: 'file', area, files: [file], file }));
       return [heading, ...children];
     });
-  }, [files, mode, collapsed, repositories]);
+  }, [groups, mode, collapsed, unifiedTree]);
   const toggleFolder = (id: string) => setCollapsed(previous => {
     const next = new Set(previous);
     if (next.has(id)) next.delete(id); else next.add(id);

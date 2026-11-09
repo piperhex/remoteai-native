@@ -1,4 +1,5 @@
 import type { AttachmentReference } from '../conversation/attachmentTypes';
+import { SSH_REFERENCE_PATTERN } from '../conversation/sshReferences';
 import type { ConnectionMode } from './protocol';
 import { base64Bytes, checkFileUploadSize, fileUploadTotalByteLimit, getChatPolicy, MIB,
   UploadPolicyError } from './policy';
@@ -49,6 +50,8 @@ export function remoteAttachments(value: unknown, mode?: ConnectionMode): Attach
     if (item.kind === 'coze' && typeof item.path === 'string'
       && /^coze:\/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(item.path)
       && item.data === undefined) return { kind: 'coze', name: item.name, path: item.path };
+    if (item.kind === 'ssh' && typeof item.path === 'string' && SSH_REFERENCE_PATTERN.test(item.path)
+      && item.data === undefined) return { kind: 'ssh', name: item.name, path: item.path };
     if (item.kind === 'conversation' && typeof item.path === 'string'
       && item.path.length <= MAX_CONVERSATION_PATH_LENGTH
       && /^codex-thread:\/\/[^/\\\x00-\x1f\x7f]+$/u.test(item.path) && item.data === undefined) {

@@ -9,8 +9,10 @@ import { itemUploadProgress, type UploadProgress } from '../../vendor/shared/rem
 import { ComposerUploadProgress } from './ComposerUploadProgress';
 
 const referenceIcons = { file: 'file-text', folder: 'folder', plugin: 'box',
-  conversation: 'message-square', coze: 'git-branch' } as const;
-const referencePrefix = { file: '', folder: '', plugin: '', conversation: '@', coze: '#' } as const;
+  conversation: 'message-square', coze: 'git-branch', ssh: 'terminal',
+} as const satisfies Record<AttachmentReference['kind'], string>;
+const referencePrefix = { file: '', folder: '', plugin: '', conversation: '@', coze: '#', ssh: '!',
+} as const satisfies Record<AttachmentReference['kind'], string>;
 
 export function ComposerReferences({ items, disabled, remove, upload, reconnecting }: {
   items: AttachmentReference[]; disabled: boolean; remove: (item: AttachmentReference) => void;
