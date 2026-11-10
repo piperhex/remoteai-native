@@ -1,18 +1,27 @@
+async function pinchFocus(pages) {
+  return pages.evaluate(element => {
+    const viewport = element.getBoundingClientRect();
+    const preferred = { x: viewport.left + viewport.width / 2,
+      y: viewport.top + Math.min(viewport.height / 2, 300) };
+    const visible = [...element.querySelectorAll('.file-pdf-page')].map(page => {
+      const rect = page.getBoundingClientRect();
+      return { page, rect, top: Math.max(rect.top, viewport.top), bottom: Math.min(rect.bottom, viewport.bottom) };
+    }).filter(page => page.bottom > page.top);
+    const containsCenter = page => page.top <= preferred.y && page.bottom >= preferred.y;
+    // A viewport midpoint can fall in a page gap; use the largest visible page in that case.
+    const target = visible.find(containsCenter)
+      ?? visible.sort((a, b) => (b.bottom - b.top) - (a.bottom - a.top))[0];
+    if (!target) throw new Error('Missing visible PDF page');
+    const { page, rect, top, bottom } = target;
+    const center = { x: preferred.x, y: containsCenter(target) ? preferred.y : (top + bottom) / 2 };
+    return { center, page: page.dataset.pdfPage, x: (center.x - rect.left) / rect.width,
+      y: (center.y - rect.top) / rect.height, width: rect.width };
+  });
+}
+
 /** Inject real Chromium touch input, including Android WebViews, and report the touched document point. */
 export async function pinchPdf(page, pages, { from = 110, to = 190, dx = 0, dy = 0, cancel = false } = {}) {
-  const bounds = await pages.boundingBox();
-  if (!bounds) throw new Error('Missing PDF viewport');
-  const center = { x: bounds.x + bounds.width / 2, y: bounds.y + Math.min(bounds.height / 2, 300) };
-  const focus = await pages.evaluate((element, center) => {
-    const target = [...element.querySelectorAll('.file-pdf-page')].find(page => {
-      const bounds = page.getBoundingClientRect();
-      return bounds.top <= center.y && bounds.bottom >= center.y;
-    });
-    if (!target) throw new Error('Place the pinch inside a PDF page');
-    const rect = target.getBoundingClientRect();
-    return { page: target.dataset.pdfPage, x: (center.x - rect.left) / rect.width,
-      y: (center.y - rect.top) / rect.height, width: rect.width };
-  }, center);
+  const { center, ...focus } = await pinchFocus(pages);
   const session = await page.context().newCDPSession(page);
   const points = (distance, progress) => [0, 1].map(id => ({ id, radiusX: 6, radiusY: 6, force: 1,
     x: center.x + dx * progress + (id ? 1 : -1) * distance / 2, y: center.y + dy * progress }));
