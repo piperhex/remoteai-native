@@ -20,7 +20,7 @@
   overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .file-pdf-reader { display: flex; flex: 1; min-height: 0; min-width: 0; position: relative; }
 .file-pdf-pages { flex: 1; min-height: 0; min-width: 0; overflow: auto; overflow-anchor: none;
-  background: var(--pdf-subtle); scrollbar-gutter: stable; }
+  background: var(--pdf-subtle); scrollbar-gutter: stable; touch-action: pan-x pan-y; }
 .file-pdf-page-list { display: flex; flex-direction: column; align-items: center; gap: 16px;
   box-sizing: border-box; width: max-content; min-width: 100%; padding: 16px; }
 .file-pdf-page, .file-pdf-thumbnail-canvas { flex: none; background: white; box-shadow: 0 2px 8px #0002; }
@@ -44,9 +44,16 @@
 .file-pdf-outline ol { list-style: none; padding: 0; margin: 0; }
 .file-pdf-outline ol ol { padding-left: 14px; }
 .file-pdf-outline li { margin: 3px 0; }
-.file-pdf-outline summary { cursor: pointer; list-style-position: inside; }
-.file-pdf-outline button { max-width: 100%; padding: 6px; border: 0; border-radius: 4px;
-  background: transparent; color: inherit; font: inherit; text-align: start; overflow-wrap: anywhere; cursor: pointer; }
+.file-pdf-outline summary { display: grid; grid-template-columns: 1em minmax(0, 1fr); gap: 4px;
+  cursor: pointer; list-style: none; }
+.file-pdf-outline summary::marker { content: ''; }
+.file-pdf-outline summary::-webkit-details-marker { display: none; }
+.file-pdf-outline-toggle { width: 1em; height: 1em; margin-top: calc(6px + .25em); }
+.file-pdf-outline details[open] > summary > .file-pdf-outline-toggle { transform: rotate(90deg); }
+.file-pdf-outline button { display: block; box-sizing: border-box; min-width: 0; width: 100%;
+  padding: 6px; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit;
+  line-height: 1.5; text-align: start; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+.file-pdf-outline li > button { width: calc(100% - 1em - 4px); margin-inline-start: calc(1em + 4px); }
 .file-pdf-outline button:hover, .file-pdf-outline button[aria-current="location"] {
   color: var(--pdf-accent); background: var(--pdf-hover); }
 .file-pdf-outline button:disabled { opacity: .7; cursor: default; }

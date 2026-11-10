@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import { pdfScrollAnchor, visiblePdfPages, type PdfPageLayout, type PdfVisiblePages } from './pdfLayout';
+import { pdfFocusScroll, pdfScrollAnchor, visiblePdfPages, type PdfPageLayout, type PdfVisiblePages,
+  type PdfZoomFocus } from './pdfLayout';
 
 export function usePdfElementWidth(host: RefObject<HTMLElement>) {
   const [width, setWidth] = useState(0);
@@ -13,9 +14,9 @@ export function usePdfElementWidth(host: RefObject<HTMLElement>) {
   return width;
 }
 
-export function usePdfViewport(host: RefObject<HTMLDivElement>, pages: readonly PdfPageLayout[]) {
+export function usePdfViewport(host: RefObject<HTMLDivElement>, pages: readonly PdfPageLayout[], focus?: PdfZoomFocus) {
   const [visible, setVisible] = useState<PdfVisiblePages>({ first: 0, last: 0, current: 0 });
-  const previous = useRef({ pages, top: 0 });
+  const previous = useRef({ pages, top: 0, focus });
   const read = useCallback(() => {
     const element = host.current;
     if (!element || previous.current.pages !== pages) return;
@@ -26,14 +27,17 @@ export function usePdfViewport(host: RefObject<HTMLDivElement>, pages: readonly 
   }, [host, pages]);
   useLayoutEffect(() => {
     const element = host.current;
-    if (element && previous.current.pages !== pages) {
+    if (element && focus && focus !== previous.current.focus) {
+      const position = pdfFocusScroll(pages, element.clientWidth, focus);
+      if (position) { element.scrollTop = position.top; element.scrollLeft = position.left; }
+    } else if (element && previous.current.pages !== pages) {
       // A smaller page list can clamp scrollTop during DOM mutations, before this effect runs.
       element.scrollTop = pdfScrollAnchor({ previous: previous.current.pages, next: pages,
         top: previous.current.top });
     }
-    previous.current = { pages, top: element?.scrollTop ?? 0 };
+    previous.current = { pages, top: element?.scrollTop ?? 0, focus };
     read();
-  }, [host, pages, read]);
+  }, [host, pages, read, focus]);
   useEffect(() => {
     const element = host.current;
     if (!element) return;

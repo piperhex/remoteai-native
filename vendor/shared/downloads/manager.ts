@@ -11,6 +11,7 @@ import { transferDownload } from './transfer';
 import { monitorDownloadSpeed } from './monitorDownloadSpeed';
 import type { DownloadConnection, DownloadSource, DownloadTask } from './types';
 import { sshDownloadClient } from '../terminal/sshDownloadClient';
+import { managedDownloadHandler, subscribeManagedDownloads } from './managedTasks';
 
 const MAX_ACTIVE_DOWNLOADS = 2;
 const MAX_DOWNLOAD_RECORDS = 500;
@@ -18,6 +19,10 @@ export const downloadOwner = (session: { baseUrl: string; email: string }) =>
   JSON.stringify([session.baseUrl, session.email.toLowerCase()]);
 
 export class WebDownloadManager {
+  constructor() {
+    subscribeManagedDownloads(() => { this.tasks = [...this.tasks]; this.pauseDisconnected();
+      this.emit(); this.schedule(); });
+  }
   private tasks: DownloadTask[] = [];
   private listeners = new Set<() => void>();
   private current?: DownloadConnection;
@@ -98,7 +103,22 @@ export class WebDownloadManager {
     this.emit();
   }
   private connected(task: DownloadTask) {
+    if (task.sync) return managedDownloadHandler(task)?.connected(task);
     return this.connectionForSource(task.source)?.ready;
+  }
+  taskConnected = (task: DownloadTask) => !!this.connected(task);
+  async updateManaged(task: DownloadTask) {
+    if (this.tasks.some(current => current.id === task.id)) await this.persist(task);
+  }
+  async enqueueManaged(task: DownloadTask) {
+    await this.initialize();
+    if (this.failure) throw new Error(this.failure);
+    if (!managedDownloadHandler(task) || this.tasks.length >= MAX_DOWNLOAD_RECORDS) {
+      throw new Error('CONVERSATION_SYNC_FAILED');
+    }
+    await storeDownload(task);
+    this.tasks = [...this.tasks, task]; this.emit(); this.schedule();
+    return task.id;
   }
   async enqueue(source: DownloadSource) {
     await this.initialize();
@@ -145,6 +165,8 @@ export class WebDownloadManager {
   }
   async remove(id: string) {
     await this.pause(id);
+    const task = this.tasks.find(task => task.id === id);
+    if (task) await managedDownloadHandler(task)?.remove?.(task);
     await deleteDownload(id);
     this.tasks = this.tasks.filter(task => task.id !== id);
     this.paused.delete(id);
@@ -152,6 +174,7 @@ export class WebDownloadManager {
   }
   async save(id: string) {
     const task = this.tasks.find(task => task.id === id);
+    if (task?.sync) return;
     if (!task || !['completed', 'ready'].includes(task.status)) return;
     // Invoke the picker in the click stack before an IndexedDB await consumes user activation.
     const saving = saveDownload(task, () => undefined);
@@ -171,6 +194,7 @@ export class WebDownloadManager {
   }
   async open(id: string, opener: DownloadOpener = openBrowserDownload) {
     const task = this.tasks.find(task => task.id === id);
+    if (task?.sync) return;
     if (!task || !['completed', 'ready'].includes(task.status)) return;
     try { await opener(task); }
     catch (error) {
@@ -191,7 +215,7 @@ export class WebDownloadManager {
       if (this.flights.size >= MAX_ACTIVE_DOWNLOADS) return;
       const connection = this.connectionForSource(task.source);
       if (task.status !== 'queued' || this.flights.has(task.id) || this.retryTimers.has(task.id) || this.paused.has(task.id)
-        || !connection?.ready) continue;
+        || !this.connected(task)) continue;
       const controller = new AbortController();
       const done = Promise.resolve().then(() => this.run(task, connection, controller.signal)).finally(() => {
         this.flights.delete(task.id); this.schedule();
@@ -199,11 +223,18 @@ export class WebDownloadManager {
       this.flights.set(task.id, { controller, done });
     }
   }
-  private async run(task: DownloadTask, connection: Omit<DownloadConnection, 'files'>, signal: AbortSignal) {
+  private async run(task: DownloadTask, connection: Omit<DownloadConnection, 'files'> | undefined,
+    signal: AbortSignal) {
     const speed = monitorDownloadSpeed(value => { task = value; this.update(value); });
     try {
       task = { ...task, status: 'preparing', preparation: undefined, completedAt: undefined };
       await this.persist(task);
+      const managed = managedDownloadHandler(task);
+      if (managed) {
+        const completed = await managed.run({ task, signal, update: speed.update });
+        speed.stop(); this.clearRetry(task.id); await this.persist(completed); return;
+      }
+      if (!connection) throw new Error('CONVERSATION_SYNC_CLOSED');
       const client = task.source.sshSessionId ? connection.ssh
         && sshDownloadClient(connection.ssh, task.source.sshSessionId) : connection.client;
       if (!client) throw new Error('client.ssh.closed');
@@ -219,12 +250,16 @@ export class WebDownloadManager {
       error = normalizeFileError(error);
       const paused = signal.aborted || error instanceof DownloadCancelled
         || (error instanceof BulkError && error.code === 'CANCELLED');
-      const retrying = canRetryDownload(error) && !signal.aborted && !this.paused.has(task.id)
+      const retrying = canRetryDownload(error) && managedDownloadHandler(task)?.retryable?.(error) !== false
+        && !signal.aborted && !this.paused.has(task.id)
         && this.connected(task) && this.deferRetry(task);
       task = { ...task, status: retrying ? 'queued' : paused ? 'paused' : 'failed', bytesPerSecond: undefined,
         message: retrying ? '下载暂时中断，正在重试…' : signal.aborted ? ''
           : error instanceof DownloadPolicyError || error instanceof BulkError ? error.message
           : '下载未完成，请检查连接和存储空间后重试。' };
+      if (task.sync && !signal.aborted) task.message = error instanceof Error
+        && error.message === 'CONVERSATION_SYNC_CHANGED' ? 'client.conversationSync.changed'
+        : 'client.conversationSync.failed';
       this.update(task);
       await storeDownload(task).catch(() => {
         this.clearRetry(task.id); this.update({ ...task, status: 'failed' }); this.storageFailed();

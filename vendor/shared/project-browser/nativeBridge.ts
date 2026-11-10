@@ -4,6 +4,8 @@ import { withinPath, type BrowserHost, type EntryAction } from './entryActions';
 import { validFileSelection } from './fileSelection';
 import { displayText } from '../localization/messages';
 import { windowRequest } from './windowRequest';
+import { filePreviewKind } from '../file-preview/kinds';
+import { readNativePdfPreview } from './nativePdfPreview';
 
 function entryAction(target: Record<string, unknown>): EntryAction {
   if (target.action === 'delete') return { action: 'delete' };
@@ -26,6 +28,8 @@ export interface BrowserSettings {
     reference: boolean; quoteSelection: boolean; blame?: boolean;
   };
   ssh?: { path: string; hidden: boolean; busy: boolean; revision: number };
+  pdfPreview?: { policy: import('../chat/chatPolicy').ChatPolicy;
+    mode: import('../remote-chat/protocol').ConnectionMode };
 }
 export interface BrowserReply { type: 'reply'; id: number; data?: unknown; error?: string }
 export type BrowserHostMessage = BrowserSettings | BrowserReply | { type: 'close' };
@@ -45,7 +49,7 @@ async function referenceEntry(target: Record<string, unknown>, path: string, hos
 
 /** The embedded viewer can only access the project selected by its native host. */
 export async function handleBrowserRequest(raw: string, options: {
-  client: ProjectBrowserClient; cwd: string; connected: boolean; host?: BrowserHost;
+  client: ProjectBrowserClient; cwd: string; connected: boolean; host?: BrowserHost; signal?: AbortSignal;
 }): Promise<BrowserReply | null> {
   let message: Record<string, unknown>;
   try { message = object(JSON.parse(raw)); } catch { return null; }
@@ -64,6 +68,13 @@ export async function handleBrowserRequest(raw: string, options: {
     }
     if (typeof target.path !== 'string' || target.path.length > 4096) throw new Error('文件暂时无法读取，请重试。');
     const file = { cwd: options.cwd, path: target.path };
+    if (message.action === 'previewPdf') {
+      if (!withinPath(file.path, options.cwd) || file.path.replace(/\\/g, '/').split('/').includes('..')
+        || filePreviewKind(file.path) !== 'pdf' || typeof target.token !== 'string'
+        || !/^[a-z\d-]{36}$/i.test(target.token)) throw new Error('client.filePreview.unavailable');
+      return { type: 'reply', id, data: await readNativePdfPreview({ ...options, ...file, token: target.token,
+        signal: options.signal ?? new AbortController().signal }) };
+    }
     if (message.action === 'blame') {
       if (!options.client.blame || typeof target.revision !== 'string' || !target.revision
         || target.revision.length > 256 || !withinPath(file.path, options.cwd)

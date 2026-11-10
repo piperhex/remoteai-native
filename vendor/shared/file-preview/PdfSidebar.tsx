@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { Images, ListTree } from 'lucide-react';
+import { ChevronRight, Images, ListTree } from 'lucide-react';
 import { displayText as t } from '../localization/messages';
 import { PdfPage } from './PdfPage';
 import { readPdfOutline, type PdfOutlineItem } from './pdfOutline';
@@ -25,7 +25,7 @@ function PdfThumbnail({ document, size, page, name, current, navigate, root }: {
     aria-label={t('client.filePreview.pdfPage', { page })} aria-current={current ? 'page' : undefined}
     onClick={() => navigate(page)}>
     <PdfPage document={document} page={page} width={THUMBNAIL_WIDTH}
-      height={THUMBNAIL_WIDTH * size.height / size.width} name={name} active={active} thumbnail />
+      height={THUMBNAIL_WIDTH * size.height / size.width} name={name} active={active || current} thumbnail />
     <span>{page}</span>
   </button>;
 }
@@ -61,9 +61,11 @@ function OutlineEntry({ entry, current, navigate }: {
 }) {
   const link = <button type="button" disabled={!entry.page}
     aria-current={entry.page === current ? 'location' : undefined}
-    onClick={() => { if (entry.page) navigate(entry.page, entry.position); }} dir="auto">{entry.title}</button>;
+    onClick={() => { if (entry.page) navigate(entry.page, entry.position); }} dir="auto"
+    title={entry.title}>{entry.title}</button>;
   return <li>{entry.children.length ? <details open={entry.expanded}>
-    <summary>{link}</summary><ol>{entry.children.map((child, index) =>
+    <summary><ChevronRight className="file-pdf-outline-toggle" aria-hidden="true" />{link}</summary>
+    <ol>{entry.children.map((child, index) =>
       <OutlineEntry key={index} entry={child} current={current} navigate={navigate} />)}</ol>
   </details> : link}</li>;
 }

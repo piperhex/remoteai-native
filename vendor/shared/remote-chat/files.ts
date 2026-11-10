@@ -14,6 +14,7 @@ export type PreviewKind = 'html' | 'markdown' | 'text' | 'image' | 'pdf' | 'vide
 export interface FilePreviewData extends FileReference {
   sessionId: string; name: string; kind: PreviewKind; text: string | null; url: string;
   size?: number;
+  remote?: boolean;
 }
 export const GUI_FILE_OPERATIONS = new Set([
   'guiFileApplications', 'guiFileAction', 'guiFilePreviewOpen', 'guiFilePreviewClose', 'guiFilePreviewHost',

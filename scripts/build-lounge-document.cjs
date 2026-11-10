@@ -2,40 +2,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
 const { webviewReactAliases } = require('./webview-react.cjs');
+const { offlinePdfPlugin } = require('./offline-pdf.cjs');
 const root = path.resolve(__dirname, '..');
-const pdfRoot = path.dirname(require.resolve('pdfjs-dist/package.json'));
-
-// Bundle PDF fonts and worker code locally so received documents work without a public viewer or network upload.
-const pdfPlugin = {
-  name: 'offline-pdf',
-  setup(build) {
-    build.onResolve({ filter: /pdf\.worker\.min\.mjs\?url$/ }, () => ({ path: 'worker', namespace: 'offline-pdf' }));
-    build.onResolve({ filter: /\/pdfAssets$|^\.\/pdfAssets$/ }, () => ({ path: 'assets', namespace: 'offline-pdf' }));
-    build.onLoad({ filter: /.*/, namespace: 'offline-pdf' }, args => {
-      if (args.path === 'worker') return { resolveDir: root, contents:
-        `import { WorkerMessageHandler } from 'pdfjs-dist/legacy/build/pdf.worker.mjs';
-        globalThis.pdfjsWorker = { WorkerMessageHandler }; export default 'offline-pdf-worker';` };
-      const assets = {};
-      for (const dir of ['cmaps', 'standard_fonts', 'wasm']) {
-        for (const name of fs.readdirSync(path.join(pdfRoot, dir)).sort()) {
-          if (!/\.(bcmap|pfb|ttf|wasm)$/.test(name)) continue;
-          assets[name] = fs.readFileSync(path.join(pdfRoot, dir, name)).toString('base64');
-        }
-      }
-      return { contents: `const assets = ${JSON.stringify(assets)};
-        function read(name) { if (!assets[name]) throw Error('Missing PDF asset');
-          return Uint8Array.from(atob(assets[name]), c => c.charCodeAt(0)); }
-        export class PdfCMapReader { async fetch({name}) {
-          return {cMapData: read(name + '.bcmap'), isCompressed: true}; } }
-        export class PdfAssetReader { async fetch({filename}) { return read(filename); } }` };
-    });
-  },
-};
 async function build() {
   const result = await esbuild.build({ absWorkingDir: root,
     entryPoints: ['vendor/shared/lounge/nativeDocumentEntry.tsx'], bundle: true, minify: true,
     format: 'iife', platform: 'browser', target: ['chrome100', 'safari16'], write: false,
-    outfile: 'lounge-document.js', jsx: 'automatic', legalComments: 'inline', plugins: [pdfPlugin],
+    outfile: 'lounge-document.js', jsx: 'automatic', legalComments: 'inline', plugins: [offlinePdfPlugin(root)],
     supported: { 'template-literal': false }, define: { 'process.env.NODE_ENV': '"production"' },
     alias: webviewReactAliases,
   });

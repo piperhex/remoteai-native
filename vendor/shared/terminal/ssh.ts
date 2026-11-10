@@ -21,6 +21,7 @@ export type SshFileReply = { type: 'list'; path: string; entries: SshEntry[]; tr
   | { type: 'file'; data: string } | { type: 'done' }
   | { type: 'upload'; token: string } | { type: 'uploaded'; path: string };
 export interface SshApi {
+  previewMode?: import('../remote-chat/protocol').ConnectionMode;
   profiles: import('./sshProfiles').SshProfileStore;
   probe: (endpoint: SshEndpoint) => Promise<string>;
   ensureX11?: (options: SshX11) => Promise<void>;

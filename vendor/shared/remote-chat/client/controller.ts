@@ -898,7 +898,8 @@ export class ChatController {
   };
 
   files: import('../fileDownload').FileClient = {
-    open: (threadId, path) => this.connection.request('request', { operation: 'fileOpen', threadId, path }),
+    open: (threadId, path, options) => this.connection.request('request', { operation: 'fileOpen', threadId, path,
+      ...(options?.preview ? { preview: options.preview } : {}) }),
     read: (request) => this.connection.request('request', { operation: 'fileRead', ...request }),
     close: (threadId, id) => this.connection.request('request', { operation: 'fileClose', threadId, id }),
   };

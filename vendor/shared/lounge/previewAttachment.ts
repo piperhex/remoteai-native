@@ -10,11 +10,12 @@ export async function previewAttachment(options: {
   progress: (fraction: number) => void;
 }): Promise<Uint8Array> {
   const { file, attachments, signal, progress } = options;
-  checkPreviewSize(file.size);
+  checkPreviewSize(file.size, file.name, 'relay');
   const bytes = new Uint8Array(file.size);
   let offset = 0;
   await attachments.download(file, {
     write: async data => {
+      checkPreviewSize(file.size, file.name, 'relay');
       if (signal.aborted) throw new Error('client.lounge.fileUnavailable');
       const chunk = toByteArray(data);
       if (offset + chunk.length > bytes.length) throw new Error('client.lounge.fileUnavailable');

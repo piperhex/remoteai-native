@@ -16,6 +16,7 @@ export interface DownloadLocation {
   cwd?: string;
 }
 export interface DownloadOpen extends DownloadLocation {
+  filePreview?: 'pdf';
   attachment?: import('../lounge/attachments').LoungeAttachment;
   transferId: string;
   path: string;

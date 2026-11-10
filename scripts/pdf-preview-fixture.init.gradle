@@ -1,0 +1,13 @@
+// Isolate the fixture package, build outputs and data from installed Remote AI applications.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-pdf-preview'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.pdfpreviewtest'
+        // Load the embedded fixture bundle without a Metro development server.
+        project.android.buildTypes.debug.debuggable = false
+        project.android.sourceSets.debug.java.srcDir(new File(project.rootDir, '../e2e/pdf-preview-android'))
+        project.android.sourceSets.debug.manifest.srcFile(new File(project.rootDir, '../e2e/pdf-preview-android/AndroidManifest.xml'))
+        project.extensions.getByName('react').entryFile = new File(project.rootDir, '../e2e/PdfPreviewFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

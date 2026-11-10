@@ -14,7 +14,11 @@ export function useImageViewer(load: PreviewImageLoader, autoLoadOriginal = fals
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; observer.current?.abort(); };
+    return () => {
+      mounted.current = false; observer.current?.abort();
+      // StrictMode remounts effects; a cancelled promise must not block the fresh request.
+      pending.current = undefined;
+    };
   }, []);
   const loadOriginal = useCallback(() => {
     if (current.current) return Promise.resolve(current.current);
@@ -27,13 +31,15 @@ export function useImageViewer(load: PreviewImageLoader, autoLoadOriginal = fals
     pending.current = Promise.resolve().then(() => loader.current({ signal: controller.signal,
       onProgress: value => { if (mounted.current && !controller.signal.aborted) setProgress(value); },
     })).then(result => {
+      if (controller.signal.aborted) throw new Error('Image request cancelled');
       current.current = result;
       if (mounted.current) setUrl(result);
       return result;
     }, cause => {
-      if (mounted.current) setError(true);
+      if (mounted.current && !controller.signal.aborted) setError(true);
       throw cause;
     }).finally(() => {
+      if (observer.current !== controller) return;
       controller.abort();
       pending.current = undefined;
       if (mounted.current) setLoading(false);

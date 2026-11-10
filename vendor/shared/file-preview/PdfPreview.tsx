@@ -26,7 +26,7 @@ function PdfReader({ document, name }: { document: PDFDocumentProxy; name: strin
   const { sizes, error } = usePdfPageSizes(document);
   const zoom = usePdfZoom(scroll);
   const pages = useMemo(() => pdfPageLayout(sizes, availableWidth, zoom.zoom), [sizes, availableWidth, zoom.zoom]);
-  const viewport = usePdfViewport(scroll, pages);
+  const viewport = usePdfViewport(scroll, pages, zoom.focus);
   const navigate = (page: number, position?: number) => {
     viewport.jump(page, position);
     if (width < SIDEBAR_BREAKPOINT) setSidebar(false);

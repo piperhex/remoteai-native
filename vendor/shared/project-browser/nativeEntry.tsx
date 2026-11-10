@@ -11,6 +11,11 @@ import { nativeSshTreeOptions } from '../terminal/nativeSshBrowser';
 import { TerminalWorkspaceProvider } from '../terminal/TerminalWorkspaceProvider';
 import { nativeScriptPanel } from './nativeScripts';
 import { readProjectDocument } from './fileTransfer';
+import { projectRequestToken } from './requestToken';
+import { NativePdfPreview } from './NativePdfPreviewView';
+import type { NativePdfData } from './nativePdfPreview';
+import { checkPreviewSize, filePreviewKind, type PreviewLoader } from '../file-preview/kinds';
+import { setChatPolicy, setChatConnectionMode } from '../remote-chat/policy';
 
 declare global {
   interface Window {
@@ -31,7 +36,7 @@ const request = <T,>(action: string, body: object) => new Promise<T>((resolve, r
   const finished = new Promise<void>(resolve => { finish = resolve; });
   const timer = setTimeout(() => {
     pending.delete(id); reject(new Error('请求超时，请重试。')); finish();
-  }, action === 'download' ? DOWNLOAD_TIMEOUT : REQUEST_TIMEOUT);
+  }, action === 'download' || action === 'previewPdf' ? DOWNLOAD_TIMEOUT : REQUEST_TIMEOUT);
   pending.set(id, { resolve: value => resolve(value as T), reject, timer, action, finished, finish });
   send({ type: 'request', id, action, body });
 });
@@ -46,6 +51,15 @@ const client: ProjectBrowserClient = {
   mutate: target => request('mutate', target),
 };
 const blameClient: ProjectBrowserClient = { ...client, blame: target => request('blame', target) };
+const loadPdf: PreviewLoader = async (path, { signal, progress }) => {
+  const value = await request<NativePdfData>('previewPdf', { path, token: projectRequestToken() });
+  signal.throwIfAborted();
+  checkPreviewSize(value.size, path, loadPdf.mode);
+  const bytes = Uint8Array.from(atob(value.data), character => character.charCodeAt(0));
+  checkPreviewSize(bytes.length, path, loadPdf.mode);
+  progress(bytes.length, bytes.length);
+  return new Blob([bytes], { type: 'application/pdf' });
+};
 const host: BrowserHost = {
   copyPath: path => request('copyPath', { path }),
   download: target => request('download', target),
@@ -70,6 +84,11 @@ async function close() {
 function render(settings: BrowserSettings) {
   currentSettings = settings;
   if (settings.language) setInterfaceLanguage(settings.language);
+  if (settings.pdfPreview) {
+    loadPdf.mode = settings.pdfPreview.mode;
+    setChatPolicy(settings.pdfPreview.policy);
+    setChatConnectionMode(settings.pdfPreview.mode);
+  }
   if (settings.themeMode) {
     document.documentElement.dataset.theme = settings.themeMode;
     document.documentElement.style.colorScheme = settings.themeMode;
@@ -84,6 +103,8 @@ function render(settings: BrowserSettings) {
   root.render(<TerminalWorkspaceProvider panel={nativeScriptPanel(settings.scripts, send)}>
     <ProjectBrowser key={settings.cwd} ref={browser}
       client={capabilities?.blame ? blameClient : client} cwd={settings.cwd} host={actionsHost}
+      renderPreview={props => filePreviewKind(props.document.path) === 'pdf'
+        ? <NativePdfPreview {...props} load={loadPdf} /> : undefined}
       treeOptions={nativeSshTreeOptions({ ...settings, connected: settings.connected && !closing }, send)}
       connected={settings.connected && !closing} t={text => settings.labels[text] ?? displayText(text)}
       initialSnapshot={settings.snapshot} runScripts={!!settings.scripts}

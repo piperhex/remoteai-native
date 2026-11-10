@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
 const { webviewReactAliases } = require('./webview-react.cjs');
+const { offlinePdfPlugin } = require('./offline-pdf.cjs');
 const root = path.resolve(__dirname, '..');
 
 function licenseNotices(inputs) {
@@ -27,6 +28,7 @@ async function build() {
     // Escape multiline snippets so generated source has no whitespace-only lines.
     supported: { 'template-literal': false },
     write: false, outfile: 'project-browser.js', jsx: 'automatic', legalComments: 'inline',
+    plugins: [offlinePdfPlugin(root)],
     define: { 'process.env.NODE_ENV': '"production"' },
     alias: webviewReactAliases,
   });
@@ -36,7 +38,7 @@ async function build() {
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy"
-content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:">
+content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data:">
 <style>html,body,#root{height:100%;margin:0;overflow:hidden}body{background:var(--panel,#fff)}
 ${css}</style></head><body><div id="root"></div><script>${script}</script></body></html>`;
   const target = path.join(root, 'assets/project-browser.html');

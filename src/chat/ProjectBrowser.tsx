@@ -1,6 +1,6 @@
 import { messageKeys } from '../../vendor/shared/project-browser/messageKeys';
 import { displayText, displayError } from '../i18n/index';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { Modal } from '../components/Modal';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +27,7 @@ import { projectBrowserHost } from './projectBrowserHost';
 import type { ScriptPanel } from '../../vendor/shared/terminal/TerminalWorkspaceProvider';
 import { handleNativeScriptAction, nativeScriptState } from '../../vendor/shared/project-browser/nativeScripts';
 import { useChatFileReference, useChatFileSelection } from '../../vendor/shared/chat/ChatFileReferences';
+import { getChatPolicy, isDirectChat, subscribeChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 export function ProjectBrowser({ client, cwd, connected, active, onClose, title, subtitle,
   host: suppliedHost, ssh, children, scripts }: {
@@ -39,6 +40,9 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
   const color = useThemeColor();
   const styles = useStyles();
   const preferences = useFilePreferences();
+  const policy = useSyncExternalStore(subscribeChatPolicy, () => getChatPolicy('relay'));
+  const previewMode = useSyncExternalStore(subscribeChatPolicy,
+    () => client.previewMode ?? (isDirectChat() ? 'direct' : 'relay'));
   const webview = useRef<WebView>(null);
   const reference = useChatFileReference();
   const quoteSelection = useChatFileSelection();
@@ -82,6 +86,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
     return () => { cancelled = true; };
   }, []);
   const update = () => emit({ type: 'settings', language, cwd, themeMode: mode,
+    pdfPreview: { policy, mode: previewMode },
     connected: connected && active && preferences.ready,
     autoSaveDelay: preferences.delay, snapshot: readBrowserSession(client, cwd),
     scripts: scripts && !ssh ? nativeScriptState(scripts) : undefined,
@@ -93,7 +98,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
       '--line': color('#dfe5e1', 'border'), '--green': color('#138475', 'accent'),
       '--browser-on-accent': color('#fff', 'canvas') } });
   useEffect(() => { if (ready) update(); },
-    [ready, connected, active, cwd, language, color, mode, preferences, host, ssh, scripts]);
+    [ready, connected, active, cwd, language, color, mode, preferences, host, ssh, scripts, policy, previewMode]);
   // Backgrounding the app must not unmount the WebView and discard its unsaved document.
   return <Modal visible={active} animationType="slide" onRequestClose={close}
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>
@@ -146,7 +151,8 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
               });
               return;
             }
-            void handleBrowserRequest(nativeEvent.data, { client, cwd, host, connected: connected && active })
+            void handleBrowserRequest(nativeEvent.data, { client, cwd, host, connected: connected && active,
+              signal: transfer.signal })
               .then(reply => { if (reply) emit(reply); });
           }}
           onError={() => {

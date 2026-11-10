@@ -4,6 +4,7 @@ import { DEFAULT_CHAT_POLICY, parseChatPolicy } from '../chat/chatPolicy';
 import type { ConnectionMode } from './protocol';
 import { getInterfaceLanguage } from "../localization/interfaceLanguage";
 import { translateMessage } from "../localization/messages";
+import { BulkError } from './bulkLimits';
 
 export const CHAT_POLICY_MESSAGE = 'chat-policy';
 export const KIB = 1024;
@@ -15,7 +16,11 @@ export function subscribeChatPolicy(listener: () => void) {
   policyListeners.add(listener);
   return () => { policyListeners.delete(listener); };
 }
-export function setChatConnectionMode(mode: ConnectionMode) { clientMode = mode; }
+export function setChatConnectionMode(mode: ConnectionMode) {
+  if (mode === clientMode) return;
+  clientMode = mode;
+  policyListeners.forEach(listener => listener());
+}
 export function isDirectChat(mode: ConnectionMode = clientMode) { return mode === 'direct'; }
 export function getChatPolicy(mode: ConnectionMode = clientMode) {
   if (!isDirectChat(mode)) return current;
@@ -46,6 +51,11 @@ export function imagePreviewCharLimit(mode?: ConnectionMode) {
 }
 export function textPreviewByteLimit(mode?: ConnectionMode) {
   return Math.min(Number.MAX_SAFE_INTEGER, getChatPolicy(mode).filePreviewMaxMb * MIB);
+}
+export function checkFilePreviewSize(bytes: number, mode?: ConnectionMode) {
+  if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > textPreviewByteLimit(mode)) {
+    throw new BulkError('PREVIEW_UNAVAILABLE');
+  }
 }
 export function fileUploadByteLimit(mode?: ConnectionMode) {
   return Math.min(Number.MAX_SAFE_INTEGER, getChatPolicy(mode).fileUploadMaxMb * MIB);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Text } from 'react-native';
 import type { LoungeAttachment } from '../../vendor/shared/lounge/attachments';
 import type { LoungeController } from '../../vendor/shared/lounge/controller';
@@ -9,6 +9,8 @@ import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
 import { t, useLanguage } from '../i18n';
 import { LoungeFilePreviewContent } from './LoungeFilePreviewContent';
+import { previewByteLimit } from '../../vendor/shared/file-preview/kinds';
+import { subscribeChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
 export function LoungeFilePreview({ file, controller, close }: {
   file: LoungeAttachment; controller: LoungeController; close: () => void;
@@ -20,6 +22,7 @@ export function LoungeFilePreview({ file, controller, close }: {
   const [progress, setProgress] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const actions = useFileActions(file, controller);
+  const limit = useSyncExternalStore(subscribeChatPolicy, () => previewByteLimit(file.name, 'relay'));
   useEffect(() => {
     const abort = new AbortController();
     setError(''); setBytes(undefined); setProgress(0);
@@ -30,7 +33,7 @@ export function LoungeFilePreview({ file, controller, close }: {
         ? cause.message : 'client.lounge.fileUnavailable');
     });
     return () => abort.abort();
-  }, [file, controller, attempt]);
+  }, [file, controller, attempt, limit]);
   return <FilePreviewSheet path={file.name} previewable close={close} actions={[
     { label: t('client.projectBrowser.download'), icon: 'download', onPress: actions.download,
       loading: actions.busy, tone: 'primary' },

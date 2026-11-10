@@ -3,14 +3,14 @@ import type { ConnectionMode } from './protocol';
 
 export const FILE_CHUNK_BYTES = 256 * 1024;
 export interface FileInfo { id: string; size: number; name: string; mimeType: string; revision?: string }
-export interface FileRead { threadId: string; id: string; offset: number; length: number }
+export interface FileRead { threadId: string; id: string; offset: number; length: number; preview?: 'pdf' }
 export interface FileChunk { offset: number; data: string }
 export type FileRequest =
-  | { operation: 'fileOpen'; threadId: string; path: string; maxBytes?: number }
+  | { operation: 'fileOpen'; threadId: string; path: string; maxBytes?: number; preview?: 'pdf' }
   | ({ operation: 'fileRead'; maxBytes?: number } & FileRead)
   | { operation: 'fileClose'; threadId: string; id: string };
 export interface FileClient {
-  open: (threadId: string, path: string) => Promise<FileInfo>;
+  open: (threadId: string, path: string, options?: { preview: 'pdf' }) => Promise<FileInfo>;
   read: (request: FileRead) => Promise<FileChunk>;
   close: (threadId: string, id: string) => Promise<unknown>;
 }
@@ -23,6 +23,8 @@ export interface DownloadOptions {
   client: FileClient; threadId: string; path: string; signal: AbortSignal;
   target: (info: FileInfo) => Promise<DownloadTarget>;
   progress: (received: number, total: number) => void;
+  preview?: 'pdf';
+  checkSize?: (size: number) => void;
 }
 export class DownloadCancelled extends Error {}
 export class DownloadValidationError extends Error {}
@@ -57,6 +59,7 @@ interface ChunkTransferOptions {
   write: (chunk: FileChunk, received: number) => Promise<void>;
   mode?: () => ConnectionMode;
   checkSize?: (size: number) => void;
+  preview?: 'pdf';
 }
 /** Bound both outstanding reads and buffered replies; commit resumed ranges in file order. */
 export async function transferFileChunks(options: ChunkTransferOptions) {
@@ -72,7 +75,8 @@ export async function transferFileChunks(options: ChunkTransferOptions) {
     const window = getChatPolicy(options.mode?.()).fileDownloadWindowSize;
     while (pending.length < window && nextOffset < info.size) {
       const length = Math.min(FILE_CHUNK_BYTES, info.size - nextOffset);
-      pending.push(readAhead(client, { threadId, id: info.id, offset: nextOffset, length }));
+      pending.push(readAhead(client, { threadId, id: info.id, offset: nextOffset, length,
+        ...(options.preview ? { preview: options.preview } : {}) }));
       nextOffset += length;
     }
   };
@@ -92,10 +96,11 @@ export async function transferFileChunks(options: ChunkTransferOptions) {
 /** Pipeline bounded reads, keep disk writes ordered, and always release local and remote resources. */
 export async function downloadFile(options: DownloadOptions) {
   checkCancelled(options.signal);
-  const info = await options.client.open(options.threadId, options.path);
+  const info = await (options.preview ? options.client.open(options.threadId, options.path, { preview: options.preview })
+    : options.client.open(options.threadId, options.path));
   let target: DownloadTarget | undefined;
   try {
-    validateFileInfo(info);
+    validateFileInfo(info, undefined, options.checkSize);
     checkCancelled(options.signal);
     target = await options.target(info);
     const destination = target;

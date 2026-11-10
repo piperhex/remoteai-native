@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ProjectDocument } from './protocol';
 
-/** Hosts opt in without bundling browser media engines into the offline native editor. */
+/** Hosts choose the media formats supported by their embedded or browser renderer. */
 export interface ProjectPreviewProps {
   document: ProjectDocument;
   text: string;

@@ -46,6 +46,7 @@ export interface ProjectFileUpload {
 }
 
 export interface ProjectBrowserClient {
+  previewMode?: import('../remote-chat/protocol').ConnectionMode;
   list: (cwd: string, directory?: string, query?: string) => Promise<ProjectFilesResponse>;
   read: (target: ProjectFileRead, signal?: AbortSignal) => Promise<ProjectDocument>;
   release?: (target: ProjectFileRead) => Promise<void>;
@@ -56,9 +57,9 @@ export interface ProjectBrowserClient {
 }
 
 export function createProjectBrowserClient(request: <T>(request: ProjectBrowserRequest) => Promise<T>,
-  transfer?: DownloadClient): ProjectBrowserClient {
+  transfer?: DownloadClient, previewMode?: import('../remote-chat/protocol').ConnectionMode): ProjectBrowserClient {
   return {
-    transfer,
+    transfer, previewMode,
     list: (cwd: string, directory?: string, query?: string) =>
       request<ProjectFilesResponse>({ operation: 'projectFiles', cwd, directory,
         ...(query === undefined ? {} : { query, searchAllDirectories: true }) }),

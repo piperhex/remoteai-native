@@ -11,6 +11,7 @@ const runtime = vi.hoisted(() => ({
 }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),
   useEffect: vi.fn(), useMemo: <T,>(create: () => T) => create(),
+  useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
   useState: (initial: unknown) => {
     const slot = runtime.cursor++;
     if (!(slot in runtime.state)) runtime.state[slot] = initial;
