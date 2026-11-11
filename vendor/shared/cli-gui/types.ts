@@ -38,6 +38,7 @@ export interface CliEntry {
   role: 'user' | 'assistant' | 'reasoning' | 'tool' | 'error' | 'notice';
   text: string; title?: string; status?: string;
   changes?: FileChange[];
+  images?: string[];
 }
 export interface CliCursor { epoch: string; seq: number }
 export interface CliHistory {
@@ -49,7 +50,8 @@ export type CliRequest = { engine: ExternalEngine } & (
   | { action: 'list'; archived: boolean }
   | { action: 'create'; cwd: string; model: string; mode?: string; effort?: string }
   | { action: 'read'; id: string; cursor?: CliCursor }
-  | { action: 'send'; id: string; text: string; messageId: string; model?: string; effort?: string }
+  | { action: 'send'; id: string; text: string; messageId: string; images?: string[]; model?: string; effort?: string }
+  | { action: 'image'; id: string; source: string }
   | { action: 'stop' | 'archive'; id: string }
   | { action: 'approve'; id: string; permissionId: string; actionId: string;
       answers?: Record<string, string> }

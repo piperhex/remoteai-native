@@ -2,6 +2,7 @@ import type { CliCatalog, CliEntry, CliHistory, CliRequest, CliRuntimeStatus, Cl
   CliTransport, ExternalEngine, GuiEngine } from './types';
 import { modelSelectionError, resolveModelSelection } from '../conversation/modelSelection';
 import { cliPickerModels, cliRequestEffort } from './modelSelection';
+import type { DraftImage } from '../chat/draftImages';
 
 const LIVE_REFRESH_DELAY_MS = 80;
 const FALLBACK_REFRESH_DELAY_MS = 1000;
@@ -11,13 +12,16 @@ export interface CliState {
   engine: GuiEngine; selected: CliSession | null; sessions: CliSession[]; history: CliHistory | null;
   runtime: Partial<Record<ExternalEngine, CliRuntimeStatus>>; catalog: CliCatalog | null;
   cwd: string; model: string; effort: string; mode: string; draft: string;
+  images: DraftImage[];
   busy: boolean; loading: boolean; error: string; archived: boolean;
 }
 export class CliController {
   private state: CliState = { engine: 'codex', selected: null, sessions: [], history: null, runtime: {},
-    catalog: null, cwd: '', model: '', effort: '', mode: '', draft: '', busy: false, loading: false, error: '', archived: false };
+    catalog: null, cwd: '', model: '', effort: '', mode: '', draft: '', images: [],
+    busy: false, loading: false, error: '', archived: false };
   private listeners = new Set<() => void>();
   private drafts = new Map<string, string>();
+  private imageDrafts = new Map<string, DraftImage[]>();
   private revision = 0;
   private catalogRevision = 0;
   private refreshPromise?: Promise<void>;
@@ -43,8 +47,17 @@ export class CliController {
     this.listeners.forEach(fn => fn());
   };
   private key() { return `${this.state.engine}:${this.state.selected?.id ?? 'draft'}`; }
-  private saveDraft() { this.drafts.set(this.key(), this.state.draft); }
+  private saveDraft() {
+    this.drafts.set(this.key(), this.state.draft);
+    this.imageDrafts.set(this.key(), this.state.images);
+  }
   edit = (draft: string) => { this.patch({ draft }); this.saveDraft(); };
+  editImages = (images: DraftImage[]) => { this.patch({ images }); this.saveDraft(); };
+  loadImage = async (id: string, source: string) => {
+    const engine = this.state.engine;
+    if (engine === 'codex') throw new Error('client.cliGui.invalidRequest');
+    return this.read<string>({ engine, action: 'image', id, source });
+  };
   report = (error: unknown) => this.patch({ error: typeof error === 'string' ? error
     : error instanceof Error ? error.message : 'client.cliGui.requestFailed' });
 
@@ -87,14 +100,15 @@ export class CliController {
     if (this.state.selected || this.state.busy || this.state.engine === engine) return;
     this.saveDraft(); this.revision++;
     this.patch({ engine, history: null, catalog: null, model: '', effort: '', mode: '', loading: false, error: '',
-      draft: this.drafts.get(`${engine}:draft`) ?? '' });
+      draft: this.drafts.get(`${engine}:draft`) ?? '', images: this.imageDrafts.get(`${engine}:draft`) ?? [] });
     if (engine !== 'codex') void this.refresh().then(this.loadCatalog);
   };
   newConversation = () => {
     if (this.state.busy) return;
     this.saveDraft(); this.revision++;
     this.patch({ selected: null, history: null, catalog: null, model: '', effort: '', loading: false, error: '',
-      draft: this.drafts.get(`${this.state.engine}:draft`) ?? '' });
+      draft: this.drafts.get(`${this.state.engine}:draft`) ?? '',
+      images: this.imageDrafts.get(`${this.state.engine}:draft`) ?? [] });
     if (this.state.engine !== 'codex') void this.loadCatalog();
   };
   open = (selected: CliSession) => {
@@ -102,7 +116,8 @@ export class CliController {
     this.saveDraft(); this.revision++;
     this.patch({ selected, engine: selected.engine, model: selected.model, effort: selected.effort ?? '',
       history: null, catalog: null, loading: true, error: '',
-      draft: this.drafts.get(`${selected.engine}:${selected.id}`) ?? '' });
+      draft: this.drafts.get(`${selected.engine}:${selected.id}`) ?? '',
+      images: this.imageDrafts.get(`${selected.engine}:${selected.id}`) ?? [] });
     void this.refresh();
     void this.loadCatalog();
   };
@@ -188,8 +203,9 @@ export class CliController {
     catch (error) { this.report(error); }
   };
   send = async () => {
-    const { engine, selected, cwd, model, mode, draft, catalog } = this.state;
-    if (engine === 'codex' || this.state.busy || !draft.trim() || selected?.archived) return;
+    const { engine, selected, cwd, model, mode, draft, images, catalog } = this.state;
+    if (engine === 'codex' || this.state.busy || (!draft.trim() && !images.length) || selected?.archived) return;
+    if (images.some(image => !image.url)) return;
     if (catalog?.status !== 'ready' || this.state.runtime[engine]?.status !== 'ready'
       || selected?.status === 'running' || selected?.permissions.length) return;
     const error = modelSelectionError(cliPickerModels(catalog.models), this.state);
@@ -202,11 +218,15 @@ export class CliController {
     try {
       const target = selected ?? await this.read<CliSession>({ engine, action: 'create', cwd, model, effort: effort || undefined,
         ...(mode ? { mode } : {}) });
-      if (revision === this.revision && !selected) this.patch({ selected: target, history: null });
+      if (revision === this.revision && !selected) {
+        this.patch({ selected: target, history: null });
+        this.drafts.delete(`${engine}:draft`); this.imageDrafts.delete(`${engine}:draft`); this.saveDraft();
+      }
       await this.read({ engine, action: 'send', id: target.id, text: draft, messageId: this.createMessageId(),
-        model, effort: effort || undefined });
+        ...(images.length ? { images: images.map(image => image.url!) } : {}), model, effort: effort || undefined });
       this.drafts.delete(`${engine}:${selected?.id ?? 'draft'}`);
-      if (revision === this.revision) this.edit('');
+      this.imageDrafts.delete(`${engine}:${selected?.id ?? 'draft'}`);
+      if (revision === this.revision) { this.patch({ draft: '', images: [] }); this.saveDraft(); }
       await this.refresh();
     } catch (error) { this.report(error); }
     finally { this.patch({ busy: false }); }

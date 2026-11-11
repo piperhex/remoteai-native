@@ -24,8 +24,8 @@ export function validateChatImages(images: readonly string[], mode?: ConnectionM
   }
 }
 
-export function draftImage(url: string): DraftImage {
-  validateChatImages([url]);
+export function draftImage(url: string, mode?: ConnectionMode): DraftImage {
+  validateChatImages([url], mode);
   return { id: `photo-${++nextImageId}`, url };
 }
 import { isDirectChat } from './policy';

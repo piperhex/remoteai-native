@@ -1,6 +1,7 @@
 import { getChatPolicy, isDirectChat, KIB, type ChatPolicy } from './policy';
 import { getInterfaceLanguage } from "../localization/interfaceLanguage";
 import { translateMessage } from "../localization/messages";
+import type { ConnectionMode } from './protocol';
 
 const QUALITIES = [0.8, 0.65, 0.5];
 const MIN_EDGE = 128;
@@ -11,10 +12,11 @@ export async function compressChatImage<T>(
   encode: (edge: number, quality: number) => Promise<{ value: T; bytes: number }>,
   policy: ChatPolicy = getChatPolicy(),
   transportBytes = Infinity,
+  mode?: ConnectionMode,
 ): Promise<T> {
   // A larger configured target must still fit a single chat message.
   const targetBytes = Math.min(policy.imageTargetKb * KIB, transportBytes);
-  if (isDirectChat()) {
+  if (isDirectChat(mode)) {
     return (await encode(policy.imageMaxEdge, 1)).value;
   }
   let edge = policy.imageMaxEdge;

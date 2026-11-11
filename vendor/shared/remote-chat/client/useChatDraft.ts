@@ -37,7 +37,7 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
   const [images, setImages] = useState<DraftImage[]>([]);
   const [references, setReferences] = useState<AttachmentReference[]>([]);
   const restore = (message: QueueDraft) => {
-    setContent(queuedMessageText(message)); setImages(message.images.map(draftImage));
+    setContent(queuedMessageText(message)); setImages(message.images.map(url => draftImage(url)));
     setReferences(message.attachments ?? []); setError('');
   };
   const [error, setError] = useState('');
@@ -67,7 +67,7 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
     setContent(previous => queuedMessageText({ ...recovered,
       text: [previous.text, recovered.text].filter(Boolean).join('\n\n'),
       skills: [...draftSkills(previous), ...recovered.skills] }));
-    setImages(previous => [...previous, ...recovered.images.map(draftImage)]);
+    setImages(previous => [...previous, ...recovered.images.map(url => draftImage(url))]);
     setReferences(previous => [...previous, ...(recovered.attachments ?? [])]);
   }, [recovered, consumeRecovered, sending]);
 
