@@ -27,7 +27,8 @@ export function CliConversation({ host, connection, active, ready }: {
   return <>
     {!!state.error && <View style={styles.footer}>
       <Text accessibilityRole="alert" style={styles.error}>{cliErrorText(state.error)}</Text></View>}
-    {state.runtime[state.engine]?.status !== 'ready' && !state.selected ? <CliRuntime ready={ready} active={active} /> : <>
+    {state.runtime[state.engine]?.status !== 'ready' && !state.selected
+      ? <CliRuntime ready={ready} active={active} connection={connection} /> : <>
       <ChatImageContext.Provider value={{ threadId, ready, load: host.imagePreview }}>
         <ChatImagePreviewProvider key={threadId ?? 'new'} active={active}>
           <ChatFileProvider threadId={threadId} ready={ready} active={active}

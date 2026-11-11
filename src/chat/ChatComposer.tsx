@@ -281,6 +281,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
         if (attachments.add({ kind: 'file', name: file.name, path: file.path })) setProjectFiles(null);
       }} />}
     {settings && <ChatSettings models={models} selection={selection} connection={connection}
+      cwd={cwd} cliLocked={sending || running}
       threadId={threadId} contextSettings={contextSettings}
       readUsage={readUsage} usageActive={active && usageActive} tokenUsage={tokenUsage}
       readConversationMetrics={readConversationMetrics}

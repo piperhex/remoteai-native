@@ -57,7 +57,6 @@ import { randomUUID } from 'expo-crypto';
 import { CliGuiProvider, useCliGui } from '../../vendor/shared/cli-gui/context';
 import { cliSidebarThread } from '../../vendor/shared/cli-gui/useCliSidebar';
 import { CliConversation } from './cli/CliConversation';
-import { CliEnginePicker } from './cli/CliEnginePicker';
 import { engineNames } from './cli/engine';
 
 interface Props {
@@ -301,8 +300,6 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
       upload={state.upload} reconnecting={state.mode === 'connecting' || state.mode === 'offline'}
       send={(input) => controller.enqueueMessage(input)} interrupted={state.selected?.turns?.at(-1)?.status === 'interrupted'}
       interrupt={() => controller.interrupt()} />
-    <CliEnginePicker locked={Boolean(state.selected) || state.sending} active={active} ready={ready}
-      cwd={state.draftProject?.cwd ?? ''} />
     </>}
     {active && pickingDevice && <ChatDevices devices={devices} onClose={() => setPickingDevice(false)}
       choose={(id) => { chooseDevice(id); setPickingDevice(false); }} />}

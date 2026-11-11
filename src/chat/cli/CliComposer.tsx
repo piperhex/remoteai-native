@@ -13,7 +13,6 @@ import { ComposerModelButton } from '../ComposerModelButton';
 import { ComposerDictation } from '../dictation/ComposerDictation';
 import { ComposerProjectFiles } from '../ComposerProjectFiles';
 import { useStyles } from '../styles';
-import { CliEnginePicker } from './CliEnginePicker';
 import { CliProject } from './CliProject';
 import { CliSettings } from './CliSettings';
 import { useCliStyles } from './styles';
@@ -68,7 +67,6 @@ export function CliComposer({ host, connection, active, ready }: {
     </View>
     {selected?.archived && <View style={cliStyles.footer}>
       <Text style={cliStyles.hint}>{t('client.chat.archived')}</Text></View>}
-    <CliEnginePicker active={active} ready={ready} />
     {settings && active && <CliSettings connection={connection} ready={ready} active={active}
       close={() => setSettings(false)} />}
     {files && active && <ComposerProjectFiles imagesOnly={false} threadId={selected?.id ?? null} cwd={cwd}

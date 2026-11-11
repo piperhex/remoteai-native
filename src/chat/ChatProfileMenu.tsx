@@ -16,13 +16,14 @@ import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { ChatGuiUpdateSheet } from './ChatGuiUpdateSheet';
 import { palette, useStyles } from './styles';
 import { ChatSettingsConnection } from './ChatSettingsConnection';
+import { CliEnginePicker } from './cli/CliEnginePicker';
 
 export interface ChatConnectionProps {
   client: GuiAccountsClient; deviceName?: string; chooseDevice: () => void;
 }
 
 type Props = ChatConnectionProps & { ready: boolean; active: boolean } & (
-  { variant: 'settings' } | { variant?: 'avatar'; email: string;
+  { variant: 'settings'; cliLocked?: boolean; cliCwd?: string } | { variant?: 'avatar'; email: string;
     guiTools: GuiToolsClient; running: boolean }
 );
 
@@ -78,7 +79,9 @@ export function ChatProfileMenu(props: Props) {
   return <>
     {settings ? <ChatSettingsConnection deviceName={deviceName || t('client.settings.chooseAComputer')}
       accountName={name} onDevice={() => { setPanel(null); chooseDevice(); }}
-      onAccount={() => { setQuery(''); setPanel('accounts'); if (ready) accounts.refresh(); }} />
+      onAccount={() => { setQuery(''); setPanel('accounts'); if (ready) accounts.refresh(); }}>
+      {cli && <CliEnginePicker active={active} ready={ready} locked={props.cliLocked} cwd={props.cliCwd} />}
+    </ChatSettingsConnection>
       : <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.openProfileMenu")}
       accessibilityState={{ expanded: panel !== null && active }} style={pickerStyles.trigger}
       onPress={() => setPanel('profile')}>

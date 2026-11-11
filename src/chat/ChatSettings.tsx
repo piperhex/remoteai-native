@@ -22,6 +22,8 @@ import { ChatSettingSegments } from './ChatSettingSegments';
 
 interface Props {
   connection: ChatConnectionProps;
+  cliLocked?: boolean;
+  cwd?: string;
   threadId: string | null;
   contextSettings: ContextSettingsApi;
   tokenUsage?: ThreadTokenUsage;
@@ -39,7 +41,8 @@ interface Props {
 }
 
 export function ChatSettings({ models, selection, saving, ready, error, updateSettings, refreshModels, onClose,
-  readUsage, readConversationMetrics, usageActive, tokenUsage, threadId, contextSettings, connection }: Props) {
+  readUsage, readConversationMetrics, usageActive, tokenUsage, threadId, contextSettings, connection,
+  cliLocked = false, cwd }: Props) {
   const styles = useStyles();
   const menuStyles = useMenuStyles();
   useLanguage();
@@ -62,7 +65,8 @@ export function ChatSettings({ models, selection, saving, ready, error, updateSe
       <ChatUsage read={readUsage} active={usageActive && !nestedOpen} ready={ready} tokenUsage={tokenUsage}
         readConversationMetrics={readConversationMetrics} threadId={threadId}
         onContextSettings={threadId && ready ? () => setContextOpen(true) : undefined} />
-      <ChatProfileMenu {...connection} variant="settings" ready={ready} active={usageActive} />
+      <ChatProfileMenu {...connection} variant="settings" ready={ready} active={usageActive}
+        cliLocked={Boolean(threadId) || cliLocked} cliCwd={cwd} />
       {visibleSettingsFields(selection).map((entry) => entry.field !== 'model'
         ? <ChatSettingSegments key={entry.field} field={entry.field}
           label={displayText(entry.label)} value={selection[entry.field] ?? ''}

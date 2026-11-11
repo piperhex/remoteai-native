@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "fc772712c257e112bfa5367e9d578e46cb7f8edd",
+  "revision": "f93aecc0d2d99ff7e2560f1fa1eddd92935c1951",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "24bdc4658929d13e11c296dcd2d33f9f20bbbd06"
+    "revision": "cddcc8fbce8db3b3d80d52667ee59675e84d4b21"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.18/remoteai-i18n-0.1.18.tgz",
   "files": {
@@ -87,6 +87,7 @@
     "shared/chat/toolDetailsFixture.json": "bf33f450e0b9240846e3d8d0211a7eba34a7d78c566e96377afbd01c79cdd1a7",
     "shared/cli-gui/context.tsx": "1380df2e31cc8ff7e78de39d023fe187e56e1fe0af2ea904f168f3e9559c6bfc",
     "shared/cli-gui/useCliSidebar.ts": "51fa0f367a4c425336e1cadcd1a1d9ad98a731b4106c77fe938690281faeb704",
+    "shared/cli-gui/modelSelection.ts": "78e78bf039e9d15be9bf34adf880acaeb5d9070459333c78d4e39f311e0e0b97",
     "shared/cli-gui/types.ts": "c464b2a909d2097a6d299f8351a992a181b1ff7cf96fe347e98524f00a6e0113",
     "shared/remote-chat/guiAccounts.ts": "a07487fd77f43e45cc53942d1f14bb99902ebac9243775d99aaeb816bd9a339f",
     "shared/chat/turnPresentation.ts": "210d76a55281c16b218d9b4a1871706c3850a2527042678d4f07573e03798fc7",
@@ -197,7 +198,6 @@
     "shared/remote-chat/accountCredits.ts": "19d4dc332288e78664ce5f80442a46f5da05759c59e2f35e8d327dfdac73bf8a",
     "shared/remote-chat/client/useChatUsage.ts": "95c3c7c3bfa2f4f3f402a2886f07f861bedbc2e738a00ed7ca9234816a687f11",
     "shared/remote-chat/client/useConversationMetrics.ts": "64fd4768aa597bd28970efeaafa74116e89b101e49ab44a46167bca97b876a4e",
-    "shared/cli-gui/modelSelection.ts": "78e78bf039e9d15be9bf34adf880acaeb5d9070459333c78d4e39f311e0e0b97",
     "shared/conversation/modelSelection.ts": "dc26855252473a71cb91573a9516f8a2f4a8cdc568ea40f6126bb3b1766c0d39",
     "shared/cli-gui/presentation.ts": "81e4c848b8e6121480478bc6f084a2860d8b79e613f0ccbdb7ce10b70f08939e",
     "shared/cli-gui/errors.ts": "c5ee110bf37773c48acbdd8b53ec4fbdbdc92918d3e6fd4ba3adbdfdab4985af",

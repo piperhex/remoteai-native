@@ -4,16 +4,18 @@ import { t } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { textMetrics } from '../theme/text';
+import type { ReactNode } from 'react';
 
 export interface SettingsConnectionProps {
   deviceName: string;
   accountName: string;
   onDevice: () => void;
   onAccount: () => void;
+  children?: ReactNode;
 }
 
-export function ChatSettingsConnection({ deviceName, accountName, onDevice, onAccount }: SettingsConnectionProps) {
-  const styles = useStyles();
+export function ChatSettingsConnection({ deviceName, accountName, onDevice, onAccount, children }: SettingsConnectionProps) {
+  const styles = useSettingsConnectionStyles();
   const color = useThemeColor();
   return <View style={styles.card}>
     <Pressable style={[styles.row, styles.divider]} onPress={onDevice}
@@ -23,17 +25,18 @@ export function ChatSettingsConnection({ deviceName, accountName, onDevice, onAc
       <Text style={styles.value} numberOfLines={1}>{deviceName}</Text>
       <Feather name="chevron-right" size={20} color={color('#596772', 'muted')} />
     </Pressable>
-    <Pressable style={styles.row} onPress={onAccount}
+    <Pressable style={[styles.row, Boolean(children) && styles.divider]} onPress={onAccount}
       accessibilityRole="button" accessibilityLabel={t('client.chat.switchAccount')}>
       <Feather name="user" size={22} color={color('#17211b', 'ink')} />
       <Text style={styles.label}>{t('client.chatSettings.account')}</Text>
       <Text style={styles.value} numberOfLines={1}>{accountName}</Text>
       <Feather name="chevron-right" size={20} color={color('#596772', 'muted')} />
     </Pressable>
+    {children}
   </View>;
 }
 
-const useStyles = createThemedStyles(color => ({
+export const useSettingsConnectionStyles = createThemedStyles(color => ({
   card: { borderRadius: 12, paddingHorizontal: 14, backgroundColor: color('#eef5f4', 'canvas') },
   row: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   divider: { borderBottomWidth: 1, borderBottomColor: color('#dfe8e7', 'border') },

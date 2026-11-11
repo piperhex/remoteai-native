@@ -94,18 +94,29 @@ async function installFixture() {
   console.log('Installing isolated native CLI fixture');
   await adb('install', '--no-streaming', '-r', '-g', apk);
 }
+async function openSettings() {
+  const composer = await waitFor(/聊天设置/);
+  assert.ok(!composer.includes('content-desc="选择 CLI"'), 'CLI selection belongs only in chat settings');
+  await tap(/聊天设置/);
+  const settings = await waitFor('content-desc="选择 CLI"');
+  const account = settings.indexOf('content-desc="切换账户"');
+  const cli = settings.indexOf('content-desc="选择 CLI"');
+  assert.ok(account >= 0 && cli > account, 'CLI selection follows the account in chat settings');
+}
 async function check(scale) {
   const prefix = `android-${scale === '1.0' ? 'light' : 'dark'}-font-${scale}`;
   console.log(`Checking ${prefix}`);
   await adb('shell', 'am', 'force-stop', app);
   await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
   await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
-  await waitFor('选择 CLI');
+  await waitFor(/聊天设置/);
   if (scale !== '1.0') await tap('toggle-theme');
+  await openSettings();
+  await screenshot(`${prefix}-codex-settings`);
   await tap('选择 CLI'); await waitFor('Gemini GUI');
   await screenshot(`${prefix}-selector`);
   await tap('Claude GUI'); await waitFor('消息');
-  await tap(/聊天设置/); await waitFor('权限模式');
+  await openSettings(); await waitFor('权限模式');
   await screenshot(`${prefix}-settings`);
   console.log(`${prefix}: selection and settings passed`);
   await adb('shell', 'input', 'keyevent', '4');
@@ -117,8 +128,10 @@ async function check(scale) {
   await screenshot(`${prefix}-claude-approval`);
   console.log(`${prefix}: exact message and approval passed`);
   await tap('允许这一次'); await waitFor('已完成项目检查。');
+  await openSettings();
   await tap('选择 CLI'); await waitFor('当前对话使用的 CLI 已固定');
   await screenshot(`${prefix}-locked`);
+  await adb('shell', 'input', 'keyevent', '4');
   await adb('shell', 'input', 'keyevent', '4');
   await tap('history'); await waitFor('整理测试计划');
   await screenshot(`${prefix}-history-list`);
@@ -127,7 +140,8 @@ async function check(scale) {
   await tap('history'); await tap('检查项目结构', true); await waitFor('归档');
   await screenshot(`${prefix}-long-press`);
   await adb('shell', 'input', 'keyevent', '4');
-  await tap('Codex 历史对话'); await tap('选择 CLI'); await waitFor('当前对话使用的 CLI 已固定');
+  await tap('Codex 历史对话'); await openSettings();
+  await tap('选择 CLI'); await waitFor('当前对话使用的 CLI 已固定');
   await screenshot(`${prefix}-codex-locked`);
   console.log(`${prefix}: history, engine locks and long press passed`);
 }

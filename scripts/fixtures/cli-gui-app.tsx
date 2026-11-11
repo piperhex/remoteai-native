@@ -16,7 +16,9 @@ import { ChatThreads } from '../../src/chat/ChatThreads';
 import { ChatProfileMenu } from '../../src/chat/ChatProfileMenu';
 import { ChatOverlay } from '../../src/chat/ChatOverlay';
 import { CliConversation } from '../../src/chat/cli/CliConversation';
-import { CliEnginePicker } from '../../src/chat/cli/CliEnginePicker';
+import { ChatSettings } from '../../src/chat/ChatSettings';
+import { ComposerModelButton } from '../../src/chat/ComposerModelButton';
+import { cliPickerModels } from '../../vendor/shared/cli-gui/modelSelection';
 import { createThemedStyles } from '../../src/theme/styles';
 import { textMetrics } from '../../src/theme/text';
 import { updateThemeMode, useThemeMode } from '../../src/theme/store';
@@ -32,6 +34,22 @@ Object.assign(host.guiAccounts, fixture.accounts);
 host.guiTools.projects.list = async () => [{ cwd: '/project', label: 'Remote AI' }];
 const connection = { client: host.guiAccounts, deviceName: 'Office PC', chooseDevice() {} };
 const codex: Thread = { id: 'codex-history', name: 'Codex 历史对话', preview: '', cwd: '/project', updatedAt: 1 };
+const models = cliPickerModels([{ id: 'model-a', label: 'Model A', efforts: [{ id: 'high', label: 'High' }] }]);
+const selection = { model: 'model-a', effort: 'high', access: 'read-only' as const, speed: 'normal' as const };
+const readUsage = async () => ({ totalTokens: 125000, estimatedCostUsd: 4.5, primaryRemainingPercent: 80,
+  primaryRemainingAggregated: false, providerEstimatedCost: null });
+const readMetrics = async () => ({ totalOutputTokens: 0, totalOutputTimeMs: 0, outputRequestCount: 0 });
+
+function CodexSettings({ locked }: { locked: boolean }) {
+  const [open, setOpen] = useState(false);
+  return <>
+    <ComposerModelButton models={models} selection={selection} compact={false} onPress={() => setOpen(true)} />
+    {open && <ChatSettings connection={connection} threadId={locked ? codex.id : null} cwd="/project"
+      contextSettings={host.contextSettings} readUsage={readUsage} readConversationMetrics={readMetrics}
+      usageActive models={models} selection={selection} saving={false} ready error=""
+      updateSettings={async () => {}} refreshModels={async () => {}} onClose={() => setOpen(false)} />}
+  </>;
+}
 
 function Screen() {
   const cli = useCliGui()!;
@@ -59,7 +77,7 @@ function Screen() {
       openSearch={() => {}} select={select} active profileMenu={<ChatProfileMenu {...connection}
         guiTools={host.guiTools} email="test@example.test" running={false} ready active />} />
       : cli.state.engine === 'codex' ? <><View style={styles.empty}><Text style={styles.title}>Codex GUI</Text></View>
-        <CliEnginePicker locked={codexSelected} active ready /></>
+        <CodexSettings locked={codexSelected} /></>
         : <CliConversation host={host} connection={connection} active ready />}
     </ChatOverlay>
     <Text accessibilityLabel="call-count" style={styles.counter}>{fixture.calls.filter(call => call.action === 'send').length}</Text>
