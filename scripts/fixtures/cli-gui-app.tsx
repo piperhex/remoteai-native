@@ -17,6 +17,7 @@ import { ChatProfileMenu } from '../../src/chat/ChatProfileMenu';
 import { ChatOverlay } from '../../src/chat/ChatOverlay';
 import { CliConversation } from '../../src/chat/cli/CliConversation';
 import { ChatSettings } from '../../src/chat/ChatSettings';
+import { ChatProjectSwitch } from '../../src/chat/ChatProjectSwitch';
 import { ComposerModelButton } from '../../src/chat/ComposerModelButton';
 import { cliPickerModels } from '../../vendor/shared/cli-gui/modelSelection';
 import { createThemedStyles } from '../../src/theme/styles';
@@ -31,6 +32,7 @@ const fixture = createCliFixture();
 const host = new ChatController(() => ({ start() {}, stop() {},
   request: async <T,>() => ({ data: [], nextCursor: null }) as T }));
 Object.assign(host.guiAccounts, fixture.accounts);
+Object.assign(host.snapshot(), { ready: true });
 host.guiTools.projects.list = async () => [{ cwd: '/project', label: 'Remote AI' }];
 const connection = { client: host.guiAccounts, deviceName: 'Office PC', chooseDevice() {} };
 const codex: Thread = { id: 'codex-history', name: 'Codex 历史对话', preview: '', cwd: '/project', updatedAt: 1 };
@@ -77,6 +79,7 @@ function Screen() {
       openSearch={() => {}} select={select} active profileMenu={<ChatProfileMenu {...connection}
         guiTools={host.guiTools} email="test@example.test" running={false} ready active />} />
       : cli.state.engine === 'codex' ? <><View style={styles.empty}><Text style={styles.title}>Codex GUI</Text></View>
+        <ChatProjectSwitch state={host.snapshot()} controller={host} active />
         <CodexSettings locked={codexSelected} /></>
         : <CliConversation host={host} connection={connection} active ready />}
     </ChatOverlay>

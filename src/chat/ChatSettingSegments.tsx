@@ -14,16 +14,17 @@ interface Props {
   value: string;
   options: SettingOption[];
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export function ChatSettingSegments({ field, label, value, options, onChange }: Props) {
+export function ChatSettingSegments({ field, label, value, options, onChange, disabled = false }: Props) {
   const styles = useStyles();
   const language = useLanguage();
   const { width, fontScale } = useWindowDimensions();
   const stacked = (language !== 'zh' && language !== 'ja') || width / fontScale < 330;
-  const { track, preview, panHandlers } = useSettingSegmentDrag(options.length, index => {
+  const { track, preview, panHandlers } = useSettingSegmentDrag(disabled ? 0 : options.length, index => {
     const option = options[index];
-    if (option) onChange(option.value);
+    if (!disabled && option) onChange(option.value);
   });
   const selected = options.findIndex(option => option.value === value);
   const active = preview ?? selected;
@@ -31,14 +32,15 @@ export function ChatSettingSegments({ field, label, value, options, onChange }: 
   if (!options.length) return null;
   return <View style={[styles.row, stacked && styles.stacked]}>
     <Text style={[styles.label, stacked && styles.stackedLabel]}>{displayText(SETTING_SHORT_LABELS[field])}</Text>
-    <View style={[styles.rail, stacked && styles.stackedRail]}
+    <View style={[styles.rail, stacked && styles.stackedRail, disabled && { opacity: 0.5 }]}
       accessibilityRole="radiogroup" accessibilityLabel={label}>
       <View ref={track} collapsable={false} style={styles.track} {...panHandlers}>
         {active >= 0 && <View pointerEvents="none" style={[styles.thumb, {
           left: `${active / options.length * 100}%`, width: `${100 / options.length}%`, backgroundColor: accent,
         }]} />}
         {options.map((option, index) => <Pressable key={option.value} accessibilityRole="radio"
-          accessibilityLabel={displayText(option.label)} accessibilityState={{ checked: selected === index }}
+          accessibilityLabel={displayText(option.label)} accessibilityState={{ checked: selected === index, disabled }}
+          disabled={disabled}
           accessibilityHint={option.description ? displayText(option.description) : undefined}
           style={styles.option} onPress={() => onChange(option.value)}>
           {index > 0 && index !== active && index - 1 !== active && <View style={styles.separator} />}

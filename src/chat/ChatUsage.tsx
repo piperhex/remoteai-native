@@ -18,8 +18,8 @@ import { ChatQuotaProgress } from './ChatQuotaProgress';
 import { ChatContextProgress } from './ChatContextProgress';
 
 export function ChatUsage({ read, active, ready, tokenUsage, onContextSettings, readConversationMetrics, threadId }: {
-  read: ReadUsage; active: boolean; ready: boolean; tokenUsage?: ThreadTokenUsage;
-  readConversationMetrics: ReadConversationMetrics; threadId: string | null;
+  read?: ReadUsage; active: boolean; ready: boolean; tokenUsage?: ThreadTokenUsage;
+  readConversationMetrics?: ReadConversationMetrics; threadId: string | null;
   onContextSettings?: () => void;
 }) {
   const styles = useStyles();
@@ -48,7 +48,7 @@ export function ChatUsage({ read, active, ready, tokenUsage, onContextSettings, 
               value1: usage.totalTokens.toLocaleString('en-US'),
             })}>{formatTokens(usage.totalTokens)}<Text style={styles.unit}> Token</Text></Text>
             <Text style={styles.cost}>{settingsCost(usage.estimatedCostUsd)}</Text>
-          </> : <Text style={styles.label}>{notice}</Text>}
+          </> : <Text style={styles.label}>{read ? notice : '—'}</Text>}
         </View>
       </View>
       <View style={styles.credits}>

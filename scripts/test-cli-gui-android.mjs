@@ -113,6 +113,30 @@ async function openSettings() {
   const cli = settings.indexOf('content-desc="选择 CLI"');
   assert.ok(account >= 0 && cli > account, 'CLI selection follows the account in chat settings');
 }
+async function checkUnifiedSettings(prefix, engine) {
+  await openSettings();
+  const initial = await waitFor('text="上下文');
+  assert.ok(!initial.includes('text="Model B"'), 'Models belong in the nested picker, not the main settings sheet.');
+  await screenshot(`${prefix}-${engine}-settings`);
+  await revealSettingsOptions();
+  await screenshot(`${prefix}-${engine}-settings-options`);
+  await tap('设置模型');
+  await waitFor('text="Model B"');
+  await screenshot(`${prefix}-${engine}-models`);
+  await tap('Model B');
+  await tap('设置模型'); await tap('Model A');
+  const restored = await waitFor('content-desc="高"');
+  assert.ok(!restored.includes('text="Model B"'), 'Choosing a model returns to the compact settings sheet.');
+  await adb('shell', 'input', 'keyevent', '4');
+}
+async function checkProjects(prefix, engine) {
+  await tap('选择项目'); await waitFor('新建项目');
+  await tap('Remote AI');
+  await tap('选择项目'); await waitFor('Remote AI');
+  await screenshot(`${prefix}-${engine}-projects`);
+  await tap('未归属项目');
+  await waitFor('text="未选择项目"');
+}
 async function check(scale) {
   const prefix = `android-${scale === '1.0' ? 'light' : 'dark'}-font-${scale}`;
   console.log(`Checking ${prefix}`);
@@ -130,11 +154,14 @@ async function check(scale) {
   await tap('选择 CLI'); await waitFor('Gemini GUI');
   await screenshot(`${prefix}-selector`);
   await tap('Claude GUI'); await waitFor('消息');
-  await openSettings(); await waitFor('权限模式');
-  await screenshot(`${prefix}-settings`);
+  await checkProjects(prefix, 'claude');
+  await checkUnifiedSettings(prefix, 'claude');
+  await openSettings(); await tap('选择 CLI'); await tap('Gemini GUI'); await waitFor('消息');
+  await checkProjects(prefix, 'gemini');
+  await checkUnifiedSettings(prefix, 'gemini');
+  await openSettings(); await tap('选择 CLI'); await tap('Claude GUI'); await waitFor('消息');
   console.log(`${prefix}: selection and settings passed`);
   if (settingsOnly) return;
-  await adb('shell', 'input', 'keyevent', '4');
   await enterMessage();
   await waitFor('text="Check project"');
   await adb('shell', 'input', 'keyevent', '4');

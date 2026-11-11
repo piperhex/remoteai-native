@@ -5,6 +5,7 @@ import { ChatProjectPicker } from './ChatProjectPicker';
 import { SheetFlatList } from '../components/SheetScrollView';
 import { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 import type { ChatProject } from '../../vendor/shared/remote-chat/client/types';
+import type { ProjectSwitchProps } from '../../vendor/shared/remote-chat/client/useProjectSwitch';
 
 const hooks = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[], effectCursor: 0,
   effects: [] as Array<{ dependencies: unknown[]; cleanup?: () => void }>, pending: [] as Array<() => void> }));
@@ -54,9 +55,10 @@ const request = vi.fn(async (_method: string, input?: unknown): Promise<unknown>
   return body.operation === 'guiProjects' ? [saved] : { cwd: body.cwd, label: 'chosen' };
 });
 let controller: ChatController;
+let workspace: ProjectSwitchProps['workspace'];
 function render() {
   hooks.cursor = 0; hooks.effectCursor = 0;
-  const nodes = descendants(ChatProjectSwitch({ state: controller.snapshot(), controller, active: true }));
+  const nodes = descendants(ChatProjectSwitch({ state: controller.snapshot(), controller, active: true, workspace }));
   hooks.pending.splice(0).forEach(effect => effect());
   return nodes;
 }
@@ -70,6 +72,7 @@ beforeEach(() => {
   vi.stubGlobal('React', React);
   hooks.states = []; hooks.effects = []; hooks.pending = [];
   request.mockClear();
+  workspace = undefined;
   controller = new ChatController(() => ({ start() {}, stop() {},
     request: async <T,>(method: string, input?: unknown) => await request(method, input) as T }));
   Object.assign(controller.snapshot(), { ready: true,
@@ -154,4 +157,30 @@ it('keeps the conversation in its project and shows the error when leaving the p
   await Promise.resolve(); await Promise.resolve();
   expect(controller.snapshot().selected).toMatchObject({ id: 'old', cwd: saved.cwd });
   expect(render().some(node => node.props.children === 'Cannot move this conversation')).toBe(true);
+});
+
+it('routes CLI project choices and clearing only to the CLI workspace', async () => {
+  Object.assign(controller.snapshot(), { selected: { id: 'codex', cwd: '/codex', preview: '', updatedAt: 1 },
+    draftProject: { cwd: '/codex-draft', label: 'Codex draft' } });
+  const choose = vi.fn();
+  workspace = { cwd: '/cli-project', disabled: false, choose };
+  const list = (await open()).find(node => node.type === SheetFlatList)!;
+  expect(list.props.data).toContainEqual({ cwd: '/cli-project', label: 'cli-project' });
+  request.mockClear();
+  list.props.renderItem!({ item: saved }).props.onPress!();
+  expect(choose).toHaveBeenCalledWith(saved.cwd);
+  const reopened = (await open()).find(node => node.type === SheetFlatList)!;
+  descendants(reopened.props.ListHeaderComponent)
+    .find(node => node.props.accessibilityLabel === '未归属项目')!.props.onPress!();
+  expect(choose).toHaveBeenLastCalledWith('');
+  expect(request.mock.calls.every(([, input]) => (input as { operation: string }).operation === 'guiProjects')).toBe(true);
+  expect(controller.snapshot().selected?.cwd).toBe('/codex');
+});
+
+it('locks a CLI conversation project without using the unrelated Codex selection state', async () => {
+  workspace = { cwd: saved.cwd, disabled: true, choose: vi.fn() };
+  expect(trigger().props.disabled).toBe(true);
+  trigger().props.onPress!();
+  expect(render().some(node => node.type === SheetFlatList)).toBe(false);
+  expect(workspace.choose).not.toHaveBeenCalled();
 });

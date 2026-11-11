@@ -19,6 +19,7 @@ const SPEED_SHORT_LABELS: Record<string, string> = {
 
 /** Short visual labels retain the full accessible names and original option values. */
 export function settingShortLabel(field: SettingField, option: SettingOption) {
+  if (option.shortLabel) return option.shortLabel;
   return field === 'speed' ? SPEED_SHORT_LABELS[option.value] ?? option.label : option.label;
 }
 

@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { USAGE_REFRESH_INTERVAL_MS, type ReadUsage, type UsageSummary } from '../usage';
 import { decodeUsageSummary } from '../usageSummary';
 
-export function useChatUsage(read: ReadUsage, active: boolean) {
+export function useChatUsage(read: ReadUsage | undefined, active: boolean) {
   const [usage, setUsage] = useState<UsageSummary | null>(null);
   const [error, setError] = useState('');
   const pending = useRef(new Set<ReadUsage>());
   useEffect(() => {
     setUsage(null); setError('');
-    if (!active) return;
+    if (!active || !read) return;
     let disposed = false;
     const refresh = async () => {
       if (disposed || pending.current.has(read)) return;

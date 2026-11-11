@@ -8,7 +8,19 @@ export const SETTINGS_FIELDS = [
   { field: 'speed', label: "client.shared.speedMode", title: "client.shared.chooseSpeedMode" },
   { field: 'access', label: "client.shared.access", title: "client.shared.access" },
 ] satisfies { field: SettingField; label: string; title: string }[];
-export interface SettingOption { value: string; label: string; description?: string }
+export interface SettingOption { value: string; label: string; shortLabel?: string; description?: string }
+export interface SettingsFieldState {
+  field: SettingField;
+  label: string;
+  value: string;
+  options: SettingOption[];
+  disabled?: boolean;
+}
+
+export function composerSettingsFields(models: Model[], selection: ComposerSettings): SettingsFieldState[] {
+  return visibleSettingsFields(selection).map(entry => ({ ...entry, value: selection[entry.field] ?? '',
+    options: settingOptions(entry.field, models, selection) }));
+}
 
 export function settingOptions(field: SettingField, models: Model[], selection: ComposerSettings): SettingOption[] {
   if (field === 'speed') return [

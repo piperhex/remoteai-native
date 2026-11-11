@@ -1,25 +1,20 @@
-import { displayText, displayError } from '../i18n/index';
-import { createThemedStyles } from '../theme/styles';
-import { textMetrics } from '../theme/text';
+import { displayError } from '../i18n/index';
 import { t, useLanguage } from '../i18n';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { BottomSheet } from '../components/BottomSheet';
-import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
+import { Pressable, Text } from 'react-native';
 import type { Model, ThreadTokenUsage } from './types';
 import type { ComposerSettings } from '../../vendor/shared/remote-chat/composer';
-import { SETTINGS_FIELDS, settingOptions, settingValue, settingsNotice, visibleSettingsFields,
+import { composerSettingsFields, settingsNotice,
   type SettingField } from '../../vendor/shared/remote-chat/settingsMenu';
-import { palette, useStyles } from './styles';
+import { useStyles } from './styles';
 import { ChatUsage } from './ChatUsage';
 import type { ReadUsage } from '../../vendor/shared/remote-chat/usage';
 import type { ReadConversationMetrics } from '../../vendor/shared/remote-chat/conversationMetrics';
 import type { ContextSettingsApi } from '../../vendor/shared/remote-chat/contextSettings';
 import { ChatContextSettings } from './ChatContextSettings';
 import { ChatProfileMenu, type ChatConnectionProps } from './ChatProfileMenu';
-import { ModelRefreshButton } from './ModelRefreshButton';
-import { ChatSettingSegments } from './ChatSettingSegments';
-import { CHAT_SETTINGS_SHEET_LAYOUT } from '../../vendor/shared/remote-chat/settingsPresentation';
+import { ChatSettingsFields, ChatSettingsModelSheet } from './ChatSettingsFields';
+import { ChatSettingsSheet } from './ChatSettingsSheet';
 
 interface Props {
   connection: ChatConnectionProps;
@@ -45,13 +40,13 @@ export function ChatSettings({ models, selection, saving, ready, error, updateSe
   readUsage, readConversationMetrics, usageActive, tokenUsage, threadId, contextSettings, connection,
   cliLocked = false, cwd }: Props) {
   const styles = useStyles();
-  const menuStyles = useMenuStyles();
   useLanguage();
   const [field, setField] = useState<SettingField | null>(null);
   const [contextOpen, setContextOpen] = useState(false);
   const nestedOpen = field !== null || contextOpen;
   useEffect(() => { setContextOpen(false); }, [threadId, ready]);
   const notice = settingsNotice({ saving, ready, error });
+  const fields = composerSettingsFields(models, selection);
   const selectInline = (field: SettingField, value: string) => {
     if (value !== selection[field] || error) void updateSettings({ [field]: value });
   };
@@ -60,61 +55,21 @@ export function ChatSettings({ models, selection, saving, ready, error, updateSe
     if (value !== selection[field] || error) await updateSettings({ [field]: value });
     setField((current) => current === field ? null : current);
   };
-  return <BottomSheet visible fullWidthContent hideHeader maxHeight={`${CHAT_SETTINGS_SHEET_LAYOUT.maxHeightPercent}%`}
-    title={t("client.chat.chatSettings.1e06eb")} onClose={onClose}>
-    <SheetScrollView contentContainerStyle={[styles.settings, menuStyles.content]}
-      accessibilityElementsHidden={nestedOpen} importantForAccessibility={nestedOpen ? 'no-hide-descendants' : 'auto'}>
+  return <ChatSettingsSheet nestedOpen={nestedOpen} close={onClose} panels={<>
+    {contextOpen && threadId && ready && <ChatContextSettings key={threadId} threadId={threadId}
+      api={contextSettings} onClose={() => setContextOpen(false)} />}
+    {field && <ChatSettingsModelSheet field={fields[0]} ready={ready} refresh={refreshModels}
+      choose={value => { void choose(value); }} close={() => setField(null)} />}
+  </>}>
       <ChatUsage read={readUsage} active={usageActive && !nestedOpen} ready={ready} tokenUsage={tokenUsage}
         readConversationMetrics={readConversationMetrics} threadId={threadId}
         onContextSettings={threadId && ready ? () => setContextOpen(true) : undefined} />
       <ChatProfileMenu {...connection} variant="settings" ready={ready} active={usageActive}
         cliLocked={Boolean(threadId) || cliLocked} cliCwd={cwd} />
-      {visibleSettingsFields(selection).map((entry) => entry.field !== 'model'
-        ? <ChatSettingSegments key={entry.field} field={entry.field}
-          label={displayText(entry.label)} value={selection[entry.field] ?? ''}
-          options={settingOptions(entry.field, models, selection)} onChange={value => selectInline(entry.field, value)} />
-        : <Pressable key={entry.field} accessibilityRole="button"
-        accessibilityLabel={t("client.chat.set", { value1: displayText(entry.label) })}
-        onPress={() => setField(entry.field)} style={menuStyles.entry}>
-        <Text style={menuStyles.title}>{displayText(entry.label)}</Text>
-        <Text numberOfLines={1} style={menuStyles.value}>
-          {settingValue(entry.field, models, selection, displayText)}</Text>
-        <Text style={menuStyles.arrow}>›</Text>
-      </Pressable>)}
+      <ChatSettingsFields fields={fields} openModel={() => setField('model')} change={selectInline} />
       {!!notice && <Text accessibilityRole={error ? 'alert' : undefined}
         style={error ? styles.error : styles.subtitle}>{displayError(notice)}</Text>}
       {!!error && <Pressable accessibilityRole="button" style={styles.button}
         onPress={() => { void updateSettings(selection); }}><Text style={styles.buttonText}>{t("client.chat.saveAgain")}</Text></Pressable>}
-    </SheetScrollView>
-    {contextOpen && threadId && ready && <ChatContextSettings key={threadId} threadId={threadId}
-      api={contextSettings} onClose={() => setContextOpen(false)} />}
-    {field && <BottomSheet fullWidthContent
-      visible title={displayText(SETTINGS_FIELDS.find((entry) => entry.field === field)!.title)}
-      titleAction={field === 'model' ? <ModelRefreshButton ready={ready} refreshModels={refreshModels} /> : undefined}
-      onBack={() => setField(null)} onClose={() => setField(null)}>
-      <SheetScrollView key={field} contentContainerStyle={[styles.settings, menuStyles.content, menuStyles.options]}>
-        {settingOptions(field, models, selection).map((option) => <Pressable key={option.value}
-          accessibilityRole="radio" accessibilityLabel={field === 'model' ? option.label : displayText(option.label)}
-          accessibilityState={{ checked: selection[field] === option.value }}
-          style={[styles.choice, selection[field] === option.value && styles.chosen]}
-          onPress={() => { void choose(option.value); }}>
-          <View style={styles.row}>
-            <Text style={[styles.buttonText, styles.fill]}>{field === 'model' ? option.label : displayText(option.label)}</Text>
-            {selection[field] === option.value && <Text style={styles.buttonText}>✓</Text>}
-          </View>
-          {option.description && <Text style={styles.subtitle}>{displayText(option.description)}</Text>}
-        </Pressable>)}
-      </SheetScrollView>
-    </BottomSheet>}
-  </BottomSheet>;
+  </ChatSettingsSheet>;
 }
-
-const useMenuStyles = createThemedStyles((color) => ({
-  content: { paddingHorizontal: CHAT_SETTINGS_SHEET_LAYOUT.horizontalPadding, paddingBottom: 14,
-    gap: CHAT_SETTINGS_SHEET_LAYOUT.gap },
-  options: { maxWidth: SHEET_READABLE_WIDTH },
-  title: { flexShrink: 1, ...textMetrics(15, 22), color: color(palette.ink, 'ink'), fontWeight: '600' },
-  entry: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 42 },
-  value: { flex: 1, textAlign: 'right', color: color(palette.green, 'accent'), ...textMetrics(14, 22) },
-  arrow: { color: color(palette.muted, 'muted'), ...textMetrics(22, 28) },
-}));

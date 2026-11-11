@@ -19,11 +19,13 @@ export function createCliFixture() {
     { id: 'user', first: 1, last: 1, role: 'user', text: session.title },
     { id: 'reply', first: 2, last: 2, role: 'assistant', text: '已检查项目结构，正在整理下一步计划。' },
   ]]));
-  const catalog = (): CliCatalog => ({ status: 'ready', models: [
+  const catalog = (engine: ExternalEngine): CliCatalog => ({ status: 'ready', models: [
     { id: selection.kind === 'provider' ? 'team-model' : 'model-a', label: 'Model A', isDefault: true,
       defaultEffort: 'high', efforts: [{ id: 'high', label: 'High' }, { id: 'medium', label: 'Medium' }] },
     { id: 'model-b', label: 'Model B', efforts: [] },
-  ], modes: [{ id: 'default', label: 'Default' }, { id: 'plan', label: 'Plan' }], defaultMode: 'default' });
+    ...['C', 'D', 'E', 'F', 'G', 'H'].map(name => ({ id: `model-${name.toLowerCase()}`, label: `Model ${name}` })),
+  ], modes: (engine === 'claude' ? ['default', 'acceptEdits', 'auto', 'bypassPermissions', 'plan']
+    : ['default', 'autoEdit', 'yolo', 'plan']).map(id => ({ id, label: id })), defaultMode: 'default' });
   const notify = () => listeners.forEach(fn => fn());
   const accounts: GuiAccountsClient = {
     read: async () => ({ selection, running: true, choices: [
@@ -40,7 +42,7 @@ export function createCliFixture() {
     if (input.action === 'status') return { status: installed.has(input.engine) ? 'ready' : 'missing',
       version: '0.15.4', cliVersion: input.engine === 'claude' ? '2.1.42' : '0.32.1' };
     if (input.action === 'install') { installed.add(input.engine); notify(); return {}; }
-    if (input.action === 'catalog') return catalog();
+    if (input.action === 'catalog') return catalog(input.engine);
     if (input.action === 'list') return sessions.filter(s => s.engine === input.engine && s.archived === input.archived);
     if (input.action === 'create') {
       const session: CliSession = { ...sessions[0], engine: input.engine, id: 'created-' + sessions.length,
