@@ -19,6 +19,7 @@ import { ChatContextSettings } from './ChatContextSettings';
 import { ChatProfileMenu, type ChatConnectionProps } from './ChatProfileMenu';
 import { ModelRefreshButton } from './ModelRefreshButton';
 import { ChatSettingSegments } from './ChatSettingSegments';
+import { CHAT_SETTINGS_SHEET_LAYOUT } from '../../vendor/shared/remote-chat/settingsPresentation';
 
 interface Props {
   connection: ChatConnectionProps;
@@ -59,7 +60,8 @@ export function ChatSettings({ models, selection, saving, ready, error, updateSe
     if (value !== selection[field] || error) await updateSettings({ [field]: value });
     setField((current) => current === field ? null : current);
   };
-  return <BottomSheet visible fullWidthContent hideHeader title={t("client.chat.chatSettings.1e06eb")} onClose={onClose}>
+  return <BottomSheet visible fullWidthContent hideHeader maxHeight={`${CHAT_SETTINGS_SHEET_LAYOUT.maxHeightPercent}%`}
+    title={t("client.chat.chatSettings.1e06eb")} onClose={onClose}>
     <SheetScrollView contentContainerStyle={[styles.settings, menuStyles.content]}
       accessibilityElementsHidden={nestedOpen} importantForAccessibility={nestedOpen ? 'no-hide-descendants' : 'auto'}>
       <ChatUsage read={readUsage} active={usageActive && !nestedOpen} ready={ready} tokenUsage={tokenUsage}
@@ -108,7 +110,8 @@ export function ChatSettings({ models, selection, saving, ready, error, updateSe
 }
 
 const useMenuStyles = createThemedStyles((color) => ({
-  content: { paddingHorizontal: 14, paddingBottom: 14, gap: 12 },
+  content: { paddingHorizontal: CHAT_SETTINGS_SHEET_LAYOUT.horizontalPadding, paddingBottom: 14,
+    gap: CHAT_SETTINGS_SHEET_LAYOUT.gap },
   options: { maxWidth: SHEET_READABLE_WIDTH },
   title: { flexShrink: 1, ...textMetrics(15, 22), color: color(palette.ink, 'ink'), fontWeight: '600' },
   entry: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 42 },

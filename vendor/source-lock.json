@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "f93aecc0d2d99ff7e2560f1fa1eddd92935c1951",
+  "revision": "975201ca82d1f291adf584c208685ae818502c43",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "cddcc8fbce8db3b3d80d52667ee59675e84d4b21"
+    "revision": "503b3729f40df32c52d5922e38e24aa5b458eaa1"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.18/remoteai-i18n-0.1.18.tgz",
   "files": {
@@ -135,7 +135,7 @@
     "shared/context-usage/values.js": "fff2f389ced4f6ee7de613f90390b0f4de2db848c9a40fb2f536c4b6f0ee7a86",
     "shared/quota.ts": "0f070ca0a99580b46dd799967ab8c73038bca88a7001d7ea8cd8765e23d8aa69",
     "shared/remote-chat/contextUsage.ts": "2e50a63610f8ced8d57cb1b14d3f4542ca1d0fa47739ccdd26dcb8918637d6df",
-    "shared/remote-chat/settingsPresentation.ts": "0073fb3888078041addafd48bdf65ada639ebf2f27cdcceebb59c4bbe15dd278",
+    "shared/remote-chat/settingsPresentation.ts": "c4654f763c58829d0448b88f8e4b598820d85cc297a59ca3eb634a0301e74782",
     "shared/remote-chat/client/useContextSettings.ts": "dfbd2fa9cc3bbd2b9d32136035ca8e0b020d1ef9b197898a058a3aa61d6e51eb",
     "shared/chat/diff.ts": "6b3da6561ea170a591d78c3151162f2d3a3a2e5114e210b397a9a3c73081c611",
     "shared/navigation/drawerMotion.ts": "6c420dce576fcc68a56ced5f4590ee17b8f6f5926809d5b109df9424891f2eda",

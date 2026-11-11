@@ -6,6 +6,7 @@ import { type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  type DimensionValue,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -52,6 +53,7 @@ interface BottomSheetProps {
   fullWidthContent?: boolean;
   horizontalPadding?: number;
   maxWidth?: number;
+  maxHeight?: DimensionValue;
   compactHeader?: boolean;
   hideHeader?: boolean;
 }
@@ -76,6 +78,7 @@ export function BottomSheet({
   fullWidthContent = false,
   horizontalPadding = SHEET_HORIZONTAL_PADDING,
   maxWidth,
+  maxHeight,
   compactHeader = false,
   hideHeader = false,
 }: BottomSheetProps) {
@@ -122,6 +125,7 @@ export function BottomSheet({
           styles.sheet,
           maxWidth !== undefined && { maxWidth, width: '100%', alignSelf: 'center' },
           tall && styles.sheetTall,
+          maxHeight !== undefined && { maxHeight },
           fillHeight && { height: tall ? '92%' : '82%' },
           fullscreen && styles.sheetFullscreen,
           { transform: [{ translateY }] },

@@ -12,6 +12,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the intended Android test device.');
 const scales = (process.env.CLI_UI_FONT_SCALES ?? '1.0,1.3').split(',');
+const settingsOnly = process.env.CLI_UI_SETTINGS_ONLY === '1';
 assert.ok(scales.length > 0 && scales.every(scale => ['1.0', '1.3'].includes(scale)),
   'CLI_UI_FONT_SCALES must contain 1.0, 1.3, or both separated by a comma.');
 const app = 'com.codexswitch.mobile.cliguitest';
@@ -81,6 +82,15 @@ async function screenshot(name) {
   await adb('shell', 'screencap', '-p', '/sdcard/cli-gui-evidence.png');
   await adb('pull', '/sdcard/cli-gui-evidence.png', path.join(output, `${name}.png`));
 }
+async function revealSettingsOptions() {
+  const xml = await hierarchy();
+  const bounds = xml.match(/scrollable="true"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/);
+  assert.ok(bounds, 'Chat settings must retain a scrollable content area.');
+  const [left, top, right, bottom] = bounds.slice(1).map(Number);
+  const x = Math.round((left + right) / 2);
+  await adb('shell', 'input', 'swipe', String(x), String(Math.round(top + (bottom - top) * 0.8)),
+    String(x), String(Math.round(top + (bottom - top) * 0.3)), '350');
+}
 async function enterMessage() {
   await waitFor('消息');
   const result = await adb('shell', 'uiautomator', 'runtest', '/system/framework/android.test.base.jar',
@@ -113,12 +123,17 @@ async function check(scale) {
   if (scale !== '1.0') await tap('toggle-theme');
   await openSettings();
   await screenshot(`${prefix}-codex-settings`);
+  if (settingsOnly) {
+    await revealSettingsOptions();
+    await screenshot(`${prefix}-codex-settings-options`);
+  }
   await tap('选择 CLI'); await waitFor('Gemini GUI');
   await screenshot(`${prefix}-selector`);
   await tap('Claude GUI'); await waitFor('消息');
   await openSettings(); await waitFor('权限模式');
   await screenshot(`${prefix}-settings`);
   console.log(`${prefix}: selection and settings passed`);
+  if (settingsOnly) return;
   await adb('shell', 'input', 'keyevent', '4');
   await enterMessage();
   await waitFor('text="Check project"');
@@ -154,7 +169,8 @@ try {
   await prepareHierarchy();
   await installFixture();
   for (const scale of scales) await check(scale);
-  console.log(`PASS native CLI selection, settings, messages, approvals, history and long press at scales ${scales}`);
+  const scenario = settingsOnly ? 'settings' : 'selection, settings, messages, approvals, history and long press';
+  console.log(`PASS native CLI ${scenario} at scales ${scales}`);
 } finally {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);
   await adb('shell', 'am', 'force-stop', app);

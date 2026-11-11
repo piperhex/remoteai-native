@@ -11,6 +11,7 @@ import { ModelRefreshButton } from '../ModelRefreshButton';
 import { useStyles } from '../styles';
 import { useCliStyles } from './styles';
 import { engineNames } from './engine';
+import { CHAT_SETTINGS_SHEET_LAYOUT } from '../../../vendor/shared/remote-chat/settingsPresentation';
 
 function Choices({ label, value, options, disabled, choose }: {
   label: string; value: string; options: { id: string; label: string }[]; disabled: boolean;
@@ -40,6 +41,7 @@ export function CliSettings({ connection, ready, active, close }: {
   const disabled = !ready || busy || selected?.status === 'running' || Boolean(selected?.archived);
   const model = catalog?.models.find(entry => entry.id === state.model);
   return <BottomSheet visible title={t('client.chat.chatSettings.1e06eb')} onClose={close}
+    maxHeight={`${CHAT_SETTINGS_SHEET_LAYOUT.maxHeightPercent}%`}
     titleAction={<ModelRefreshButton ready={ready && !busy}
       refreshModels={async () => { await controller.refresh(); await controller.loadCatalog(); }} />}>
     <SheetScrollView contentContainerStyle={styles.content}>

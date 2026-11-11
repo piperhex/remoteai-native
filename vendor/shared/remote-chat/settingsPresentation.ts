@@ -3,6 +3,9 @@ import type { ThreadTokenUsage } from './client/types';
 import type { SettingField, SettingOption } from './settingsMenu';
 import type { UsageSummary } from './usage';
 
+/** Shared by the native and browser chat settings sheets. */
+export const CHAT_SETTINGS_SHEET_LAYOUT = { maxHeightPercent: 88, horizontalPadding: 14, gap: 12 } as const;
+
 export const SETTING_SHORT_LABELS = {
   model: 'client.shared.model',
   effort: 'client.chatSettings.effort',
