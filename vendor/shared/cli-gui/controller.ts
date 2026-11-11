@@ -3,6 +3,10 @@ import type { CliCatalog, CliEntry, CliHistory, CliRequest, CliRuntimeStatus, Cl
 import { modelSelectionError, resolveModelSelection } from '../conversation/modelSelection';
 import { cliPickerModels, cliRequestEffort } from './modelSelection';
 
+const LIVE_REFRESH_DELAY_MS = 80;
+const FALLBACK_REFRESH_DELAY_MS = 1000;
+const METADATA_REFRESH_INTERVAL_MS = 2000;
+
 export interface CliState {
   engine: GuiEngine; selected: CliSession | null; sessions: CliSession[]; history: CliHistory | null;
   runtime: Partial<Record<ExternalEngine, CliRuntimeStatus>>; catalog: CliCatalog | null;
@@ -19,8 +23,10 @@ export class CliController {
   private refreshPromise?: Promise<void>;
   private active = false;
   private generation = 0;
-  private refreshAgain = false;
+  private refreshAgain?: 'history' | 'full';
   private timer?: ReturnType<typeof setTimeout>;
+  private scheduledLive = false;
+  private metadataRefreshedAt = -Infinity;
   private unsubscribe?: () => void;
   private unsubscribeAccount?: () => void;
   private older?: { revision: number; generation: number; history: CliHistory };
@@ -54,7 +60,7 @@ export class CliController {
         if (this.active && generation === this.generation) this.unsubscribeAccount = stop; else stop();
       }).catch(this.report);
     }
-    void Promise.resolve(this.transport.subscribe(() => this.schedule())).then(unsubscribe => {
+    void Promise.resolve(this.transport.subscribe(() => this.schedule(true))).then(unsubscribe => {
       if (this.active && generation === this.generation) this.unsubscribe = unsubscribe; else unsubscribe();
     }).catch(this.report);
     void this.refresh();
@@ -63,9 +69,15 @@ export class CliController {
       if (this.older) { this.older = undefined; this.patch({ loading: false }); }
       clearTimeout(this.timer); this.timer = undefined; };
   }
-  private schedule = () => {
-    if (!this.active || this.timer) return;
-    this.timer = setTimeout(() => { this.timer = undefined; void this.refresh(); }, 1000);
+  private schedule = (live = false) => {
+    const immediate = live && Boolean(this.state.selected);
+    if (!this.active || (this.timer && (!immediate || this.scheduledLive))) return;
+    clearTimeout(this.timer);
+    this.scheduledLive = immediate;
+    this.timer = setTimeout(() => {
+      this.timer = undefined;
+      void this.refresh(true);
+    }, immediate ? LIVE_REFRESH_DELAY_MS : FALLBACK_REFRESH_DELAY_MS);
   };
   showCodex = () => {
     this.saveDraft(); this.revision++;
@@ -96,18 +108,32 @@ export class CliController {
   };
   private async read<T>(request: CliRequest) { return this.transport.request<T>(request); }
 
-  refresh = (): Promise<void> => {
-    if (this.refreshPromise) { this.refreshAgain = true; return this.refreshPromise; }
-    this.refreshPromise = this.synchronize().catch(error => {
+  refresh = (historyOnly = false): Promise<void> => {
+    if (this.refreshPromise) {
+      if (this.refreshAgain !== 'full') this.refreshAgain = historyOnly ? 'history' : 'full';
+      return this.refreshPromise;
+    }
+    const generation = this.generation;
+    this.refreshPromise = this.synchronize(historyOnly).catch(error => {
       if (this.state.engine !== 'codex') { this.report(error); this.patch({ loading: false }); }
     }).finally(() => {
       this.refreshPromise = undefined;
-      if (this.refreshAgain) { this.refreshAgain = false; void this.refresh(); }
+      const again = this.refreshAgain;
+      this.refreshAgain = undefined;
+      if (again && (this.active || generation === this.generation)) void this.refresh(again === 'history');
     });
     return this.refreshPromise;
   };
-  private async synchronize() {
+  private async synchronize(historyOnly: boolean) {
     const revision = this.revision;
+    if (historyOnly && this.state.selected) {
+      await this.synchronizeHistory(revision);
+      if (Date.now() - this.metadataRefreshedAt < METADATA_REFRESH_INTERVAL_MS) return;
+    }
+    await this.synchronizeMetadata();
+    if (!historyOnly || !this.state.selected) await this.synchronizeHistory(revision);
+  }
+  private async synchronizeMetadata() {
     const archived = this.state.archived;
     const wasReady = this.state.engine !== 'codex' && this.state.runtime[this.state.engine]?.status === 'ready';
     const runtimes = await Promise.all((['claude', 'gemini'] as const).map(async engine =>
@@ -120,12 +146,17 @@ export class CliController {
     if (archived === this.state.archived) {
       this.patch({ sessions: lists.flat().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)) });
     }
+    this.metadataRefreshedAt = Date.now();
     if (!wasReady && this.state.engine !== 'codex') void this.loadCatalog();
+  }
+  private async synchronizeHistory(revision: number) {
     const { selected } = this.state;
     if (!selected || revision !== this.revision) return;
     const history = await this.read<CliHistory>({ engine: selected.engine, action: 'read', id: selected.id });
     if (revision === this.revision) this.patch({ history: preserveOlder(this.state.history, history),
-      selected: history.session, loading: false });
+      selected: history.session, loading: false,
+      sessions: this.state.sessions.map(session => session.engine === selected.engine && session.id === selected.id
+        ? history.session : session) });
     if (history.session.status === 'running' || history.session.permissions.length) this.schedule();
   }
   filter = (archived: boolean) => {
@@ -171,7 +202,7 @@ export class CliController {
     try {
       const target = selected ?? await this.read<CliSession>({ engine, action: 'create', cwd, model, effort: effort || undefined,
         ...(mode ? { mode } : {}) });
-      if (revision === this.revision) this.patch({ selected: target, history: null });
+      if (revision === this.revision && !selected) this.patch({ selected: target, history: null });
       await this.read({ engine, action: 'send', id: target.id, text: draft, messageId: this.createMessageId(),
         model, effort: effort || undefined });
       this.drafts.delete(`${engine}:${selected?.id ?? 'draft'}`);

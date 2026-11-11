@@ -6,17 +6,14 @@ import { CliController } from '../../../vendor/shared/cli-gui/controller';
 import { createCliFixture } from '../../../scripts/fixtures/cli-gui';
 import { CliMessageInput } from './CliMessageInput';
 
-const input = vi.hoisted(() => ({ value: undefined as string | undefined, hint: '',
-  change: (_text: string) => {}, setNativeProps: vi.fn() }));
-vi.mock('../ComposerInput', async () => {
-  const { forwardRef, useImperativeHandle } = await import('react');
-  return { ComposerInput: forwardRef(function MockInput({ value, displayValue, onChangeText }: {
-    value?: string; displayValue: string; onChangeText: (text: string) => void;
-  }, ref) {
-    input.value = value; input.hint = displayValue; input.change = onChangeText;
-    useImperativeHandle(ref, () => ({ setNativeProps: input.setNativeProps }));
+const input = vi.hoisted(() => ({ value: '', change: (_text: string) => {} }));
+vi.mock('../ComposerInput', () => {
+  return { ComposerInput: function MockInput({ value, onChangeText }: {
+    value: string; onChangeText: (text: string) => void;
+  }) {
+    input.value = value; input.change = onChangeText;
     return null;
-  }) };
+  } };
 });
 let root: Root;
 let controller: CliController;
@@ -27,30 +24,38 @@ function Harness() {
 beforeEach(() => {
   vi.stubGlobal('React', React);
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  input.setNativeProps.mockClear();
   controller = new CliController(createCliFixture().transport, () => 'native');
   root = createRoot(document.createElement('div'));
   act(() => root.render(<Harness />));
 });
 afterEach(() => { act(() => root.unmount()); vi.unstubAllGlobals(); });
 
-it('keeps rapid native typing intact while updating the sendable draft immediately', () => {
-  for (const text of ['C', 'Check', 'Check project']) act(() => {
-    input.change(text);
-    expect(controller.getSnapshot().draft).toBe(text);
+it('publishes rapid typing after TextInput records its native event and retains the latest text', async () => {
+  await act(async () => {
+    for (const text of ['C', 'Check', 'Check project']) input.change(text);
+    expect(controller.getSnapshot().draft).toBe('');
   });
-  expect(input.value).toBeUndefined();
-  expect(input.hint).toBe('Check project');
-  expect(input.setNativeProps).not.toHaveBeenCalled();
+  expect(controller.getSnapshot().draft).toBe('Check project');
+  expect(input.value).toBe('Check project');
 });
 
-it('writes restored drafts and clearing to the native field without rewriting unchanged input', () => {
-  act(() => input.change('Typed'));
+it('keeps the actual input value synchronized for restore, clear and subsequent typing', async () => {
+  await act(async () => input.change('Typed'));
   act(() => controller.edit('Restored draft'));
-  expect(input.setNativeProps).toHaveBeenLastCalledWith({ text: 'Restored draft' });
+  expect(input.value).toBe('Restored draft');
   act(() => controller.patch({ busy: true }));
-  expect(input.setNativeProps).toHaveBeenCalledTimes(1);
+  expect(input.value).toBe('Restored draft');
   act(() => controller.edit(''));
-  expect(input.setNativeProps).toHaveBeenLastCalledWith({ text: '' });
-  expect(input.hint).toBe('');
+  expect(input.value).toBe('');
+  await act(async () => input.change('Follow-up'));
+  expect(controller.getSnapshot().draft).toBe('Follow-up');
+  expect(input.value).toBe('Follow-up');
+});
+
+it('does not publish a queued edit after its conversation input unmounts', async () => {
+  await act(async () => {
+    input.change('Previous conversation');
+    root.unmount();
+  });
+  expect(controller.getSnapshot().draft).toBe('');
 });

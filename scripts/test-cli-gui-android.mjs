@@ -13,6 +13,8 @@ const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the intended Android test device.');
 const scales = (process.env.CLI_UI_FONT_SCALES ?? '1.0,1.3').split(',');
 const settingsOnly = process.env.CLI_UI_SETTINGS_ONLY === '1';
+const gesturesOnly = process.env.CLI_UI_GESTURES_ONLY === '1';
+const inputOnly = process.env.CLI_UI_INPUT_ONLY === '1';
 assert.ok(scales.length > 0 && scales.every(scale => ['1.0', '1.3'].includes(scale)),
   'CLI_UI_FONT_SCALES must contain 1.0, 1.3, or both separated by a comma.');
 const app = 'com.codexswitch.mobile.cliguitest';
@@ -51,17 +53,18 @@ async function prepareHierarchy() {
     path.join(build, 'dev/remoteai/testing/NativeCliHierarchy.class')]);
   await adb('push', jar, '/data/local/tmp/native-cli-hierarchy.jar');
 }
-async function waitFor(label) {
+async function waitFor(label, present = true) {
   let lastError;
   for (let attempt = 0; attempt < 25; attempt++) {
     let xml;
     try { xml = await hierarchy(); }
     catch (error) { lastError = error; await delay(400); continue; }
     await writeFile(path.join(output, 'latest.xml'), xml);
-    if (typeof label === 'string' ? xml.includes(label) : label.test(xml)) return xml;
+    const found = typeof label === 'string' ? xml.includes(label) : label.test(xml);
+    if (found === present) return xml;
     await delay(400);
   }
-  assert.fail(`Missing native control: ${label}. ${lastError ?? ''}`);
+  assert.fail(`${present ? 'Missing' : 'Still visible'} native control: ${label}. ${lastError ?? ''}`);
 }
 async function tap(label, long = false) {
   await waitFor(label);
@@ -98,7 +101,9 @@ async function enterMessage() {
   assert.ok(result.includes('OK (1 test)'), result);
 }
 async function installFixture() {
-  const installed = (await adb('shell', 'pm', 'path', app)).replace(/^package:/, '').trim();
+  const packages = await adb('shell', 'pm', 'list', 'packages', app);
+  const installed = packages.split(/\r?\n/).includes(`package:${app}`)
+    ? (await adb('shell', 'pm', 'path', app)).replace(/^package:/, '').trim() : '';
   const hash = createHash('sha256').update(await readFile(apk)).digest('hex');
   if (installed && (await adb('shell', 'sha256sum', installed)).startsWith(hash)) return;
   console.log('Installing isolated native CLI fixture');
@@ -137,6 +142,56 @@ async function checkProjects(prefix, engine) {
   await tap('未归属项目');
   await waitFor('text="未选择项目"');
 }
+async function checkSwipes(prefix, state) {
+  console.log(`${prefix}: checking ${state} swipes`);
+  const swipe = async right => {
+    // Fixed steps preserve move events even if the emulator briefly stalls during injection.
+    const result = await adb('shell', 'uiautomator', 'runtest', '/system/framework/android.test.base.jar',
+      '/data/local/tmp/native-cli-hierarchy.jar', '-e', 'direction', right ? 'right' : 'left',
+      '-c', 'dev.remoteai.testing.NativeCliHierarchy#testSwipe');
+    assert.ok(result.includes('OK (1 test)'), result);
+    await delay(500);
+  };
+  await swipe(true);
+  await waitFor('整理测试计划');
+  await screenshot(`${prefix}-${state}-right-drawer`);
+  await swipe(false);
+  await waitFor('text="整理测试计划"', false);
+  await swipe(false);
+  await waitFor('content-desc="active-tab-accounts"');
+  await screenshot(`${prefix}-${state}-left-accounts`);
+  await tap('chat-tab');
+  await waitFor('content-desc="active-tab-chat"');
+  console.log(`${prefix}: ${state} swipes passed`);
+}
+async function checkSentInput(prefix, engine, index) {
+  console.log(`${prefix}: checking ${engine} send ${index}`);
+  await enterMessage();
+  await waitFor('text="Check project"');
+  await adb('shell', 'input', 'keyevent', '4');
+  await tap('发送消息');
+  await waitFor('更新项目说明');
+  await screenshot(`${prefix}-${engine}-sent-${index}-cleared`);
+  const xml = await waitFor(/text=""[^>]*class="android.widget.EditText"/);
+  const field = xml.match(/<node\b[^>]*class="android.widget.EditText"[^>]*>/)?.[0];
+  assert.ok(field?.includes('text=""'), 'Sending clears the actual native editor before showing its hint.');
+  await tap('允许这一次');
+  await waitFor('已完成项目检查。');
+  console.log(`${prefix}: ${engine} send ${index} cleared`);
+}
+async function checkGestures(prefix) {
+  if (!inputOnly) await checkSwipes(prefix, 'codex-empty');
+  for (const engine of ['claude', 'gemini']) {
+    await openSettings(); await tap('选择 CLI');
+    await tap(engine === 'claude' ? 'Claude GUI' : 'Gemini GUI');
+    await waitFor('消息');
+    if (!inputOnly) await checkSwipes(prefix, `${engine}-empty`);
+    await checkSentInput(prefix, engine, 1);
+    await checkSentInput(prefix, engine, 2);
+    if (!inputOnly) await checkSwipes(prefix, `${engine}-conversation`);
+    await tap('new-conversation');
+  }
+}
 async function check(scale) {
   const prefix = `android-${scale === '1.0' ? 'light' : 'dark'}-font-${scale}`;
   console.log(`Checking ${prefix}`);
@@ -145,6 +200,7 @@ async function check(scale) {
   await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
   await waitFor(/聊天设置/);
   if (scale !== '1.0') await tap('toggle-theme');
+  if (gesturesOnly || inputOnly) { await checkGestures(prefix); return; }
   await openSettings();
   await screenshot(`${prefix}-codex-settings`);
   if (settingsOnly) {
@@ -196,7 +252,10 @@ try {
   await prepareHierarchy();
   await installFixture();
   for (const scale of scales) await check(scale);
-  const scenario = settingsOnly ? 'settings' : 'selection, settings, messages, approvals, history and long press';
+  let scenario = 'selection, settings, messages, approvals, history and long press';
+  if (settingsOnly) scenario = 'settings';
+  if (gesturesOnly) scenario = 'swipes and native input clearing';
+  if (inputOnly) scenario = 'native input clearing';
   console.log(`PASS native CLI ${scenario} at scales ${scales}`);
 } finally {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);

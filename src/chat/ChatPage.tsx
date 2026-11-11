@@ -236,6 +236,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
       </View>
     </View>
     {external ? <CliConversation host={controller} active={active && foreground} ready={ready}
+      swipe={{ enabled: active && !pickingDevice && !searching, ...drawerSwipe }}
       connection={{ client: controller.guiAccounts, deviceName: device?.name,
         chooseDevice: () => setPickingDevice(true) }} /> : <>
     <ChatTaskStatus state={state} />
