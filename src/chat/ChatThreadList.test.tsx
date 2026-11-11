@@ -7,6 +7,7 @@ import type { ChatController } from './controller';
 const hooks = vi.hoisted(() => ({ states: [] as unknown[], slot: 0 }));
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
+  useEffect: vi.fn(), useContext: () => null,
   useMemo: <T,>(compute: () => T) => compute(),
   useState: <T,>(initial: () => T) => {
     const slot = hooks.slot++;
@@ -40,6 +41,23 @@ it('shows pull-to-refresh progress only for an explicit refresh', () => {
   expect(render(state).refreshing).toBe(false);
   expect(render({ ...state, listRefreshing: true }).refreshing).toBe(true);
   expect(render({ ...state, loading: false, listRefreshing: false }).refreshing).toBe(false);
+});
+
+it('opens the same conversation actions for long press, right-click and accessibility', () => {
+  const thread: Thread = { id: 'cli:claude:history', name: 'CLI history', preview: '', cwd: '', updatedAt: 1 };
+  const state = { ...initialChatState(), ready: true, threads: [thread] };
+  const openActions = vi.fn();
+  const select = vi.fn();
+  const list = ChatThreadList({ state, controller: {} as ChatController, select, newChat: vi.fn(),
+    openActions, openProjectActions: vi.fn(), bottomInset: 0 }).props;
+  const row = list.renderItem({ item: thread, section: list.sections[0] }).props;
+  row.onPointerDown({ nativeEvent: { button: 0 } });
+  expect(openActions).not.toHaveBeenCalled();
+  row.onLongPress();
+  row.onPointerDown({ nativeEvent: { button: 2 } });
+  row.onAccessibilityAction({ nativeEvent: { actionName: 'longpress' } });
+  expect(openActions.mock.calls).toEqual([[thread], [thread], [thread]]);
+  expect(select).not.toHaveBeenCalled();
 });
 
 it('opens project actions by long press or accessibility without collapsing the folder', () => {

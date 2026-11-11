@@ -14,6 +14,9 @@ import { palette, useStyles } from './styles';
 import { THREAD_LONG_PRESS_MS } from '../../vendor/shared/remote-chat/client/threadActions';
 import { useGrouping } from '../../vendor/shared/chat/groups/context';
 import { NativeGroupIcon } from './groups/GroupChoice';
+import { useCliSidebar } from '../../vendor/shared/cli-gui/useCliSidebar';
+import { useCliGui } from '../../vendor/shared/cli-gui/context';
+import { engineNames } from './cli/engine';
 
 interface Props {
   state: ChatState; newChat: (project?: ChatProject) => void; select: (thread: Thread) => void;
@@ -33,8 +36,11 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
   const listStyles = useListStyles();
   const color = useThemeColor();
   const grouping = useGrouping();
+  const cli = useCliGui();
+  const sidebar = useCliSidebar({ threads: state.threads, archived: state.archived });
+  const selected = cli && cli.state.engine !== 'codex' ? sidebar.selected : state.selected;
   useLanguage();
-  const { groups, toggle, toggleCollapse } = useThreadGroups(state);
+  const { groups, toggle, toggleCollapse } = useThreadGroups({ ...state, threads: sidebar.threads, selected });
   const layoutKey = JSON.stringify(groups.map(group => [group.id, group.data.length, group.canToggle]));
   const pagination = useThreadListScroll(state, controller, layoutKey);
   const ready = state.ready;
@@ -47,7 +53,7 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
       keyExtractor={(thread) => thread.id}
       contentContainerStyle={[listStyles.content, { paddingBottom: bottomInset + LIST_BOTTOM_SPACING }]}
       stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
-      refreshing={Boolean(state.listRefreshing)} onRefresh={() => { void controller.list(); }}
+      refreshing={Boolean(state.listRefreshing)} onRefresh={() => { void controller.list(); void cli?.controller.refresh(); }}
       onLayout={pagination.onLayout} onContentSizeChange={pagination.onContentSizeChange}
       onScroll={pagination.onScroll} scrollEventThrottle={16}
       renderSectionHeader={({ section }) => <View style={[styles.row,
@@ -87,17 +93,20 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
       </Pressable> : null}
       renderItem={({ item, section }) => {
         const view = threadPresentation(item, state.sidebar, displayText);
+        const session = sidebar.session(item);
         return <Pressable accessibilityRole="button" accessibilityLabel={view.title}
           accessibilityHint={t("client.mobile.longPressToManageConversation")} delayLongPress={THREAD_LONG_PRESS_MS}
           onLongPress={() => openActions(item)}
+          onPointerDown={event => { if (event.nativeEvent.button === 2) openActions(item); }}
           accessibilityActions={[{ name: 'longpress', label: t("client.threadActions.chatActions") }]}
           onAccessibilityAction={event => { if (event.nativeEvent.actionName === 'longpress') openActions(item); }}
-          accessibilityState={{ selected: state.selected?.id === item.id }}
-          disabled={(!ready && !state.cachedThreadIds?.includes(item.id)) || state.sending}
+          accessibilityState={{ selected: selected?.id === item.id }}
+          disabled={(!ready && !state.cachedThreadIds?.includes(item.id)) || state.sending || cli?.state.busy}
           style={[listStyles.thread, { marginLeft: section.contentIndent },
-            state.selected?.id === item.id && listStyles.selected]}
+            selected?.id === item.id && listStyles.selected]}
           onPress={() => select(item)}>
           <Text numberOfLines={1} style={listStyles.title}>{view.title}</Text>
+          {session && <Text style={listStyles.project}>{t(engineNames[session.engine])}</Text>}
           <View style={listStyles.status}>
             {ready && view.running ? <ActivityIndicator size="small" color={color(palette.muted, 'muted')} accessibilityLabel={t("client.chat.replying")} />
               : view.unread && <View accessible accessibilityLabel={t("client.chat.unreadReply")} style={listStyles.dot} />}

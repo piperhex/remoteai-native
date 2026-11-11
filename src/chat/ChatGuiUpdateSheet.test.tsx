@@ -10,6 +10,7 @@ const update = vi.hoisted(() => ({ version: '0.155.0', release: { version: '0.15
   check: vi.fn(), requestInstall: vi.fn(), cancel: vi.fn(), confirm: vi.fn() }));
 vi.mock('../../vendor/shared/remote-chat/useGuiUpdate', () => ({ useGuiUpdate: () => update }));
 vi.mock('react-native', () => ({ ScrollView: 'ScrollView', Text: 'Text', View: 'View',
+  Platform: { OS: 'android' },
   StyleSheet: { create: <T,>(value: T) => value } }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 const props = { client: {} as GuiToolsClient, active: true, connected: true, running: false,

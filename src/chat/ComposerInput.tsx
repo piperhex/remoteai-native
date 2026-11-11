@@ -3,15 +3,15 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 import { useThemeColor } from '../theme/store';
 import { useStyles } from './styles';
 
-type Props = Omit<TextInputProps, 'style'> & { compact: boolean };
+type Props = Omit<TextInputProps, 'style'> & { compact: boolean; displayValue?: string };
 
 export const ComposerInput = forwardRef<TextInput, Props>(function ComposerInput(
-  { compact, placeholder, ...props }, ref,
+  { compact, placeholder, displayValue, ...props }, ref,
 ) {
   const color = useThemeColor();
   const chatStyles = useStyles();
   const hintColor = color('#999999', 'muted');
-  const showHint = !props.value && !!placeholder;
+  const showHint = !(displayValue ?? props.value) && !!placeholder;
   return <View style={compact && styles.compactSpacing}>
     <TextInput {...props} ref={ref} style={[chatStyles.input, compact && styles.compactInput]}
       placeholder={showHint ? undefined : placeholder} placeholderTextColor={hintColor}

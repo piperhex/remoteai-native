@@ -1,0 +1,9 @@
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-cli-gui'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.cliguitest'
+        project.extensions.getByName('react').entryFile =
+            new File(project.rootDir, '../scripts/fixtures/cli-gui-app.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

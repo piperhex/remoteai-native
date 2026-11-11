@@ -6,7 +6,11 @@ import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { parseGuiAccountsSnapshot, type GuiAccountsClient, type GuiAccountsSnapshot }
   from '../../vendor/shared/remote-chat/guiAccounts';
 
-const state = vi.hoisted(() => ({ panel: 'profile' as string | null, snapshot: null as GuiAccountsSnapshot | null }));
+const state = vi.hoisted(() => ({ panel: 'profile' as string | null, snapshot: null as GuiAccountsSnapshot | null,
+  engine: undefined as 'codex' | 'claude' | 'gemini' | undefined, select: vi.fn(async () => true) }));
+vi.mock('../../vendor/shared/cli-gui/context', () => ({
+  useCliGui: () => state.engine ? { state: { engine: state.engine } } : null,
+}));
 vi.mock('react', async original => ({ ...await original<typeof React>(), useEffect: vi.fn(),
   useState: (initial: unknown) => initial === null
     ? [state.panel, (value: string | null) => { state.panel = value; }] : ['', vi.fn()] ,
@@ -17,11 +21,12 @@ vi.mock('react-native', () => ({ Pressable: 'Pressable', Text: 'Text', TextInput
 vi.mock('@expo/vector-icons/Feather', () => ({ default: 'Icon' }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 vi.mock('../../vendor/shared/remote-chat/client/useGuiAccounts', () => ({ useGuiAccounts: () => ({
-  loading: false, saving: false, snapshot: state.snapshot, error: '', refresh: vi.fn(), select: vi.fn(),
+  loading: false, saving: false, snapshot: state.snapshot, error: '', refresh: vi.fn(), select: state.select,
 }) }));
 interface NodeProps {
   children?: ReactNode; accessibilityLabel?: string; onPress?: () => void; client?: GuiToolsClient;
   connected?: boolean; running?: boolean; onBack?: () => void;
+  accessibilityState?: { selected?: boolean };
 }
 function nodes(tree: ReactNode): ReactElement<NodeProps>[] {
   return Children.toArray(tree).flatMap(child => isValidElement<NodeProps>(child)
@@ -29,7 +34,10 @@ function nodes(tree: ReactNode): ReactElement<NodeProps>[] {
 }
 const props = { client: {} as GuiAccountsClient, guiTools: {} as GuiToolsClient, email: 'test@example.test',
   active: true, ready: false, running: true, chooseDevice: vi.fn() };
-beforeEach(() => { state.panel = 'profile'; state.snapshot = null; vi.stubGlobal('React', React); });
+beforeEach(() => {
+  state.panel = 'profile'; state.snapshot = null; state.engine = undefined;
+  state.select.mockClear(); vi.stubGlobal('React', React);
+});
 afterEach(() => vi.unstubAllGlobals());
 
 it('opens GUI updates from the avatar and forwards this computer connection and task state', () => {
@@ -52,4 +60,19 @@ it('keeps the drawer avatar and account panel usable after the background servic
   expect(picker.some(node => node.props.children === '电脑上的聊天暂不可用，请在电脑上重新打开 Remote AI。')).toBe(true);
   expect(picker.some(node => node.props.children === '请先在电脑上开启本地代理，再切换账户。')).toBe(false);
   expect(picker.some(node => node.props.children === '暂无可选账户，请先在电脑上添加账户。')).toBe(false);
+});
+
+it('shows the active Claude account and scopes provider switching to the selected CLI', async () => {
+  state.engine = 'claude'; state.panel = 'accounts';
+  state.snapshot = { running: true, selection: { kind: 'account', id: 'internal' }, choices: [
+    { kind: 'account', id: 'internal', name: 'Internal', detail: '', available: true },
+    { kind: 'account', id: 'claude', name: 'Claude account', detail: '', available: true,
+      accountSource: 'claudeCode', active: true },
+    { kind: 'provider', id: 'team', name: 'Team API', detail: '', available: true },
+  ] };
+  const picker = nodes(ChatProfileMenu({ ...props, ready: true }));
+  expect(picker.find(node => node.props.accessibilityLabel === 'Claude account')
+    ?.props.accessibilityState?.selected).toBe(true);
+  picker.find(node => node.props.accessibilityLabel === 'Team API')?.props.onPress?.();
+  expect(state.select).toHaveBeenCalledWith({ kind: 'provider', id: 'team', engine: 'claude' });
 });

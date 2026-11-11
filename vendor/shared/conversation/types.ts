@@ -214,6 +214,7 @@ export type ApprovalReply = {
   answers?: Record<string, { answers: string[] }>;
 };
 export type Request =
+  | import('./recovery/types').RecoveryRequest
   | ({ operation: 'toolDetails' } & NonNullable<Item['detailsRef']>)
   | ({ operation: 'processDetails' } & NonNullable<Item['processRef']>)
   | Exclude<import('../project-browser/protocol').ProjectBrowserRequest, { operation: 'projectFiles' }>

@@ -7,7 +7,7 @@ const styles = useStyles();
 
 vi.mock('../theme/store', () => ({ useThemeMode: () => 'light' }));
 
-vi.mock('react-native', () => ({ StyleSheet: { create: <T>(value: T) => value } }));
+vi.mock('react-native', () => ({ Platform: { OS: 'android' }, StyleSheet: { create: <T>(value: T) => value } }));
 
 interface Cell { index: number; offset: number; length: number }
 interface RenderRange { first: number; last: number }

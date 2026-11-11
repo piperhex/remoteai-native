@@ -9,6 +9,7 @@ vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 vi.mock('react-native', () => ({ Pressable: 'Pressable', View: 'View', Text: 'Text',
+  Platform: { OS: 'android' },
   StyleSheet: { create: <T,>(value: T) => value } }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 vi.mock('../components/SheetScrollView', () => ({ SheetScrollView: 'SheetScrollView' }));

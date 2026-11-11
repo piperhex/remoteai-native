@@ -13,6 +13,7 @@ import type { ChatController } from './controller';
 import type { ChatState, Thread } from './types';
 import { threadPresentation } from '../../vendor/shared/remote-chat/sidebar';
 import { useChatSearch } from './useChatSearch';
+import { useCliSidebar } from '../../vendor/shared/cli-gui/useCliSidebar';
 import { palette, useStyles } from './styles';
 
 interface Props { state: ChatState; controller: ChatController; onClose: () => void; select: (thread: Thread) => void }
@@ -25,6 +26,7 @@ export function ChatSearch({ state, controller, onClose, select }: Props) {
   const [query, setQuery] = useState('');
   const input = useRef<TextInput>(null);
   const search = useChatSearch({ controller, query, archived: state.archived, ready: state.ready });
+  const sidebar = useCliSidebar({ threads: search.threads, archived: state.archived, query });
   const emptyMessage = !state.ready ? t("client.chat.connectToYourComputerToSearchChats") : query.trim() ? t("client.chat.noMatchingChats") : t("client.chat.enterKeywordsToFindAChat");
   return <Modal visible animationType="slide" statusBarTranslucent
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}
@@ -35,7 +37,7 @@ export function ChatSearch({ state, controller, onClose, select }: Props) {
           <Text accessibilityRole="header" style={searchStyles.label}>{t("client.app.chat")}</Text>
           {state.archived && <Text style={styles.subtitle}>{t("client.mobile.archived")}</Text>}
         </View>
-        <FlatList data={search.threads} keyExtractor={(thread) => thread.id} style={styles.fill}
+        <FlatList data={query.trim() ? sidebar.threads : []} keyExtractor={(thread) => thread.id} style={styles.fill}
           contentContainerStyle={searchStyles.results} keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag" renderItem={({ item }) => {
             const view = threadPresentation(item, state.sidebar, displayText);

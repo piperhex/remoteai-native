@@ -9,7 +9,7 @@ export function createGuiAccountsClient(options: {
     read: () => options.request({ operation: 'guiAccountsRead' }),
     select: (selection) => options.request({ operation: 'guiAccountSelect', selection }),
     subscribe: (changed) => options.subscribe((event) => {
-      if (event.method === GUI_ACCOUNTS_EVENT) changed();
+      if (event.method === GUI_ACCOUNTS_EVENT || event.method === 'claudeAccounts/changed') changed();
     }),
   };
 }

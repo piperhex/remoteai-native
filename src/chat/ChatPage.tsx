@@ -51,8 +51,14 @@ import { useChatCompletionNotifications, useOpenChatNotification } from './useCh
 import { notificationId, type ChatNotificationTarget } from './notificationTarget';
 import { useStyles } from './styles';
 import { threadPresentation } from '../../vendor/shared/remote-chat/sidebar';
-import type { ChatProject } from './types';
+import type { ChatProject, Thread } from './types';
 import { compactUnavailableReason } from '../../vendor/shared/remote-chat/client/composerCommands';
+import { randomUUID } from 'expo-crypto';
+import { CliGuiProvider, useCliGui } from '../../vendor/shared/cli-gui/context';
+import { cliSidebarThread } from '../../vendor/shared/cli-gui/useCliSidebar';
+import { CliConversation } from './cli/CliConversation';
+import { CliEnginePicker } from './cli/CliEnginePicker';
+import { engineNames } from './cli/engine';
 
 interface Props {
   session: AuthSession; devices: RemoteDevice[]; devicesLoaded: boolean; active: boolean;
@@ -95,15 +101,32 @@ export function ChatPage(props: Props) {
   </View>;
 }
 
-function ConnectedChat({ session, device, devices, selected, active: pageActive, chooseDevice, notification,
-  notificationHandled, tokenSummary, closeTokenSummary, openAccounts }: Props & {
+type ConnectedProps = Props & {
   device?: RemoteDevice; selected: boolean; chooseDevice: (id: string) => void;
+};
+
+function ConnectedChat(props: ConnectedProps) {
+  const chat = useChat(props.session, props.device?.deviceId ?? '', props.active);
+  return <CliGuiProvider transport={chat.controller.cliGui} createMessageId={randomUUID}
+    enabled={chat.state.ready && props.active && chat.foreground && !props.tokenSummary}>
+    <ConnectedChatContent {...props} chat={chat} />
+  </CliGuiProvider>;
+}
+
+function ConnectedChatContent({ session, device, devices, selected, active: pageActive, chooseDevice, notification,
+  notificationHandled, tokenSummary, closeTokenSummary, openAccounts, chat }: ConnectedProps & {
+  chat: ReturnType<typeof useChat>;
 }) {
   const styles = useStyles();
   useLanguage();
   const active = pageActive && !tokenSummary;
   const insets = useSafeAreaInsets();
-  const { state, controller, foreground, catalog } = useChat(session, device?.deviceId ?? '', pageActive);
+  const { state, controller, foreground, catalog } = chat;
+  const cli = useCliGui()!;
+  const external = cli.state.engine !== 'codex';
+  const codexTitle = state.selected ? threadPresentation(state.selected, state.sidebar, displayText).title
+    : t('client.chat.newChat');
+  const title = external ? cli.state.selected?.title || t(engineNames[cli.state.engine]) : codexTitle;
   useDownloadConnection({ session, deviceId: device?.deviceId ?? '', deviceName: device?.name ?? '', controller,
     enabled: selected });
   useChatCompletionNotifications(controller, session, device?.deviceId ?? '');
@@ -117,9 +140,10 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
   const [searching, setSearching] = useState(false);
   useEffect(() => {
     if (!notification) return;
+    cli.controller.showCodex();
     afterClose.current = undefined;
     drawerRef.current?.closeDrawer(); setPickingDevice(false); setSearching(false);
-  }, [notification]);
+  }, [notification, cli.controller]);
   const ready = state.ready;
   const error = visibleChatError(state.error, state);
   const runningTurn = ready ? currentRunningTurn(state.selected?.turns) : undefined;
@@ -135,31 +159,47 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
     afterClose.current = undefined;
     action?.();
   }, []);
-  const newChat = (project?: ChatProject) => { if (!state.sending) closeDrawer(() => controller.back(project)); };
-  useEffect(() => { controller.setViewing(active && foreground && !drawer && !drawerMoving && !pickingDevice && !searching); },
-    [active, foreground, drawer, drawerMoving, pickingDevice, searching, controller]);
+  const newChat = (project?: ChatProject) => {
+    if (state.sending || cli.state.busy) return;
+    closeDrawer(() => {
+      cli.controller.newConversation();
+      cli.controller.patch({ cwd: project?.cwd ?? '' });
+      controller.back(project);
+    });
+  };
+  const selectThread = (thread: Thread) => {
+    const session = cli.state.sessions.find(entry => cliSidebarThread(entry).id === thread.id);
+    if (session) cli.controller.open(session);
+    else { cli.controller.showCodex(); void controller.select(thread); }
+  };
+  useEffect(() => {
+    controller.setViewing(active && foreground && !external && !drawer && !drawerMoving && !pickingDevice && !searching);
+  }, [active, foreground, external, drawer, drawerMoving, pickingDevice, searching, controller]);
   useEffect(() => {
     if (active) return;
     afterClose.current = undefined;
     drawerRef.current?.closeDrawer(); setPickingDevice(false); setSearching(false);
   }, [active]);
   useEffect(() => {
-    if (!active || pickingDevice || (!drawer && !drawerMoving && !state.selected)) return;
+    if (!active || pickingDevice || (!drawer && !drawerMoving && !(external ? cli.state.selected : state.selected))) return;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
       if (drawer || drawerMoving) closeDrawer();
-      else if (!state.sending) controller.back();
+      else if (!state.sending && !cli.state.busy) {
+        if (external) cli.controller.newConversation(); else controller.back();
+      }
       return true;
     });
     return () => subscription.remove();
-  }, [active, drawer, drawerMoving, pickingDevice, state.selected?.id, state.sending, controller]);
+  }, [active, drawer, drawerMoving, pickingDevice, state.selected?.id, state.sending, controller,
+    external, cli.state.selected?.id, cli.state.busy, cli.controller]);
   return <>
   {tokenSummary && pageActive && <TokenSummaryPage read={controller.readTokenSummary} ready={ready}
     scope={JSON.stringify([session.baseUrl, session.email, device?.deviceId ?? ''])}
     foreground={foreground} deviceName={device?.name} onBack={closeTokenSummary} />}
   <View style={[styles.fill, tokenSummary && styles.hidden]}>
-  <ChatFileReferencesProvider enabled={active && !state.selectedArchived}>
+  <ChatFileReferencesProvider enabled={active && !external && !state.selectedArchived}>
   <ChatQuotesProvider active={active} scope={state.draftScope ?? state.selected?.id ?? null}
-    enabled={active && !state.selectedArchived}>
+    enabled={active && !external && !state.selectedArchived}>
   <ChatDrawer ref={drawerRef} enabled={active && !pickingDevice}
     onOpen={() => { setDrawer(true); setDrawerMoving(false); }}
     onMoving={() => setDrawerMoving(true)} onClose={closed}
@@ -170,7 +210,7 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
         running={state.sending || running || Object.values(state.sidebar.threads).some(thread => thread.running)}
         chooseDevice={() => closeDrawer(() => setPickingDevice(true))}
         ready={ready} active={active && foreground && drawer && !searching} />}
-      select={(thread) => closeDrawer(() => { void controller.select(thread); })} />}>
+      select={(thread) => closeDrawer(() => selectThread(thread))} />}>
     <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       // The drawer resets local Y to zero; iOS keyboard coordinates still include the top safe area.
       keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}>
@@ -180,10 +220,10 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
         expanded={drawer} onPress={openDrawer} />
       <View style={styles.headerContent}>
         <Text numberOfLines={1} style={styles.headerTitle}>
-          {state.selected ? threadPresentation(state.selected, state.sidebar, displayText).title : t("client.chat.newChat")}</Text>
+          {title}</Text>
         <ChatConnectionInfo state={state} controller={controller} device={device} active={active && foreground} />
       </View>
-      {state.selected && state.selectedArchived && <Pressable accessibilityRole="button"
+      {!external && state.selected && state.selectedArchived && <Pressable accessibilityRole="button"
         style={styles.compactButton} disabled={!ready || running}
         onPress={() => { void controller.archive().then(openDrawer); }}>
         <Text style={styles.buttonText}>{t("client.chat.restore")}</Text></Pressable>}
@@ -192,9 +232,13 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
           active={active} foreground={foreground} connected={ready}
           scope={JSON.stringify([session.baseUrl, session.email, device?.deviceId ?? ''])}
           session={session}
-          deviceName={device?.name} cwd={state.selected?.cwd ?? state.draftProject?.cwd ?? ''} />
+          deviceName={device?.name} cwd={external ? cli.state.selected?.cwd ?? cli.state.cwd
+            : state.selected?.cwd ?? state.draftProject?.cwd ?? ''} />
       </View>
     </View>
+    {external ? <CliConversation host={controller} active={active && foreground} ready={ready}
+      connection={{ client: controller.guiAccounts, deviceName: device?.name,
+        chooseDevice: () => setPickingDevice(true) }} /> : <>
     <ChatTaskStatus state={state} />
     {!!error && <Text accessibilityRole="alert" style={styles.error}>{displayError(error)}</Text>}
     {state.desktopOnly && <Text style={[styles.subtitle, { maxWidth: 400, paddingHorizontal: 16 }]}>
@@ -257,10 +301,13 @@ function ConnectedChat({ session, device, devices, selected, active: pageActive,
       upload={state.upload} reconnecting={state.mode === 'connecting' || state.mode === 'offline'}
       send={(input) => controller.enqueueMessage(input)} interrupted={state.selected?.turns?.at(-1)?.status === 'interrupted'}
       interrupt={() => controller.interrupt()} />
+    <CliEnginePicker locked={Boolean(state.selected) || state.sending} active={active} ready={ready}
+      cwd={state.draftProject?.cwd ?? ''} />
+    </>}
     {active && pickingDevice && <ChatDevices devices={devices} onClose={() => setPickingDevice(false)}
       choose={(id) => { chooseDevice(id); setPickingDevice(false); }} />}
     {searching && active && <ChatSearch state={state} controller={controller} onClose={() => setSearching(false)}
-      select={(thread) => { setSearching(false); closeDrawer(() => { void controller.select(thread); }); }} />}
+      select={(thread) => { setSearching(false); closeDrawer(() => selectThread(thread)); }} />}
     </ChatOverlay>
   </KeyboardAvoidingView></ChatDrawer></ChatQuotesProvider></ChatFileReferencesProvider></View></>;
 }

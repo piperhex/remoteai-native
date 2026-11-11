@@ -8,6 +8,9 @@ export interface SyncDirectory { name: string; homes: SyncHome[] }
 export interface SyncThread {
   sessionId: string; sessionKind: string; title: string; cwd: string; updatedAt: number | null;
   sizeBytes: number; matchExcerpt: string | null;
+  /** Resolved by the source host; an empty path explicitly identifies a projectless conversation. */
+  projectPath?: string;
+  projectName?: string;
 }
 export interface SyncBundle {
   id: string; size: number; sha256: string; sessionIds: string[];

@@ -10,7 +10,7 @@ export function resolveModelSelection(models: Model[], selection: ModelSelection
   if (!target) return { model: selection.model, effort: selection.effort };
   const efforts = target.supportedReasoningEfforts.map((entry) => entry.reasoningEffort);
   const preferred = target.defaultReasoningEffort;
-  const defaultEffort = preferred && (!efforts.length || efforts.includes(preferred))
+  const defaultEffort = preferred && efforts.includes(preferred)
     ? preferred : efforts.at(-1) ?? "none";
   const effort = selection.effort || defaultEffort;
   return { model: target.model, effort };

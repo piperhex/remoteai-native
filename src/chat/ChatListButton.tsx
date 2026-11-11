@@ -2,6 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { GuiAccountsClient } from '../../vendor/shared/remote-chat/guiAccounts';
 import { guiAccountAvatar } from '../../vendor/shared/remote-chat/guiAccountAvatar';
 import { useGuiAccounts } from '../../vendor/shared/remote-chat/client/useGuiAccounts';
+import { useCliGui } from '../../vendor/shared/cli-gui/context';
 import { t, useLanguage } from '../i18n';
 import { createThemedStyles } from '../theme/styles';
 import { palette } from './styles';
@@ -13,8 +14,9 @@ interface Props {
 export function ChatListButton({ client, active, ready, expanded, onPress }: Props) {
   useLanguage();
   const styles = useStyles();
+  const cli = useCliGui();
   const { snapshot } = useGuiAccounts(client, active && ready);
-  const avatar = guiAccountAvatar(snapshot, t("client.chat.me"));
+  const avatar = guiAccountAvatar(snapshot, t("client.chat.me"), cli?.state.engine);
   return <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.openChatList")}
     accessibilityState={{ expanded }} onPress={onPress}
     style={({ pressed }) => [styles.button, pressed && styles.pressed]}>

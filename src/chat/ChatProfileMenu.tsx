@@ -8,6 +8,8 @@ import Feather from '@expo/vector-icons/Feather';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SheetInset, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
 import type { GuiAccountChoice, GuiAccountsClient } from '../../vendor/shared/remote-chat/guiAccounts';
+import { guiAccountSelectionForEngine } from '../../vendor/shared/remote-chat/guiAccounts';
+import { useCliGui } from '../../vendor/shared/cli-gui/context';
 import { guiAccountAvatar } from '../../vendor/shared/remote-chat/guiAccountAvatar';
 import { useGuiAccounts } from '../../vendor/shared/remote-chat/client/useGuiAccounts';
 import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
@@ -32,15 +34,17 @@ export function ChatProfileMenu(props: Props) {
   const styles = useStyles();
   useLanguage();
   const { client, deviceName, ready, active, chooseDevice } = props;
+  const cli = useCliGui();
   const settings = props.variant === 'settings';
   const [panel, setPanel] = useState<'profile' | 'accounts' | 'update' | null>(null);
   const [query, setQuery] = useState('');
   const accounts = useGuiAccounts(client, active && ready, panel === 'accounts' ? ACCOUNT_REFRESH_INTERVAL_MS : 0);
-  const selection = accounts.snapshot?.selection;
+  const selection = guiAccountSelectionForEngine(accounts.snapshot?.selection,
+    accounts.snapshot?.choices ?? [], cli?.state.engine);
   const current = accounts.snapshot?.choices.find((choice) =>
     selection?.kind === choice.kind && selection.id === choice.id);
   const name = current?.name || t("client.chat.chooseAccount");
-  const { initials } = guiAccountAvatar(accounts.snapshot, t("client.chat.me"));
+  const { initials } = guiAccountAvatar(accounts.snapshot, t("client.chat.me"), cli?.state.engine);
   const disabled = accounts.loading || Boolean(accounts.saving) || !ready || !accounts.snapshot?.running;
   const search = query.trim().toLowerCase();
   const choices = accounts.snapshot?.choices.filter((choice) =>
@@ -49,7 +53,8 @@ export function ChatProfileMenu(props: Props) {
 
   const select = async (choice: GuiAccountChoice) => {
     if (disabled || !choice.available || choice === current) return;
-    if (await accounts.select({ kind: choice.kind, id: choice.id })) setPanel(settings ? null : 'profile');
+    if (await accounts.select({ kind: choice.kind, id: choice.id,
+      ...(cli ? { engine: cli.state.engine } : {}) })) setPanel(settings ? null : 'profile');
   };
 
   const connectionOptions = <>

@@ -15,6 +15,10 @@ import { useThreadActions } from '../../vendor/shared/remote-chat/client/useThre
 import { palette, useStyles } from './styles';
 import { NativeGroups } from './groups/NativeGroups';
 import { useGrouping } from '../../vendor/shared/chat/groups/context';
+import { useCliGui } from '../../vendor/shared/cli-gui/context';
+import { cliSidebarThread } from '../../vendor/shared/cli-gui/useCliSidebar';
+import type { CliSession } from '../../vendor/shared/cli-gui/types';
+import { CliThreadActions } from './cli/CliThreadActions';
 
 interface Props {
   state: ChatState; controller: ChatController; newChat: (project?: ChatProject) => void;
@@ -33,10 +37,16 @@ function ChatThreadsContent({ state, controller, newChat, openSearch, select, pr
   const listStyles = useListStyles();
   const color = useThemeColor();
   const grouping = useGrouping();
+  const cli = useCliGui();
+  const [cliActions, setCliActions] = useState<CliSession | null>(null);
   useLanguage();
   const [footerHeight, setFooterHeight] = useState(0);
   const actions = useThreadActions(state, controller);
   const projectActions = useProjectActions(state, controller);
+  const openActions = (thread: Thread) => {
+    const session = cli?.state.sessions.find(entry => cliSidebarThread(entry).id === thread.id);
+    if (session) setCliActions(session); else actions.open(thread);
+  };
   return <View style={styles.fill}>
     <View style={listStyles.header}>
       <Text style={listStyles.heading}>{t("client.app.chat")}</Text>
@@ -53,13 +63,16 @@ function ChatThreadsContent({ state, controller, newChat, openSearch, select, pr
         style={listStyles.search}><Feather name="search" size={23} color={color(palette.ink, 'ink')} /></Pressable>
     </View>
     <ChatThreadList state={state} controller={controller} newChat={newChat} select={select}
-      openActions={actions.open} openProjectActions={projectActions.open} bottomInset={footerHeight} />
+      openActions={openActions} openProjectActions={projectActions.open} bottomInset={footerHeight} />
     {active && <ChatThreadActions actions={actions} />}
     {active && <ChatProjectActions actions={projectActions} />}
+    {active && cliActions && <CliThreadActions session={cliActions} ready={state.ready}
+      close={() => setCliActions(null)} />}
     <View style={listStyles.footer} pointerEvents="box-none"
       onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.newChat")} disabled={state.sending}
-        style={[listStyles.newChat, state.sending && styles.disabled]} onPress={() => newChat()}>
+      <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.newChat")}
+        disabled={state.sending || cli?.state.busy}
+        style={[listStyles.newChat, (state.sending || cli?.state.busy) && styles.disabled]} onPress={() => newChat()}>
         <Feather name="edit" size={21} color="#fff" /><Text style={listStyles.newChatText}>{t("client.chat.newChat")}</Text>
       </Pressable>
       {profileMenu}

@@ -1,4 +1,5 @@
 import { createThemedStyles } from '../theme/styles';
+import { textMetrics } from '../theme/text';
 import { StyleSheet } from 'react-native';
 
 // A consistent gray canvas keeps the white composer distinct, including above the keyboard.
@@ -28,7 +29,7 @@ export const useStyles = createThemedStyles((color) => ({
     alignItems: 'center' },
   headerContent: { flex: 1, minWidth: 0 },
   headerTools: { flexShrink: 0, marginLeft: 'auto' },
-  headerTitle: { color: color(palette.ink, 'ink'), fontSize: 16, lineHeight: 24, fontWeight: '700' },
+  headerTitle: { color: color(palette.ink, 'ink'), ...textMetrics(16, 24), fontWeight: '700' },
   // Explicit leading leaves room for Android's Chinese fallback font, including single-line labels.
   headerMeta: { color: color(palette.muted, 'muted'), fontSize: 11, lineHeight: 18, marginTop: 4 },
   back: { padding: 6, minWidth: 35, minHeight: 40, justifyContent: 'center' },

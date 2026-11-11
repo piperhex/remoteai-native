@@ -9,6 +9,7 @@ vi.mock('react', async original => ({ ...await original<typeof import('react')>(
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 vi.mock('react-native', () => ({ Pressable: 'Pressable', Text: 'Text', View: 'View', ScrollView: 'ScrollView',
+  Platform: { OS: 'android' },
   StyleSheet: { create: <T,>(styles: T) => styles },
 }));
 interface Props { children?: ReactNode; disabled?: boolean; onPress?: () => void }

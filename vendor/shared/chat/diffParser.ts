@@ -33,16 +33,24 @@ function parseLines(raw: string, kind: string): DiffLine[] {
   }
   let oldLine: number | undefined;
   let newLine: number | undefined;
+  let inHunk = false;
   return source.map((text): DiffLine => {
     const hunk = text.match(/^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
     if (hunk) {
+      inHunk = true;
       oldLine = Number(hunk[1]); newLine = Number(hunk[2]);
       return { kind: "hunk", text };
     }
-    if (oldLine == null || newLine == null || text.startsWith("\\")) return { kind: "meta", text };
-    if (text.startsWith("+")) return { kind: "add", text: text.slice(1), newLine: newLine++ };
-    if (text.startsWith("-")) return { kind: "remove", text: text.slice(1), oldLine: oldLine++ };
-    if (text.startsWith(" ")) return { kind: "context", text: text.slice(1), oldLine: oldLine++, newLine: newLine++ };
+    // External CLI replacement snippets have no trustworthy file offsets.
+    if (text === '@@ @@') {
+      inHunk = true; oldLine = undefined; newLine = undefined;
+      return { kind: 'hunk', text };
+    }
+    if (!inHunk || text.startsWith("\\")) return { kind: "meta", text };
+    if (text.startsWith("+")) return { kind: "add", text: text.slice(1), newLine: newLine == null ? undefined : newLine++ };
+    if (text.startsWith("-")) return { kind: "remove", text: text.slice(1), oldLine: oldLine == null ? undefined : oldLine++ };
+    if (text.startsWith(" ")) return { kind: "context", text: text.slice(1),
+      oldLine: oldLine == null ? undefined : oldLine++, newLine: newLine == null ? undefined : newLine++ };
     return { kind: "meta", text };
   });
 }

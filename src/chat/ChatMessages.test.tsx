@@ -20,6 +20,7 @@ vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof impor
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 vi.mock('react-native', () => ({ ActivityIndicator: 'Spinner', FlatList: 'FlatList', Pressable: 'Pressable',
+  Platform: { OS: 'android' },
   RefreshControl: 'RefreshControl', Text: 'Text', View: 'View', Keyboard: { dismiss: state.dismiss },
   StyleSheet: { create: <T,>(value: T) => value },
 }));

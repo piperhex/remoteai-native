@@ -15,6 +15,7 @@ vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 vi.mock('react-native', () => ({ Text: 'Text', View: 'View', ScrollView: 'ScrollView', Pressable: 'Pressable',
+  Platform: { OS: 'android' },
   Linking: { openURL: vi.fn() }, StyleSheet: { create: <T,>(styles: T) => styles },
 }));
 vi.mock('./ChatCodeBlock', () => ({ ChatCodeBlock: 'Code' }));

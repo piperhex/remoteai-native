@@ -11,6 +11,7 @@ import type { GitRequest, GitStatus } from './gitWorkspace';
 import { PROJECT_LIST_OPERATION, PROJECT_SELECT_OPERATION, type ProjectSelection } from './projects';
 import type { ChatProject } from './client/types';
 import { CODEX_STATUS_OPERATION, type CodexServiceStatus } from '../codex-status/status';
+import { createGuiSettingsClient, GUI_SETTINGS_OPERATIONS } from './guiSettings';
 import type { GitActionRequest, GitChanges, GitCommitFile, GitCommitRequest, GitDiff, GitHistory,
   GitFileActionRequest, GitRepository, GitRevisionRequest, GitMessageRequest, GitSettings,
   GitConflict, GitResolution } from './gitTypes';
@@ -30,6 +31,7 @@ export interface RemoteCliStatus {
   error: string;
 }
 export const GUI_TOOL_OPERATIONS = new Set([
+  ...GUI_SETTINGS_OPERATIONS,
   CODEX_STATUS_OPERATION,
   'guiBrowser',
   PROJECT_LIST_OPERATION, PROJECT_SELECT_OPERATION,
@@ -62,6 +64,7 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
       request<SshFileReply>({ operation: 'guiTerminalSshFiles', id, request: input }),
   };
   return {
+    settings: createGuiSettingsClient(request),
     serviceStatus: () => request<CodexServiceStatus>({ operation: CODEX_STATUS_OPERATION }),
     browser: (input: import('../browser/automation').BrowserRequest) =>
       request<import('../browser/automation').BrowserReply>({ operation: 'guiBrowser', request: input }),

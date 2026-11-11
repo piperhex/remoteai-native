@@ -10,7 +10,8 @@ vi.mock('react', async original => ({ ...await original<typeof import('react')>(
   }],
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
-vi.mock('react-native', () => ({ View: 'View', StyleSheet: { create: <T,>(styles: T) => styles } }));
+vi.mock('react-native', () => ({ View: 'View', Platform: { OS: 'android' },
+  StyleSheet: { create: <T,>(styles: T) => styles } }));
 vi.mock('../components/BottomSheet', () => ({ BottomSheet: 'Sheet' }));
 vi.mock('../components/SheetScrollView', () => ({ SheetFlatList: 'List' }));
 vi.mock('./ChatMessage', () => ({ ChatActivityRow: 'Row', ChatMessage: 'Message' }));

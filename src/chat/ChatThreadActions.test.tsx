@@ -8,6 +8,10 @@ import type { ChatController } from './controller';
 import { useGrouping } from '../../vendor/shared/chat/groups/context';
 vi.mock('../../vendor/shared/chat/groups/context', () => ({ useGrouping: vi.fn(() => null) }));
 vi.mock('./groups/GroupChoice', () => ({ NativeGroupIcon: 'GroupIcon' }));
+vi.mock('../../vendor/shared/cli-gui/context', () => ({ useCliGui: () => null }));
+vi.mock('../../vendor/shared/cli-gui/useCliSidebar', () => ({
+  useCliSidebar: ({ threads }: { threads: Thread[] }) => ({ threads, selected: null, session: () => undefined }),
+}));
 
 vi.mock('react-native', () => ({ Pressable: 'Pressable', SectionList: 'SectionList', Text: 'Text',
   View: 'View', TextInput: 'TextInput', ActivityIndicator: 'Spinner', Platform: { OS: 'android' },
@@ -42,6 +46,8 @@ it('opens native long-press actions without selecting a conversation and exposes
   expect(select).not.toHaveBeenCalled();
   row.props.onAccessibilityAction({ nativeEvent: { actionName: 'longpress' } });
   expect(openActions).toHaveBeenCalledTimes(2);
+  row.props.onPointerDown({ nativeEvent: { button: 2 } });
+  expect(openActions).toHaveBeenCalledTimes(3);
   row.props.onPress(); expect(select).toHaveBeenCalledWith(thread);
 });
 

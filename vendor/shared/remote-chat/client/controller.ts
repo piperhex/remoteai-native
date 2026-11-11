@@ -1,4 +1,5 @@
 import type { ChatConnection, ConnectionEvents } from './connection';
+import { createRecoveryClient } from '../../conversation/recovery/types';
 import { modelSelectionError } from '../../conversation/modelSelection';
 import { openPreparedDownload } from '../archiveDownload';
 import { mergeTaskDelivery } from '../taskDelivery';
@@ -60,6 +61,14 @@ const SYNCHRONIZATION_RETRY_MS = 3000;
 type ReadErrorSource = 'list' | 'history';
 
 export class ChatController {
+  readonly taskRecovery = createRecoveryClient(body => this.connection.request('request', body),
+    listener => this.subscribeEvents(listener));
+  openRecoveryThread = async (threadId: string) => {
+    try {
+      const result = await this.request<{ thread: Thread }>({ operation: 'read', threadId });
+      await this.select(result.thread);
+    } catch (error) { this.failure(error); }
+  };
   /** Enable before start only when the host UI supports loading individual tool details. */
   deferToolDetails = false;
   deferProcessDetails = false;
@@ -218,6 +227,16 @@ export class ChatController {
   subscribeEvents = (listener: (event: GuiEvent) => void) => {
     this.eventListeners.add(listener);
     return () => { this.eventListeners.delete(listener); };
+  };
+  readonly cliGui: import('../../cli-gui/types').CliTransport = {
+    subscribeAccountChange: listener => this.subscribeEvents(event => {
+      if (event.method === 'guiAccounts/selectionChanged' || event.method === 'claudeAccounts/changed') listener();
+    }),
+    request: request => this.connection.request('request', { operation: 'cliGui', request }),
+    subscribe: listener => this.subscribeEvents(event => { if (event.method === 'cliGui/changed') listener(); }),
+  };
+  readonly claudeAccounts: import('../../accounts/claudeAccounts').ClaudeAccountTransport = {
+    request: request => this.connection.request('request', { operation: 'claudeAccounts', request }),
   };
   private emit() {
     const { selected, ready, historyOffline, selectedArchived } = this.state;
@@ -453,6 +472,8 @@ export class ChatController {
       const response = await this.connection.request<unknown>('connect', chatHandshake);
       if (!this.active || generation !== this.synchronization) return;
       const approvals = chatApprovals(response);
+      this.update({ taskRecoverySupported: !!response && typeof response === 'object'
+        && 'taskRecoveryV1' in response && response.taskRecoveryV1 === true });
       this.conversationViewsSupported = !!response && typeof response === 'object'
         && 'conversationViewsV1' in response && response.conversationViewsV1 === true;
       await this.syncConversationView();
