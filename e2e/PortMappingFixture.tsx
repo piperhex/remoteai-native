@@ -21,8 +21,15 @@ const devices = [
   { deviceId: 'one', name: '办公电脑', online: true },
   { deviceId: 'two', name: '家用电脑', online: true },
 ] as RemoteDevice[];
+const seededMappings = [{ id: 'browser-fixture', remotePort: 8306, localPort: 18306, protocol: 'tcp' }];
+const defaults = new Map([
+  ['codex-port-forwarding:one', JSON.stringify(seededMappings)],
+  ['codex-port-mapping-enabled:one', JSON.stringify(['browser-fixture'])],
+  ['fixture-cloud:one', JSON.stringify({ revision: 0, mappings: seededMappings })],
+]);
 const fixture = mappingFixture({
-  storage: { getItem: key => Storage.getItemSync(`hub-fixture:${key}`),
+  storage: { getItem: key => Storage.getItemSync(`hub-fixture:${key}`)
+    ?? defaults.get(key) ?? null,
     setItem: (key, value) => Storage.setItemSync(`hub-fixture:${key}`, value) },
   createTunnel: (client, options) => new NativeMappingTunnel(client, options),
 });
@@ -48,8 +55,10 @@ function PortMappingFixture() {
           <Text style={textMetrics(14, 22)}>Reconnect fixture</Text></Pressable>
         <Pressable onPress={() => setInterfaceLanguage('en')}>
           <Text style={textMetrics(14, 22)}>English</Text></Pressable>
-        {page === 'discover' && <Pressable onPress={() => updateThemeMode('dark')}>
-          <Text style={textMetrics(14, 22)}>Dark</Text></Pressable>}
+        <Pressable onPress={() => updateThemeMode('dark')}>
+          <Text style={textMetrics(14, 22)}>Dark</Text></Pressable>
+        <Pressable onPress={() => updateThemeMode('light')}>
+          <Text style={textMetrics(14, 22)}>Light</Text></Pressable>
       </View>
     </DeviceMappingProvider>
   </SafeAreaView></SafeAreaProvider>;

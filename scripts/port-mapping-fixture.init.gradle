@@ -1,0 +1,13 @@
+// Exercise production mapping screens without changing an installed Remote AI app or its data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-port-mapping'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.portmappingtest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/PortMappingFixture.tsx')
+        react.debuggableVariants = []
+    }
+}
