@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "a1021fa7d4960c32205f6b16847149a5a5cd453c",
+  "revision": "cd5b69acabdb861ece6f45d5b52522ad99b69232",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "0f5a950cdd6eceee296f40a96198d7c21f8345c4"
+    "revision": "b556b59d8422889b39cca660c2595a57c5867175"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.21/remoteai-i18n-0.1.21.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.23/remoteai-i18n-0.1.23.tgz",
   "files": {
     "shared/dependencies.json": "7baf05672d7fd2f5452e0d100068f91c69034684aca1b05436e408fa48ca969f",
     "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",

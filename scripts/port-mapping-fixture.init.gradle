@@ -9,5 +9,7 @@ gradle.afterProject { project ->
         react.root.set(sourceRoot)
         react.entryFile = new File(sourceRoot, 'e2e/PortMappingFixture.tsx')
         react.debuggableVariants = []
+        // Package archives can retain identical mtimes across releases; never reuse stale Metro translations.
+        react.extraPackagerArgs = ['--reset-cache']
     }
 }

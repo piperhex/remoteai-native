@@ -1,4 +1,4 @@
-const { withMainApplication } = require('expo/config-plugins');
+const { AndroidConfig, withAndroidManifest, withMainApplication } = require('expo/config-plugins');
 
 const MARKER = '// Refresh Fabric measurements after a system font-size change.';
 
@@ -9,7 +9,7 @@ function replaceOnce(source, before, after) {
   return source.replace(before, after);
 }
 
-/** Android recreates the activity for font changes, but RN 0.79 retains measurements in the shared runtime. */
+/** RN 0.79 retains font measurements in its shared runtime until it reloads. */
 function addFontScaleRefresh(source) {
   if (source.includes(MARKER)) return source;
   const newline = source.includes('\r\n') ? '\r\n' : '\n';
@@ -31,10 +31,25 @@ function addFontScaleRefresh(source) {
 }
 
 module.exports = function withFontScaleRefresh(config) {
+  config = withAndroidManifest(config, result => {
+    const activity = AndroidConfig.Manifest.getMainActivityOrThrow(result.modResults);
+    handleFontScaleChanges(activity.$);
+    return result;
+  });
   return withMainApplication(config, result => {
     if (result.modResults.language !== 'kt') throw new Error('The font-scale refresh requires Kotlin MainApplication.');
     result.modResults.contents = addFontScaleRefresh(result.modResults.contents);
     return result;
   });
 };
+
+function handleFontScaleChanges(attributes) {
+  // Activity recreation can attach a new Fabric surface while reload destroys the old scheduler.
+  // Let the existing runtime refresh own this change, keeping the activity stable during reload.
+  const changes = new Set((attributes['android:configChanges'] || '').split('|').filter(Boolean));
+  changes.add('fontScale');
+  attributes['android:configChanges'] = [...changes].join('|');
+}
+
 module.exports.addFontScaleRefresh = addFontScaleRefresh;
+module.exports.handleFontScaleChanges = handleFontScaleChanges;

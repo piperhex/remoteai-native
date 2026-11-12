@@ -7,6 +7,8 @@ export const useMappingBrowserStyles = createThemedStyles(color => ({
   icon: { width: 36, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
   pressed: { backgroundColor: color('#e7f5f4', 'accentSoft') },
   disabled: { opacity: 0.35 },
+  tabCount: { ...textMetrics(12, 18), minWidth: 24, textAlign: 'center', fontWeight: '600',
+    borderWidth: 1.5, borderRadius: 6, borderColor: color('#0b8065', 'accent'), color: color('#0b8065', 'accent') },
   address: { ...textMetrics(13, 20), flex: 1, minWidth: 0, minHeight: 44, paddingHorizontal: 10, borderRadius: 12,
     color: color('#17211b', 'ink'), backgroundColor: color('#ffffff', 'surface'),
     borderWidth: 1, borderColor: color('#dfe5df', 'border') },
