@@ -44,10 +44,11 @@ function PortMappingFixture() {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { setPage('discover'); return true; });
     return () => listener.remove();
   }, []);
-  return <SafeAreaProvider><NativeBrowserProvider scope="browser-fixture" channel={bookmarkFixture}>
+  return <SafeAreaProvider>
+    <DeviceMappingProvider registry={fixture.registry} deviceIds={devices.map(device => device.deviceId)}>
+    <NativeBrowserProvider scope="browser-fixture" channel={bookmarkFixture} devices={devices}>
     <SafeAreaView style={{ flex: 1, backgroundColor: color('#f8fafc', 'canvas') }}>
     <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-    <DeviceMappingProvider registry={fixture.registry} deviceIds={devices.map(device => device.deviceId)}>
       {fonts && (page === 'port-mappings'
         ? <PortMappingPage devices={devices} onBack={() => setPage('discover')} />
         : <DiscoveryPage onOpen={setPage} />)}
@@ -64,7 +65,6 @@ function PortMappingFixture() {
         <Pressable onPress={() => updateThemeMode('light')}>
           <Text style={textMetrics(14, 22)}>Light</Text></Pressable>
       </View>
-    </DeviceMappingProvider>
-  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></DeviceMappingProvider></SafeAreaProvider>;
 }
 registerRootComponent(PortMappingFixture);

@@ -6,6 +6,7 @@ import type { BookmarkChannel } from '../../vendor/shared/browser/bookmarks/chan
 import { MappingPreview } from '../chat/portMapping/MappingPreview';
 import { mappingBrowserUrl } from '../chat/portMapping/useMappingBrowser';
 import { NativeBrowserContext } from './context';
+import type { BrowserDevice } from './browserMappings';
 
 const bookmarkStorage = {
   getItem: (key: string) => Storage.getItemSync(key),
@@ -13,8 +14,8 @@ const bookmarkStorage = {
 };
 
 /** One retained browsing context keeps session storage and navigation alive between entry points. */
-export function NativeBrowserProvider({ scope, channel, children }: {
-  scope: string; channel?: BookmarkChannel; children: ReactNode;
+export function NativeBrowserProvider({ scope, channel, children, devices = [] }: {
+  scope: string; channel?: BookmarkChannel; children: ReactNode; devices?: readonly BrowserDevice[];
 }) {
   const key = `remoteai:browser-last-url:${scope}`;
   const [initialUrl] = useState(() => {
@@ -43,7 +44,7 @@ export function NativeBrowserProvider({ scope, channel, children }: {
         {visited && <View style={[StyleSheet.absoluteFill, !visible && styles.hidden]} collapsable={false}
           pointerEvents={visible ? 'auto' : 'none'} accessibilityElementsHidden={!visible}
           importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}>
-          <MappingPreview initialUrl={initialUrl} request={request} visible={visible}
+          <MappingPreview initialUrl={initialUrl} request={request} visible={visible} devices={devices}
             onNavigate={saveUrl} close={() => { Keyboard.dismiss(); setVisible(false); }} />
         </View>}
       </View>

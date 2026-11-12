@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import type { MessageKey } from '@remoteai/i18n';
-import { t } from '../../i18n';
+import { t, useLanguage } from '../../i18n';
+import { marketText } from '../../../vendor/shared/provider-market/i18n';
 import { useThemeColor } from '../../theme/store';
 import { MappingPreviewActivity } from './MappingPreviewActivity';
 import { useMappingBrowserStyles } from './mappingBrowserStyles';
@@ -27,12 +28,16 @@ export function MappingBrowserToolbar({ browser, settingsOpen, openSettings, onL
   browser: Browser; settingsOpen: boolean; openSettings: () => void; onLayout: (event: LayoutChangeEvent) => void;
 }) {
   const styles = useMappingBrowserStyles();
+  const text = marketText(useLanguage());
+  const color = useThemeColor();
   return <View style={styles.toolbar} onLayout={onLayout}>
     <ToolbarButton icon="chevron-back" label="client.mobile.back" disabled={!browser.history.back}
       onPress={() => browser.navigate('goBack')} />
     <ToolbarButton icon="chevron-forward" label="client.projectExplorer.forward" disabled={!browser.history.forward}
       onPress={() => browser.navigate('goForward')} />
     <TextInput accessibilityLabel={t('client.portMappingEditing.accessAddress')} style={styles.address}
+      placeholder={text('market.browserSearchOrAddress')}
+      placeholderTextColor={color('#718078', 'muted')}
       value={browser.address} onChangeText={browser.setAddress}
       onSubmitEditing={event => browser.submit(event.nativeEvent.text)}
       keyboardType="url" returnKeyType="go" autoCapitalize="none" autoCorrect={false} selectTextOnFocus />

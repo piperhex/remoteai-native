@@ -1207,9 +1207,9 @@ function AppContent() {
   if (!session) return <View style={styles.app}>
     <ThemeStatusBar /><LoginScreen initialBaseUrl={DEFAULT_CLOUD_BASE_URL} onLoggedIn={handleLogin} />
   </View>;
-  return <NativeBrowserProvider key={JSON.stringify([session.baseUrl, session.email])}
-    scope={JSON.stringify([session.baseUrl, session.email])} channel={lounge.controller.bookmarks}>
-    <MappingProvider session={session} devices={devices}>
+  return <MappingProvider key={JSON.stringify([session.baseUrl, session.email])} session={session} devices={devices}>
+    <NativeBrowserProvider scope={JSON.stringify([session.baseUrl, session.email])}
+      channel={lounge.controller.bookmarks} devices={devices}>
     <SafeAreaView edges={showBottomNavigation ? ['left', 'right'] : ['left', 'right', 'bottom']}
     style={[styles.app, activePage === 'totp' && totpPageStyles.page,
     activePage === 'accounts' && accountStyles.page,
@@ -1272,7 +1272,7 @@ function AppContent() {
     </PrimaryPagePager>
     {showBottomNavigation && <BottomNavigation activePage={activePage}
       owner={session ? downloadOwner(session) : undefined} loungeUnread={lounge.state.unread} onChange={setActivePage} />}
-  </SafeAreaView></MappingProvider></NativeBrowserProvider>;
+  </SafeAreaView></NativeBrowserProvider></MappingProvider>;
 }
 
 export default function App() {

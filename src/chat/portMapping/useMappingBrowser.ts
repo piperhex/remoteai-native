@@ -3,6 +3,8 @@ import { Keyboard, Linking } from 'react-native';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
 import { t } from '../../i18n';
 import { usePreviewActivity } from './usePreviewActivity';
+import { browserInput } from '../../../vendor/shared/browser/addressInput';
+import { useNativeSearchEngine } from '../../browser/searchEngine';
 
 export function mappingBrowserUrl(address: string): string | undefined {
   const value = address.trim();
@@ -15,6 +17,7 @@ export function mappingBrowserUrl(address: string): string | undefined {
 }
 
 export function useMappingBrowser(initialUrl: string) {
+  const search = useNativeSearchEngine();
   const webview = useRef<WebView>(null);
   const opening = useRef(false);
   const editing = useRef(false);
@@ -30,7 +33,7 @@ export function useMappingBrowser(initialUrl: string) {
     setError(''); activity.onLoadStart(); webview.current?.[action]();
   };
   const submit = (value = address) => {
-    const url = mappingBrowserUrl(value);
+    const url = browserInput(value, search.engine, 'http:')?.href;
     if (!url) { setError(t('client.runtimeErrors.useAValidServerAddress')); return; }
     editing.current = false;
     Keyboard.dismiss();

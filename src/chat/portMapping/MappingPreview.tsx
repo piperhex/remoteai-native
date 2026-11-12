@@ -10,33 +10,37 @@ import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
 import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
+import { BrowserPortMappings } from '../../browser/BrowserPortMappings';
+import type { BrowserDevice } from '../../browser/browserMappings';
+import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
 
-export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close }: {
+export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close, devices = [] }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   onNavigate?: (url: string) => void; close: () => void;
+  devices?: readonly BrowserDevice[];
 }) {
   const styles = useStyles();
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search'>();
   const [toolbarHeight, setToolbarHeight] = useState(0);
   useLanguage();
   useEffect(() => { if (request) browser.visit(request.url); }, [request]);
   useEffect(() => {
-    if (!visible) { setSettingsOpen(false); setBookmarksOpen(false); }
+    if (!visible) { setSettingsOpen(false); setDrawer(undefined); }
   }, [visible]);
   useEffect(() => {
     if (!visible) return;
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (bookmarksOpen) setBookmarksOpen(false);
+      if (drawer) setDrawer(undefined);
       else if (settingsOpen) setSettingsOpen(false);
       else close();
       return true;
     });
     return () => listener.remove();
-  }, [visible, settingsOpen, bookmarksOpen, close]);
+  }, [visible, settingsOpen, drawer, close]);
   return <SafeAreaView style={styles.page}>
     <View style={styles.fill}>
     {/* Keep the WebView's native parent stable when the menu changes accessibility visibility. */}
@@ -70,10 +74,15 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
         onError={browser.onError} />
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
-      bookmarks={() => { setSettingsOpen(false); setBookmarksOpen(true); }}
+      bookmarks={() => { setSettingsOpen(false); setDrawer('bookmarks'); }}
+      mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
+      search={() => { setSettingsOpen(false); setDrawer('search'); }}
       dismiss={() => setSettingsOpen(false)} close={close} />}
-    {bookmarksOpen && <BrowserBookmarks currentUrl={browser.currentUrl} currentTitle={browser.title}
-      visit={url => { setBookmarksOpen(false); browser.visit(url); }} close={() => setBookmarksOpen(false)} />}
+    {drawer === 'bookmarks' && <BrowserBookmarks currentUrl={browser.currentUrl} currentTitle={browser.title}
+      visit={url => { setDrawer(undefined); browser.visit(url); }} close={() => setDrawer(undefined)} />}
+    {drawer === 'mappings' && <BrowserPortMappings devices={devices}
+      visit={url => { setDrawer(undefined); browser.visit(url); }} close={() => setDrawer(undefined)} />}
+    {drawer === 'search' && <BrowserSearchEngines close={() => setDrawer(undefined)} />}
     </View>
     </SafeAreaView>;
 }

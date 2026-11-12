@@ -32,6 +32,9 @@ vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' 
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));
 vi.mock('../../browser/BrowserBookmarks', () => ({ BrowserBookmarks: 'Bookmarks' }));
+vi.mock('../../browser/BrowserPortMappings', () => ({ BrowserPortMappings: 'Mappings' }));
+vi.mock('../../browser/BrowserSearchEngines', () => ({ BrowserSearchEngines: 'SearchEngines' }));
+vi.mock('../../browser/searchEngine', () => ({ useNativeSearchEngine: () => ({ engine: 'google' }) }));
 vi.mock('./mappingBrowserStyles', () => ({ useMappingBrowserStyles: () => ({}) }));
 vi.mock('../../components/Modal', () => ({ Modal: 'Modal' }));
 vi.mock('../styles', () => ({ useStyles: () => ({}) }));
