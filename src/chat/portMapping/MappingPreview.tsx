@@ -1,10 +1,12 @@
-import { Platform, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Keyboard, Platform, Text, View } from 'react-native';
 import { Modal } from '../../components/Modal';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { t, useLanguage } from '../../i18n';
 import { useStyles } from '../styles';
 import { MappingBrowserToolbar } from './MappingBrowserToolbar';
+import { MappingBrowserSettings } from './MappingBrowserSettings';
 import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
@@ -14,11 +16,19 @@ export function MappingPreview({ port, close }: { port: number; close: () => voi
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port);
   const { activity } = browser;
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
   useLanguage();
-  return <Modal visible animationType="slide" onRequestClose={close}
+  return <Modal visible animationType="slide"
+    onRequestClose={() => settingsOpen ? setSettingsOpen(false) : close()}
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>
     <SafeAreaProvider><SafeAreaView style={styles.page}>
-      <MappingBrowserToolbar browser={browser} close={close} />
+    <View style={styles.fill}>
+    <View style={styles.fill} accessibilityElementsHidden={settingsOpen}
+      importantForAccessibility={settingsOpen ? 'no-hide-descendants' : 'auto'}>
+      <MappingBrowserToolbar browser={browser} settingsOpen={settingsOpen}
+        openSettings={() => { Keyboard.dismiss(); setSettingsOpen(true); }}
+        onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)} />
       {Platform.OS === 'ios' && <Text style={browserStyles.message}>
         {t("client.portForwarding.switchingAppsMayInterruptTheMappingPreviewHereForA")}</Text>}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
@@ -39,6 +49,10 @@ export function MappingPreview({ port, close }: { port: number; close: () => voi
           <Text style={browserStyles.message}>
             {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
         onError={browser.onError} />
+    </View>
+    {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
+      dismiss={() => setSettingsOpen(false)} close={close} />}
+    </View>
     </SafeAreaView></SafeAreaProvider>
   </Modal>;
 }

@@ -9,6 +9,8 @@ import path from 'node:path';
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the physical test device.');
+const scales = process.env.PORT_MAPPING_FONT_SCALES?.split(',') ?? ['1.0', '1.3'];
+assert.ok(scales.length && scales.every(scale => ['1.0', '1.3'].includes(scale)), 'Invalid font scales.');
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '.codex-tmp/port-mapping-browser');
 const app = 'com.codexswitch.mobile.portmappingtest';
@@ -18,7 +20,13 @@ const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
 })).stdout.trim();
 
 async function nodes() {
-  await adb('shell', 'uiautomator', 'dump', '/sdcard/port-mapping-layout.xml');
+  try { await adb('shell', 'uiautomator', 'dump', '/sdcard/port-mapping-layout.xml'); }
+  catch (error) {
+    // Android may reclaim the inspector after it has written a complete hierarchy.
+    if (error.code !== 137 || !error.stdout?.includes('UI hierchary dumped to: /sdcard/port-mapping-layout.xml')) {
+      throw error;
+    }
+  }
   const xml = await adb('shell', 'cat', '/sdcard/port-mapping-layout.xml');
   return [...xml.matchAll(/<node\b([^>]*)>/g)].map(match => Object.fromEntries(
     [...match[1].matchAll(/([\w-]+)="([^"]*)"/g)].map(attribute => [attribute[1], attribute[2]])));
@@ -67,6 +75,11 @@ async function verifyToolbar(name) {
   await assertAddress('http://127.0.0.1:18306/next');
   await tap('刷新');
   await find('mapped-one');
+  assert.equal((await find('返回')).enabled, 'true');
+  await tap('返回');
+  await assertAddress('http://127.0.0.1:18306/');
+  await tap('前进');
+  await assertAddress('http://127.0.0.1:18306/next');
   await screenshot(`${name}-navigated`);
 }
 async function verifyExternal(label) {
@@ -89,7 +102,7 @@ async function verifyExternal(label) {
 await mkdir(output, { recursive: true });
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
-  for (const scale of ['1.0', '1.3']) {
+  for (const scale of scales) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
     await adb('shell', 'am', 'start', '-S', '-n', activity);
     await tap('端口映射');
@@ -110,6 +123,13 @@ try {
         await adb('shell', 'input', 'keyevent', '4');
         await adb('shell', 'am', 'start', '-n', activity);
       }
+      assert.ok(!(await nodes()).some(node => node['content-desc'] === '关闭'), 'Close must live inside settings');
+      await tap('设置');
+      await find('关闭');
+      await screenshot(`${name}-settings`);
+      await adb('shell', 'input', 'keyevent', '4');
+      await find('设置');
+      await tap('设置');
       await tap('关闭');
       await find('打开');
     }

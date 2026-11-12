@@ -9,7 +9,7 @@ import { PREVIEW_NETWORK_BUSY, PREVIEW_NETWORK_IDLE } from './previewNetworkActi
 const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[],
   refs: [] as { current: unknown }[], refCursor: 0,
   openURL: vi.fn(async (_url: string) => {}),
-  webview: { reload: vi.fn(), goBack: vi.fn(), goForward: vi.fn(), injectJavaScript: vi.fn() } }));
+  webview: { reload: vi.fn(), goBack: vi.fn(), goForward: vi.fn() } }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
   useRef: (initial: unknown) => {
@@ -29,6 +29,7 @@ vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'Provider',
 vi.mock('react-native-webview', () => ({ WebView: 'WebView' }));
 vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' }));
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
+vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));
 vi.mock('./mappingBrowserStyles', () => ({ useMappingBrowserStyles: () => ({}) }));
 vi.mock('../../components/Modal', () => ({ Modal: 'Modal' }));
 vi.mock('../styles', () => ({ useStyles: () => ({}) }));
@@ -91,12 +92,11 @@ it('clears activity on failure and starts it immediately for refresh and back na
 });
 
 it('tracks navigation history and opens the current page externally without reloading the initial source', async () => {
-  const original = webview().source;
   webview().onNavigationStateChange!({ url: 'http://127.0.0.1:3002/next',
     canGoBack: true, canGoForward: false } as never);
   expect(browser().address).toBe('http://127.0.0.1:3002/next');
   expect(browser().history).toEqual({ back: true, forward: false });
-  expect(webview().source).toBe(original);
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/next' });
   browser().setAddress('http://not-submitted.example');
   await browser().openExternal();
   expect(runtime.openURL).toHaveBeenCalledWith('http://127.0.0.1:3002/next');
@@ -136,9 +136,9 @@ it('can revisit a submitted address after going back without losing browser hist
   browser().navigate('goBack');
   webview().onNavigationStateChange!({ url: 'http://127.0.0.1:3002/',
     canGoBack: false, canGoForward: true } as never);
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/' });
   browser().setAddress('http://127.0.0.1:3002/next'); browser().submit();
-  expect(runtime.webview.injectJavaScript).toHaveBeenCalledWith(
-    'window.location.assign("http://127.0.0.1:3002/next"); true;');
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/next' });
 });
 
 it('resets requests from the previous document when navigating to another page', () => {

@@ -33,14 +33,15 @@ export function useMappingBrowser(port: number) {
     Keyboard.dismiss();
     setAddress(url);
     if (url === mappingBrowserUrl(currentUrl)) { navigate('reload'); return; }
-    setError(''); activity.onLoadStart();
-    // After Back, submitting the last source again would leave the native source prop unchanged.
-    if (url === source.uri) webview.current?.injectJavaScript(`window.location.assign(${JSON.stringify(url)}); true;`);
-    else setSource({ uri: url });
+    setError(''); activity.onLoadStart(); setSource({ uri: url });
   };
   const onNavigationStateChange = (state: WebViewNavigation) => {
     setHistory({ back: state.canGoBack, forward: state.canGoForward });
-    if (/^https?:\/\//i.test(state.url)) { setCurrentUrl(state.url); setAddress(state.url); }
+    if (!/^https?:\/\//i.test(state.url)) return;
+    setCurrentUrl(state.url); setAddress(state.url);
+    // Native WebViews skip loading an already-current URL. Keep source aligned after Back/Forward
+    // so the next address submission is a browser navigation, preserving usable history entries.
+    setSource({ uri: state.url });
   };
   const openExternal = async () => {
     if (opening.current) return;
