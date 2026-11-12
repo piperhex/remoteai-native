@@ -3,7 +3,9 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import type { DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import { PortMappingPage } from './PortMappingPage';
 
-const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[], entries: [] as DeviceMappingEntry[] }));
+const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[], entries: [] as DeviceMappingEntry[],
+  open: vi.fn() }));
+vi.mock('../browser/context', () => ({ useNativeBrowser: () => ({ open: runtime.open }) }));
 vi.mock('react', async original => ({ ...await original<typeof React>(), useEffect: vi.fn(),
   useRef: () => ({ current: null }),
   useState: (initial: unknown) => {
@@ -36,7 +38,7 @@ function render() {
 }
 const find = (type: string) => render().find(node => node.type === type)?.props;
 beforeEach(() => {
-  vi.stubGlobal('React', React); runtime.states = [];
+  vi.stubGlobal('React', React); runtime.states = []; runtime.open.mockClear();
   runtime.entries = [{ deviceId: 'one', entry: { id: 'mapping', localPort: 18306,
     status: 'running', protocol: 'tcp' } }] as DeviceMappingEntry[];
 });
@@ -48,7 +50,7 @@ it('opens the chooser before creating a browser and passes the selected local po
   expect(find('Actions')!.port).toBe(18306);
   find('Actions')!.preview!();
   expect(find('Sheet')).toBeUndefined();
-  expect(find('Preview')!.port).toBe(18306);
+  expect(runtime.open).toHaveBeenCalledWith('http://127.0.0.1:18306');
 });
 
 it('dismisses the chooser after external opening or cancellation without entering a preview', () => {

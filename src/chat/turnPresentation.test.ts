@@ -172,7 +172,7 @@ it('excludes empty process items without losing a stable drawer address or final
     { id: 'final', type: 'agentMessage', phase: 'final_answer', text: 'Done' },
   ] };
   expect(conversationEntries([turn])).toMatchObject([
-    { id: 'turn:work:empty', items: [{ id: 'tool' }] }, { kind: 'message', item: { id: 'final' } },
+    { id: 'turn:work:tool', items: [{ id: 'tool' }] }, { kind: 'message', item: { id: 'final' } },
   ]);
   expect(conversationEntries([{ ...turn, items: turn.items.slice(0, 2) }])).toEqual([]);
 });

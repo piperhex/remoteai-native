@@ -26,6 +26,7 @@ vi.mock('../../i18n', async () => ({ ...await vi.importActual<typeof import('../
 vi.mock('../../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 vi.mock('../../components/SheetScrollView', () => ({ SheetScrollView: 'SheetScrollView' }));
 vi.mock('./MappingPreview', () => ({ MappingPreview: 'MappingPreview' }));
+vi.mock('../../browser/context', () => ({ useNativeBrowser: () => ({ open: vi.fn() }) }));
 vi.mock('./MappingOpenActions', () => ({ MappingOpenActions: 'MappingOpenActions' }));
 vi.mock('./usePortMappings', () => ({ usePortMappings: () => ({ service: runtime.service,
   entries: runtime.service!.snapshot(), syncStatus: runtime.syncStatus }) }));

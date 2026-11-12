@@ -15,6 +15,8 @@ import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLan
 import { textMetrics } from '../src/theme/text';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import type { RemoteDevice } from '../src/types';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
+import { bookmarkFixture, updatePcBookmark } from './BrowserBookmarksFixture';
 
 setInterfaceLanguage('zh');
 const devices = [
@@ -42,13 +44,15 @@ function PortMappingFixture() {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { setPage('discover'); return true; });
     return () => listener.remove();
   }, []);
-  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: color('#f8fafc', 'canvas') }}>
+  return <SafeAreaProvider><NativeBrowserProvider scope="browser-fixture" channel={bookmarkFixture}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: color('#f8fafc', 'canvas') }}>
     <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
     <DeviceMappingProvider registry={fixture.registry} deviceIds={devices.map(device => device.deviceId)}>
       {fonts && (page === 'port-mappings'
         ? <PortMappingPage devices={devices} onBack={() => setPage('discover')} />
         : <DiscoveryPage onOpen={setPage} />)}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, padding: 8 }}>
+        <Pressable onPress={updatePcBookmark}><Text style={textMetrics(14, 22)}>PC update</Text></Pressable>
         <Pressable onPress={() => fixture.controls.forEach(control => control.ready(false))}>
           <Text style={textMetrics(14, 22)}>Disconnect fixture</Text></Pressable>
         <Pressable onPress={() => fixture.controls.forEach(control => control.ready(true))}>
@@ -61,6 +65,6 @@ function PortMappingFixture() {
           <Text style={textMetrics(14, 22)}>Light</Text></Pressable>
       </View>
     </DeviceMappingProvider>
-  </SafeAreaView></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
 }
 registerRootComponent(PortMappingFixture);

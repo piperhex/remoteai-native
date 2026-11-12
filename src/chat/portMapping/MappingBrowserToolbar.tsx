@@ -33,11 +33,14 @@ export function MappingBrowserToolbar({ browser, settingsOpen, openSettings, onL
     <ToolbarButton icon="chevron-forward" label="client.projectExplorer.forward" disabled={!browser.history.forward}
       onPress={() => browser.navigate('goForward')} />
     <TextInput accessibilityLabel={t('client.portMappingEditing.accessAddress')} style={styles.address}
-      value={browser.address} onChangeText={browser.setAddress} onSubmitEditing={browser.submit}
+      value={browser.address} onChangeText={browser.setAddress}
+      onSubmitEditing={event => browser.submit(event.nativeEvent.text)}
       keyboardType="url" returnKeyType="go" autoCapitalize="none" autoCorrect={false} selectTextOnFocus />
-    <ToolbarButton icon="refresh-outline" label="client.chat.refresh" loading={browser.activity.active}
+    <ToolbarButton icon="refresh-outline" label="client.chat.refresh" disabled={!browser.currentUrl}
+      loading={!!browser.currentUrl && browser.activity.active}
       onPress={() => browser.navigate('reload')} />
     <ToolbarButton icon="open-outline" label="client.workspaceActions.openInBrowser"
+      disabled={!browser.currentUrl}
       onPress={() => { void browser.openExternal(); }} />
     <ToolbarButton icon="settings-outline" label="client.app.settings" expanded={settingsOpen} onPress={openSettings} />
   </View>;

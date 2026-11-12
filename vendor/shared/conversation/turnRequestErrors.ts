@@ -1,5 +1,6 @@
 import type { RequestError } from "./requestError";
 import type { Turn } from "./types";
+import { hasVisibleProcessContent } from '../chat/processContent';
 
 export interface TurnRequestError {
   id: string;
@@ -60,8 +61,11 @@ export function isRequestErrorVisible(turn: Turn, record: TurnRequestError): boo
   if (turn.status === "completed") return false;
   if (!record.willRetry) return true;
   if (turn.status !== "inProgress") return false;
+  const latest = turn.requestErrors?.at(-1);
+  if (latest && latest.id !== record.id) return false;
+  // Empty reasoning/message placeholders do not mean a request has recovered.
   return !turn.items.slice(requestErrorPosition(turn, record))
-    .some(item => item.type !== "userMessage" && item.type !== "modelChange");
+    .some(item => item.type !== "userMessage" && item.type !== "modelChange" && hasVisibleProcessContent(item));
 }
 
 export function visibleTurnRequestErrors(turn: Turn): TurnRequestError[] {

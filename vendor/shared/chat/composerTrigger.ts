@@ -4,7 +4,7 @@ export function composerMenuTrigger(text: string, selection: TextSelection) {
   const command = composerTrigger(text, selection);
   if (command) return { ...command, conversations: false, files: false, ssh: false };
   if (selection.start !== selection.end) return null;
-  const ssh = text.slice(0, selection.start).match(/(?:^|\s)!([^\s!]*)$/u);
+  const ssh = text.slice(0, selection.start).match(/(?:^|\s)#([^\s#]*)$/u);
   if (ssh) return { start: selection.start - ssh[1].length - 1, end: selection.start,
     query: ssh[1], skillsOnly: false, conversations: false, files: false, ssh: true };
   const file = text.slice(0, selection.start).match(/(?:^|\s)%([^\s%]*)$/u);

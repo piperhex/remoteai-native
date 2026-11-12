@@ -9,7 +9,7 @@ import { SheetScrollView } from '../../components/SheetScrollView';
 import type { AuthSession } from '../../types';
 import { t } from '../../i18n';
 import { usePortMappings } from './usePortMappings';
-import { MappingPreview } from './MappingPreview';
+import { useNativeBrowser } from '../../browser/context';
 import { MappingOpenActions } from './MappingOpenActions';
 import { MappingForm } from './MappingForm';
 import { MappingRow } from './MappingRow';
@@ -20,13 +20,13 @@ export function PortMappings(props: {
   open: boolean; close: () => void; deviceName?: string;
 }) {
   const styles = useMappingStyles();
+  const browser = useNativeBrowser();
   const { entries, service, syncStatus, connected = props.connected } = usePortMappings(props);
-  const [selection, setSelection] = useState<{ id: string; view: 'actions' | 'preview' }>();
+  const [selection, setSelection] = useState<{ id: string }>();
   const [editing, setEditing] = useState<ForwardingEntry>();
   const [newestFirst, setNewestFirst] = useState(false);
   const selected = entries.find(entry => entry.id === selection?.id && entry.status === 'running'
     && entry.protocol !== 'udp');
-  const previewing = !!selected && selection?.view === 'preview';
   const closeActions = () => setSelection(undefined);
   useEffect(() => {
     if (!props.active || !props.open || !selected) setSelection(undefined);
@@ -34,7 +34,7 @@ export function PortMappings(props: {
   useEffect(() => { setEditing(undefined); }, [service]);
   const sorted = [...entries].sort((a, b) => newestFirst ? (b.updatedAt ?? 0) - (a.updatedAt ?? 0) : 0);
   return <>
-    <BottomSheet visible={props.active && props.open && !previewing}
+    <BottomSheet visible={props.active && props.open}
       title={t(selected ? "client.portForwarding.openMappedAddress" : "client.portForwarding.portMapping")}
       titleIcon={!selected && <View style={styles.heroIcon}>
         <Ionicons name="swap-horizontal-outline" size={26} color="#008b73" /></View>}
@@ -42,7 +42,8 @@ export function PortMappings(props: {
       onClose={selected ? closeActions : props.close} onBack={selected ? closeActions : undefined}
       maxWidth={540} horizontalPadding={16} fullWidthContent={!selected}>
       {selected ? <MappingOpenActions key={selected.id} port={selected.localPort}
-        preview={() => setSelection({ id: selected.id, view: 'preview' })} opened={closeActions} /> :
+        preview={() => { closeActions(); props.close(); browser.open(`http://127.0.0.1:${selected.localPort}`); }}
+        opened={closeActions} /> :
       <SheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View style={styles.notice}><Ionicons name="information-circle" size={21} color="#008b73" />
@@ -59,7 +60,7 @@ export function PortMappings(props: {
         {sorted.map(entry => editing?.id === entry.id
           ? <MappingForm key={entry.id} service={service} entry={editing} done={() => setEditing(undefined)} />
           : <MappingRow key={entry.id} entry={entry} service={service} connected={connected}
-            edit={() => setEditing(entry)} open={() => setSelection({ id: entry.id, view: 'actions' })} />)}
+            edit={() => setEditing(entry)} open={() => setSelection({ id: entry.id })} />)}
         {editing && !entries.some(entry => entry.id === editing.id) && <Pressable accessibilityRole="button"
           onPress={() => setEditing(undefined)}><Text style={styles.muted}>
           {t("client.portMappingEditing.thisMappingWasRemovedAddItAgainToContinue")}</Text></Pressable>}
@@ -71,7 +72,5 @@ export function PortMappings(props: {
           {t("client.portForwarding.switchingAppsMayInterruptTheMappingPreviewHereForA")}</Text>}
       </SheetScrollView>}
     </BottomSheet>
-    {selected && previewing && props.active && props.open && <MappingPreview
-      key={`${selected.id}:${selected.updatedAt}`} port={selected.localPort} close={closeActions} />}
   </>;
 }

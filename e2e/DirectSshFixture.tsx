@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
 import { SshPage } from '../src/discovery/SshPage';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { BottomNavigation } from '../src/discovery/BottomNavigation';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
@@ -31,7 +32,7 @@ function Fixture() {
     }).catch(async error => { const message = await reportDirectSshFailure(error); if (mounted) setStatus(message); });
     return () => { mounted = false; void dispose?.(); };
   }, []);
-  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: color('#ededed', 'canvas') }}>
+  return <SafeAreaProvider><NativeBrowserProvider scope="DirectSshFixture"><SafeAreaView style={{ flex: 1, backgroundColor: color('#ededed', 'canvas') }}>
     <ThemeStatusBar />
     {page !== 'ssh' && <><View style={{ flexDirection: 'row' }}>
       <Button title="Light" onPress={() => updateThemeMode('light')} />
@@ -42,6 +43,6 @@ function Fixture() {
       ? <SshPage client={connection.client} onBack={() => setPage('discover')} />
       : <DiscoveryPage onOpen={setPage} />)}
     <BottomNavigation activePage={page} onChange={setPage} />
-  </SafeAreaView></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
 }
 registerRootComponent(Fixture);

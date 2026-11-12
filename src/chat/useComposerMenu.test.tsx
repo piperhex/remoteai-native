@@ -28,26 +28,26 @@ function type(text: string, caret = text.length) {
   act(() => menu.setSelection({ start: caret, end: caret }));
 }
 
-it('routes ! queries to SSH without loading commands, then consumes only the trigger at the caret', () => {
-  type('Inspect !dev afterwards', 12);
+it('routes # queries to SSH without loading commands, then consumes only the trigger at the caret', () => {
+  type('Inspect #dev afterwards', 12);
   expect(menu).toMatchObject({ open: true, ssh: true, files: false, conversations: false, query: 'dev' });
   expect(refresh).not.toHaveBeenCalled();
   act(() => menu.consumeTrigger());
   expect(removeText).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ start: 8, end: 12 }),
-    'Inspect !dev afterwards');
+    'Inspect #dev afterwards');
   expect(menu.selection).toEqual({ start: 8, end: 8 });
   expect(menu.open).toBe(false);
 });
 
 it('dismisses SSH suggestions and reopens them when the query changes', () => {
-  type('!'); act(() => menu.close());
+  type('#'); act(() => menu.close());
   expect(menu.open).toBe(false);
-  type('!prod'); expect(menu).toMatchObject({ open: true, ssh: true, query: 'prod' });
+  type('#prod'); expect(menu).toMatchObject({ open: true, ssh: true, query: 'prod' });
   expect(refresh).not.toHaveBeenCalled();
 });
 
 it('keeps an explicit plugin picker separate from an SSH trigger', () => {
-  type('!dev');
+  type('#dev');
   act(() => menu.openPlugins());
   expect(menu).toMatchObject({ open: true, ssh: false, plugins: true, query: '' });
   expect(refresh).toHaveBeenCalledTimes(1);

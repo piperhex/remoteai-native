@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { Keyboard, Platform, Text, View } from 'react-native';
-import { Modal } from '../../components/Modal';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
+import { BackHandler, Keyboard, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { t, useLanguage } from '../../i18n';
 import { useStyles } from '../styles';
@@ -10,49 +9,71 @@ import { MappingBrowserSettings } from './MappingBrowserSettings';
 import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
+import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
 
-export function MappingPreview({ port, close }: { port: number; close: () => void }) {
+export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close }: {
+  port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
+  onNavigate?: (url: string) => void; close: () => void;
+}) {
   const styles = useStyles();
   const browserStyles = useMappingBrowserStyles();
-  const browser = useMappingBrowser(port);
+  const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [toolbarHeight, setToolbarHeight] = useState(0);
   useLanguage();
-  return <Modal visible animationType="slide"
-    onRequestClose={() => settingsOpen ? setSettingsOpen(false) : close()}
-    supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>
-    <SafeAreaProvider><SafeAreaView style={styles.page}>
+  useEffect(() => { if (request) browser.visit(request.url); }, [request]);
+  useEffect(() => {
+    if (!visible) { setSettingsOpen(false); setBookmarksOpen(false); }
+  }, [visible]);
+  useEffect(() => {
+    if (!visible) return;
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (bookmarksOpen) setBookmarksOpen(false);
+      else if (settingsOpen) setSettingsOpen(false);
+      else close();
+      return true;
+    });
+    return () => listener.remove();
+  }, [visible, settingsOpen, bookmarksOpen, close]);
+  return <SafeAreaView style={styles.page}>
     <View style={styles.fill}>
-    <View style={styles.fill} accessibilityElementsHidden={settingsOpen}
+    {/* Keep the WebView's native parent stable when the menu changes accessibility visibility. */}
+    <View collapsable={false} style={styles.fill} accessibilityElementsHidden={settingsOpen}
       importantForAccessibility={settingsOpen ? 'no-hide-descendants' : 'auto'}>
       <MappingBrowserToolbar browser={browser} settingsOpen={settingsOpen}
         openSettings={() => { Keyboard.dismiss(); setSettingsOpen(true); }}
         onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)} />
-      {Platform.OS === 'ios' && <Text style={browserStyles.message}>
-        {t("client.portForwarding.switchingAppsMayInterruptTheMappingPreviewHereForA")}</Text>}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
-      <WebView ref={browser.webview} source={browser.source} style={styles.fill} incognito
+      <WebView ref={browser.webview} source={browser.source.uri ? browser.source : undefined} style={styles.fill}
+        incognito={false} domStorageEnabled
         originWhitelist={['http://*', 'https://*']} allowFileAccess={false}
         allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
-        sharedCookiesEnabled={false} thirdPartyCookiesEnabled={false}
+        sharedCookiesEnabled thirdPartyCookiesEnabled={false}
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
         // Android enforces this through patch-webview-permissions.cjs, including after redirects.
         geolocationEnabled={false} mediaCapturePermissionGrantType="deny"
         injectedJavaScriptBeforeContentLoaded={PREVIEW_NETWORK_SCRIPT}
         injectedJavaScript={PREVIEW_NETWORK_SCRIPT}
         onMessage={activity.onMessage} onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
-        onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)}
-        onNavigationStateChange={browser.onNavigationStateChange}
+        onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
+          || !browser.source.uri && request.url === 'about:blank'}
+        onNavigationStateChange={state => {
+          browser.onNavigationStateChange(state);
+          if (/^https?:\/\//i.test(state.url)) onNavigate?.(state.url);
+        }}
         renderError={() => <View style={styles.empty}>
           <Text style={browserStyles.message}>
             {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
         onError={browser.onError} />
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
+      bookmarks={() => { setSettingsOpen(false); setBookmarksOpen(true); }}
       dismiss={() => setSettingsOpen(false)} close={close} />}
+    {bookmarksOpen && <BrowserBookmarks currentUrl={browser.currentUrl} currentTitle={browser.title}
+      visit={url => { setBookmarksOpen(false); browser.visit(url); }} close={() => setBookmarksOpen(false)} />}
     </View>
-    </SafeAreaView></SafeAreaProvider>
-  </Modal>;
+    </SafeAreaView>;
 }

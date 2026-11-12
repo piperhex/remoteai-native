@@ -1,5 +1,6 @@
 export const discoveryEntries = [
   { page: 'lounge', label: 'client.lounge.title' },
+  { page: 'browser', label: 'client.configLabels.browser' },
   { page: 'port-mappings', label: 'client.portForwarding.portMapping' },
   { page: 'devices', label: 'client.app.devices' },
   { page: 'ssh', label: 'client.discovery.ssh' },

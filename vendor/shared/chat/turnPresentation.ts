@@ -1,16 +1,16 @@
 import type { Item, Turn } from '../remote-chat/client/types';
 import { changedFiles, parseDiff } from './diff';
-import { followsStoppedTurn, visibleContinuationItems } from '../conversation/continuation';
+import { followsStoppedTurn } from '../conversation/continuation';
 import { turnElapsedMs } from '../conversation/turnTiming';
-import { groupTurnItems } from './turnGroups';
-import { hasVisibleProcessContent } from './processContent';
+import { turnMessageGroups, type TurnMessageGroup } from '../conversation/turnMessageGroups';
 import { processOutputs } from '../conversation/processDetails';
-import { visibleTurnRequestErrors } from '../conversation/turnRequestErrors';
+import type { TurnRequestError } from '../conversation/turnRequestErrors';
 export { groupTurnItems } from './turnGroups';
 
 export type MessageEntry = { id: string; kind: 'message' | 'process'; turn: Turn; item: Item };
 export type WorkEntry = { id: string; kind: 'work'; turn: Turn; items: Item[]; inline: boolean; timed?: boolean };
 export type TurnEntry = MessageEntry | WorkEntry | { id: string; kind: 'summary'; turn: Turn }
+  | { id: string; kind: 'error'; turn: Turn; error: TurnRequestError }
   | { id: string; kind: 'duration'; turn: Turn };
 
 // History reducers replace changed turns. Reuse unchanged turns without retaining discarded conversations.
@@ -26,7 +26,7 @@ export function completedTurnFiles(turn: Turn) {
 }
 
 function hasSummary(turn: Turn) {
-  return Boolean(turn.plan?.length || turn.diff?.trim() || visibleTurnRequestErrors(turn).length
+  return Boolean(turn.plan?.length || turn.diff?.trim()
     || turn.status === 'interrupted' || turn.status === 'failed' || completedTurnFiles(turn).length
     || processOutputs(turn.items).some((item) => item.type === 'imageGeneration'
       && item.status === 'completed' && !item.failure));
@@ -49,19 +49,8 @@ export function conversationEntries(turns: Turn[], inlineTurns: ReadonlyMap<stri
 }
 
 function turnEntries(turn: Turn, { inline, continuation }: { inline: boolean; continuation: boolean }): TurnEntry[] {
-  const items = continuation ? visibleContinuationItems(turn.items) : turn.items;
-  const entries = groupTurnItems(items).flatMap((group): TurnEntry[] => {
-    if (group.type === 'message') return [{ id: `${turn.id}:message:${group.items[0].id}`,
-      kind: 'message', turn, item: group.items[0] }];
-    const visible = group.items.filter(hasVisibleProcessContent);
-    if (!visible.length) return [];
-    const work: WorkEntry = { id: `${turn.id}:work:${group.items[0].id}`,
-      kind: 'work', turn, items: visible, inline };
-    if (!inline) return [work];
-    return [work, ...visible.map((item): MessageEntry => ({
-      id: `${turn.id}:message:${item.id}`, kind: 'process', turn, item,
-    }))];
-  });
+  const groups = turnMessageGroups(turn, { visibleItems: turn.items, followsInterruption: continuation });
+  const entries = groups.flatMap(group => groupEntries(group, turn, inline));
   if (turn.status !== 'inProgress' && turnElapsedMs(turn, 0) != null) {
     const response = entries.findIndex((entry) => entry.kind !== 'message' || entry.item.type !== 'userMessage');
     const first = entries[response];
@@ -71,6 +60,18 @@ function turnEntries(turn: Turn, { inline, continuation }: { inline: boolean; co
   }
   if (hasSummary(turn)) entries.push({ id: `${turn.id}:summary`, kind: 'summary', turn });
   return entries;
+}
+
+function groupEntries(group: TurnMessageGroup, turn: Turn, inline: boolean): TurnEntry[] {
+  if (group.type === 'error') return [{ id: group.key, kind: 'error', turn, error: group.error }];
+  if (group.type === 'message') return [{ id: `${turn.id}:message:${group.key}`,
+    kind: 'message', turn, item: group.items[0] }];
+  const work: WorkEntry = { id: `${turn.id}:work:${group.key}`,
+    kind: 'work', turn, items: group.items, inline };
+  if (!inline) return [work];
+  return [work, ...group.items.map((item): MessageEntry => ({
+    id: `${turn.id}:message:${item.id}`, kind: 'process', turn, item,
+  }))];
 }
 
 /** Loading an earlier page can prepend activities to an already-open process group. */

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button, DeviceEventEmitter, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNavigation } from '../src/discovery/BottomNavigation';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { DownloadManagerPage } from '../src/downloads/DownloadManagerPage';
 import { downloadManager, downloadOwner } from '../src/downloads/manager';
@@ -28,7 +29,7 @@ function DownloadCountFixture() {
   const [other, setOther] = useState(false);
   const visibleOwner = other ? 'other' : owner;
   useEffect(() => { void downloadManager.initialize().then(() => update(2)); }, []);
-  return <SafeAreaProvider><SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+  return <SafeAreaProvider><NativeBrowserProvider scope="DownloadCountFixture"><SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
       <Button title="12 tasks" onPress={() => update(12)} />
       <Button title="Pause" onPress={() => update(12, 'paused')} />
@@ -41,7 +42,7 @@ function DownloadCountFixture() {
       {page === 'downloads' && <DownloadManagerPage session={session} onBack={() => setPage('discover')} />}
     </View>
     {page !== 'downloads' && <BottomNavigation owner={visibleOwner} activePage={page} onChange={setPage} />}
-  </SafeAreaView></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
 }
 
 registerRootComponent(DownloadCountFixture);

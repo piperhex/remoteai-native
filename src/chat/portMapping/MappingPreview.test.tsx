@@ -11,6 +11,7 @@ const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[],
   openURL: vi.fn(async (_url: string) => {}),
   webview: { reload: vi.fn(), goBack: vi.fn(), goForward: vi.fn() } }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),
+  useEffect: vi.fn(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
   useRef: (initial: unknown) => {
     const index = runtime.refCursor++;
@@ -30,6 +31,7 @@ vi.mock('react-native-webview', () => ({ WebView: 'WebView' }));
 vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' }));
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));
+vi.mock('../../browser/BrowserBookmarks', () => ({ BrowserBookmarks: 'Bookmarks' }));
 vi.mock('./mappingBrowserStyles', () => ({ useMappingBrowserStyles: () => ({}) }));
 vi.mock('../../components/Modal', () => ({ Modal: 'Modal' }));
 vi.mock('../styles', () => ({ useStyles: () => ({}) }));
@@ -119,6 +121,13 @@ it('submits HTTP addresses and preserves invalid input without navigating', () =
   }
   expect(mappingBrowserUrl(' https://example.com/a?q=1 ')).toBe('https://example.com/a?q=1');
   expect(mappingBrowserUrl('localhost:8080')).toBe('http://localhost:8080/');
+});
+
+it('submits the native input value before a pending React render', () => {
+  const current = browser();
+  current.setAddress('http://127.0.0.1:3003/');
+  current.submit('http://127.0.0.1:3003/');
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3003/' });
 });
 
 it('reloads the current address and reports external browser errors without closing the preview', async () => {

@@ -25,6 +25,7 @@ import { ReconnectBackoff } from '../realtime/reconnectBackoff';
 import { parseClientVersion } from './clientVersion';
 import { LoungeGroupReadViewport, type GroupReadViewing, type GroupReadVisibility } from './groupReadViewport';
 import { LoungeDeletions } from './deletions';
+import { BookmarkChannel } from '../browser/bookmarks/channel';
 
 const HEARTBEAT_MS = 20_000;
 const STALE_MS = 65_000;
@@ -71,6 +72,8 @@ export class LoungeController {
   private localReady = false;
   private restoringLocal = false;
   readonly attachments: LoungeAttachmentManager;
+  readonly bookmarks = new BookmarkChannel(frame => this.state.status === 'connected'
+    && this.transport.send(this.socket, frame), () => this.runtime.randomId());
 
   constructor(private readonly session?: LoungeSession, private readonly runtime: LoungeRuntime = browserLoungeRuntime) {
     this.backoff = new ReconnectBackoff({ maximumMs: 15_000, random: runtime.retryRandom });
@@ -289,6 +292,7 @@ export class LoungeController {
     }
     this.renewalStarted = 0;
     this.submissions.disconnect();
+    this.bookmarks.disconnect();
     this.watched = '';
     this.profiles.disconnect();
     this.directState.disconnect();
@@ -301,6 +305,7 @@ export class LoungeController {
     try { frame = JSON.parse(data) as Record<string, unknown>; } catch { return; }
     if (!frame || typeof frame !== 'object') return;
     this.received = Date.now();
+    if (this.bookmarks.receive(frame)) return;
     const notifications = notificationSettingsUpdate(this.state, frame);
     if (notifications) this.update(notifications);
     if (frame.type === 'accepted') {
@@ -356,6 +361,7 @@ export class LoungeController {
         directResetAvailable: frame.directReset === true,
         contacts: this.state.contacts.filter(contact => contact.user.id !== user.id) });
       this.contactSync.ready(frame.savedContacts === true);
+      this.bookmarks.ready(frame.bookmarks === true);
       this.deviceSync.ready(user.id, frame.deviceSync === true);
       this.syncWatch(); return;
     }

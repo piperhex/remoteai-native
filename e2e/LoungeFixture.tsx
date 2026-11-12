@@ -5,6 +5,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { BackHandler, Pressable, Text, View } from 'react-native';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { BottomNavigation } from '../src/discovery/BottomNavigation';
 import { LoungePage } from '../src/lounge/LoungePage';
@@ -37,7 +38,7 @@ function LoungeFixture() {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { setPage('discover'); return true; });
     return () => listener.remove();
   }, []);
-  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: color('#f5f7f8', 'canvas') }}>
+  return <SafeAreaProvider><NativeBrowserProvider scope="LoungeFixture"><SafeAreaView style={{ flex: 1, backgroundColor: color('#f5f7f8', 'canvas') }}>
     {fonts && signedIn && <>
       {page === 'lounge' ? <LoungePage controller={lounge.controller} onBack={() => setPage('discover')} />
         : page === 'settings' ? <SettingsPage session={session} profile={null} globalRefreshMinutes={30}
@@ -52,6 +53,6 @@ function LoungeFixture() {
       {page !== 'lounge' && <BottomNavigation activePage={page} loungeUnread={lounge.state.unread} onChange={setPage} />}
     </>}
     {!signedIn && <Text style={textMetrics(16, 24)}>Signed out fixture</Text>}
-  </SafeAreaView></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
 }
 registerRootComponent(LoungeFixture);

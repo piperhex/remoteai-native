@@ -8,6 +8,7 @@ import { useFonts } from 'expo-font';
 import type { GuiToolsClient } from '../vendor/shared/remote-chat/guiTools';
 import type { TerminalEvent, TerminalInfo } from '../vendor/shared/terminal/types';
 import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { SshPage } from '../src/discovery/SshPage';
 import { BottomNavigation } from '../src/discovery/BottomNavigation';
@@ -55,7 +56,7 @@ function DiscoverySshFixture() {
   const client = useMemo(() => createClient(mode), [mode]);
   const color = useThemeColor();
   const canvas = { flex: 1, backgroundColor: color('#ededed', 'canvas') };
-  return <SafeAreaProvider><SafeAreaView style={canvas} edges={['left', 'right', 'bottom']}>
+  return <SafeAreaProvider><NativeBrowserProvider scope="DiscoverySshFixture"><SafeAreaView style={canvas} edges={['left', 'right', 'bottom']}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingTop: 30 }}>
       <Button title="Light" onPress={() => updateThemeMode('light')} />
       <Button title="Dark" onPress={() => updateThemeMode('dark')} />
@@ -70,6 +71,6 @@ function DiscoverySshFixture() {
       }}>{page === 'ssh' && <SshPage key={mode} client={client} onBack={() => setPage('discover')} />}
       </PrimaryPagePager>}
     <BottomNavigation activePage={page} onChange={setPage} />
-  </SafeAreaView></SafeAreaProvider>;
+  </SafeAreaView></NativeBrowserProvider></SafeAreaProvider>;
 }
 registerRootComponent(DiscoverySshFixture);
