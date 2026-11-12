@@ -3,6 +3,7 @@ import { registerRootComponent } from 'expo';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useEffect, useState } from 'react';
+import { Appearance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatPage } from '../src/chat/ChatPage';
@@ -10,9 +11,11 @@ import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLan
 import { updateThemeMode } from '../src/theme/store';
 import { activateSession, sessionEpoch } from '../src/api/sessionStore';
 import type { AuthSession, RemoteDevice } from '../src/types';
+import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 
 setInterfaceLanguage('zh');
-updateThemeMode('dark');
+const mode = Appearance.getColorScheme() ?? 'light';
+updateThemeMode(mode);
 const session: AuthSession = { baseUrl: 'http://127.0.0.1:15370', email: 'mobile-test@example.test',
   accessToken: 'local-test-token', refreshToken: 'local-test-refresh' };
 const devices: RemoteDevice[] = [{ deviceId: 'computer', name: '测试电脑', platform: 'Windows', online: true,
@@ -25,10 +28,12 @@ function RequestErrorFixture() {
     void activateSession(session, sessionEpoch()).then(() => setAuthenticated(true)).catch(console.error);
   }, []);
   return <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider>
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#101513' }}>
-      {fonts && authenticated && <ChatPage session={session} devices={devices} devicesLoaded active
-        notification={null} notificationError="" notificationHandled={() => {}}
-        tokenSummary={false} closeTokenSummary={() => {}} />}
+    <SafeAreaView style={{ flex: 1, backgroundColor: mode === 'dark' ? '#101513' : '#f7f9f8' }}>
+      {fonts && authenticated && <NativeBrowserProvider scope="RequestErrorFixture">
+        <ChatPage session={session} devices={devices} devicesLoaded active
+          notification={null} notificationError="" notificationHandled={() => {}}
+          tokenSummary={false} closeTokenSummary={() => {}} />
+      </NativeBrowserProvider>}
     </SafeAreaView>
   </SafeAreaProvider></GestureHandlerRootView>;
 }

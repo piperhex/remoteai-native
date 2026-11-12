@@ -96,53 +96,9 @@ it('hides acceptance when review is unavailable or the turn has no file changes'
   expect(content(unavailable)).toContain('审核');
 });
 
-it('shows retry after the error notice and continues when pressed', () => {
-  const retry = vi.fn();
-  reviewContext.value = { turnId: 'turn', disabled: false, pending: false, retry };
-  const tree = ChatTurnSummary({ turn: { ...turn, status: 'failed' }, onOpen: vi.fn() });
-  expect(content(tree)).toContain('本次回复遇到问题，已中断。 查看报错详情重试');
-  const button = descendants(tree).find(node => node.type === 'Pressable' && content(node.props.children) === '重试');
-  expect(button?.props.disabled).toBe(false);
-  button?.props.onPress?.();
-  expect(retry).toHaveBeenCalledOnce();
-});
-
-it('disables retry while pending and omits it from older errors', () => {
-  reviewContext.value = { turnId: 'turn', disabled: true, pending: true, retry: vi.fn() };
-  const failed = { ...turn, status: 'failed' };
-  const tree = ChatTurnSummary({ turn: failed, onOpen: vi.fn() });
-  const button = descendants(tree).find(node => node.type === 'Pressable' && content(node.props.children) === '正在重试…');
-  expect(button?.props.disabled).toBe(true);
-  expect(content(ChatTurnSummary({ turn: { ...failed, id: 'old' }, onOpen: vi.fn() }))).not.toContain('正在重试…');
-});
-
-it.each([
-  { error: { message: MODEL_CAPACITY_MESSAGE } },
-  { error: { message: 'Request failed', additionalDetails: MODEL_CAPACITY_MESSAGE } },
-  { error: null, retryError: { message: MODEL_CAPACITY_MESSAGE } },
-])('shows capacity failures directly and keeps the retry action (%j)', error => {
-  const retry = vi.fn();
-  const onOpen = vi.fn();
-  reviewContext.value = { turnId: 'turn', disabled: false, pending: false, retry };
-  const tree = ChatTurnSummary({ turn: { ...turn, status: 'failed', ...error }, onOpen });
-  expect(content(tree)).toContain(t('client.chat.modelAtCapacity'));
-  expect(content(tree)).not.toContain('本次回复遇到问题，已中断。');
-  expect(content(tree)).not.toContain('查看报错详情');
-  const button = descendants(tree).find(node => node.type === 'Pressable' && content(node.props.children) === '重试');
-  expect(button?.props.disabled).toBe(false);
-  button?.props.onPress?.();
-  expect(retry).toHaveBeenCalledOnce();
-  expect(onOpen).not.toHaveBeenCalled();
-});
-
-it('shows retrying capacity errors and preserves older failures without a retry button', () => {
-  reviewContext.value = { turnId: 'turn', disabled: true, pending: true, retry: vi.fn() };
-  const capacityTurn = { ...turn, error: null, retryError: { message: MODEL_CAPACITY_MESSAGE } };
-  const tree = ChatTurnSummary({ turn: capacityTurn, onOpen: vi.fn() });
-  expect(content(tree)).toContain(t('client.chat.modelAtCapacity'));
-  const button = descendants(tree).find(node => node.type === 'Pressable' && content(node.props.children) === '正在重试…');
-  expect(button?.props.disabled).toBe(true);
-  const previous = ChatTurnSummary({ turn: { ...capacityTurn, id: 'old', status: 'failed' }, onOpen: vi.fn() });
-  expect(content(previous)).toContain(t('client.chat.modelAtCapacity'));
-  expect(content(previous)).not.toContain('正在重试…');
+it.each(['inProgress', 'failed'])('keeps request errors out of the %s turn summary', status => {
+  const tree = ChatTurnSummary({ turn: { ...turn, status, error: { message: 'HTTP 502' } }, onOpen: vi.fn() });
+  expect(content(tree)).not.toContain(t('client.chat.viewErrorDetails'));
+  expect(content(tree)).not.toContain(t('client.chat.thisReplyStoppedBecauseOfAProblem'));
+  expect(content(tree)).not.toContain(t('client.terminal.retry'));
 });

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTurnRetry } from '../../vendor/shared/chat/TurnRetryContext';
 import { t } from '../i18n';
 import { palette } from './styles';
+import { textMetrics } from '../theme/text';
 
 export function ChatRetryButton({ turnId, variant = 'inline' }: {
   turnId: string; variant?: 'inline' | 'capacity';
@@ -28,8 +29,8 @@ export function ChatRetryButton({ turnId, variant = 'inline' }: {
 const useStyles = createThemedStyles((color) => ({
   button: { flexDirection: 'row', alignItems: 'center', gap: 2, padding: 2,
     borderWidth: 1, borderColor: color('#c96c3d', 'warning'), borderRadius: 4 },
-  label: { color: color('#c96c3d', 'warning'), fontSize: 12, lineHeight: 16 },
+  label: { color: color('#c96c3d', 'warning'), ...textMetrics(12, 16) },
   capacityButton: { paddingVertical: 4, paddingHorizontal: 9, borderColor: color(palette.ink, 'ink') },
-  capacityLabel: { color: color(palette.ink, 'ink'), fontSize: 14 },
+  capacityLabel: { color: color(palette.ink, 'ink'), ...textMetrics(14, 20) },
   disabled: { opacity: 0.5 },
 }));

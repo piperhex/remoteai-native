@@ -10,6 +10,7 @@ import { ChatWorkDrawer } from './ChatWorkDrawer';
 import { ChatProcessSummary } from './ChatProcessSummary';
 import { ChatTurnDuration, ChatTurnSummary, type TurnPanel } from './ChatTurnSummary';
 import { ChatTurnDetails } from './ChatTurnDetails';
+import { ChatRequestError } from './ChatRequestError';
 import { findWorkEntry } from './turnPresentation';
 import { activityTimeline, findActivityEntry, latestActivity, type TimelineEntry as Entry } from './activityTimeline';
 import { useConversationEntries } from './useConversationEntries';
@@ -21,7 +22,7 @@ import { palette, useStyles } from './styles';
 
 type ProcessSelection = { type: 'work' | 'activities'; id: string };
 type Selection = ProcessSelection | { type: 'item'; id: string }
-  | { type: 'turn'; id: string; panel: TurnPanel };
+  | { type: 'turn'; id: string; panel: TurnPanel; errorId?: string };
 
 const PROCESS_SEPARATOR_STYLE = { height: 14 };
 const RESPONSE_SEPARATOR_STYLE = { height: 12 };
@@ -63,6 +64,8 @@ const TimelineEntry = memo(function TimelineEntry({ entry, open, onInline, proce
     open({ type: 'item', id });
   }, [open, onInline, entry.kind, entry.turn.id]);
   if (entry.kind === 'duration') return <ChatTurnDuration turn={entry.turn} />;
+  if (entry.kind === 'error') return <ChatRequestError turn={entry.turn} record={entry.error}
+    onOpen={() => open({ type: 'turn', id: entry.turn.id, panel: 'error', errorId: entry.error.id })} />;
   if (entry.kind === 'summary') return <>{processing}{processing && <View style={styles.messageSeparator} />}
     <ChatTurnSummary turn={entry.turn} onOpen={(id, panel) => open({ type: 'turn', id, panel })} /></>;
   if (entry.kind === 'work') return <ChatProcessSummary entry={entry} onInline={onInline}
@@ -160,6 +163,6 @@ export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder,
     {selectedEntry && <ChatWorkDrawer key={processSelection?.id} entry={selectedEntry} onClose={close} />}
     {selectedTool && <ChatToolDetails key={selectedTool.id} item={selectedTool} onClose={close} />}
     {selectedTurn && selection?.type === 'turn' && <ChatTurnDetails turn={selectedTurn}
-      panel={selection.panel} onClose={close} />}
+      panel={selection.panel} errorId={selection.errorId} onClose={close} />}
   </>;
 }

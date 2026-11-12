@@ -7,7 +7,7 @@ import { useThemeColor } from '../theme/store';
 import { palette } from './styles';
 import { ChatRetryButton } from './ChatRetryButton';
 
-export function ChatCapacityErrorNotice({ turnId }: { turnId: string }) {
+export function ChatCapacityErrorNotice({ turnId, retry = true }: { turnId: string; retry?: boolean }) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
@@ -16,7 +16,7 @@ export function ChatCapacityErrorNotice({ turnId }: { turnId: string }) {
       <Ionicons name="alert-circle-outline" size={20} color={color(palette.ink, 'ink')} />
       <Text style={styles.message}>{t('client.chat.modelAtCapacity')}</Text>
     </View>
-    <ChatRetryButton turnId={turnId} variant="capacity" />
+    {retry && <ChatRetryButton turnId={turnId} variant="capacity" />}
   </View>;
 }
 

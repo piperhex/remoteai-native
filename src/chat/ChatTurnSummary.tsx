@@ -13,10 +13,6 @@ import type { Turn } from './types';
 import { palette, useStyles } from './styles';
 import { useTaskReviewAvailable } from '../../vendor/shared/remote-chat/TaskReviewContext';
 import { ReviewButton } from './review/ReviewButton';
-import { ChatRetryButton } from './ChatRetryButton';
-import { ChatCapacityErrorNotice } from './ChatCapacityErrorNotice';
-import { isModelCapacityError } from '../../vendor/shared/conversation/requestError';
-import { visibleTurnRequestErrors } from '../../vendor/shared/conversation/turnRequestErrors';
 
 export type TurnPanel = 'plan' | 'changes' | 'error' | 'result';
 interface Props { turn: Turn; onOpen: (turnId: string, panel: TurnPanel) => void }
@@ -109,8 +105,6 @@ export function ChatTurnSummary({ turn, onOpen }: Props) {
   const reviewAvailable = useTaskReviewAvailable(turn.status);
   const files = useMemo(() => completedTurnFiles(turn), [turn.diff, turn.items]);
   const completed = turn.plan?.filter((step) => step.status === 'completed').length ?? 0;
-  const requestError = visibleTurnRequestErrors(turn).at(-1);
-  const capacityError = isModelCapacityError(requestError?.error);
   const generated = [...new Set(turn.items.filter((item) => item.type === 'imageGeneration'
     && item.status === 'completed' && !item.failure).map(generatedImageSource).filter((src) => !!src))];
   return <View style={summaryStyles.summary}>
@@ -125,16 +119,6 @@ export function ChatTurnSummary({ turn, onOpen }: Props) {
       onOpen={() => onOpen(turn.id, 'changes')}
       onResult={reviewAvailable ? () => onOpen(turn.id, 'result') : undefined} />}
     {turn.status === 'interrupted' && <Text style={styles.subtitle}>{t("client.chat.generationStopped")}</Text>}
-    {capacityError && <ChatCapacityErrorNotice turnId={turn.id} />}
-    {!capacityError && requestError && <View style={summaryStyles.error}>
-      <Text style={summaryStyles.notice}>{turnErrorNotice(turn)}{' '}</Text>
-      <View style={summaryStyles.errorActions}>
-        <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.viewErrorDetails")}
-          onPress={() => onOpen(turn.id, 'error')}>
-          <Text style={[summaryStyles.notice, summaryStyles.noticeLink]}>{t("client.chat.viewErrorDetails")}</Text>
-        </Pressable><ChatRetryButton turnId={turn.id} />
-      </View>
-    </View>}
   </View>;
 }
 
@@ -157,8 +141,4 @@ const useSummaryStyles = createThemedStyles((color) => ({
   counts: { flexDirection: 'row', gap: 5 },
   added: { color: color('#168348', 'accent'), fontSize: 13, lineHeight: 20 },
   removed: { color: color('#c24047', 'danger'), fontSize: 13, lineHeight: 20 },
-  error: { maxWidth: 400, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
-  errorActions: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  notice: { maxWidth: 400, fontSize: 12, lineHeight: 20, color: color('#c96c3d', 'warning') },
-  noticeLink: { textDecorationLine: 'underline' },
 }));

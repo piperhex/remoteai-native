@@ -15,9 +15,9 @@ import { palette, useStyles } from './styles';
 import type { Turn } from './types';
 import { TaskReviewPanel } from './review/TaskReviewPanel';
 import { useEffect } from 'react';
-import { visibleTurnRequestErrors } from '../../vendor/shared/conversation/turnRequestErrors';
+import { visibleTurnRequestErrors, type TurnRequestError } from '../../vendor/shared/conversation/turnRequestErrors';
 
-interface Props { turn: Turn; panel: TurnPanel; onClose: () => void }
+interface Props { turn: Turn; panel: TurnPanel; onClose: () => void; errorId?: string }
 const PANEL_TITLES: Record<TurnPanel, string> = { get plan() { return t("client.chat.taskPlan"); },
   get changes() { return t("client.chat.changesThisTurn"); }, get error() { return t("client.chat.errorDetails"); }, get result() { return t("client.taskReview.taskReview"); } };
 
@@ -41,21 +41,22 @@ function PlanDetails({ turn }: { turn: Turn }) {
   </View>;
 }
 
-function ErrorDetails({ turn }: { turn: Turn }) {
+function ErrorDetails({ turn, record }: { turn: Turn; record: TurnRequestError }) {
   const detailStyles = useDetailStyles();
   const styles = useStyles();
   useLanguage();
-  const error = visibleTurnRequestErrors(turn).at(-1)?.error;
+  const error = record.error;
   const text = error ? requestErrorDetails(error) : turnErrorNotice(turn);
   return <View style={detailStyles.error}>
     <SelectableChatText style={styles.messageText} copy={{ text, label: t("client.chat.copyErrorDetails") }}>{text}</SelectableChatText>
   </View>;
 }
 
-export function ChatTurnDetails({ turn, panel, onClose }: Props) {
+export function ChatTurnDetails({ turn, panel, onClose, errorId }: Props) {
   const detailStyles = useDetailStyles();
   useLanguage();
-  const requestError = visibleTurnRequestErrors(turn).at(-1);
+  const errors = visibleTurnRequestErrors(turn);
+  const requestError = errorId ? errors.find(error => error.id === errorId) : errors.at(-1);
   useEffect(() => {
     if (panel === 'error' && !requestError) onClose();
   }, [panel, requestError, onClose]);
@@ -65,7 +66,7 @@ export function ChatTurnDetails({ turn, panel, onClose }: Props) {
       {panel === 'result' && <TaskReviewPanel key={turn.id} turn={turn} />}
       {panel === 'plan' && <PlanDetails turn={turn} />}
       {panel === 'changes' && <ChatDiff files={completedTurnFiles(turn)} />}
-      {panel === 'error' && <ErrorDetails turn={turn} />}
+      {panel === 'error' && requestError && <ErrorDetails turn={turn} record={requestError} />}
     </SheetScrollView>
   </BottomSheet>;
 }

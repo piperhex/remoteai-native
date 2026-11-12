@@ -120,7 +120,7 @@ it('retains every turn plan, failure, interruption and changes instead of only t
     ] },
   ];
   expect(conversationEntries(turns).map((entry) => [entry.turn.id, entry.kind])).toEqual([
-    ['plan', 'summary'], ['failure', 'summary'], ['stop', 'summary'], ['continue', 'message'],
+    ['plan', 'summary'], ['failure', 'error'], ['failure', 'summary'], ['stop', 'summary'], ['continue', 'message'],
   ]);
 });
 

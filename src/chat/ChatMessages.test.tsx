@@ -31,6 +31,7 @@ vi.mock('./ChatToolDetails', () => ({ ChatToolDetails: 'ToolDetails' }));
 vi.mock('./ChatProcessSummary', () => ({ ChatProcessSummary: 'ProcessSummary' }));
 vi.mock('./ChatTurnSummary', () => ({ ChatTurnDuration: 'Duration', ChatTurnSummary: 'Summary' }));
 vi.mock('./ChatTurnDetails', () => ({ ChatTurnDetails: 'TurnDetails' }));
+vi.mock('./ChatRequestError', () => ({ ChatRequestError: 'RequestError' }));
 vi.mock('./useConversationEntries', () => ({ useConversationEntries: (turns: Turn[]) => ({
   entries: conversationEntries(turns, state.inline), hasObservedLiveTurn: true,
   setInline: (id: string, inline: boolean) => { state.inline.set(id, inline); },
@@ -79,6 +80,34 @@ const command = (id: string, status = 'completed'): Item => ({ id, type: 'comman
   command: `echo ${id}`, aggregatedOutput: `output-${id}` });
 const render = (turn: Turn) => ChatMessages({ thread: { id: 'thread', cwd: '', preview: '', updatedAt: 0,
   turns: [turn] }, loading: false, loadingMore: false, hasMore: false });
+
+it('anchors failures outside collapsed work and opens the selected error record', () => {
+  const turn: Turn = { id: 'turn', status: 'failed', items: [command('before'), command('after')],
+    plan: [{ step: 'Check changes', status: 'inProgress' }], requestErrors: [
+      { id: 'first-error', afterItemId: 'before', itemCount: 1, willRetry: false, error: { message: 'HTTP 502' } },
+      { id: 'last-error', afterItemId: 'after', itemCount: 2, willRetry: false, error: { message: 'HTTP 503' } },
+    ] };
+  state.inline.set(turn.id, false);
+  const list = element<ListProps>(render(turn), 'FlatList').props;
+  expect(list.data.map(entry => entry.kind)).toEqual(['work', 'error', 'work', 'error', 'summary']);
+  const cell = list.renderItem({ item: list.data[1] }) as ReactElement<{ children: ReactElement }>;
+  const row = cell.props.children;
+  const component = row.type as (props: unknown) => ReactElement<{ onOpen: () => void }>;
+  component(row.props).props.onOpen();
+  expect(element<{ errorId: string }>(render(turn), 'TurnDetails').props.errorId).toBe('first-error');
+});
+
+it('keeps retries before the summary through empty placeholders and clears them on recovery', () => {
+  const turn: Turn = { id: 'turn', status: 'inProgress', items: [command('before'),
+    { id: 'empty', type: 'reasoning', summary: [] }], plan: [{ step: 'Check', status: 'inProgress' }],
+  requestErrors: [{ id: 'retry', afterItemId: 'before', itemCount: 1, willRetry: true,
+    error: { message: 'HTTP 502' } }] };
+  const list = element<ListProps>(render(turn), 'FlatList').props;
+  expect(list.data.map(entry => entry.kind)).toEqual(['work', 'process', 'error', 'summary']);
+  const recovered = { ...turn, items: [...turn.items,
+    { id: 'resumed', type: 'agentMessage', text: 'Resumed' }] };
+  expect(element<ListProps>(render(recovered), 'FlatList').props.data.some(entry => entry.kind === 'error')).toBe(false);
+});
 
 it('passes the initial positioning event frequency through to the native list', () => {
   const tree = render({ id: 'turn', status: 'completed', items: [command('single')] });
