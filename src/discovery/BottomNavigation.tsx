@@ -8,6 +8,8 @@ import { useThemeColor } from '../theme/store';
 import { createThemedStyles } from '../theme/styles';
 import { LoungeUnread } from '../lounge/LoungeMessage';
 
+const NAVIGATION_ICON_SIZE = 25;
+
 export type BottomNavigationPage = 'chat' | 'browser' | 'accounts' | 'discover' | 'settings';
 
 export interface BottomNavigationProps {
@@ -28,34 +30,34 @@ export function BottomNavigation({ activePage, owner, loungeUnread = 0, onChange
     <Pressable accessibilityRole="tab" accessibilityLabel={t('client.app.chat')}
       accessibilityState={{ selected: activePage === 'chat' }}
       onPress={() => onChange('chat')} style={styles.navItem}>
-      <Ionicons name="chatbubble-outline" size={23}
+      <Ionicons name="chatbubble-outline" size={NAVIGATION_ICON_SIZE}
         color={activePage === 'chat' ? resolveThemeColor('#00c98b', 'accent') : resolveThemeColor('#858991', 'muted')} />
     </Pressable>
     <Pressable accessibilityRole="tab" accessibilityLabel={t('client.configLabels.browser')}
       accessibilityState={{ selected: activePage === 'browser' }}
       onPress={() => onChange('browser')} style={styles.navItem}>
-      <Ionicons name="globe-outline" size={23} color={activePage === 'browser'
+      <Ionicons name="globe-outline" size={NAVIGATION_ICON_SIZE} color={activePage === 'browser'
         ? resolveThemeColor('#00c98b', 'accent') : resolveThemeColor('#858991', 'muted')} />
     </Pressable>
     <Pressable accessibilityRole="tab" accessibilityLabel={t('client.app.accounts')}
       accessibilityState={{ selected: activePage === 'accounts' }}
       onPress={() => onChange('accounts')} style={styles.navItem}>
       <Ionicons name={activePage === 'accounts' ? 'people' : 'people-outline'}
-        size={23} color={activePage === 'accounts'
+        size={NAVIGATION_ICON_SIZE} color={activePage === 'accounts'
           ? resolveThemeColor('#00c98b', 'accent') : resolveThemeColor('#858991', 'muted')} />
     </Pressable>
     <Pressable accessibilityRole="tab" accessibilityLabel={t('client.discovery.title')}
       accessibilityState={{ selected: discoveryActive }}
       onPress={() => onChange('discover')} style={styles.navItem}>
       <LoungeUnread count={loungeUnread}><DownloadCountIcon owner={loungeUnread ? undefined : owner}>
-        <Ionicons name={discoveryActive ? 'compass' : 'compass-outline'} size={23}
+        <Ionicons name={discoveryActive ? 'compass' : 'compass-outline'} size={NAVIGATION_ICON_SIZE}
           color={discoveryActive ? resolveThemeColor('#00c98b', 'accent') : resolveThemeColor('#858991', 'muted')} />
       </DownloadCountIcon></LoungeUnread>
     </Pressable>
     <Pressable accessibilityRole="tab" accessibilityLabel={t('client.app.settings')}
       accessibilityState={{ selected: settingsActive }}
       onPress={() => onChange('settings')} style={styles.navItem}>
-      <Ionicons name="settings" size={23}
+      <Ionicons name="settings" size={NAVIGATION_ICON_SIZE}
         color={settingsActive ? resolveThemeColor('#00c98b', 'accent') : resolveThemeColor('#858991', 'muted')} />
     </Pressable>
   </SafeAreaView>;
