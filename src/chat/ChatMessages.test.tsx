@@ -32,6 +32,11 @@ vi.mock('./ChatProcessSummary', () => ({ ChatProcessSummary: 'ProcessSummary' })
 vi.mock('./ChatTurnSummary', () => ({ ChatTurnDuration: 'Duration', ChatTurnSummary: 'Summary' }));
 vi.mock('./ChatTurnDetails', () => ({ ChatTurnDetails: 'TurnDetails' }));
 vi.mock('./ChatRequestError', () => ({ ChatRequestError: 'RequestError' }));
+vi.mock('./useChatDetailSelection', () => ({ useChatDetailSelection: (active: boolean) => ({
+  selection: active ? state.selection : null,
+  open: (value: unknown) => { if (active) { state.dismiss(); state.selection = value; } },
+  close: () => { state.selection = null; },
+}) }));
 vi.mock('./useConversationEntries', () => ({ useConversationEntries: (turns: Turn[]) => ({
   entries: conversationEntries(turns, state.inline), hasObservedLiveTurn: true,
   setInline: (id: string, inline: boolean) => { state.inline.set(id, inline); },

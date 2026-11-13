@@ -1,0 +1,11 @@
+// Isolate command-detail navigation checks from the installed app and concurrent fixtures.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-command-details-navigation'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.detailsnavigationtest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.entryFile = new File(project.rootDir, '../e2e/CommandDetailsNavigationFixture.tsx')
+        react.debuggableVariants = []
+    }
+}

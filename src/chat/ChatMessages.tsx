@@ -1,14 +1,14 @@
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
-import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, Pressable, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, type ReactNode } from 'react';
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useChatScroll } from './useChatScroll';
 import { ChatActivityRow, ChatMessage } from './ChatMessage';
 import { ChatToolDetails } from './ChatToolDetails';
 import { ChatWorkDrawer } from './ChatWorkDrawer';
 import { ChatProcessSummary } from './ChatProcessSummary';
-import { ChatTurnDuration, ChatTurnSummary, type TurnPanel } from './ChatTurnSummary';
+import { ChatTurnDuration, ChatTurnSummary } from './ChatTurnSummary';
 import { ChatTurnDetails } from './ChatTurnDetails';
 import { ChatRequestError } from './ChatRequestError';
 import { findWorkEntry } from './turnPresentation';
@@ -20,9 +20,7 @@ import { questionMessageText } from '../../vendor/shared/remote-chat/client/asyn
 import type { ChatMessagesProps } from '../../vendor/shared/remote-chat/client/messageProps';
 import { palette, useStyles } from './styles';
 
-type ProcessSelection = { type: 'work' | 'activities'; id: string };
-type Selection = ProcessSelection | { type: 'item'; id: string }
-  | { type: 'turn'; id: string; panel: TurnPanel; errorId?: string };
+import { useChatDetailSelection, type ChatDetailSelection as Selection } from './useChatDetailSelection';
 
 const PROCESS_SEPARATOR_STYLE = { height: 14 };
 const RESPONSE_SEPARATOR_STYLE = { height: 12 };
@@ -83,8 +81,8 @@ const TimelineEntry = memo(function TimelineEntry({ entry, open, onInline, proce
     running={entry.turn.status === 'inProgress' && entry.item.status !== 'completed'} />;
 });
 
-export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder, historyLoad, offline, processing }:
-  ChatMessagesProps & { processing?: ReactNode }) {
+export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder, historyLoad, offline, processing,
+  active = true }: ChatMessagesProps & { processing?: ReactNode; active?: boolean }) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
@@ -107,8 +105,7 @@ export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder,
   const firstMessageIndex = entries[0]?.kind === 'work' && entries[0].inline ? 1 : 0;
   // Keep live messages visible through completion, including replies that never call tools.
   const showInitialLoading = (!hasObservedLiveTurn && initializing) || (loading && !loadingMore && !entries.length);
-  const [selection, setSelection] = useState<Selection | null>(null);
-  const open = useCallback((value: Selection) => { Keyboard.dismiss(); setSelection(value); }, []);
+  const { selection, open, close } = useChatDetailSelection(active);
   // Resolve against live history so open process, plan, output and diff drawers keep receiving updates.
   const processSelection = selection?.type === 'work' || selection?.type === 'activities' ? selection : undefined;
   const findProcessEntry = processSelection?.type === 'work' ? findWorkEntry : findActivityEntry;
@@ -116,7 +113,6 @@ export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder,
   const selectedTool = selection?.type === 'item'
     ? thread?.turns?.flatMap((turn) => turn.items).find((item) => item.id === selection.id) : undefined;
   const selectedTurn = selection?.type === 'turn' ? thread?.turns?.find((turn) => turn.id === selection.id) : undefined;
-  const close = () => setSelection(null);
   return <><View style={styles.fill}><FlatList ref={list} data={timeline} keyExtractor={(entry) => entry.id}
     style={showInitialLoading && styles.messageListLoading}
     pointerEvents={showInitialLoading ? 'none' : 'auto'} accessibilityElementsHidden={showInitialLoading}
@@ -160,9 +156,14 @@ export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder,
       <Text style={[styles.subtitle, styles.messageLoadingText]}>{t("client.chat.loadingChatHistory")}</Text>
     </View>}
     </View>
+    {/* Android dialogs have their own window. Exclude their in-page hosts from hit testing
+        so returning from a dialog cannot block the next message press. */}
+    <View collapsable={false} pointerEvents={Platform.OS === 'android' ? 'none' : 'box-none'}
+      style={StyleSheet.absoluteFill}>
     {selectedEntry && <ChatWorkDrawer key={processSelection?.id} entry={selectedEntry} onClose={close} />}
     {selectedTool && <ChatToolDetails key={selectedTool.id} item={selectedTool} onClose={close} />}
     {selectedTurn && selection?.type === 'turn' && <ChatTurnDetails turn={selectedTurn}
       panel={selection.panel} errorId={selection.errorId} onClose={close} />}
+    </View>
   </>;
 }

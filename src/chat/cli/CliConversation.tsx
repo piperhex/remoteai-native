@@ -38,7 +38,7 @@ export function CliConversation({ host, connection, active, ready, swipe }: {
         <ChatImagePreviewProvider key={threadId ?? 'new'} active={active}>
           <ChatFileProvider threadId={threadId} ready={ready} active={active}
             load={host.textPreview} videos={host.videos} files={host.files}>
-            <ChatMessages key={`${state.engine}:${threadId ?? 'new'}`} thread={thread} offline={!ready}
+            <ChatMessages key={`${state.engine}:${threadId ?? 'new'}`} thread={thread} offline={!ready} active={active}
               loading={state.loading && !state.history} loadingMore={state.loading && Boolean(state.history)}
               hasMore={state.history?.hasOlder} loadOlder={controller.loadOlder} />
           </ChatFileProvider>
