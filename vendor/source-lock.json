@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "854e77e6e9a11c2f2ceaa73d2f895b92bf372b49",
+  "revision": "91511a2420c803a4f56e9501c10eea1db08a3a31",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "6ff6139a73c40ba300771c5e87dc90f8252c0263"
+    "revision": "185ecd1c4a031f0ef65d18bc62ef9b30eeb94ee9"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.25/remoteai-i18n-0.1.25.tgz",
   "files": {
@@ -29,6 +29,7 @@
     "shared/browser/bookmarks/channel.ts": "a9e9dfbc8f666317dae072dc058a227e34f7825c3e90ce76c86f15696ecb4411",
     "shared/browser/bookmarks/model.ts": "a7fda5c0828d5dfe778fcfa7ac5a9caec898a81ecb0024221aab1ba8d95b8116",
     "apps/desktop/e2e/android-hierarchy.mjs": "9ab90f7470f71237d18608f812d7b06847ffcbbe718be8d615d7e6927ecccc8e",
+    "shared/remote-chat/downloads.ts": "66c7d42d7cc62a736ea72475c2a5e1341d0a183df385f179e534c7dd8eda3c97",
     "shared/port-mapping/deviceRegistry.tsx": "c1a43c7cac48b6e2c45af123dce501a924e0f3a79a607b79dac4de0a2a0dddce",
     "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
     "shared/remote-chat/client/historyLoad.ts": "b74d39fd3369d839bfbe876b4e135663943cf2b807e10b6e57be1a7a3f5798a1",
@@ -48,7 +49,6 @@
     "shared/terminal/sshCredentials.ts": "0237763e11563418bbbbc1a2f06165c47cba99adbc235739e853309711f12ee0",
     "shared/remote-chat/guiTools.ts": "9ea3ad96d33cace8f51ef19cac22556faa1fbde98d7ec5589d1af813a72dbf6d",
     "shared/terminal/types.ts": "ae85febb5ae829a338e38ee97ef4bf1cb4475a025d86f201a910dce0e442c4dd",
-    "shared/remote-chat/downloads.ts": "66c7d42d7cc62a736ea72475c2a5e1341d0a183df385f179e534c7dd8eda3c97",
     "shared/file-preview/htmlPreviewFixture.ts": "835af175e68e630b2a7a2da042cdbcbf032656f8a797c7b4586c706d047cf795",
     "apps/desktop/e2e/android-chat-driver.mjs": "43424278ec019d3d48596a8ed8feefade193dfc2ef1204bb576563a354a94a94",
     "shared/remote-chat/testing/gitFixture.ts": "ed48011ce762e99c65d44d6ae825b84ef19457f34adc02d012da204f61b69fd2",
@@ -314,7 +314,7 @@
     "shared/port-mapping/types.ts": "d0a3d9dee2f648b138437ef2436f64b7e0985fbfb4b14b1c111c33b0d7784514",
     "shared/port-mapping/udpTunnel.ts": "2787e53f73c3d83e0504737f8d5f1d75c5aa2911f23984c117c90732c62a6f9d",
     "shared/port-mapping/datagrams.ts": "f26910e69b41eb9e24a46b1e19b264d64972170e48c96e8a0478ff237f512be9",
-    "shared/browser/addressInput.ts": "b809825ba42ff12c5ce7bb99db3aee310f8851ea7f9343b374abab7a856ec817",
+    "shared/browser/addressInput.ts": "20e6c460b07f6204b31486e3cd458eb4f5ffbdf89f4a0d1789a25fb7acfd5f8d",
     "shared/port-mapping/protocolTunnel.ts": "ce60cbb4883455e119c7a6208148a845139b2e5d6029b6c9d75e7758f7d4d3a4",
     "shared/port-mapping/useMappingSync.ts": "8b0b98deba0956d6d859ff01fea08153bfa2fd25212e1783e140e2c648aef952",
     "shared/chat/previewProgress.ts": "e9bf534bb06b5f24a379ad18b6d991bd706eaef784328600ec59914268eb94a6",

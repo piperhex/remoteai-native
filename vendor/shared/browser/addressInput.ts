@@ -19,8 +19,10 @@ export function browserInput(value: string, engine: SearchEngine = DEFAULT_SEARC
   if (/\s/.test(input)) return searchUrl(input, engine);
   if (input.startsWith('/') || input.includes('\\')) return browserAddress(input);
   const candidate = browserAddress(input);
-  const looksLikeHost = candidate && (candidate.hostname.includes('.') || candidate.hostname === 'localhost'
-    || candidate.hostname.startsWith('[') || HOST_WITH_PORT.test(input));
+  // Inspect what was typed: URL parsing turns bare numbers such as 666 into IPv4 addresses.
+  const host = input.split(/[/?#]/, 1)[0];
+  const looksLikeHost = candidate && (host.includes('.') || host.toLowerCase() === 'localhost'
+    || host.startsWith('[') || HOST_WITH_PORT.test(input));
   if (looksLikeHost) { candidate.protocol = defaultProtocol; return candidate; }
   // Preserve errors for malformed host/port input instead of silently searching a broken URL.
   if (HOST_WITH_PORT.test(input) || input.includes('@')) return null;

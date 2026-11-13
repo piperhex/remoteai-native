@@ -33,6 +33,11 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const [history, setHistory] = useState({ back: false, forward: false });
   const [error, setError] = useState('');
   const activity = usePreviewActivity();
+  const load = (url: string) => {
+    // After Back or a redirect, resubmitting the last source would not change the native prop.
+    if (url === source.uri) webview.current?.injectJavaScript(`window.location.assign(${JSON.stringify(url)}); true;`);
+    else setSource({ uri: url });
+  };
   const home = () => {
     Keyboard.dismiss(); editing.current = false; setError('');
     if (!homeVisible) setHomeReturn('goBack');
@@ -73,7 +78,7 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     setAddress(url);
     setError(''); activity.onLoadStart();
     if (url === mappingBrowserUrl(currentUrl)) { webview.current?.reload(); return; }
-    setSource({ uri: url });
+    load(url);
   };
   const visit = (address: string) => {
     const url = mappingBrowserUrl(address);
@@ -82,7 +87,7 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     setResourceVisible(false);
     if (url === mappingBrowserUrl(currentUrl)) { setAddress(url); return; }
     editing.current = false;
-    setAddress(url); setError(''); activity.onLoadStart(); setSource({ uri: url });
+    setAddress(url); setError(''); activity.onLoadStart(); load(url);
   };
   const onNavigationStateChange = (state: WebViewNavigation) => {
     setHistory({ back: state.canGoBack, forward: state.canGoForward });
@@ -90,9 +95,8 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     setCurrentUrl(state.url);
     if (!editing.current && !resourceVisible && !homeVisible) setAddress(state.url);
     setTitle(state.title);
-    // Native WebViews skip loading an already-current URL. Keep source aligned after Back/Forward
-    // so the next address submission is a browser navigation, preserving usable history entries.
-    setSource({ uri: state.url });
+    // Navigation reports are observations, not load requests. Replaying delayed reports through
+    // source can alternate old and new pages indefinitely while a navigation is already in flight.
   };
   const openExternal = async () => {
     if (opening.current || !currentUrl) return;

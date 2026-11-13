@@ -9,7 +9,7 @@ import { PREVIEW_NETWORK_BUSY, PREVIEW_NETWORK_IDLE } from './previewNetworkActi
 const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[],
   refs: [] as { current: unknown }[], refCursor: 0,
   openURL: vi.fn(async (_url: string) => {}),
-  webview: { reload: vi.fn(), goBack: vi.fn(), goForward: vi.fn() } }));
+  webview: { reload: vi.fn(), goBack: vi.fn(), goForward: vi.fn(), injectJavaScript: vi.fn() } }));
 vi.mock('react', async original => ({ ...await original<typeof React>(),
   useEffect: vi.fn(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
@@ -110,7 +110,7 @@ it('tracks navigation history and opens the current page externally without relo
     canGoBack: true, canGoForward: false } as never);
   expect(browser().address).toBe('http://127.0.0.1:3002/next');
   expect(browser().history).toEqual({ back: true, forward: false });
-  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/next' });
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002' });
   browser().setAddress('http://not-submitted.example');
   await browser().openExternal();
   expect(runtime.openURL).toHaveBeenCalledWith('http://127.0.0.1:3002/next');
@@ -157,9 +157,37 @@ it('can revisit a submitted address after going back without losing browser hist
   browser().navigate('goBack');
   webview().onNavigationStateChange!({ url: 'http://127.0.0.1:3002/',
     canGoBack: false, canGoForward: true } as never);
-  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/' });
+  expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/next' });
   browser().setAddress('http://127.0.0.1:3002/next'); browser().submit();
   expect(webview().source).toEqual({ uri: 'http://127.0.0.1:3002/next' });
+  expect(runtime.webview.injectJavaScript).toHaveBeenCalledWith(
+    'window.location.assign("http://127.0.0.1:3002/next"); true;');
+});
+
+it('searches numbers and never turns delayed navigation or error reports into new loads', () => {
+  browser().submit('666');
+  const source = webview().source;
+  expect(source).toEqual({ uri: 'https://www.google.com/search?q=666' });
+  browser().submit('664656');
+  const pending = webview().source;
+  expect(pending).toEqual({ uri: 'https://www.google.com/search?q=664656' });
+  for (const url of ['http://0.0.2.154/', 'http://0.10.36.80/', 'http://0.0.2.154/']) {
+    webview().onNavigationStateChange!({ url, canGoBack: true, canGoForward: false } as never);
+    webview().onError!({} as never);
+    expect(webview().source).toBe(pending);
+  }
+  expect(runtime.webview.injectJavaScript).not.toHaveBeenCalled();
+  expect(runtime.webview.reload).not.toHaveBeenCalled();
+});
+
+it('revisits the last submitted URL from a bookmark after a redirect', () => {
+  const target = 'https://example.test/start?q=%22quoted%22';
+  browser().visit(target);
+  webview().onNavigationStateChange!({ url: 'https://example.test/final',
+    canGoBack: true, canGoForward: false } as never);
+  browser().visit(target);
+  expect(runtime.webview.injectJavaScript).toHaveBeenCalledWith(`window.location.assign(${JSON.stringify(target)}); true;`);
+  expect(runtime.webview.reload).not.toHaveBeenCalled();
 });
 
 it('resets requests from the previous document when navigating to another page', () => {
