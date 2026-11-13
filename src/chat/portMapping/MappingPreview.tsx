@@ -39,6 +39,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   const site = useBrowserSiteMode(desktop, browser.webview);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [fullscreenMenuOpen, setFullscreenMenuOpen] = useState(false);
   const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search'>();
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const page = useRef<View>(null);
@@ -56,7 +57,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     finally { capturing.current = false; action(); }
   };
   const navigate = (direction: 'back' | 'forward') => {
-    if (drawer) setDrawer(undefined);
+    if (fullscreenMenuOpen) setFullscreenMenuOpen(false);
+    else if (drawer) setDrawer(undefined);
     else if (settingsOpen) setSettingsOpen(false);
     else if (fullscreen) onFullscreenChange(false);
     else if (browser.history[direction]) browser.navigate(direction === 'back' ? 'goBack' : 'goForward');
@@ -129,7 +131,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
       search={() => { setSettingsOpen(false); setDrawer('search'); }}
       dismiss={() => setSettingsOpen(false)} reload={() => browser.navigate('reload')} />}
-    {fullscreen && <BrowserFullscreenExit exit={() => onFullscreenChange(false)} />}
+    {fullscreen && <BrowserFullscreenExit open={fullscreenMenuOpen} setOpen={setFullscreenMenuOpen}
+      exit={() => onFullscreenChange(false)} />}
     {drawer === 'bookmarks' && <BrowserBookmarks currentUrl={browser.currentUrl} currentTitle={browser.title}
       visit={url => { setDrawer(undefined); browser.visit(url); }} close={() => setDrawer(undefined)} />}
     {drawer === 'mappings' && <BrowserPortMappings devices={devices}

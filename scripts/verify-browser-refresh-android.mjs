@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { verifyBrowserFullscreen } from './verify-browser-fullscreen-android.mjs';
 
 export async function verifyBrowserRefresh({ adb, find, tap, nodes, screenshot, prefix }) {
   await tap('浏览器'); await tap('设置');
   assert.equal((await find('刷新')).enabled, 'false', 'An empty tab cannot reload');
   assert.ok(!(await nodes()).some(node => node['content-desc'] === '关闭'));
-  await tap('设置'); await tap('聊天');
+  await tap('全屏展示');
+  await verifyBrowserFullscreen({ adb, find, tap, nodes, screenshot, prefix: `${prefix}-home` });
+  await tap('聊天');
   await tap('网页链接'); await find('Website preview');
   await tap('Change page state'); await find('Changed page state');
   await tap('设置');
@@ -14,12 +17,13 @@ export async function verifyBrowserRefresh({ adb, find, tap, nodes, screenshot, 
   assert.ok(Number(reload.bounds.match(/\d+/g)[1]) < Number(bookmark.bounds.match(/\d+/g)[1]));
   assert.ok(!(await nodes()).some(node => node['content-desc'] === '关闭'));
   await screenshot(`${prefix}-refresh-menu`);
-  await tap('全屏展示'); await find('退出全屏'); await find('Changed page state');
+  await tap('全屏展示'); await find('更多操作'); await find('Changed page state');
   let current = await nodes();
   assert.ok(!current.some(node => ['访问地址', '聊天'].includes(node['content-desc'] || node.text)));
   await screenshot(`${prefix}-fullscreen`);
-  await tap('退出全屏'); await find('访问地址'); await find('Changed page state');
-  await tap('设置'); await tap('全屏展示'); await find('退出全屏');
+  await verifyBrowserFullscreen({ adb, find, tap, nodes, screenshot, prefix });
+  await find('Changed page state');
+  await tap('设置'); await tap('全屏展示'); await find('更多操作');
   await adb('shell', 'input', 'keyevent', '4'); await find('访问地址'); await find('Changed page state');
   current = await nodes();
   assert.ok(!current.some(node => node['content-desc'] === '退出全屏'));
