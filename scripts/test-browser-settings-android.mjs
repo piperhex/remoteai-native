@@ -79,10 +79,10 @@ try {
   await tap('http://127.0.0.1:18306'); await find('mapped-one');
   assert.ok((await find('访问地址')).text.startsWith('http://127.0.0.1:18306'));
   await screenshot('android-mapped-page');
-  await tap('设置'); await tap('关闭'); await tap('Disconnect fixture'); await tap('浏览器');
+  await tap('Return to fixture'); await tap('Disconnect fixture'); await tap('浏览器');
   await tap('设置'); await tap('端口映射'); await find('暂无可打开的端口映射');
   await screenshot('android-disconnected-empty'); await back();
-  await tap('设置'); await tap('关闭'); await tap('Reconnect fixture');
+  await tap('Return to fixture'); await tap('Reconnect fixture');
   console.log('Search defaults, changes, restart persistence, mapping selection and disconnect passed.');
   for (const scale of ['1.0', '1.3']) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
@@ -91,7 +91,7 @@ try {
       await tap(theme); await tap('浏览器'); await tap('设置'); await screenshot(`${label}-settings`);
       await tap('默认搜索引擎'); await find('DuckDuckGo'); await screenshot(`${label}-engines`); await back();
       await tap('设置'); await tap('端口映射'); await find('http://127.0.0.1:18306');
-      await screenshot(`${label}-mappings`); await back(); await tap('设置'); await tap('关闭');
+      await screenshot(`${label}-mappings`); await back(); await tap('Return to fixture');
       console.log(`Verified ${label}`);
     }
   }

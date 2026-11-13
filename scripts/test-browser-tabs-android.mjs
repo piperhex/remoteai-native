@@ -158,7 +158,7 @@ try {
   await back(); await tap('管理标签页（2）'); await tap('Page one');
   await find('draft-one-unsaved');
   assert.equal(reports.length, loadCount, 'Switching tabs must not reload documents');
-  await tap('设置'); await tap('关闭'); await tap('浏览器'); await find('Page one');
+  await tap('Return to fixture'); await tap('浏览器'); await find('Page one');
   assert.equal(reports.length, loadCount, 'Reopening the browser must retain tabs');
   await tap('Next page'); await find('Page next');
   const dimensions = (await adb('shell', 'wm', 'size')).match(/Physical size: (\d+)x(\d+)/);
@@ -187,9 +187,9 @@ try {
   await tap('所有书签'); await find('搜索书签'); await find('Page one');
   await screenshot('android-quick-bookmark-drawer'); await tap('关闭所有书签'); await delay(500);
   await find('访问地址'); await tap('设置');
-  await tap('关闭'); await tap('浏览器'); await find('访问地址');
+  await tap('Return to fixture'); await tap('浏览器'); await find('访问地址');
   }
-  await tap('设置'); await tap('关闭');
+  await tap('Return to fixture');
   for (const scale of ['1.0', '1.3']) {
     const processId = await adb('shell', 'pidof', app);
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
@@ -204,7 +204,7 @@ try {
       await tap('设置'); await find('在浏览器中打开'); await screenshot(`${label}-settings`);
       await tap('桌面版网站'); await delay(1200); await screenshot(`${label}-desktop-settings`);
       await back(); await find('访问地址'); await screenshot(`${label}-desktop-page`);
-      await tap('设置'); await tap('桌面版网站'); await delay(1000); await tap('关闭');
+      await tap('设置'); await tap('桌面版网站'); await delay(1000); await tap('Return to fixture');
     }
   }
   if (!visualOnly) {

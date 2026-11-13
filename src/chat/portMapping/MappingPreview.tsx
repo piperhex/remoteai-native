@@ -19,15 +19,18 @@ import { useBrowserNavigationGestures } from '../../browser/useBrowserNavigation
 import { useBrowserSafeAreaEdges } from '../../browser/context';
 import { useBrowserSiteMode } from '../../browser/useBrowserSiteMode';
 import type { NativeBrowserResource } from '../../browser/browserTabs';
+import { BrowserFullscreenExit } from '../../browser/BrowserFullscreenExit';
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
-  tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {} }: {
+  tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
+  fullscreen = false, onFullscreenChange = () => {} }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
   desktop?: boolean; onDesktopChange?: (desktop: boolean) => void;
+  fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void;
 }) {
   const styles = useStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
@@ -55,6 +58,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   const navigate = (direction: 'back' | 'forward') => {
     if (drawer) setDrawer(undefined);
     else if (settingsOpen) setSettingsOpen(false);
+    else if (fullscreen) onFullscreenChange(false);
     else if (browser.history[direction]) browser.navigate(direction === 'back' ? 'goBack' : 'goForward');
     else if (direction === 'back') close();
   };
@@ -68,16 +72,16 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       browser.webview.current?.injectJavaScript('document.activeElement?.blur?.(); true;');
     }
   }, [visible]);
-  return <SafeAreaView style={styles.page} edges={safeAreaEdges} {...gestures}>
+  return <SafeAreaView style={styles.page} edges={fullscreen ? ['left', 'right'] : safeAreaEdges} {...gestures}>
     <View style={styles.fill}>
     {/* Keep the WebView's native parent stable when the menu changes accessibility visibility. */}
     <View collapsable={false} style={styles.fill} accessibilityElementsHidden={settingsOpen}
       importantForAccessibility={settingsOpen ? 'no-hide-descendants' : 'auto'}>
-      <MappingBrowserToolbar browser={browser} settingsOpen={settingsOpen}
+      {!fullscreen && <MappingBrowserToolbar browser={browser} settingsOpen={settingsOpen}
         tabCount={tabCount} newTab={() => { void snapshotThen(newTab); }}
         manageTabs={() => { void snapshotThen(manageTabs); }}
         openSettings={() => { Keyboard.dismiss(); setSettingsOpen(true); }}
-        onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)} />
+        onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)} />}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
@@ -118,12 +122,14 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
       url={browser.currentUrl} title={browser.title}
       desktop={desktop} onDesktopChange={onDesktopChange}
+      fullscreen={() => { setSettingsOpen(false); onFullscreenChange(true); }}
       external={!browser.resourceVisible && browser.currentUrl
         ? () => { setSettingsOpen(false); void browser.openExternal(); } : undefined}
       bookmarks={() => { setSettingsOpen(false); setDrawer('bookmarks'); }}
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
       search={() => { setSettingsOpen(false); setDrawer('search'); }}
-      dismiss={() => setSettingsOpen(false)} close={close} />}
+      dismiss={() => setSettingsOpen(false)} reload={() => browser.navigate('reload')} />}
+    {fullscreen && <BrowserFullscreenExit exit={() => onFullscreenChange(false)} />}
     {drawer === 'bookmarks' && <BrowserBookmarks currentUrl={browser.currentUrl} currentTitle={browser.title}
       visit={url => { setDrawer(undefined); browser.visit(url); }} close={() => setDrawer(undefined)} />}
     {drawer === 'mappings' && <BrowserPortMappings devices={devices}

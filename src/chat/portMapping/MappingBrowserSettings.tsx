@@ -8,13 +8,14 @@ import { randomUUID } from 'expo-crypto';
 import { useCurrentBookmark } from '../../../vendor/shared/browser/bookmarks/useCurrentBookmark';
 import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/status';
 
-export function MappingBrowserSettings({ top, dismiss, close, bookmarks, mappings, search, external, url, title,
-  desktop, onDesktopChange }: {
-  top: number; dismiss: () => void; close: () => void; bookmarks: () => void;
+export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappings, search, external, url, title,
+  desktop, onDesktopChange, fullscreen }: {
+  top: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
   external?: () => void;
   url: string; title: string;
   desktop: boolean; onDesktopChange: (desktop: boolean) => void;
+  fullscreen: () => void;
 }) {
   const styles = useMappingBrowserStyles();
   const color = useThemeColor();
@@ -24,6 +25,12 @@ export function MappingBrowserSettings({ top, dismiss, close, bookmarks, mapping
     <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={dismiss} />
     <View accessibilityRole="menu" accessibilityLabel={t('client.app.settings')}
       style={[styles.menu, { top }]}>
+      <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.browserReload')}
+        disabled={!url} accessibilityState={{ disabled: !url }} onPress={() => { dismiss(); reload(); }}
+        style={({ pressed }) => [styles.menuItem, !url && styles.disabled, pressed && styles.pressed]}>
+        <Ionicons name="reload-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{text('market.browserReload')}</Text>
+      </Pressable>
       <Pressable accessibilityRole="menuitem" onPress={current.add} disabled={!current.available || current.saved}
         accessibilityLabel={text('market.bookmarkAdd')}
         accessibilityState={{ disabled: !current.available || current.saved, selected: current.saved }}
@@ -39,6 +46,11 @@ export function MappingBrowserSettings({ top, dismiss, close, bookmarks, mapping
         <Text style={[styles.menuText, { flex: 1 }]}>{text('market.browserDesktopSite')}</Text>
         <Ionicons name={desktop ? 'checkbox-outline' : 'square-outline'} size={23}
           color={color('#0b8065', 'accent')} />
+      </Pressable>
+      <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.browserFullscreen')}
+        onPress={fullscreen} style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
+        <Ionicons name="expand-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{text('market.browserFullscreen')}</Text>
       </Pressable>
       {(current.invalid || current.status === 'storage-error') && <Text style={styles.menuText} accessibilityRole="alert">
         {text(current.invalid ? 'market.bookmarkInvalid' : bookmarkStatusKeys[current.status])}</Text>}
@@ -65,11 +77,6 @@ export function MappingBrowserSettings({ top, dismiss, close, bookmarks, mapping
         style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
         <Ionicons name="bookmarks-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.bookmarkAll')}</Text>
-      </Pressable>
-      <Pressable accessibilityRole="menuitem" accessibilityLabel={t('client.projectBrowser.close')}
-        onPress={close} style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
-        <Ionicons name="close-outline" size={21} color={color('#17211b', 'ink')} />
-        <Text style={styles.menuText}>{t('client.projectBrowser.close')}</Text>
       </Pressable>
     </View>
   </View>;

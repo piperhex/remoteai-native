@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Keyboard, StyleSheet, View } from 'react-native';
+import { Keyboard, StatusBar, StyleSheet, View } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 import { BookmarkProvider } from '../../vendor/shared/browser/bookmarks/context';
 import type { BookmarkChannel } from '../../vendor/shared/browser/bookmarks/channel';
@@ -22,11 +22,13 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const browser = useNativeBrowserTabs(scope);
   const [visited, setVisited] = useState(false);
   const [requestedVisible, setVisible] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const visible = active ?? requestedVisible;
   useEffect(() => { if (visible) setVisited(true); }, [visible]);
+  useEffect(() => { if (!visible) setFullscreen(false); }, [visible]);
   const [manager, setManager] = useState(false);
   const close = useCallback(() => {
-    Keyboard.dismiss(); setVisible(false); setManager(false); onActiveChange?.(false);
+    Keyboard.dismiss(); setVisible(false); setManager(false); setFullscreen(false); onActiveChange?.(false);
   }, [onActiveChange]);
   const hasBottomNavigation = Boolean(footer);
   const reveal = () => {
@@ -45,6 +47,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   return <NativeBrowserContext.Provider value={context}>
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage}>
       <View style={styles.root}>
+      {visible && fullscreen && <StatusBar hidden />}
       <View style={styles.root}>
         <View style={styles.root} collapsable={false} accessibilityElementsHidden={visible}
           pointerEvents={visible ? 'none' : 'auto'}
@@ -57,6 +60,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
             <MappingPreview initialUrl={tab.url} resource={tab.resource} request={tab.request}
               visible={active} devices={devices}
               desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
+              fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}
               tabCount={browser.tabs.length} newTab={add} manageTabs={() => setManager(true)}
               onPreview={preview => browser.update(tab.id, { preview })}
               onNavigate={(url, title) => browser.update(tab.id, { url, title })} close={close} />
@@ -67,9 +71,9 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
             select={id => { Keyboard.dismiss(); browser.select(id); setManager(false); }} close={() => setManager(false)} />
         </View>}
       </View>
-      {footer}
+      <View style={visible && fullscreen ? styles.footerHidden : undefined}>{footer}</View>
       </View>
     </BookmarkProvider>
   </NativeBrowserContext.Provider>;
 }
-const styles = StyleSheet.create({ root: { flex: 1 }, hidden: { opacity: 0 } });
+const styles = StyleSheet.create({ root: { flex: 1 }, hidden: { opacity: 0 }, footerHidden: { display: 'none' } });

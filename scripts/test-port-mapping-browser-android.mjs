@@ -130,7 +130,7 @@ try {
       await adb('shell', 'input', 'keyevent', '4');
       await find('设置');
       await tap('设置');
-      await tap('关闭');
+      await tap('Return to fixture');
       await find('打开');
     }
   }

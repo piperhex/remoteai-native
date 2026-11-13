@@ -45,6 +45,14 @@ function BrowserFixtureEntry() {
   </Pressable>;
 }
 
+function BrowserFixtureFooter() {
+  const browser = useNativeBrowser();
+  if (!browser.visible) return null;
+  return <Pressable onPress={browser.close} accessibilityRole="button" style={{ padding: 12 }}>
+    <Text style={textMetrics(14, 22)}>Return to fixture</Text>
+  </Pressable>;
+}
+
 function PortMappingFixture() {
   const color = useThemeColor();
   const [fonts] = useFonts(Ionicons.font);
@@ -55,7 +63,8 @@ function PortMappingFixture() {
   }, []);
   return <SafeAreaProvider>
     <DeviceMappingProvider registry={fixture.registry} deviceIds={devices.map(device => device.deviceId)}>
-    <NativeBrowserProvider scope="browser-fixture" channel={bookmarkFixture} devices={devices}>
+    <NativeBrowserProvider scope="browser-fixture" channel={bookmarkFixture} devices={devices}
+      footer={<BrowserFixtureFooter />}>
     <SafeAreaView style={{ flex: 1, backgroundColor: color('#f8fafc', 'canvas') }}>
     <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       {fonts && (page === 'port-mappings'

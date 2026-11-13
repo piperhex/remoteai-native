@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { verifyBrowserNavigation } from './verify-browser-navigation-android.mjs';
 import { verifyBrowserDownload } from './verify-browser-download-android.mjs';
+import { verifyBrowserRefresh } from './verify-browser-refresh-android.mjs';
 
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
@@ -16,6 +17,7 @@ const app = 'com.codexswitch.mobile.chatbrowsertest';
 const imagesOnly = process.argv.includes('--images-only');
 const navigationOnly = process.argv.includes('--navigation-only');
 const downloadsOnly = process.argv.includes('--downloads-only');
+const refreshOnly = process.argv.includes('--refresh-only');
 const output = fileURLToPath(new URL('../.codex-tmp/chat-browser/', import.meta.url));
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
@@ -80,7 +82,8 @@ const server = createServer((request, response) => {
   const title = request.url === '/next' ? 'Second page' : request.url === '/' ? 'Mapped service' : 'Website preview';
   response.end(`<!doctype html><title>${title}</title>`
     + `<meta name="viewport" content="width=device-width,initial-scale=1"><h1>${title}</h1>`
-    + '<a href="/next">Next page</a>');
+    + '<a href="/next">Next page</a>'
+    + '<button onclick="this.textContent=\'Changed page state\'">Change page state</button>');
 });
 await mkdir(output, { recursive: true });
 await new Promise(resolve => server.listen(18408, '127.0.0.1', resolve));
@@ -96,6 +99,9 @@ try {
     await find('页面预览.html');
     if (scale === '1.3') await tap('深色模式');
     const prefix = `android-${scale === '1.3' ? 'dark' : 'light'}-font${scale}`;
+    if (refreshOnly) {
+      await verifyBrowserRefresh({ adb, find, tap, nodes, screenshot, prefix }); continue;
+    }
     if (downloadsOnly) {
       await verifyBrowserDownload({ adb, find, tap, nodes, screenshot, prefix }); continue;
     }

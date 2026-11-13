@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict';
+
+export async function verifyBrowserRefresh({ adb, find, tap, nodes, screenshot, prefix }) {
+  await tap('浏览器'); await tap('设置');
+  assert.equal((await find('刷新')).enabled, 'false', 'An empty tab cannot reload');
+  assert.ok(!(await nodes()).some(node => node['content-desc'] === '关闭'));
+  await tap('设置'); await tap('聊天');
+  await tap('网页链接'); await find('Website preview');
+  await tap('Change page state'); await find('Changed page state');
+  await tap('设置');
+  const reload = await find('刷新');
+  const bookmark = await find('添加书签');
+  assert.equal(reload.enabled, 'true');
+  assert.ok(Number(reload.bounds.match(/\d+/g)[1]) < Number(bookmark.bounds.match(/\d+/g)[1]));
+  assert.ok(!(await nodes()).some(node => node['content-desc'] === '关闭'));
+  await screenshot(`${prefix}-refresh-menu`);
+  await tap('全屏展示'); await find('退出全屏'); await find('Changed page state');
+  let current = await nodes();
+  assert.ok(!current.some(node => ['访问地址', '聊天'].includes(node['content-desc'] || node.text)));
+  await screenshot(`${prefix}-fullscreen`);
+  await tap('退出全屏'); await find('访问地址'); await find('Changed page state');
+  await tap('设置'); await tap('全屏展示'); await find('退出全屏');
+  await adb('shell', 'input', 'keyevent', '4'); await find('访问地址'); await find('Changed page state');
+  current = await nodes();
+  assert.ok(!current.some(node => node['content-desc'] === '退出全屏'));
+  await screenshot(`${prefix}-exited-fullscreen`);
+  await tap('设置');
+  await tap('刷新'); await find('Change page state');
+  assert.ok(!(await nodes()).some(node => node['content-desc'] === '添加书签'));
+  await find('管理标签页（2）');
+  await screenshot(`${prefix}-refreshed-page`);
+  await tap('Change page state'); await tap('聊天'); await tap('页面预览.html');
+  await tap('验证交互'); await find('点击成功');
+  await tap('设置'); await tap('刷新'); await find('验证交互');
+  await find('管理标签页（3）');
+  await screenshot(`${prefix}-refreshed-resource`);
+  await tap('管理标签页（3）'); await tap('Website preview'); await find('Changed page state');
+  console.log(`${prefix}: refresh, fullscreen/button/Back exit, resource reload and retained tabs passed.`);
+}

@@ -109,24 +109,24 @@ try {
     await find('Stable background');
     const loaded = requests.at(-1);
     const loadCount = requests.length;
-    await tap('设置'); await tap('关闭');
+    await tap('Return to fixture');
     await adb('shell', 'input', 'keyevent', '4'); await find('浏览器');
     await screenshot('android-reopened-discovery');
     await tap('浏览器'); await find('Stable background');
     assert.equal(requests.length, loadCount, 'Reopening must retain the same document');
     await tap('访问地址'); await adb('shell', 'input', 'keyevent', '66'); await delay(800); await find('Stable background');
     assert.deepEqual(requests.at(-1), loaded, 'Reload must preserve local storage, session storage and cookies');
-    await tap('设置'); await tap('关闭'); await tap('PC update'); await tap('浏览器');
+    await tap('Return to fixture'); await tap('PC update'); await tap('浏览器');
     await tap('设置'); await tap('所有书签'); await find('PC updated bookmark');
     await screenshot('android-pc-bookmark-update');
     await adb('shell', 'input', 'keyevent', '4');
-    await tap('设置'); await tap('关闭');
+    await tap('Return to fixture');
     await adb('shell', 'am', 'start', '-S', '-n', activity);
     await tap('浏览器'); await find('Stable background');
     assert.equal(requests.at(-1).local, loaded.local, 'Local storage must survive app restart');
     assert.equal(requests.at(-1).cookie, loaded.cookie, 'Persistent cookies must survive app restart');
     await screenshot('android-persistent-storage-after-restart');
-    await tap('设置'); await tap('关闭');
+    await tap('Return to fixture');
     for (const scale of ['1.0', '1.3']) {
       await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
       for (const theme of ['Light', 'Dark']) {
@@ -135,7 +135,7 @@ try {
         await find('Stable background'); await tap('设置'); await screenshot(`${label}-settings`);
         await tap('所有书签'); await find('PC updated bookmark');
         await find('书签已同步，其他设备的修改会自动更新。'); await screenshot(`${label}-bookmarks`);
-        await adb('shell', 'input', 'keyevent', '4'); await tap('设置'); await tap('关闭');
+        await adb('shell', 'input', 'keyevent', '4'); await tap('Return to fixture');
       }
     }
   }
