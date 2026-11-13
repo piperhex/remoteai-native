@@ -1,0 +1,13 @@
+// Isolate tool-window lifecycle checks from installed user applications and other fixtures.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-tool-windows'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.toolwindowstest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/ToolWindowsFixture.tsx')
+        react.debuggableVariants = []
+    }
+}
