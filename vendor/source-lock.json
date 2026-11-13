@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "6c4509f031dd1f9e221ca99b575d8c9954327850",
+  "revision": "270611df83cd041561e6629dd3df74fb847b3a1b",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
     "revision": "dfc4ae36d806d122c615bc30053fa441d85b40bc"

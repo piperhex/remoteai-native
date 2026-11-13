@@ -1,6 +1,6 @@
 #import <React/RCTBridgeModule.h>
 #import <WebKit/WebKit.h>
-#import <CommonCrypto/CommonKeyDerivation.h>
+#import <CommonCrypto/CommonCrypto.h>
 
 @interface BrowserData : NSObject <RCTBridgeModule>
 @end
