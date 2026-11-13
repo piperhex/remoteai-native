@@ -13,7 +13,7 @@ it('uses the PDF preview allowance and releases the remote file after reading', 
   try {
     const result = await loadBinaryPreview({ client, threadId: 'original-thread', path: 'C:/report.pdf',
       signal: new AbortController().signal, progress: vi.fn() });
-    expect(result.bytes).toEqual(bytes);
+    expect(Buffer.compare(Buffer.from(result.bytes), Buffer.from(bytes))).toBe(0);
     expect(client.open).toHaveBeenCalledWith('original-thread', 'C:/report.pdf', { preview: 'pdf' });
     expect(client.read.mock.calls.every(([request]) => 'preview' in request && request.preview === 'pdf')).toBe(true);
     expect(client.close).toHaveBeenCalledOnce();
