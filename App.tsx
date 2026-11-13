@@ -79,7 +79,7 @@ import { RemoteModelSwitchSheet } from './src/components/RemoteModelSwitchSheet'
 import { QuotaConsumptionSheet } from './src/components/QuotaConsumptionSheet';
 import { TotpPage } from './src/totp/TotpPage';
 import { downloadOwner } from './src/downloads/manager';
-import { BottomNavigation } from './src/discovery/BottomNavigation';
+import { BrowserBottomNavigation } from './src/discovery/BrowserBottomNavigation';
 import { MappingProvider } from './src/portMapping/MappingProvider';
 import { NativeBrowserProvider } from './src/browser/NativeBrowserProvider';
 import { PortMappingPage } from './src/portMapping/PortMappingPage';
@@ -604,7 +604,7 @@ function DeviceManagementPage({
 }
 
 type AppPage = 'port-mappings' | 'accounts' | 'devices' | 'chat' | 'discover' | 'totp' | 'admin' | 'settings' | 'about'
-  | 'token-summary' | 'downloads' | 'lounge' | 'ssh';
+  | 'token-summary' | 'downloads' | 'lounge' | 'ssh' | 'browser';
 const DEFAULT_APP_PAGE: AppPage = 'chat';
 
 function DeviceSwitchDrawer({ account, devices, switching, onClose, onSwitch }: {
@@ -964,7 +964,7 @@ function AppContent() {
   useEffect(() => {
     // Android's system Back action also covers the edge-swipe gesture. Keep
     // top-level tabs in the app before allowing the Activity to finish.
-    if (!session || activePage === DEFAULT_APP_PAGE || activePage === 'admin' || activePage === 'downloads') {
+    if (!session || [DEFAULT_APP_PAGE, 'admin', 'downloads', 'browser'].includes(activePage)) {
       return undefined;
     }
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -1202,6 +1202,9 @@ function AppContent() {
 
   const lounge = useNativeLounge(session);
   const directSsh = useDirectSsh(session);
+  const handleBrowserActiveChange = useCallback((active: boolean) => {
+    setActivePage(page => active ? 'browser' : page === 'browser' ? 'discover' : page);
+  }, []);
   const showBottomNavigation = !['token-summary', 'downloads', 'lounge'].includes(activePage);
   if (initializing) return <View style={styles.boot}><ThemeStatusBar /><ActivityIndicator size="large" color={color(COLORS.green, 'accent')} /><Text style={styles.bootText}>Remote AI</Text></View>;
   if (!session) return <View style={styles.app}>
@@ -1209,7 +1212,10 @@ function AppContent() {
   </View>;
   return <MappingProvider key={JSON.stringify([session.baseUrl, session.email])} session={session} devices={devices}>
     <NativeBrowserProvider scope={JSON.stringify([session.baseUrl, session.email])}
-      channel={lounge.controller.bookmarks} devices={devices}>
+      channel={lounge.controller.bookmarks} devices={devices}
+      active={activePage === 'browser'} onActiveChange={handleBrowserActiveChange}
+      footer={<BrowserBottomNavigation activePage={activePage} owner={downloadOwner(session)}
+        loungeUnread={lounge.state.unread} onChange={setActivePage} />}>
     <SafeAreaView edges={showBottomNavigation ? ['left', 'right'] : ['left', 'right', 'bottom']}
     style={[styles.app, activePage === 'totp' && totpPageStyles.page,
     activePage === 'accounts' && accountStyles.page,
@@ -1247,7 +1253,8 @@ function AppContent() {
     {activePage === 'downloads' && <DownloadManagerPage session={session} onBack={() => setActivePage('discover')} />}
     {activePage === 'ssh' && directSsh && <SshPage client={directSsh} onBack={() => setActivePage('discover')} />}
     {isDiscoveryPage(activePage)
-      && !['downloads', 'token-summary', 'lounge', 'port-mappings', 'totp', 'devices', 'ssh'].includes(activePage)
+      && !['downloads', 'token-summary', 'lounge', 'port-mappings', 'totp', 'devices', 'ssh', 'browser']
+        .includes(activePage)
       && <DiscoveryBackButton onBack={() => setActivePage('discover')} />}
     {activePage === 'port-mappings'
       && <PortMappingPage devices={devices} onBack={() => setActivePage('discover')} />}
@@ -1270,8 +1277,6 @@ function AppContent() {
               ? <AboutPage onBack={() => setActivePage('settings')} />
               : null}
     </PrimaryPagePager>
-    {showBottomNavigation && <BottomNavigation activePage={activePage}
-      owner={session ? downloadOwner(session) : undefined} loungeUnread={lounge.state.unread} onChange={setActivePage} />}
   </SafeAreaView></NativeBrowserProvider></MappingProvider>;
 }
 

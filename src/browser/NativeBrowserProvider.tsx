@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 import { BookmarkProvider } from '../../vendor/shared/browser/bookmarks/context';
@@ -15,22 +15,30 @@ const bookmarkStorage = {
 };
 
 /** Each tab owns a retained browsing context, including session storage and native navigation history. */
-export function NativeBrowserProvider({ scope, channel, children, devices = [] }: {
+export function NativeBrowserProvider({ scope, channel, children, devices = [], footer, active, onActiveChange }: {
   scope: string; channel?: BookmarkChannel; children: ReactNode; devices?: readonly BrowserDevice[];
+  footer?: ReactNode; active?: boolean; onActiveChange?: (active: boolean) => void;
 }) {
   const browser = useNativeBrowserTabs(scope);
   const [visited, setVisited] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [requestedVisible, setVisible] = useState(false);
+  const visible = active ?? requestedVisible;
   const [manager, setManager] = useState(false);
-  const context = useMemo(() => ({ open: (url?: string) => {
+  const close = useCallback(() => {
+    Keyboard.dismiss(); setVisible(false); setManager(false); onActiveChange?.(false);
+  }, [onActiveChange]);
+  const hasBottomNavigation = Boolean(footer);
+  const context = useMemo(() => ({ visible, hasBottomNavigation, close,
+    open: (url?: string) => {
     Keyboard.dismiss();
     if (url) browser.visit(url);
     setManager(false); setVisited(true); setVisible(true);
-  } }), []);
+    onActiveChange?.(true);
+  } }), [visible, hasBottomNavigation, close, onActiveChange]);
   const add = () => { Keyboard.dismiss(); browser.add(); setManager(false); };
-  const close = () => { Keyboard.dismiss(); setVisible(false); setManager(false); };
   return <NativeBrowserContext.Provider value={context}>
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage}>
+      <View style={styles.root}>
       <View style={styles.root}>
         <View style={styles.root} collapsable={false} accessibilityElementsHidden={visible}
           pointerEvents={visible ? 'none' : 'auto'}
@@ -50,6 +58,8 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [] }
           <BrowserTabManager tabs={browser.tabs} activeId={browser.activeId} add={add} remove={browser.remove}
             select={id => { Keyboard.dismiss(); browser.select(id); setManager(false); }} close={() => setManager(false)} />
         </View>}
+      </View>
+      {footer}
       </View>
     </BookmarkProvider>
   </NativeBrowserContext.Provider>;

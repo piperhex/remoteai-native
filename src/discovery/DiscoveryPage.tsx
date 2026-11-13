@@ -7,11 +7,9 @@ import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
 import { DownloadCountIcon } from '../downloads/DownloadCountIcon';
 import { LoungeUnread } from '../lounge/LoungeMessage';
-import { useNativeBrowser } from '../browser/context';
 
 const entryIcons = {
   lounge: 'cafe-outline',
-  browser: 'globe-outline',
   devices: 'server-outline',
   ssh: 'terminal-outline',
   'port-mappings': 'swap-horizontal-outline',
@@ -28,15 +26,15 @@ export function DiscoveryPage({ owner, loungeUnread = 0, onOpen }: {
   useLanguage();
   const styles = useStyles();
   const color = useThemeColor();
-  const browser = useNativeBrowser();
   return <View style={styles.page}>
     <View style={styles.header}>
       <Text accessibilityRole="header" style={styles.title}>{t('client.discovery.title')}</Text>
     </View>
     <ScrollView contentContainerStyle={styles.content}>
-      {discoveryEntries.filter(entry => entry.page !== 'downloads' || Platform.OS === 'android')
+      {discoveryEntries.filter(entry => entry.page !== 'browser')
+        .filter(entry => entry.page !== 'downloads' || Platform.OS === 'android')
         .map(entry => <Pressable key={entry.page} accessibilityRole="button"
-        onPress={() => entry.page === 'browser' ? browser.open() : onOpen(entry.page)}
+        onPress={() => onOpen(entry.page)}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
         {entry.page === 'downloads'
           ? <DownloadCountIcon owner={owner}>

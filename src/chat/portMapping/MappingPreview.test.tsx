@@ -30,6 +30,7 @@ vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'Provider',
 vi.mock('react-native-webview', () => ({ WebView: 'WebView' }));
 vi.mock('react-native-view-shot', () => ({ captureRef: vi.fn() }));
 vi.mock('../../browser/useBrowserNavigationGestures', () => ({ useBrowserNavigationGestures: () => ({}) }));
+vi.mock('../../browser/context', () => ({ useBrowserSafeAreaEdges: () => undefined }));
 vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' }));
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));

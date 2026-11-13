@@ -15,6 +15,7 @@ import { BrowserPortMappings } from '../../browser/BrowserPortMappings';
 import type { BrowserDevice } from '../../browser/browserMappings';
 import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
 import { useBrowserNavigationGestures } from '../../browser/useBrowserNavigationGestures';
+import { useBrowserSafeAreaEdges } from '../../browser/context';
 
 export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview }: {
@@ -24,6 +25,7 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
 }) {
   const styles = useStyles();
+  const safeAreaEdges = useBrowserSafeAreaEdges();
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl);
   const { activity } = browser;
@@ -53,9 +55,13 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
   useLanguage();
   useEffect(() => { if (request) browser.visit(request.url); }, [request]);
   useEffect(() => {
-    if (!visible) { setSettingsOpen(false); setDrawer(undefined); }
+    if (!visible) {
+      setSettingsOpen(false); setDrawer(undefined);
+      // Native keyboard dismissal does not blur focused inputs inside a retained WebView.
+      browser.webview.current?.injectJavaScript('document.activeElement?.blur?.(); true;');
+    }
   }, [visible]);
-  return <SafeAreaView style={styles.page} {...gestures}>
+  return <SafeAreaView style={styles.page} edges={safeAreaEdges} {...gestures}>
     <View style={styles.fill}>
     {/* Keep the WebView's native parent stable when the menu changes accessibility visibility. */}
     <View collapsable={false} style={styles.fill} accessibilityElementsHidden={settingsOpen}

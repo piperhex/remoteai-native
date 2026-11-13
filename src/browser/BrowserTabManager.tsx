@@ -10,6 +10,7 @@ import { textMetrics } from '../theme/text';
 import type { NativeBrowserTab } from './browserTabs';
 import { useBrowserBack } from './useBrowserNavigationGestures';
 import { BrowserTabPreview } from './BrowserTabPreview';
+import { useBrowserSafeAreaEdges } from './context';
 
 export function BrowserTabManager({ tabs, activeId, select, remove, add, close }: {
   tabs: NativeBrowserTab[]; activeId: string; select: (id: string) => void; remove: (id: string) => void;
@@ -17,12 +18,13 @@ export function BrowserTabManager({ tabs, activeId, select, remove, add, close }
 }) {
   const [query, setQuery] = useState('');
   const styles = useTabStyles();
+  const safeAreaEdges = useBrowserSafeAreaEdges();
   const color = useThemeColor();
   const text = marketText(useLanguage());
   const { width } = useWindowDimensions();
   useBrowserBack(true, close);
   const filtered = tabs.filter(tab => `${tab.title} ${tab.url}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
-  return <SafeAreaView style={styles.page} accessibilityViewIsModal>
+  return <SafeAreaView style={styles.page} edges={safeAreaEdges}>
     <View style={styles.toolbar}>
       <Pressable accessibilityRole="button" accessibilityLabel={text('market.browserReturnToPage')}
         style={styles.icon} onPress={close}><Ionicons name="chevron-back" size={24} color={color('#17211b', 'ink')} />

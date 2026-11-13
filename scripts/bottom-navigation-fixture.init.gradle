@@ -1,0 +1,12 @@
+// Isolate navigation verification from the user's installed app and other test fixtures.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-bottom-navigation'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.bottomnavigationtest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.entryFile = new File(project.rootDir, '../e2e/BottomNavigationFixture.tsx')
+        react.debuggableVariants = []
+        react.extraPackagerArgs = ['--reset-cache']
+    }
+}
