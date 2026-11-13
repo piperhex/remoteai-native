@@ -16,6 +16,8 @@ import { textMetrics } from '../src/theme/text';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import type { RemoteDevice } from '../src/types';
 import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
+import { useNativeBrowser } from '../src/browser/context';
+import { t } from '../src/i18n';
 import { bookmarkFixture, updatePcBookmark } from './BrowserBookmarksFixture';
 
 setInterfaceLanguage('zh');
@@ -36,6 +38,13 @@ const fixture = mappingFixture({
   createTunnel: (client, options) => new NativeMappingTunnel(client, options),
 });
 
+function BrowserFixtureEntry() {
+  const browser = useNativeBrowser();
+  return <Pressable onPress={() => browser.open()} accessibilityRole="button">
+    <Text style={textMetrics(14, 22)}>{t('client.configLabels.browser')}</Text>
+  </Pressable>;
+}
+
 function PortMappingFixture() {
   const color = useThemeColor();
   const [fonts] = useFonts(Ionicons.font);
@@ -53,6 +62,7 @@ function PortMappingFixture() {
         ? <PortMappingPage devices={devices} onBack={() => setPage('discover')} />
         : <DiscoveryPage onOpen={setPage} />)}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, padding: 8 }}>
+        <BrowserFixtureEntry />
         <Pressable onPress={updatePcBookmark}><Text style={textMetrics(14, 22)}>PC update</Text></Pressable>
         <Pressable onPress={() => fixture.controls.forEach(control => control.ready(false))}>
           <Text style={textMetrics(14, 22)}>Disconnect fixture</Text></Pressable>

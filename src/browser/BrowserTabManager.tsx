@@ -11,6 +11,7 @@ import type { NativeBrowserTab } from './browserTabs';
 import { useBrowserBack } from './useBrowserNavigationGestures';
 import { BrowserTabPreview } from './BrowserTabPreview';
 import { useBrowserSafeAreaEdges } from './context';
+import { SwipeableBrowserTab } from './SwipeableBrowserTab';
 
 export function BrowserTabManager({ tabs, activeId, select, remove, add, close }: {
   tabs: NativeBrowserTab[]; activeId: string; select: (id: string) => void; remove: (id: string) => void;
@@ -40,8 +41,11 @@ export function BrowserTabManager({ tabs, activeId, select, remove, add, close }
     <ScrollView contentContainerStyle={styles.grid} keyboardShouldPersistTaps="handled">
       {filtered.map(tab => {
         const title = tab.title || tab.url || text('market.browserNewTab');
-        return <View key={tab.id} style={[styles.card, { width: (width - 44) / 2 },
+        return <SwipeableBrowserTab key={tab.id} width={(width - 44) / 2} close={() => remove(tab.id)}
+          select={() => select(tab.id)}
+          style={[styles.card, { width: (width - 44) / 2 },
           activeId === tab.id && styles.selected]}>
+          {selectTab => <>
           <View style={styles.cardHeader}>
             <Text style={styles.title} numberOfLines={1}>{title}</Text>
             <Pressable accessibilityRole="button" accessibilityLabel={text('market.browserCloseTab', { name: title })}
@@ -50,12 +54,13 @@ export function BrowserTabManager({ tabs, activeId, select, remove, add, close }
             </Pressable>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel={title}
-            accessibilityState={{ selected: activeId === tab.id }} style={styles.preview} onPress={() => select(tab.id)}>
+            accessibilityState={{ selected: activeId === tab.id }} style={styles.preview} onPress={selectTab}>
             {tab.preview ? <BrowserTabPreview uri={tab.preview} />
               : <Ionicons name="globe-outline" size={38} color={color('#718078', 'muted')} />}
           </Pressable>
           <Text style={styles.url} numberOfLines={1}>{tab.url || text('market.browserNewTab')}</Text>
-        </View>;
+          </>}
+        </SwipeableBrowserTab>;
       })}
       {!filtered.length && <Text style={styles.empty}>{text('market.browserNoMatchingTabs')}</Text>}
     </ScrollView>

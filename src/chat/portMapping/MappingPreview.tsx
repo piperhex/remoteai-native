@@ -16,18 +16,21 @@ import type { BrowserDevice } from '../../browser/browserMappings';
 import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
 import { useBrowserNavigationGestures } from '../../browser/useBrowserNavigationGestures';
 import { useBrowserSafeAreaEdges } from '../../browser/context';
+import { useBrowserSiteMode } from '../../browser/useBrowserSiteMode';
 
 export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close, devices = [],
-  tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview }: {
+  tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {} }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
+  desktop?: boolean; onDesktopChange?: (desktop: boolean) => void;
 }) {
   const styles = useStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl);
+  const site = useBrowserSiteMode(desktop, browser.webview);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search'>();
@@ -75,6 +78,8 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
       <WebView ref={browser.webview} source={browser.source.uri ? browser.source : undefined} style={styles.fill}
+        // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
+        userAgent={site.userAgent} contentMode="mobile"
         incognito={false} domStorageEnabled
         originWhitelist={['http://*', 'https://*']} allowFileAccess={false}
         allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
@@ -82,9 +87,10 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
         // Android enforces this through patch-webview-permissions.cjs, including after redirects.
         geolocationEnabled={false} mediaCapturePermissionGrantType="deny"
-        injectedJavaScriptBeforeContentLoaded={PREVIEW_NETWORK_SCRIPT}
-        injectedJavaScript={PREVIEW_NETWORK_SCRIPT}
-        onMessage={activity.onMessage} onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
+        injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT}
+        injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT}
+        onMessage={event => { if (!site.receive(event)) activity.onMessage(event); }}
+        onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
         onNavigationStateChange={state => {
@@ -98,6 +104,8 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
       </View>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
+      url={browser.currentUrl} title={browser.title}
+      desktop={desktop} onDesktopChange={onDesktopChange}
       external={browser.currentUrl ? () => { setSettingsOpen(false); void browser.openExternal(); } : undefined}
       bookmarks={() => { setSettingsOpen(false); setDrawer('bookmarks'); }}
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}

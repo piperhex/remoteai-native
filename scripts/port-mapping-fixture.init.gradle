@@ -11,5 +11,10 @@ gradle.afterProject { project ->
         react.debuggableVariants = []
         // Package archives can retain identical mtimes across releases; never reuse stale Metro translations.
         react.extraPackagerArgs = ['--reset-cache']
+        project.tasks.matching { it.name == 'createBundleDebugJsAndAssets' }.configureEach {
+            // The React plugin excludes node_modules; dependency upgrades must invalidate the fixture bundle too.
+            inputs.file(new File(sourceRoot, 'package-lock.json'))
+            inputs.file(new File(sourceRoot, 'vendor/package.json'))
+        }
     }
 }

@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "cd5b69acabdb861ece6f45d5b52522ad99b69232",
+  "revision": "0308df9b2f8e1db8222dba32c8cab97189d39607",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "b556b59d8422889b39cca660c2595a57c5867175"
+    "revision": "0cb12ba72827b927e4048d57828456c4184b1197"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.23/remoteai-i18n-0.1.23.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.24/remoteai-i18n-0.1.24.tgz",
   "files": {
     "shared/dependencies.json": "7baf05672d7fd2f5452e0d100068f91c69034684aca1b05436e408fa48ca969f",
     "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",
@@ -25,11 +25,11 @@
     "shared/legal/useAgreementConsent.ts": "27e80e0c8b705249e25bc04a3c0a9280b7ab44cbf01f566d46769f9fe65eefd1",
     "shared/project-browser/protocol.ts": "3c7fe272d827ceb130c2c9b10ef026fc5e983578fc6173fcf4b47bf968d11755",
     "apps/desktop/e2e/project-browser-fixture.ts": "94bef3f05bfa825f0d9577fc64eeb59d2791c85e157629c4031d623b2ac87cc4",
+    "shared/localization/interfaceLanguage.ts": "98119adb9b96f720c785ce6d9580d25b599c73c62ad4b988fad1f2e1c083de62",
     "shared/browser/bookmarks/channel.ts": "a9e9dfbc8f666317dae072dc058a227e34f7825c3e90ce76c86f15696ecb4411",
     "shared/browser/bookmarks/model.ts": "a7fda5c0828d5dfe778fcfa7ac5a9caec898a81ecb0024221aab1ba8d95b8116",
     "apps/desktop/e2e/android-hierarchy.mjs": "9ab90f7470f71237d18608f812d7b06847ffcbbe718be8d615d7e6927ecccc8e",
     "shared/remote-chat/client/historyLoad.ts": "b74d39fd3369d839bfbe876b4e135663943cf2b807e10b6e57be1a7a3f5798a1",
-    "shared/localization/interfaceLanguage.ts": "98119adb9b96f720c785ce6d9580d25b599c73c62ad4b988fad1f2e1c083de62",
     "shared/remote-chat/testing/settingsFixture.ts": "ef4fd197fe842662327eda1062d2a17ff8971995e80258abfd6eed37a51cf152",
     "shared/chat/userMessageFixture.json": "2e3a1a1bc14467e6ce7341d154d9ac7e7be416d0f9932aa7cc24b44f16fa6d4d",
     "shared/testing/sshProfiles.ts": "73229b6516e784606a465300d3bffb62bb17fc86dfda46641625f12499de50ba",
@@ -103,10 +103,12 @@
     "shared/terminal/sshProfileResponse.ts": "b1d435ce79a4c9652765bd0179d8b23136e0e45ff846e4bb532385b825d2d048",
     "shared/browser/bookmarks/store.ts": "c9501be61d70ff74e07d2f89a79c25fa807cb1bead8a307b208ff6643202403e",
     "shared/browser/bookmarks/context.tsx": "b1d341dde2d400a3b225fb4a7620a282a767ab84fe39661892f8a209c310346f",
+    "shared/browser/bookmarks/useCurrentBookmark.ts": "90101c1341d6f690a7ef7a201559a5e18407a30655370300185daf10380ad255",
     "shared/browser/bookmarks/status.ts": "003546ca89e4a6cf202165b03127402770046146fde1abc3d29b64169dcfea9e",
     "shared/provider-market/i18n.ts": "99dda5e97e45baf4e6a78c6db8ecf6df1dae0d66356af9647cfe4264dd9413b2",
     "shared/port-mapping/service.ts": "8b483dd0244fce2acdba2f5040ee8b9266cb1baaf4cef971a83767243dfe98fb",
     "shared/browser/searchEngine.ts": "6f3d67eabc3cb333ca29447b9e96c10f8740c58dd00ce9f357ac2194e6291bd4",
+    "shared/browser/siteMode.ts": "f3a8bde3b6066ec266fa8191ab3a4976c164696eabc915b7001d49cc7072be62",
     "shared/browser/searchPreference.ts": "e735f5fd02aa753eaa37018d75d3baeb6fcdb0ba6e84c2535af4e2b5b2c8e4da",
     "shared/browser/useSearchEngine.ts": "2cafdc9368d73008726547fa3b2e8e455d8e0a9352f6f5dcfb004071e3d74904",
     "shared/chat/acknowledgedMessages.ts": "644b11c4a3731646bdcaa0e7c335abc42f1d8820db470af7c1d9f6a7b4d93005",

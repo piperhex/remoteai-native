@@ -15,13 +15,22 @@ const app = 'com.codexswitch.mobile.portmappingtest';
 const activity = `${app}/com.codexswitch.mobile.MainActivity`;
 const port = 18407;
 const visualOnly = process.argv.includes('--visual-only');
+const siteOnly = process.argv.includes('--site-only');
+const swipeOnly = process.argv.includes('--swipe-only');
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
 })).stdout.trim();
 async function nodes() {
-  try { await adb('shell', 'uiautomator', 'dump', '/sdcard/browser-tabs-layout.xml'); }
-  catch (error) {
-    if (error.code !== 137 || !error.stdout?.includes('UI hierchary dumped to: /sdcard/browser-tabs-layout.xml')) throw error;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let result;
+    try { result = await adb('shell', 'uiautomator', 'dump', '/sdcard/browser-tabs-layout.xml'); }
+    catch (error) {
+      if (error.code !== 137) throw error;
+      result = error.stdout ?? '';
+    }
+    if (result.includes('UI hierchary dumped to: /sdcard/browser-tabs-layout.xml')) break;
+    if (attempt === 7) throw new Error('Android did not produce a fresh accessibility hierarchy.');
+    await delay(400);
   }
   const xml = await adb('shell', 'cat', '/sdcard/browser-tabs-layout.xml');
   return [...xml.matchAll(/<node\b([^>]*)>/g)].map(match => Object.fromEntries(
@@ -39,8 +48,25 @@ async function find(label) {
 }
 async function tap(label) {
   const node = await find(label);
+  console.log('Tap:', label, node.class, node.bounds);
   const [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));
-  await adb('shell', 'input', 'tap', String((left + right) >> 1), String((top + bottom) >> 1));
+  const x = String((left + right) >> 1); const y = String((top + bottom) >> 1);
+  await adb('shell', 'input', 'swipe', x, y, x, y, '100');
+}
+async function openInitialBrowser() {
+  // Cold fixture windows can still be acquiring input focus after their accessibility tree is available.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await tap('浏览器'); await delay(800);
+    if ((await nodes()).some(node => node['content-desc'] === '访问地址')) return;
+  }
+  throw new Error('The fixture browser did not become ready after startup.');
+}
+async function swipeTab(label, distance) {
+  const node = await find(label);
+  console.log('Swipe:', label, node.class, node.bounds, distance);
+  const [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));
+  const x = Math.round((left + right) / 2); const y = Math.round((top + bottom) / 2);
+  await adb('shell', 'input', 'swipe', String(x), String(y), String(x + distance), String(y), '240');
 }
 async function screenshot(name) {
   await adb('shell', 'screencap', '-p', '/sdcard/browser-tabs-screen.png');
@@ -52,11 +78,27 @@ async function visit(name) {
   await tap('访问地址'); await input(`http://127.0.0.1:${port}/${name}`);
   await adb('shell', 'input', 'keyevent', '66'); await find(`Page ${name}`);
 }
+async function checkSwipeDismissal() {
+  await tap('管理标签页（2）'); await find('搜索标签页');
+  await tap('Page one'); await delay(200);
+  assert.match((await find('访问地址')).text, /\/one$/, 'A normal tap still selects its tab');
+  await tap('管理标签页（2）'); await find('搜索标签页');
+  await swipeTab('Page one', 60); await find('搜索标签页'); await find('关闭 Page one');
+  await swipeTab('Page one', -150); await find('搜索标签页'); await find('关闭 Page one');
+  await swipeTab('Page one', 300); await find('关闭 Page two'); await find('搜索标签页');
+  assert.equal((await nodes()).filter(node => node['content-desc'] === '关闭 Page one').length, 0);
+  await screenshot('android-swipe-removed-tab'); await tap('关闭 Page two');
+  await tap('返回网页'); await find('管理标签页（1）');
+  const blankAddress = (await find('访问地址')).text;
+  assert.ok(!blankAddress || blankAddress === '搜索或输入网址', 'Closing the last tab leaves a blank page');
+}
 const reports = [];
 const server = createServer((request, response) => {
   if (request.url === '/state') {
     let body = ''; request.on('data', chunk => { body += chunk; });
-    request.on('end', () => { reports.push(JSON.parse(body)); response.end('ok'); }); return;
+    request.on('end', () => {
+      reports.push({ ...JSON.parse(body), userAgent: request.headers['user-agent'] }); response.end('ok');
+    }); return;
   }
   const name = request.url.slice(1) || 'one';
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -70,8 +112,9 @@ const server = createServer((request, response) => {
     </main><script>if(!sessionStorage.saved)sessionStorage.saved='session-'+Math.random();
     if(!localStorage.saved)localStorage.saved='local-'+Math.random();
     document.cookie='tabs=cookie-kept; Max-Age=86400; Path=/';
-    fetch('/state',{method:'POST',body:JSON.stringify({page:'${name}',session:sessionStorage.saved,
-    local:localStorage.saved,cookie:document.cookie})});</script>`);
+    setTimeout(function(){fetch('/state',{method:'POST',body:JSON.stringify({page:'${name}',session:sessionStorage.saved,
+    local:localStorage.saved,cookie:document.cookie,width:innerWidth,screen:screen.width,
+    viewport:document.querySelector('meta[name="viewport"]').content,scale:visualViewport.scale})});},400);</script>`);
 });
 await mkdir(output, { recursive: true });
 await new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
@@ -79,10 +122,30 @@ const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scal
 try {
   await adb('reverse', `tcp:${port}`, `tcp:${port}`);
   if (!visualOnly) await adb('shell', 'pm', 'clear', app);
-  await adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0');
+  await adb('shell', 'settings', 'put', 'system', 'font_scale', swipeOnly ? '1.3' : '1.0');
   await delay(1000);
-  await adb('shell', 'am', 'start', '-W', '-S', '-n', activity); await delay(1000);
-  await tap('浏览器'); await find('访问地址');
+  await adb('shell', 'am', 'start', '-W', '-S', '-n', activity); await delay(2500);
+  await find('发现'); await delay(500); // Fixture controls move below the page once its icon font has loaded.
+  if (swipeOnly) await tap('Dark');
+  await openInitialBrowser(); await find('访问地址');
+  if (swipeOnly) {
+    await visit('one'); await tap('新标签页'); await visit('two');
+    await checkSwipeDismissal();
+    await writeFile(path.join(output, 'swipe-result.json'), JSON.stringify({
+      physicalDevice: serial, shortSwipeRetained: true, leftSwipeRetained: true, rightSwipeClosed: true,
+      closeLast: true, fontScale: '1.3', theme: 'dark', reports }, null, 2));
+    console.log('Short and left drags retain tabs; right drags close them; the last tab becomes blank.');
+  } else if (siteOnly) {
+    await visit('one'); const session = reports.at(-1).session;
+    await tap('设置'); await tap('桌面版网站'); await delay(1500);
+    assert.ok(!reports.at(-1).userAgent.includes('Mobile'));
+    assert.ok(reports.at(-1).width >= 980 && reports.at(-1).scale < 1);
+    assert.equal(reports.at(-1).session, session);
+    await screenshot('android-desktop-fit'); await tap('桌面版网站'); await delay(1500);
+    assert.ok(reports.at(-1).userAgent.includes('Mobile') && reports.at(-1).width < 500);
+    await writeFile(path.join(output, 'site-mode-result.json'), JSON.stringify(reports, null, 2));
+    console.log('Desktop viewport fitting and mobile restoration passed.');
+  } else {
   if (!visualOnly) {
   await visit('one');
   await tap('draft-one'); await adb('shell', 'input', 'keyevent', '123'); await input('-unsaved'); await back();
@@ -107,6 +170,24 @@ try {
   await adb('shell', 'input', 'swipe', String(width - 2), y, String(Math.round(width * 0.3)), y, '350');
   await find('Page next'); await screenshot('android-edge-forward');
   await back(); await find('Page one'); await back(); await find('访问地址');
+  await tap('设置'); await tap('添加书签');
+  assert.equal((await find('添加书签')).enabled, 'false', 'A saved page cannot be added twice');
+  await screenshot('android-quick-bookmark');
+  const session = reports.at(-1).session;
+  await tap('桌面版网站'); await delay(1500);
+  assert.equal((await find('桌面版网站')).checked, 'true');
+  assert.ok(!reports.at(-1).userAgent.includes('Mobile'), 'Desktop mode sends a desktop User-Agent');
+  assert.ok(reports.at(-1).width >= 980, 'Desktop mode uses a wide page viewport');
+  assert.ok(reports.at(-1).scale < 1, 'Desktop pages initially fit within the phone screen');
+  assert.equal(reports.at(-1).session, session, 'Mode switching retains the tab session');
+  await screenshot('android-desktop-site-checked'); await tap('桌面版网站'); await delay(1500);
+  assert.ok(reports.at(-1).userAgent.includes('Mobile'), 'Mobile mode restores the system User-Agent');
+  assert.ok(reports.at(-1).width < 500, 'Mobile mode restores the responsive phone viewport');
+  assert.equal(reports.at(-1).session, session);
+  await tap('所有书签'); await find('搜索书签'); await find('Page one');
+  await screenshot('android-quick-bookmark-drawer'); await tap('关闭所有书签'); await delay(500);
+  await find('访问地址'); await tap('设置');
+  await tap('关闭'); await tap('浏览器'); await find('访问地址');
   }
   await tap('设置'); await tap('关闭');
   for (const scale of ['1.0', '1.3']) {
@@ -120,25 +201,29 @@ try {
       const label = `android-${theme.toLowerCase()}-font-${scale}`;
       await screenshot(`${label}-page`); await tap('管理标签页（2）');
       await find('搜索标签页'); await screenshot(`${label}-tabs`); await tap('返回网页');
-      await tap('设置'); await find('在浏览器中打开'); await screenshot(`${label}-settings`); await tap('关闭');
+      await tap('设置'); await find('在浏览器中打开'); await screenshot(`${label}-settings`);
+      await tap('桌面版网站'); await delay(1200); await screenshot(`${label}-desktop-settings`);
+      await back(); await find('访问地址'); await screenshot(`${label}-desktop-page`);
+      await tap('设置'); await tap('桌面版网站'); await delay(1000); await tap('关闭');
     }
   }
   if (!visualOnly) {
-  await tap('浏览器'); await tap('管理标签页（2）'); await tap('关闭 Page two'); await tap('关闭 Page one');
-  await tap('返回网页'); await find('管理标签页（1）');
-  const blankAddress = (await find('访问地址')).text;
-  assert.ok(!blankAddress || blankAddress === '搜索或输入网址', 'Closing the last tab leaves a blank page');
+  await tap('浏览器'); await checkSwipeDismissal();
   await visit('one'); await tap('新标签页'); await visit('two');
-  await adb('shell', 'am', 'start', '-W', '-S', '-n', activity); await delay(1000);
-  await tap('浏览器'); await find('Page two'); await find('管理标签页（2）');
+  await adb('shell', 'am', 'start', '-W', '-S', '-n', activity); await delay(2500);
+  await find('发现'); await delay(500);
+  await openInitialBrowser(); await find('Page two'); await find('管理标签页（2）');
   assert.equal(reports.at(-1).local, reports[0].local, 'Local storage survives process restart');
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ physicalDevice: serial, reports,
     tabSessions: true, retainedDrafts: true, edgeBackForward: true, closeLast: true, restoredTabs: true,
+    swipeClose: true, quickBookmark: true, desktopMobileSite: true, desktopFit: true,
     fontScales: ['1.0', '1.3'], themes: ['light', 'dark'] }, null, 2));
   console.log('Native tab retention, search, close, edge history, persistence and visual states passed.');
   } else console.log('Native visual states captured after layout settled.');
+  }
 } catch (error) {
   await screenshot('failure'); await writeFile(path.join(output, 'failure-ui.json'), JSON.stringify(await nodes(), null, 2));
+  await writeFile(path.join(output, 'failure-reports.json'), JSON.stringify(reports, null, 2));
   await writeFile(path.join(output, 'failure-exit-info.log'),
     await adb('shell', 'dumpsys', 'activity', 'exit-info', app));
   throw error;

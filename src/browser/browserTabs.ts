@@ -4,6 +4,7 @@ export interface NativeBrowserTab {
   title: string;
   preview?: string;
   request?: { url: string };
+  desktop?: boolean;
 }
 export interface NativeBrowserTabs { tabs: NativeBrowserTab[]; activeId: string }
 
@@ -25,10 +26,11 @@ export function restoreBrowserTabs(raw: string | null, fallbackUrl: string): Nat
   try {
     const value: unknown = JSON.parse(raw ?? 'null');
     if (value && typeof value === 'object' && 'tabs' in value && Array.isArray(value.tabs)) {
-      const tabs = value.tabs.filter((entry): entry is { url: string; title?: string } =>
+      const tabs = value.tabs.filter((entry): entry is { url: string; title?: string; desktop?: boolean } =>
         !!entry && typeof entry === 'object' && typeof entry.url === 'string'
         && (!entry.url || /^https?:\/\//i.test(entry.url)))
-        .map(entry => ({ ...newBrowserTab(entry.url), title: typeof entry.title === 'string' ? entry.title : '' }));
+        .map(entry => ({ ...newBrowserTab(entry.url), desktop: entry.desktop === true,
+          title: typeof entry.title === 'string' ? entry.title : '' }));
       if (tabs.length) {
         const index = 'activeIndex' in value && typeof value.activeIndex === 'number' ? value.activeIndex : 0;
         return { tabs, activeId: (tabs[index] ?? tabs[0]).id };
@@ -40,6 +42,6 @@ export function restoreBrowserTabs(raw: string | null, fallbackUrl: string): Nat
 }
 
 export function serializeBrowserTabs(state: NativeBrowserTabs): string {
-  return JSON.stringify({ tabs: state.tabs.map(({ url, title }) => ({ url, title })),
+  return JSON.stringify({ tabs: state.tabs.map(({ url, title, desktop }) => ({ url, title, desktop })),
     activeIndex: state.tabs.findIndex(tab => tab.id === state.activeId) });
 }

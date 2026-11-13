@@ -49,6 +49,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
             pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
             importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
             <MappingPreview initialUrl={tab.url} request={tab.request} visible={active} devices={devices}
+              desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
               tabCount={browser.tabs.length} newTab={add} manageTabs={() => setManager(true)}
               onPreview={preview => browser.update(tab.id, { preview })}
               onNavigate={(url, title) => browser.update(tab.id, { url, title })} close={close} />

@@ -24,6 +24,7 @@ vi.mock('react', async original => ({ ...await original<typeof React>(),
   },
 }));
 vi.mock('react-native', () => ({ Linking: { openURL: runtime.openURL }, Keyboard: { dismiss: vi.fn() },
+  useWindowDimensions: () => ({ width: 393, height: 852, scale: 1, fontScale: 1 }),
   Modal: 'Modal', Platform: { OS: 'android' },
   Pressable: 'Pressable', Text: 'Text', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'Provider', SafeAreaView: 'SafeAreaView' }));

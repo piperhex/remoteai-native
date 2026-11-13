@@ -5,13 +5,14 @@ describe('retained native browser tabs', () => {
   it('restores URLs and selection without serializing page previews or pending navigation', () => {
     const first = newBrowserTab('https://example.org/one');
     const second = { ...newBrowserTab('https://example.org/two'), title: 'Second',
-      preview: 'private-image', request: { url: 'https://pending.example' } };
+      desktop: true, preview: 'private-image', request: { url: 'https://pending.example' } };
     const saved = serializeBrowserTabs({ tabs: [first, second], activeId: second.id });
     expect(saved).not.toContain('private-image'); expect(saved).not.toContain('pending');
     const restored = restoreBrowserTabs(saved, '');
     expect(restored.tabs.map(tab => tab.url)).toEqual([first.url, second.url]);
     expect(restored.activeId).toBe(restored.tabs[1].id);
     expect(restored.tabs[1].title).toBe('Second');
+    expect(restored.tabs[1].desktop).toBe(true);
   });
   it('selects the adjacent tab when closing the active tab and preserves other live instances', () => {
     const tabs = [newBrowserTab('https://one.test'), newBrowserTab('https://two.test'), newBrowserTab()];
