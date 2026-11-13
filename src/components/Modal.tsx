@@ -2,6 +2,7 @@ import { Modal as NativeModal, Platform, type ModalProps } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useThemeMode } from '../theme/store';
 import { ModalSystemBars } from './ModalSystemBars';
+import { ModalBackHandler } from './ModalBackHandler';
 
 type Props = ModalProps & { statusBarStyle?: 'light' | 'dark' };
 
@@ -16,6 +17,7 @@ export function Modal({ children, statusBarStyle, statusBarTranslucent,
     navigationBarTranslucent={navigationBarTranslucent}>
     <SafeAreaProvider>
       <ModalSystemBars style={statusBarStyle ?? (theme === 'dark' ? 'light' : 'dark')} />
+      <ModalBackHandler onRequestClose={props.onRequestClose} />
       {children}
     </SafeAreaProvider>
   </NativeModal>;

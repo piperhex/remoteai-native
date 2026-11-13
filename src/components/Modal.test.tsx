@@ -10,6 +10,7 @@ vi.mock('react', async original => ({ ...await original<typeof React>(),
 vi.mock('react-native', () => ({ Modal: 'NativeModal', Platform: { OS: 'android' } }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'SafeAreaProvider' }));
 vi.mock('./ModalSystemBars', () => ({ ModalSystemBars: 'ModalSystemBars' }));
+vi.mock('./ModalBackHandler', () => ({ ModalBackHandler: 'ModalBackHandler' }));
 beforeEach(() => { vi.stubGlobal('React', React); updateThemeMode('light'); Platform.OS = 'android'; });
 afterEach(() => { updateThemeMode('light'); vi.unstubAllGlobals(); });
 
@@ -32,12 +33,22 @@ it('preserves modal visibility, close, presentation and immersion ownership', ()
     transparent: true, presentationStyle: 'fullScreen', statusBarTranslucent: true });
   expect(props.navigationBarTranslucent).toBeUndefined();
   expect(props).not.toHaveProperty('hidden');
-  expect(props.children.props.children[1]).toBe('content');
+  expect(props.children.props.children[2]).toBe('content');
   const opaque = Modal({ statusBarTranslucent: false }).props;
   expect(opaque.statusBarTranslucent).toBe(false);
   expect(opaque.navigationBarTranslucent).toBeUndefined();
   expect(Modal({ navigationBarTranslucent: true }).props.navigationBarTranslucent).toBe(true);
   expect(Modal({ navigationBarTranslucent: false }).props.navigationBarTranslucent).toBe(false);
+});
+
+it('routes committed system gestures through the same close handler as the Back key', () => {
+  const onClose = vi.fn();
+  const props = Modal({ visible: true, onRequestClose: onClose }).props;
+  const gesture = props.children.props.children[1];
+  expect(gesture.type).toBe('ModalBackHandler');
+  gesture.props.onRequestClose();
+  props.onRequestClose();
+  expect(onClose).toHaveBeenCalledTimes(2);
 });
 
 it('keeps the existing iOS presentation and system-bar behavior', () => {

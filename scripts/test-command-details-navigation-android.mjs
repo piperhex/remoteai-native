@@ -52,6 +52,34 @@ async function assertNoDetails() {
   assert.ok(!tree.some(node => /^关闭(正在处理|执行命令)/.test(node['content-desc'])),
     'Closed command details must not reappear during navigation.');
 }
+async function gestureBack(side) {
+  const size = (await adb('shell', 'wm', 'size')).match(/Physical size: (\d+)x(\d+)/);
+  assert.ok(size);
+  const width = Number(size[1]); const y = String(Math.round(Number(size[2]) * 0.6));
+  const start = side === 'right' ? width - 2 : 2;
+  const distance = Math.round(width * 0.65);
+  const end = side === 'right' ? start - distance : start + distance;
+  await ensureForeground();
+  await adb('shell', 'input', 'swipe', String(start), y, String(end), y, '350');
+  await delay(350);
+}
+async function verifyGestureReopen(label) {
+  // KEYCODE_BACK alone misses Dialog's separate predictive-back callback on Android 13+.
+  for (const side of ['right', 'left']) {
+    await tap('已运行 echo single'); await find('SINGLE_OUTPUT');
+    await gestureBack(side); await assertNoDetails();
+    await screenshot(`${label}-${side}-gesture-closed`);
+    await tap('已运行 echo single'); await find('SINGLE_OUTPUT');
+    await screenshot(`${label}-${side}-gesture-same-command-reopened`);
+    await gestureBack(side); await assertNoDetails();
+    await tap('查看处理过程，2 项活动'); await find('关闭正在处理');
+    await tap('已运行 echo first'); await find('FIRST_OUTPUT');
+    await gestureBack(side); await assertNoDetails();
+    await tap('查看处理过程，2 项活动'); await find('关闭正在处理');
+    await screenshot(`${label}-${side}-gesture-process-reopened`);
+    await tap('关闭正在处理'); await assertNoDetails();
+  }
+}
 async function verifyNavigation() {
   await tap('ACCOUNTS'); await find('Accounts'); await assertNoDetails();
   await tap('CHAT'); await find('已运行 echo single'); await assertNoDetails();
@@ -100,6 +128,7 @@ async function verifyDetails(label) {
 }
 
 await mkdir(output, { recursive: true });
+await writeFile(path.join(output, 'result.json'), JSON.stringify({ serial, passed: false, status: 'running' }));
 await prepareHierarchy({ adb, output });
 const scale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
@@ -109,6 +138,7 @@ try {
     await find('已运行 echo single', 60);
     for (const mode of ['LIGHT', 'DARK']) {
       await tap(mode);
+      await verifyGestureReopen(`android-${mode.toLowerCase()}-font-${font}`);
       await verifyDetails(`android-${mode.toLowerCase()}-font-${font}`);
     }
   }
@@ -116,6 +146,8 @@ try {
     fontScales: ['1.0', '1.3'], modes: ['light', 'dark'], cases: [
       'single command opens immediately', 'process opens immediately', 'inline output',
       'repeated command/process alternation after hardware Back and close button',
+      'same command reopens after right and left system back gestures',
+      'command/process alternate and process reopens after system back gestures',
       'tab press', 'page swipe', 'navigation during modal', 'no delayed dialogs', 'group reopens',
     ] }, null, 2));
 } catch (error) {

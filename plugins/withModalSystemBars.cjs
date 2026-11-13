@@ -4,6 +4,14 @@ const path = require('node:path');
 
 const PACKAGE_LINE = 'packages.add(com.codexswitch.systembars.ModalSystemBarsPackage())';
 
+async function writeAndroidSources(platformProjectRoot) {
+  const target = path.join(platformProjectRoot, 'app/src/main/java/com/codexswitch/systembars');
+  await fs.mkdir(target, { recursive: true });
+  for (const name of ['ModalSystemBarsManager.kt', 'ModalSystemBarsPackage.kt', 'ModalBackHandlerManager.kt']) {
+    await fs.copyFile(path.join(__dirname, 'modalSystemBars', name), path.join(target, name));
+  }
+}
+
 module.exports = function withModalSystemBars(config) {
   config = withMainApplication(config, result => {
     const source = result.modResults.contents;
@@ -14,11 +22,8 @@ module.exports = function withModalSystemBars(config) {
     return result;
   });
   return withDangerousMod(config, ['android', async result => {
-    const target = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java/com/codexswitch/systembars');
-    await fs.mkdir(target, { recursive: true });
-    for (const name of ['ModalSystemBarsManager.kt', 'ModalSystemBarsPackage.kt']) {
-      await fs.copyFile(path.join(__dirname, 'modalSystemBars', name), path.join(target, name));
-    }
+    await writeAndroidSources(result.modRequest.platformProjectRoot);
     return result;
   }]);
 };
+module.exports.writeAndroidSources = writeAndroidSources;
