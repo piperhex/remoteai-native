@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -17,10 +17,12 @@ import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
 import { useBrowserNavigationGestures } from '../../browser/useBrowserNavigationGestures';
 import { useBrowserSafeAreaEdges } from '../../browser/context';
 import { useBrowserSiteMode } from '../../browser/useBrowserSiteMode';
+import type { NativeBrowserResource } from '../../browser/browserTabs';
 
-export function MappingPreview({ port, initialUrl = '', request, visible = true, onNavigate, close, devices = [],
+export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {} }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
+  resource?: NativeBrowserResource;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
@@ -29,7 +31,7 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
   const styles = useStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
   const browserStyles = useMappingBrowserStyles();
-  const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl);
+  const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl, resource);
   const site = useBrowserSiteMode(desktop, browser.webview);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -77,6 +79,7 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
+      <View style={[StyleSheet.absoluteFill, browser.resourceVisible && { display: 'none' }]}>
       <WebView ref={browser.webview} source={browser.source.uri ? browser.source : undefined} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
@@ -102,11 +105,17 @@ export function MappingPreview({ port, initialUrl = '', request, visible = true,
             {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
         onError={browser.onError} />
       </View>
+      {resource && <View key={browser.resourceGeneration}
+        style={[styles.fill, !browser.resourceVisible && { display: 'none' }]}>
+        {resource.render({ active: visible && browser.resourceVisible, close })}
+      </View>}
+      </View>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
       url={browser.currentUrl} title={browser.title}
       desktop={desktop} onDesktopChange={onDesktopChange}
-      external={browser.currentUrl ? () => { setSettingsOpen(false); void browser.openExternal(); } : undefined}
+      external={!browser.resourceVisible && browser.currentUrl
+        ? () => { setSettingsOpen(false); void browser.openExternal(); } : undefined}
       bookmarks={() => { setSettingsOpen(false); setDrawer('bookmarks'); }}
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
       search={() => { setSettingsOpen(false); setDrawer('search'); }}

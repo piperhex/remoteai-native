@@ -3,7 +3,7 @@ import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { MappingPreview } from './MappingPreview';
 import type { MappingBrowserToolbar } from './MappingBrowserToolbar';
-import { mappingBrowserUrl } from './useMappingBrowser';
+import { mappingBrowserUrl, useMappingBrowser } from './useMappingBrowser';
 import { PREVIEW_NETWORK_BUSY, PREVIEW_NETWORK_IDLE } from './previewNetworkActivity';
 
 const runtime = vi.hoisted(() => ({ cursor: 0, states: [] as unknown[],
@@ -20,10 +20,13 @@ vi.mock('react', async original => ({ ...await original<typeof React>(),
   useState: (initial: unknown) => {
     const index = runtime.cursor++;
     if (!(index in runtime.states)) runtime.states[index] = initial;
-    return [runtime.states[index], (value: unknown) => { runtime.states[index] = value; }];
+    return [runtime.states[index], (value: unknown) => {
+      runtime.states[index] = typeof value === 'function' ? value(runtime.states[index]) : value;
+    }];
   },
 }));
 vi.mock('react-native', () => ({ Linking: { openURL: runtime.openURL }, Keyboard: { dismiss: vi.fn() },
+  StyleSheet: { absoluteFill: {} },
   useWindowDimensions: () => ({ width: 393, height: 852, scale: 1, fontScale: 1 }),
   Modal: 'Modal', Platform: { OS: 'android' },
   Pressable: 'Pressable', Text: 'Text', View: 'View' }));
@@ -163,4 +166,28 @@ it('resets requests from the previous document when navigating to another page',
   webview().onLoadEnd!({} as never);
   expect(active()).toBe(false);
   expect(webview().injectedJavaScriptBeforeContentLoaded).toBe(webview().injectedJavaScript);
+});
+
+it('retains the resource when browsing websites and reloads the selected website after returning', () => {
+  const resource = { url: 'file:///report.md', title: 'report.md', render: () => null };
+  const current = () => {
+    runtime.cursor = 0; runtime.refCursor = 0;
+    return useMappingBrowser(resource.url, resource);
+  };
+  expect(current().resourceVisible).toBe(true);
+  current().submit('https://example.test/');
+  current().onNavigationStateChange({ url: 'https://example.test/',
+    canGoBack: false, canGoForward: false, title: 'Example' } as never);
+  current().navigate('goBack');
+  expect(current().currentUrl).toBe(resource.url);
+  expect(current().history).toEqual({ back: false, forward: true });
+  current().submit('https://example.test/');
+  expect(current().resourceVisible).toBe(false);
+  expect(runtime.webview.reload).toHaveBeenCalledOnce();
+  expect(current().resourceGeneration).toBe(0);
+  current().navigate('goBack');
+  current().navigate('reload');
+  expect(current().resourceGeneration).toBe(1);
+  current().navigate('goForward');
+  expect(current().currentUrl).toBe('https://example.test/');
 });

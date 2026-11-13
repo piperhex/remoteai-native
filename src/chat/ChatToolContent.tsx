@@ -1,7 +1,8 @@
 import { displayText } from '../i18n/index';
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { useChatWebsite } from './useChatWebsite';
 import { SelectableChatText } from './SelectableChatText';
 import { UserMessageText } from './UserMessageText';
 import { messageReferences } from '../../vendor/shared/chat/messageReferences';
@@ -23,12 +24,13 @@ import { useStyles, palette } from './styles';
 import type { Item } from './types';
 
 function WebLink({ url, title }: { url?: string; title?: string }) {
+  const openWebsite = useChatWebsite();
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
   if (!url || !/^https?:\/\//i.test(url)) return <Text style={styles.messageText}>{title || url}</Text>;
   return <Pressable accessibilityRole="link" onPress={() => {
-    void Linking.openURL(url).catch(() => undefined);
+    openWebsite(url);
   }}><SelectableChatText style={[styles.messageText, { color: color(palette.green, 'accent'), textDecorationLine: 'underline' }]}>
     {title || url}</SelectableChatText></Pressable>;
 }

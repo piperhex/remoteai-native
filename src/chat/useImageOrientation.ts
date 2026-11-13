@@ -20,7 +20,7 @@ const DISPLAYED_ORIENTATIONS: Partial<Record<ScreenOrientation.Orientation, Imag
   [ScreenOrientation.Orientation.LANDSCAPE_RIGHT]: 'landscape-right',
 };
 
-export function useImageOrientation() {
+export function useImageOrientation(enabled = true) {
   const [displayed, setDisplayed] = useState<ImageOrientation>('portrait');
   const [device, setDevice] = useState<ImageOrientation | null>(null);
   const [error, setError] = useState('');
@@ -30,6 +30,7 @@ export function useImageOrientation() {
   const pending = useRef(Promise.resolve());
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     const update = (value: ScreenOrientation.Orientation) => {
       const orientation = DISPLAYED_ORIENTATIONS[value];
@@ -41,9 +42,10 @@ export function useImageOrientation() {
     void ScreenOrientation.getOrientationAsync().then(update)
       .catch(() => console.warn('Unable to read preview orientation'));
     return () => { active = false; subscription.remove(); };
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     mounted.current = true;
     let active = true;
     let subscription: ReturnType<typeof Accelerometer.addListener> | undefined;
@@ -67,7 +69,7 @@ export function useImageOrientation() {
       void pending.current.then(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT))
         .catch(() => console.warn('Unable to restore automatic orientation'));
     };
-  }, []);
+  }, [enabled]);
 
   const rotate = () => {
     if (!device || device === displayed || busy.current) return;

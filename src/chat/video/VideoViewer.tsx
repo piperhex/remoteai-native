@@ -1,7 +1,7 @@
 import { displayError } from '../../i18n/index';
 import { createThemedStyles } from '../../theme/styles';
 import { t, useLanguage } from '../../i18n';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Modal } from '../../components/Modal';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,23 +17,24 @@ import { useManagedDownload } from '../../downloads/useManagedDownload';
 interface Props {
   path: string; threadId: string | null; ready: boolean; client: VideoClient; close: () => void;
   files: FileClient;
+  embedded?: boolean; active?: boolean;
 }
-export function VideoViewer({ close, ...options }: Props) {
+export function VideoViewer({ close, embedded = false, active = true, ...options }: Props) {
   const styles = useStyles();
   const language = useLanguage();
   const video = useVideoStream(options);
   const download = useManagedDownload({ ...options, client: options.files });
-  const orientation = useImageOrientation();
+  const orientation = useImageOrientation(active);
+  const webview = useRef<WebView>(null);
+  useEffect(() => {
+    if (!active) webview.current?.injectJavaScript('document.querySelectorAll("video,audio").forEach(v=>v.pause());true;');
+  }, [active]);
   const [failedUrl, setFailedUrl] = useState('');
   const error = video.error || (video.url && video.url === failedUrl
     ? t("client.mobile.cannotPlayThisVideoTryAnotherMp4File") : '');
   const source = useMemo(() => video.url
     ? { html: videoPlayerHtml(video.url, t("client.runtimeErrors.videoPlayer")), baseUrl: video.url } : undefined, [video.url, language]);
-  return <Modal visible animationType="fade" onRequestClose={close} statusBarStyle="light" statusBarTranslucent
-    navigationBarTranslucent supportedOrientations={['portrait', 'portrait-upside-down',
-      'landscape-left', 'landscape-right']}>
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.overlay}>
+  const content = <SafeAreaView style={styles.overlay} edges={embedded ? [] : undefined}>
         <View style={styles.toolbar}>
           <Text numberOfLines={1} style={styles.title}>{options.path.split(/[\\/]/).pop()}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel={download.label}
@@ -49,7 +50,7 @@ export function VideoViewer({ close, ...options }: Props) {
             <MaterialCommunityIcons name="close" size={28} color="#fff" />
           </Pressable>
         </View>
-        {!!source && !error && <WebView key={video.url} source={source} style={styles.player}
+        {!!source && !error && <WebView ref={webview} key={video.url} source={source} style={styles.player}
           originWhitelist={['http://127.0.0.1:*', 'about:blank']} allowsInlineMediaPlayback
           mediaPlaybackRequiresUserAction allowsFullscreenVideo={false}
           allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
@@ -68,9 +69,11 @@ export function VideoViewer({ close, ...options }: Props) {
         {!!orientation.error && <Text style={styles.status}>{orientation.error}</Text>}
         {download.busy && !!download.detail && <Text style={styles.status}>{download.detail}</Text>}
         {!!download.message && <Text accessibilityLiveRegion="polite" style={styles.status}>{displayError(download.message)}</Text>}
-      </SafeAreaView>
-    </SafeAreaProvider>
-  </Modal>;
+      </SafeAreaView>;
+  if (embedded) return content;
+  return <Modal visible animationType="fade" onRequestClose={close} statusBarStyle="light" statusBarTranslucent
+    navigationBarTranslucent supportedOrientations={['portrait', 'portrait-upside-down',
+      'landscape-left', 'landscape-right']}><SafeAreaProvider>{content}</SafeAreaProvider></Modal>;
 }
 const useStyles = createThemedStyles((color) => ({
   overlay: { flex: 1, backgroundColor: '#000' },

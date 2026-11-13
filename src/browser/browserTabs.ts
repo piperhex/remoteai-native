@@ -1,3 +1,11 @@
+import type { ReactNode } from 'react';
+
+export interface NativeBrowserResource {
+  url: string;
+  title: string;
+  render: (options: { active: boolean; close: () => void }) => ReactNode;
+}
+
 export interface NativeBrowserTab {
   id: string;
   url: string;
@@ -5,6 +13,7 @@ export interface NativeBrowserTab {
   preview?: string;
   request?: { url: string };
   desktop?: boolean;
+  resource?: NativeBrowserResource;
 }
 export interface NativeBrowserTabs { tabs: NativeBrowserTab[]; activeId: string }
 
@@ -42,6 +51,8 @@ export function restoreBrowserTabs(raw: string | null, fallbackUrl: string): Nat
 }
 
 export function serializeBrowserTabs(state: NativeBrowserTabs): string {
-  return JSON.stringify({ tabs: state.tabs.map(({ url, title, desktop }) => ({ url, title, desktop })),
-    activeIndex: state.tabs.findIndex(tab => tab.id === state.activeId) });
+  // Conversation resources depend on live, scoped clients and must never be restored as ordinary URLs.
+  const tabs = state.tabs.filter(tab => !tab.resource);
+  return JSON.stringify({ tabs: tabs.map(({ url, title, desktop }) => ({ url, title, desktop })),
+    activeIndex: Math.max(0, tabs.findIndex(tab => tab.id === state.activeId)) });
 }

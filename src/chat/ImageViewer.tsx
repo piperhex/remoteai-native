@@ -19,22 +19,21 @@ import { ImageAiToolbar } from './ImageAiToolbar';
 interface Props {
   thumbnail?: string; description: string; load: PreviewImageLoader; close: () => void;
   save?: (url: string) => Promise<void>;
+  embedded?: boolean;
+  active?: boolean;
 }
 
-export function ImageViewer({ thumbnail, description, load, close, save }: Props) {
+export function ImageViewer({ thumbnail, description, load, close, save, embedded = false, active = true }: Props) {
   const styles = useStyles();
   useLanguage();
   const image = useImageViewer(load);
-  const orientation = useImageOrientation();
+  const orientation = useImageOrientation(active);
   const { gesture, animatedStyle } = useImageGestures(close, orientation.displayed);
   const saving = useSaveImage({ load: image.loadOriginal, save });
   const message = saving.message || orientation.error;
   const source = image.url ?? thumbnail;
   const originalLabel = t(image.error ? 'client.mobile.reloadOriginalImage' : 'client.chat.viewOriginal');
-  return <Modal visible animationType="fade" onRequestClose={close} statusBarStyle="light" statusBarTranslucent
-    navigationBarTranslucent supportedOrientations={['portrait', 'portrait-upside-down',
-      'landscape-left', 'landscape-right']}>
-    <SafeAreaProvider>
+  const content = <>
       <GestureHandlerRootView style={styles.overlay}>
         <GestureDetector gesture={gesture}>
           <View style={styles.stage} collapsable={false} onAccessibilityEscape={close}>
@@ -46,7 +45,7 @@ export function ImageViewer({ thumbnail, description, load, close, save }: Props
         </GestureDetector>
         <KeyboardAvoidingView pointerEvents="box-none" style={styles.controls}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <SafeAreaView pointerEvents="box-none" edges={['bottom', 'left', 'right']}>
+        <SafeAreaView pointerEvents="box-none" edges={embedded ? [] : ['bottom', 'left', 'right']}>
           <View pointerEvents="box-none" style={styles.footer}>
             <View pointerEvents="box-none" style={styles.notices}>
               {!!message && <Text pointerEvents="none" accessibilityLiveRegion="polite"
@@ -64,7 +63,7 @@ export function ImageViewer({ thumbnail, description, load, close, save }: Props
           </View>
         </SafeAreaView>
         </KeyboardAvoidingView>
-        <SafeAreaView pointerEvents="box-none" edges={['top', 'left', 'right']} style={styles.header}>
+        <SafeAreaView pointerEvents="box-none" edges={embedded ? [] : ['top', 'left', 'right']} style={styles.header}>
           <View pointerEvents="box-none" style={styles.headerActions}>
             {!image.url && !image.loading && <Pressable accessibilityRole="button"
               accessibilityLabel={originalLabel} onPress={image.request} style={styles.original}>
@@ -81,8 +80,11 @@ export function ImageViewer({ thumbnail, description, load, close, save }: Props
           </View>
         </SafeAreaView>
       </GestureHandlerRootView>
-    </SafeAreaProvider>
-  </Modal>;
+  </>;
+  if (embedded) return content;
+  return <Modal visible animationType="fade" onRequestClose={close} statusBarStyle="light" statusBarTranslucent
+    navigationBarTranslucent supportedOrientations={['portrait', 'portrait-upside-down',
+      'landscape-left', 'landscape-right']}><SafeAreaProvider>{content}</SafeAreaProvider></Modal>;
 }
 
 const useStyles = createThemedStyles((color) => ({

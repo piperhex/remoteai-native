@@ -22,6 +22,9 @@ import type { PreviewLoadOptions, PreviewProgress } from '../../vendor/shared/re
 import { PreviewTransferProgress } from './PreviewTransferProgress';
 import { isDownloadOnlyFile } from '../../vendor/shared/remote-chat/filePreview';
 import { filePreviewError } from '../../vendor/shared/remote-chat/fileErrors';
+import { filePreviewKind } from '../../vendor/shared/file-preview/kinds';
+import { useBrowserFilePreview } from './useBrowserFilePreview';
+import { ChatBinaryFilePreview } from './ChatBinaryFilePreview';
 
 export const ChatFileContext = createContext<((file: FileReference) => void) | null>(null);
 interface Props {
@@ -34,11 +37,12 @@ interface Props {
   files: FileClient;
 }
 
+export type ChatFileOptions = Omit<Props, 'children' | 'active'>;
 type PreviewProps = Omit<Props, 'children'> & {
-  file: FileReference; close: () => void;
+  file: FileReference; close: () => void; embedded?: boolean;
 };
 
-function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps) {
+function FilePreview({ file, threadId, ready, load, files, close, embedded }: PreviewProps) {
   const styles = useStyles();
   useLanguage();
   const [result, setResult] = useState<TextPreview>();
@@ -65,7 +69,7 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
     });
     return () => { observer.abort(); };
   }, [threadId, ready, load, file.path, attempt, binary]);
-  return <FilePreviewSheet path={file.path} previewable={!binary} close={close}
+  return <FilePreviewSheet path={file.path} previewable={!binary} close={close} embedded={embedded}
     actions={[
       ...(html || markdown ? [{
         label: source ? t('client.chat.preview') : sourceLabel,
@@ -103,19 +107,28 @@ function FilePreview({ file, threadId, ready, load, files, close }: PreviewProps
   </FilePreviewSheet>;
 }
 
-function FilePreviewContent(props: PreviewProps) {
+export function FilePreviewContent(props: PreviewProps) {
   useLanguage();
-  const { file, threadId, ready, videos, files, close } = props;
-  if (localImageSource(file.path)) return <ChatImageFilePreview path={file.path} close={close} />;
+  const { file, threadId, ready, videos, files, close, embedded, active } = props;
+  const kind = filePreviewKind(file.path);
+  if (localImageSource(file.path)) return <ChatImageFilePreview path={file.path}
+    close={close} embedded={embedded} active={active} />;
   if (isVideoPath(file.path)) return <VideoViewer path={file.path} threadId={threadId}
-    ready={ready} client={videos} files={files} close={close} />;
+    ready={ready} client={videos} files={files} close={close} embedded={embedded} active={active} />;
+  if (kind === 'pdf' || kind === 'audio' || kind === 'video' || kind === 'image') return <ChatBinaryFilePreview path={file.path}
+    threadId={threadId} ready={ready} files={files} close={close} embedded={embedded} active={active} />;
   return <FilePreview {...props} />;
 }
 
 export function ChatFileProvider({ children, active = true, ...options }: Props) {
   useLanguage();
   const [file, setFile] = useState<FileReference | null>(null);
-  const open = useCallback((value: FileReference) => { Keyboard.dismiss(); setFile(value); }, []);
+  const browserPreview = useBrowserFilePreview(options);
+  const open = useCallback((value: FileReference) => {
+    Keyboard.dismiss();
+    if (browserPreview) browserPreview(value);
+    else setFile(value);
+  }, [browserPreview]);
   return <ChatFileContext.Provider value={open}>
     {children}
     {active && file && <FilePreviewContent key={file.path} {...options} file={file} close={() => setFile(null)} />}

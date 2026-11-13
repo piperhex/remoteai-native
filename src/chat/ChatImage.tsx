@@ -5,6 +5,10 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useChatImage, type ImagePreviewOptions } from '../../vendor/shared/remote-chat/client/useChatImage';
 import { palette, useStyles } from './styles';
 import { useChatImagePreview } from './ChatImagePreview';
+import { NativeBrowserContext } from '../browser/context';
+import { BottomSheet } from '../components/BottomSheet';
+import { ImageViewer } from './ImageViewer';
+import { fileResourceUrl } from '../../vendor/shared/file-preview/resourceAddress';
 
 export const ChatImageContext = createContext<ImagePreviewOptions | null>(null);
 const PREVIEW_ASPECT_RATIO = 4 / 3;
@@ -17,6 +21,8 @@ export function ChatImage({ source, description = t("client.chat.image"), sent =
   const styles = useStyles();
   useLanguage();
   const context = useContext(ChatImageContext);
+  const browser = useContext(NativeBrowserContext);
+  const [menu, setMenu] = useState(false);
   const image = useChatImage(source, context);
   const [dimensions, setDimensions] = useState<{ key: string; ratio: number }>();
   const ratio = dimensions?.key === image.key ? dimensions.ratio : 1;
@@ -35,6 +41,8 @@ export function ChatImage({ source, description = t("client.chat.image"), sent =
     {!image.failed && !previewReady && <Text style={styles.status}>{t("client.chat.loadingImage")}</Text>}
     {previewReady && <Pressable style={StyleSheet.absoluteFill} accessibilityRole="button"
       accessibilityLabel={t("client.chat.enlarge", { value1: description })}
+      onLongPress={browser?.openResource ? () => setMenu(true) : undefined}
+      onPointerDown={event => { if (event.nativeEvent.button === 2 && browser?.openResource) setMenu(true); }}
       onPress={() => { if (image.url) openPreview({ key: image.key, thumbnail: image.url,
         description, load: image.original, save: image.save }); }}>
       <Image key={image.key} source={{ uri: image.url }} accessibilityLabel={description}
@@ -44,6 +52,15 @@ export function ChatImage({ source, description = t("client.chat.image"), sent =
           if (Number.isFinite(nextRatio) && nextRatio > 0) setDimensions({ key: image.key, ratio: nextRatio });
         } : undefined} />
     </Pressable>}
+    {menu && <BottomSheet visible title={description} maxWidth={400} onClose={() => setMenu(false)} actions={[
+      { label: t('client.filePreview.openInBuiltInBrowser'), onPress: () => {
+        setMenu(false);
+        browser?.openResource({ title: description,
+          url: source && /^https?:\/\//i.test(source) ? source : fileResourceUrl(description),
+          render: props => <ImageViewer {...props} embedded thumbnail={image.url} description={description}
+            load={image.original} save={image.save} /> });
+      } },
+    ]} />}
   </View>;
 }
 

@@ -1,0 +1,14 @@
+// Keep verification independent of the user's installed app and account data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-chat-browser'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.chatbrowsertest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/ChatBrowserFixture.tsx')
+        react.debuggableVariants = []
+        react.extraPackagerArgs = ['--reset-cache']
+    }
+}

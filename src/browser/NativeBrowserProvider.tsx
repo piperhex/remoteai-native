@@ -28,13 +28,18 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     Keyboard.dismiss(); setVisible(false); setManager(false); onActiveChange?.(false);
   }, [onActiveChange]);
   const hasBottomNavigation = Boolean(footer);
-  const context = useMemo(() => ({ visible, hasBottomNavigation, close,
-    open: (url?: string) => {
+  const reveal = () => {
     Keyboard.dismiss();
-    if (url) browser.visit(url);
     setManager(false); setVisited(true); setVisible(true);
     onActiveChange?.(true);
-  } }), [visible, hasBottomNavigation, close, onActiveChange]);
+  };
+  const context = useMemo(() => ({ visible, hasBottomNavigation, close,
+    open: (url?: string) => { if (url) browser.visit(url); reveal(); },
+    openTab: (url: string) => { browser.add(url); reveal(); },
+    openResource: (resource: import('./browserTabs').NativeBrowserResource) => {
+      browser.add(resource.url, resource); reveal();
+    },
+  }), [visible, hasBottomNavigation, close, onActiveChange]);
   const add = () => { Keyboard.dismiss(); browser.add(); setManager(false); };
   return <NativeBrowserContext.Provider value={context}>
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage}>
@@ -48,7 +53,8 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
           return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]} collapsable={false}
             pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
             importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-            <MappingPreview initialUrl={tab.url} request={tab.request} visible={active} devices={devices}
+            <MappingPreview initialUrl={tab.url} resource={tab.resource} request={tab.request}
+              visible={active} devices={devices}
               desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
               tabCount={browser.tabs.length} newTab={add} manageTabs={() => setManager(true)}
               onPreview={preview => browser.update(tab.id, { preview })}

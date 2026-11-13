@@ -1,3 +1,5 @@
+import { filePreviewKind } from '../file-preview/kinds';
+
 export interface TextPreview {
   path: string;
   text: string;
@@ -5,5 +7,5 @@ export interface TextPreview {
 }
 
 export function isMarkdownPath(path: string): boolean {
-  return /\.(md|markdown)$/i.test(path);
+  return filePreviewKind(path) === 'markdown';
 }

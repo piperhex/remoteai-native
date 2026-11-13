@@ -24,10 +24,14 @@ function PreviewActions({ actions }: { actions: FilePreviewAction[] }) {
   </Pressable>)}</View>;
 }
 
-export function FilePreviewSheet({ path, previewable, close, actions, children }: {
+export function FilePreviewSheet({ path, previewable, close, actions, children, embedded = false }: {
   path: string; previewable: boolean; close: () => void; actions: FilePreviewAction[]; children: ReactNode;
+  embedded?: boolean;
 }) {
   useLanguage();
+  if (embedded) return <View style={{ flex: 1 }}>
+    <PreviewActions actions={actions} />{children}
+  </View>;
   return <BottomSheet visible tall fullWidthContent fillHeight={previewable} fullscreen={previewable}
     compactHeader={previewable} truncateTitle={previewable} horizontalPadding={previewable ? 12 : undefined}
     title={previewable ? path.split(/[\\/]/).at(-1) || t('client.projectBrowser.filePreview')
@@ -40,7 +44,7 @@ export function FilePreviewSheet({ path, previewable, close, actions, children }
 }
 
 const useStyles = createThemedStyles(color => ({
-  actions: { flexDirection: 'row', gap: 4, flexShrink: 0 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 4, flexShrink: 0 },
   action: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center',
     borderRadius: 12, backgroundColor: color('#eef3f0', 'canvas') },
   pressed: { opacity: 0.78 },

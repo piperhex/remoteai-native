@@ -7,11 +7,12 @@ import type { HtmlFileContext } from './html/HtmlPreparation';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { ChatCodeBlock } from './ChatCodeBlock';
 import { textMetrics } from '../theme/text';
+import { filePreviewKind } from '../../vendor/shared/file-preview/kinds';
 
 const PREVIEW_MODES = [{ value: 'preview', get label() { return t("client.chat.preview"); } }, { value: 'source', get label() { return t("client.downloads.source"); } }] as const;
 
 export function isHtmlPath(path: string) {
-  return /\.html?$/i.test(path);
+  return filePreviewKind(path) === 'html';
 }
 
 export function ChatHtmlPreview({ text, context, source: controlledSource }: {

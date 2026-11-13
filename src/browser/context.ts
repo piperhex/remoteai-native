@@ -1,7 +1,10 @@
 import { createContext, useContext } from 'react';
+import type { NativeBrowserResource } from './browserTabs';
 
 export const NativeBrowserContext = createContext<{
   open: (url?: string) => void;
+  openTab: (url: string) => void;
+  openResource: (resource: NativeBrowserResource) => void;
   close: () => void;
   visible: boolean;
   hasBottomNavigation: boolean;

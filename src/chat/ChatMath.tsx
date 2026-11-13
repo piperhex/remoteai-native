@@ -1,7 +1,8 @@
 import { createThemedStyles } from '../theme/styles';
 import { useThemeMode } from '../theme/store';
 import { useContext, useMemo, useState } from 'react';
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
+import { useChatWebsite } from './useChatWebsite';
 import { WebView } from 'react-native-webview';
 import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileContext } from './ChatFilePreview';
@@ -16,6 +17,7 @@ export function ChatMath({ markup, muted, fontSize, copy, compact = false,
 }) {
   const styles = useStyles();
   const openFile = useContext(ChatFileContext);
+  const openWebsite = useChatWebsite();
   const theme = useThemeMode();
   const [height, setHeight] = useState(MIN_MATH_HEIGHT);
   const source = useMemo(() => ({ html: mathDocument(markup, {
@@ -29,7 +31,7 @@ export function ChatMath({ markup, muted, fontSize, copy, compact = false,
         if (url === 'about:blank') return true;
         const file = parseFileReference(url);
         if (file && openFile) openFile(file);
-        else if (/^https?:\/\//i.test(url)) void Linking.openURL(url).catch(() => undefined);
+        else openWebsite(url);
         return false;
       }}
       onMessage={({ nativeEvent }) => {

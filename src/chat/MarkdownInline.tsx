@@ -1,6 +1,7 @@
 import { t, useLanguage } from '../i18n';
 import { useContext } from 'react';
-import { Linking, Text, View, type TextStyle } from 'react-native';
+import { Text, View, type TextStyle } from 'react-native';
+import { useChatWebsite } from './useChatWebsite';
 import { parseFileReference } from '../../vendor/shared/chat/fileReference';
 import { ChatFileContext } from './ChatFilePreview';
 import { ChatImage } from './ChatImage';
@@ -17,10 +18,6 @@ export interface MarkdownContext {
   listItemStart?: boolean;
   flushTop?: boolean; flushBottom?: boolean;
   copy?: CopyAction;
-}
-
-function openLink(url: string) {
-  if (/^https?:\/\//i.test(url)) void Linking.openURL(url).catch(() => undefined);
 }
 
 function inlineRuns(nodes: MarkdownNode[]): (MarkdownNode | string)[] {
@@ -49,6 +46,7 @@ function Inline({ nodes, muted = false }: {
   const INLINE_STYLES = { strong_open: markdownStyles.bold, em_open: markdownStyles.italic,
   s_open: markdownStyles.strike, code_inline: [styles.code, markdownStyles.inlineCode] };
   const openFile = useContext(ChatFileContext);
+  const openLink = useChatWebsite();
   // Plain runs inherit their enclosing Text style without consuming a native span for every line.
   return <>{inlineRuns(nodes).map((run, index) => {
     if (typeof run === 'string') return run;

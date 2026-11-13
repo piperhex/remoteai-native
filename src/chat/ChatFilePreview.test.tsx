@@ -43,6 +43,8 @@ vi.mock('./ChatCodeHighlight', () => ({ fileLanguage: () => 'text' }));
 vi.mock('./fileDownloadTarget', () => ({ nativeDownloadTarget: {} }));
 vi.mock('../downloads/useManagedDownload', () => ({ useManagedDownload: () => state.download }));
 vi.mock('./video/VideoViewer', () => ({ VideoViewer: 'Video' }));
+vi.mock('./ChatBinaryFilePreview', () => ({ ChatBinaryFilePreview: 'BinaryPreview' }));
+vi.mock('./useBrowserFilePreview', () => ({ useBrowserFilePreview: () => null }));
 vi.mock('./useImageGestures', () => ({ useImageGestures: () => ({ gesture: {}, animatedStyle: {} }) }));
 vi.mock('./useImageOrientation', () => ({ useImageOrientation: () => ({ displayed: 'portrait' }) }));
 vi.mock('./useSaveImage', () => ({ useSaveImage: () => ({ saving: false, message: '', save: vi.fn() }) }));

@@ -43,8 +43,8 @@ beforeEach(() => {
 });
 
 it('recognizes HTML and HTM files without treating other source files as pages', () => {
-  for (const path of ['index.html', 'C:\\site\\INDEX.HTM', '/tmp/页面.HTML']) expect(isHtmlPath(path)).toBe(true);
-  for (const path of ['index.html.txt', 'source.ts', 'page.xhtml']) expect(isHtmlPath(path)).toBe(false);
+  for (const path of ['index.html', 'C:\\site\\INDEX.HTM', '/tmp/页面.HTML', 'page.xhtml']) expect(isHtmlPath(path)).toBe(true);
+  for (const path of ['index.html.txt', 'source.ts']) expect(isHtmlPath(path)).toBe(false);
 });
 
 it('opens the rendered page by default and allows switching to source and back', () => {

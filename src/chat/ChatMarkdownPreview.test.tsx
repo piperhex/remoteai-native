@@ -41,7 +41,8 @@ it('recognizes Markdown extensions without rendering ordinary source files', () 
   for (const path of ['./verification.md', 'C:\\docs\\README.MD', '/docs/说明.markdown']) {
     expect(isMarkdownPath(path)).toBe(true);
   }
-  for (const path of ['source.ts', 'report.md.txt', 'page.mdx']) expect(isMarkdownPath(path)).toBe(false);
+  for (const path of ['page.mdx', 'notes.mdown', 'notes.mkd']) expect(isMarkdownPath(path)).toBe(true);
+  for (const path of ['source.ts', 'report.md.txt']) expect(isMarkdownPath(path)).toBe(false);
 });
 
 it('defaults to rendered content and switches to the unchanged source and back', () => {
