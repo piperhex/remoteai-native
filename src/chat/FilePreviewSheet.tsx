@@ -30,7 +30,7 @@ export function FilePreviewSheet({ path, previewable, close, actions, children, 
 }) {
   useLanguage();
   if (embedded) return <View style={{ flex: 1 }}>
-    <PreviewActions actions={actions} />{children}
+    {actions.length > 0 && <PreviewActions actions={actions} />}{children}
   </View>;
   return <BottomSheet visible tall fullWidthContent fillHeight={previewable} fullscreen={previewable}
     compactHeader={previewable} truncateTitle={previewable} horizontalPadding={previewable ? 12 : undefined}

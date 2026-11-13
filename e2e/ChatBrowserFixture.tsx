@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 import { useFonts } from 'expo-font';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Buffer } from 'buffer';
@@ -19,6 +19,8 @@ import { textMetrics } from '../src/theme/text';
 import { statusBarTestImage } from './modalStatusBarImage';
 import { DeviceMappingProvider } from '../vendor/shared/port-mapping/deviceRegistry';
 import { browserMappings, browserDevices, browserDeviceIds, toggleBrowserMapping } from './chatBrowserMappings';
+import { downloadManager } from '../src/downloads/manager';
+import { browserDownloadClient } from './chatBrowserDownloads';
 
 setInterfaceLanguage('zh');
 updateThemeMode('light');
@@ -75,6 +77,11 @@ function FixtureFooter() {
 function ChatBrowserFixture() {
   const [fonts] = useFonts({ ...Ionicons.font, ...MaterialCommunityIcons.font });
   const [active, setActive] = useState(false);
+  useEffect(() => {
+    downloadManager.bind({ owner: 'browser-fixture', deviceId: 'fixture-pc', deviceName: 'PC',
+      ready: true, mode: 'relay', windowSize: 1, threadId: 'fixture', client: browserDownloadClient, files: client });
+    return () => downloadManager.unbind(client);
+  }, []);
   return <SafeAreaProvider>{fonts && <DeviceMappingProvider registry={browserMappings.registry} deviceIds={browserDeviceIds}>
     <NativeBrowserProvider scope="chat-browser-fixture" active={active} devices={browserDevices}
     onActiveChange={setActive} footer={<FixtureFooter />}>

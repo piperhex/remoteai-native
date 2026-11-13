@@ -3,7 +3,7 @@ import { useRef, useState, useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 import type { FileClient } from '../../vendor/shared/remote-chat/fileDownload';
 import { useFileDownload } from '../../vendor/shared/remote-chat/useFileDownload';
-import { downloadDetail } from './presentation';
+import { downloadDetail, downloadPercent, downloadStatusLabel } from './presentation';
 import { nativeDownloadTarget } from '../chat/fileDownloadTarget';
 import { downloadManager } from './manager';
 import type { DownloadTask } from './types';
@@ -36,7 +36,7 @@ function useAndroidDownload(options: Options) {
     && item.source.deviceId === connection?.deviceId);
   const { share, sharing, error: shareError } = useDownloadShare(task);
   const busy = starting || !!task && ['queued', 'preparing', 'downloading', 'verifying', 'saving'].includes(task.status);
-  const percent = task?.size ? Math.floor(task.received / task.size * 100) : 0;
+  const percent = task && (task.size > 0 || task.status === 'completed') ? downloadPercent(task) : undefined;
   const start = async () => {
     if (starting || (!options.ready && task?.status !== 'completed')
       || !connection || connection.files !== options.client) return;
@@ -57,16 +57,20 @@ function useAndroidDownload(options: Options) {
     if (task) void downloadManager.pause(task.id).catch(() => setMessage(t("client.mobile.couldNotPauseTryAgain")));
   };
   let label = t("client.projectBrowser.download");
-  if (busy) label = t("client.mobile.pauseDownload", { value1: percent });
+  if (busy) label = t('client.downloads.pauseDownload');
   else if (task?.status === 'completed') label = t("client.mobile.openFile");
   else if (task) label = t("client.downloads.resumeDownload");
   const detail = task ? downloadDetail(task) : '';
-  return { busy, label, detail, completed: task?.status === 'completed', share, sharing,
+  const status = task ? downloadStatusLabel(task) : starting ? t('client.downloads.queued') : undefined;
+  return { busy, label, detail, percent, status, completed: task?.status === 'completed', share, sharing,
     message: shareError || message || task?.message, start, cancel: pause };
 }
 
 // Each installed platform selects one stable hook implementation for its lifetime.
-export const useManagedDownload = Platform.OS === 'android' ? useAndroidDownload : (options: Options) => ({
-  ...useFileDownload({ ...options, target: nativeDownloadTarget, success: t("client.mobile.fileSavedToDownloads") }), completed: false,
-  share: undefined, sharing: false,
-});
+export const useManagedDownload = Platform.OS === 'android' ? useAndroidDownload : (options: Options) => {
+  const download = useFileDownload({ ...options, target: nativeDownloadTarget,
+    success: t('client.mobile.fileSavedToDownloads') });
+  return { ...download, completed: false, share: undefined, sharing: false,
+    percent: download.detail ? download.percent : undefined,
+    status: download.busy ? t('client.mobile.downloading') : undefined };
+};

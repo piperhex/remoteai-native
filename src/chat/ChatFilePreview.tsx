@@ -5,7 +5,8 @@ import { Keyboard, Platform, Text } from 'react-native';
 import type { FileReference } from '../../vendor/shared/chat/fileReference';
 import { localImageSource } from '../../vendor/shared/chat/imageSources';
 import { isMarkdownPath, type TextPreview } from '../../vendor/shared/remote-chat/textPreview';
-import { FilePreviewSheet } from './FilePreviewSheet';
+import { FilePreviewSheet, type FilePreviewAction } from './FilePreviewSheet';
+import { ChatDownloadPreview } from './ChatDownloadPreview';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { ChatCodeBlock } from './ChatCodeBlock';
 import { ChatImageFilePreview } from './ChatImageFilePreview';
@@ -69,8 +70,7 @@ function FilePreview({ file, threadId, ready, load, files, close, embedded }: Pr
     });
     return () => { observer.abort(); };
   }, [threadId, ready, load, file.path, attempt, binary]);
-  return <FilePreviewSheet path={file.path} previewable={!binary} close={close} embedded={embedded}
-    actions={[
+  const actions: FilePreviewAction[] = [
       ...(html || markdown ? [{
         label: source ? t('client.chat.preview') : sourceLabel,
         icon: source ? 'eye-outline' as const : 'code-tags' as const,
@@ -83,7 +83,11 @@ function FilePreview({ file, threadId, ready, load, files, close, embedded }: Pr
         tone: 'primary',
         disabled: download.sharing || (!download.busy && !download.completed && (!ready || !threadId)) },
     ...(error ? [{ label: t("client.mobile.retryPreview"), onPress: () => setAttempt(attempt + 1),
-      icon: 'reload' as const, disabled: !ready }] : [])]}>
+      icon: 'reload' as const, disabled: !ready }] : [])];
+  if (binary && embedded) return <FilePreviewSheet path={file.path} previewable={false} close={close} embedded actions={[]}>
+    <ChatDownloadPreview path={file.path} ready={ready} actions={actions} download={download} />
+  </FilePreviewSheet>;
+  return <FilePreviewSheet path={file.path} previewable={!binary} close={close} embedded={embedded} actions={actions}>
     {(!rendered || download.message || download.busy && download.detail) && <SheetScrollView
       style={rendered || binary ? { flexGrow: 0, flexShrink: 1 } : { flex: 1 }}
       contentContainerStyle={{ paddingBottom: rendered ? 0 : 20 }}>

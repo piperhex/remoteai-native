@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { verifyBrowserNavigation } from './verify-browser-navigation-android.mjs';
+import { verifyBrowserDownload } from './verify-browser-download-android.mjs';
 
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
@@ -14,6 +15,7 @@ assert.ok(serial, 'Set ANDROID_SERIAL to the physical test device.');
 const app = 'com.codexswitch.mobile.chatbrowsertest';
 const imagesOnly = process.argv.includes('--images-only');
 const navigationOnly = process.argv.includes('--navigation-only');
+const downloadsOnly = process.argv.includes('--downloads-only');
 const output = fileURLToPath(new URL('../.codex-tmp/chat-browser/', import.meta.url));
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
@@ -94,6 +96,9 @@ try {
     await find('页面预览.html');
     if (scale === '1.3') await tap('深色模式');
     const prefix = `android-${scale === '1.3' ? 'dark' : 'light'}-font${scale}`;
+    if (downloadsOnly) {
+      await verifyBrowserDownload({ adb, find, tap, nodes, screenshot, prefix }); continue;
+    }
     if (imagesOnly) { await verifyImageTaps(prefix); continue; }
     if (navigationOnly) {
       await verifyBrowserNavigation({ adb, find, tap, nodes, screenshot, prefix }); continue;

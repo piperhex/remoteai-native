@@ -60,6 +60,24 @@ it('ignores missing local files and tasks from another computer', () => {
   expect(render().share).toBeUndefined();
 });
 
+it.each(['downloading', 'paused', 'failed'] as const)('retains measured progress for %s downloads', status => {
+  Object.assign(mocks.tasks[0], { status, size: 1024, received: 384, bytesPerSecond: 256 });
+  const download = render();
+  expect(download.percent).toBe(37);
+  expect(download.status).toBeTruthy();
+  expect(download.detail).toContain('1 KB');
+  expect(download.busy).toBe(status === 'downloading');
+});
+
+it('distinguishes unknown totals, saving progress, and completed empty files', () => {
+  Object.assign(mocks.tasks[0], { status: 'preparing', size: 0, received: 0 });
+  expect(render().percent).toBeUndefined();
+  Object.assign(mocks.tasks[0], { status: 'saving', size: 100, received: 100, savedBytes: 45 });
+  expect(render().percent).toBe(45);
+  Object.assign(mocks.tasks[0], { status: 'completed', size: 0 });
+  expect(render().percent).toBe(100);
+});
+
 it('prevents repeated shares and shows failures ahead of the saved-file message', async () => {
   let rejectShare: (reason: Error) => void = () => {};
   mocks.share.mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { rejectShare = reject; }));
