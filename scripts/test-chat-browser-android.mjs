@@ -11,6 +11,7 @@ const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the physical test device.');
 const app = 'com.codexswitch.mobile.chatbrowsertest';
+const imagesOnly = process.argv.includes('--images-only');
 const output = fileURLToPath(new URL('../.codex-tmp/chat-browser/', import.meta.url));
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
@@ -45,6 +46,30 @@ async function screenshot(name) {
   await adb('shell', 'screencap', '-p', '/sdcard/chat-browser-screen.png');
   await adb('pull', '/sdcard/chat-browser-screen.png', path.join(output, `${name}.png`));
 }
+async function tapImageCanvas() {
+  const size = await adb('shell', 'wm', 'size');
+  const [width, height] = [...size.matchAll(/(\d+)x(\d+)/g)].at(-1).slice(1).map(Number);
+  await adb('shell', 'input', 'tap', String(Math.round(width / 2)), String(Math.round(height / 2)));
+  await delay(500);
+}
+async function verifyImageTaps(prefix) {
+  await tap('放大查看：图片菜单');
+  await find('查看原图');
+  await tapImageCanvas();
+  await find('放大查看：图片菜单');
+  await tap('放大查看：图片菜单', 0, true);
+  await tap('在内置浏览器中打开');
+  await find('管理标签页（2）');
+  await tapImageCanvas();
+  await find('管理标签页（2）');
+  await screenshot(`${prefix}-image-after-tap`);
+  await tap('聊天'); await tap('图片预览.png');
+  await find('管理标签页（3）');
+  await tapImageCanvas();
+  await find('管理标签页（3）');
+  await screenshot(`${prefix}-image-file-after-tap`);
+  console.log(`${prefix}: browser image taps retain both tabs; fullscreen image tap still dismisses.`);
+}
 const server = createServer((_request, response) => {
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
   response.end('<!doctype html><title>Website preview</title>'
@@ -64,6 +89,7 @@ try {
     await find('页面预览.html');
     if (scale === '1.3') await tap('深色模式');
     const prefix = `android-${scale === '1.3' ? 'dark' : 'light'}-font${scale}`;
+    if (imagesOnly) { await verifyImageTaps(prefix); continue; }
     await tap('页面预览.html'); await find('管理标签页（2）'); await find('验证交互');
     await tap('验证交互'); await find('点击成功'); await screenshot(`${prefix}-html`);
     await tap('聊天'); await tap('页面预览.html'); await find('管理标签页（3）'); await find('验证交互');

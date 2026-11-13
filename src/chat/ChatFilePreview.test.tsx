@@ -45,7 +45,9 @@ vi.mock('../downloads/useManagedDownload', () => ({ useManagedDownload: () => st
 vi.mock('./video/VideoViewer', () => ({ VideoViewer: 'Video' }));
 vi.mock('./ChatBinaryFilePreview', () => ({ ChatBinaryFilePreview: 'BinaryPreview' }));
 vi.mock('./useBrowserFilePreview', () => ({ useBrowserFilePreview: () => null }));
-vi.mock('./useImageGestures', () => ({ useImageGestures: () => ({ gesture: {}, animatedStyle: {} }) }));
+vi.mock('./useImageGestures', () => ({ useImageGestures: (close?: () => void) => ({
+  gesture: { tap: () => close?.() }, animatedStyle: {},
+}) }));
 vi.mock('./useImageOrientation', () => ({ useImageOrientation: () => ({ displayed: 'portrait' }) }));
 vi.mock('./useSaveImage', () => ({ useSaveImage: () => ({ saving: false, message: '', save: vi.fn() }) }));
 vi.mock('../../vendor/shared/chat/useImageViewer', () => ({ useImageViewer: () => ({
@@ -217,6 +219,21 @@ it('offers original loading without starting it and allows an explicit save befo
   expect(loaded.find(node => node.type === 'Image')?.props.source).toEqual({ uri: original });
   const download = loaded.find(node => node.props.accessibilityLabel === '下载图片到相册');
   expect(download?.props.disabled).toBe(false);
+});
+
+it.each([false, true])('limits image tap and accessibility dismissal to fullscreen previews: embedded=%s', embedded => {
+  const close = vi.fn();
+  const nodes = descendants(ImageViewer({ embedded, close, description: 'photo.png',
+    thumbnail: original, load: state.load }));
+  const gesture = nodes.find(node => node.type === 'Gesture')!.props.gesture as { tap: () => void };
+  gesture.tap();
+  expect(close).toHaveBeenCalledTimes(embedded ? 0 : 1);
+  const image = nodes.find(node => node.type === 'Image')!.props;
+  const activate = image.onAccessibilityAction as (() => void) | undefined;
+  activate?.();
+  expect(close).toHaveBeenCalledTimes(embedded ? 0 : 2);
+  expect(image.accessibilityHint).toBe(embedded ? undefined : '轻点关闭，双指缩放');
+  expect(image.accessibilityActions).toEqual(embedded ? undefined : [{ name: 'activate', label: '关闭预览' }]);
 });
 
 it('shows a retry when an image file cannot be loaded', async () => {

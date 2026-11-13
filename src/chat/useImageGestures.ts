@@ -13,13 +13,14 @@ function points(touches: TouchData[]): ImageGestureTouch[] {
 }
 
 /** Keep touch tracking and image transforms on the UI thread while chat updates occupy JavaScript. */
-export function useImageGestures(close: () => void, orientation: string) {
+export function useImageGestures(close: (() => void) | undefined, orientation: string) {
   const transform = useSharedValue(INITIAL_TRANSFORM);
   const current = useSharedValue<ImageGestureState | null>(null);
   const closeBlockedUntil = useSharedValue(0);
   const onClose = useRef(close);
   onClose.current = close;
-  const closePreview = useCallback(() => onClose.current(), []);
+  const closePreview = useCallback(() => onClose.current?.(), []);
+  const tapToClose = Boolean(close);
   const gesture = useMemo(() => {
     const protectPinchClose = () => {
       'worklet';
@@ -51,7 +52,7 @@ export function useImageGestures(close: () => void, orientation: string) {
           Date.now(), closeBlockedUntil.value);
         current.value = null;
         manager.end();
-        if (tapped) runOnJS(closePreview)();
+        if (tapped && tapToClose) runOnJS(closePreview)();
       })
       .onTouchesCancelled((_event, manager) => {
         protectPinchClose();
@@ -59,7 +60,7 @@ export function useImageGestures(close: () => void, orientation: string) {
         manager.fail();
       })
       .onFinalize(() => { protectPinchClose(); current.value = null; });
-  }, [transform, current, closeBlockedUntil, closePreview]);
+  }, [transform, current, closeBlockedUntil, closePreview, tapToClose]);
   useEffect(() => {
     runOnUI(() => {
       'worklet';

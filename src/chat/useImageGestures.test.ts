@@ -36,9 +36,9 @@ function event(touches: TouchData[], changedTouches = touches): GestureTouchEven
   return { allTouches: touches, changedTouches, numberOfTouches: touches.length } as GestureTouchEvent;
 }
 
-function viewer() {
+function viewer(tapToClose = true) {
   const close = vi.fn();
-  const { gesture, animatedStyle } = useImageGestures(close, 'portrait');
+  const { gesture, animatedStyle } = useImageGestures(tapToClose ? close : undefined, 'portrait');
   const manager = { begin: vi.fn(), activate: vi.fn(), end: vi.fn(), fail: vi.fn() };
   // Replay platform touch ordering through the callbacks registered with the native gesture.
   const { handlers } = gesture as unknown as {
@@ -67,6 +67,23 @@ it('closes on a normal tap without a preceding pinch', () => {
   const image = viewer();
   image.tap();
   expect(image.close).toHaveBeenCalledOnce();
+});
+
+it('keeps browser images open on taps while retaining pinch and pan', () => {
+  const image = viewer(false);
+  image.tap();
+  expect(image.close).not.toHaveBeenCalled();
+  expect(runOnJS).not.toHaveBeenCalled();
+  image.pinch();
+  expect(image.animatedStyle.transform).toEqual([{ translateX: 0 }, { translateY: 0 }, { scale: 2 }]);
+  image.dispatch('onTouchesUp', event([finger('1', 50)], [finger('2', 250)]));
+  image.dispatch('onTouchesMove', event([finger('1', 80)]));
+  expect(image.animatedStyle.transform).toEqual([{ translateX: 30 }, { translateY: 0 }, { scale: 2 }]);
+  image.dispatch('onTouchesUp', event([], [finger('1', 80)]));
+  vi.advanceTimersByTime(1100);
+  image.tap();
+  expect(image.close).not.toHaveBeenCalled();
+  expect(runOnJS).not.toHaveBeenCalled();
 });
 
 it('blocks taps for one second after the last finger leaves a long pinch', () => {

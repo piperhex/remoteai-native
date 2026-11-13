@@ -28,7 +28,9 @@ export function ImageViewer({ thumbnail, description, load, close, save, embedde
   useLanguage();
   const image = useImageViewer(load);
   const orientation = useImageOrientation(active);
-  const { gesture, animatedStyle } = useImageGestures(close, orientation.displayed);
+  // A browser resource shares image transforms, but its taps must not dismiss the browser.
+  const dismiss = embedded ? undefined : close;
+  const { gesture, animatedStyle } = useImageGestures(dismiss, orientation.displayed);
   const saving = useSaveImage({ load: image.loadOriginal, save });
   const message = saving.message || orientation.error;
   const source = image.url ?? thumbnail;
@@ -36,10 +38,11 @@ export function ImageViewer({ thumbnail, description, load, close, save, embedde
   const content = <>
       <GestureHandlerRootView style={styles.overlay}>
         <GestureDetector gesture={gesture}>
-          <View style={styles.stage} collapsable={false} onAccessibilityEscape={close}>
+          <View style={styles.stage} collapsable={false} onAccessibilityEscape={dismiss}>
             {source && <Animated.Image source={{ uri: source }} accessibilityLabel={description}
-              accessibilityHint={t("client.mobile.tapToClosePinchToZoom")} accessibilityActions={[{ name: 'activate', label: t("client.mobile.closePreview") }]}
-              onAccessibilityAction={close} resizeMode="contain" onError={image.fail}
+              accessibilityHint={embedded ? undefined : t('client.mobile.tapToClosePinchToZoom')}
+              accessibilityActions={embedded ? undefined : [{ name: 'activate', label: t('client.mobile.closePreview') }]}
+              onAccessibilityAction={dismiss} resizeMode="contain" onError={image.fail}
               fadeDuration={0} style={[styles.image, animatedStyle]} />}
           </View>
         </GestureDetector>
