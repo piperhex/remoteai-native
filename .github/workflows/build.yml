@@ -167,7 +167,8 @@ jobs:
   native-ios:
     name: Build iOS app
     # React Native 0.79's fmt pod is not compatible with Xcode 26 yet.
-    runs-on: macos-15
+    # Hosted arm64 runners can exhaust their queue window before accepting this build.
+    runs-on: macos-15-intel
     env:
       NODE_PATH: ${{ github.workspace }}/node_modules
       IOS_BUNDLE_IDENTIFIER: ${{ vars.IOS_BUNDLE_IDENTIFIER || 'com.codexswitch.mobile' }}
@@ -203,8 +204,8 @@ jobs:
       - name: Cache iOS Rust dependencies
         uses: swatinem/rust-cache@v2
         with:
-          # Match chat-connectivity.yml so new tags can read the default branch cache.
-          shared-key: chat-connectivity-macos-15-${{ steps.apple-cache.outputs.version }}
+          # Keep Intel host artifacts separate from the arm64 connectivity cache.
+          shared-key: chat-connectivity-macos-15-intel-${{ steps.apple-cache.outputs.version }}
           cache-bin: false
           workspaces: |
             vendor/crates/chat-connectivity
