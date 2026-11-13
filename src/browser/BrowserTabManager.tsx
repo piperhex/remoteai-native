@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Keyboard, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { marketText } from '../../vendor/shared/provider-market/i18n';
 import { useLanguage } from '../i18n';
@@ -12,27 +12,38 @@ import { useBrowserBack } from './useBrowserNavigationGestures';
 import { BrowserTabPreview } from './BrowserTabPreview';
 import { useBrowserSafeAreaEdges } from './context';
 import { SwipeableBrowserTab } from './SwipeableBrowserTab';
+import { BrowserTabMenu } from './BrowserTabMenu';
 
-export function BrowserTabManager({ tabs, activeId, select, remove, add, close }: {
+export function BrowserTabManager({ tabs, activeId, select, remove, add, close, closeAll }: {
   tabs: NativeBrowserTab[]; activeId: string; select: (id: string) => void; remove: (id: string) => void;
-  add: () => void; close: () => void;
+  add: () => void; close: () => void; closeAll: () => void;
 }) {
   const [query, setQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
   const styles = useTabStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
   const color = useThemeColor();
   const text = marketText(useLanguage());
   const { width } = useWindowDimensions();
-  useBrowserBack(true, close);
+  useBrowserBack(true, () => { if (menuOpen) setMenuOpen(false); else close(); });
   const filtered = tabs.filter(tab => `${tab.title} ${tab.url}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   return <SafeAreaView style={styles.page} edges={safeAreaEdges}>
-    <View style={styles.toolbar}>
+    <View style={styles.content}>
+    <View style={styles.content} accessibilityElementsHidden={menuOpen}
+      importantForAccessibility={menuOpen ? 'no-hide-descendants' : 'auto'}>
+    <View style={styles.toolbar} onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)}>
       <Pressable accessibilityRole="button" accessibilityLabel={text('market.browserReturnToPage')}
         style={styles.icon} onPress={close}><Ionicons name="chevron-back" size={24} color={color('#17211b', 'ink')} />
       </Pressable>
       <Text style={styles.heading}>{text('market.browserTabs')} ({tabs.length})</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={text('market.browserNewTab')}
         style={styles.icon} onPress={add}><Ionicons name="add" size={26} color={color('#0b8065', 'accent')} />
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={text('market.moreActions')}
+        accessibilityState={{ expanded: menuOpen }} style={styles.icon}
+        onPress={() => { Keyboard.dismiss(); setMenuOpen(true); }}>
+        <Ionicons name="ellipsis-vertical" size={22} color={color('#0b8065', 'accent')} />
       </Pressable>
     </View>
     <TextInput style={styles.search} value={query} onChangeText={setQuery} autoCorrect={false}
@@ -64,10 +75,14 @@ export function BrowserTabManager({ tabs, activeId, select, remove, add, close }
       })}
       {!filtered.length && <Text style={styles.empty}>{text('market.browserNoMatchingTabs')}</Text>}
     </ScrollView>
+    </View>
+    {menuOpen && <BrowserTabMenu top={toolbarHeight} dismiss={() => setMenuOpen(false)} closeAll={closeAll} />}
+    </View>
   </SafeAreaView>;
 }
 
 const useTabStyles = createThemedStyles(color => ({
+  content: { flex: 1 },
   page: { flex: 1, backgroundColor: color('#f7faf7', 'canvas') },
   toolbar: { flexDirection: 'row', alignItems: 'center', padding: 8, gap: 8 },
   icon: { minWidth: 40, minHeight: 44, alignItems: 'center', justifyContent: 'center' },

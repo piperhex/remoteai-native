@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { verifyBrowserTabClosing } from './verify-browser-tab-close-android.mjs';
 
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
@@ -17,6 +18,7 @@ const port = 18407;
 const visualOnly = process.argv.includes('--visual-only');
 const siteOnly = process.argv.includes('--site-only');
 const swipeOnly = process.argv.includes('--swipe-only');
+const closeOnly = process.argv.includes('--close-only');
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
 })).stdout.trim();
@@ -88,7 +90,7 @@ async function checkSwipeDismissal() {
   await swipeTab('Page one', 300); await find('关闭 Page two'); await find('搜索标签页');
   assert.equal((await nodes()).filter(node => node['content-desc'] === '关闭 Page one').length, 0);
   await screenshot('android-swipe-removed-tab'); await tap('关闭 Page two');
-  await tap('返回网页'); await find('管理标签页（1）');
+  await find('管理标签页（1）');
   const blankAddress = (await find('访问地址')).text;
   assert.ok(!blankAddress || blankAddress === '搜索或输入网址', 'Closing the last tab leaves a blank page');
 }
@@ -128,7 +130,9 @@ try {
   await find('发现'); await delay(500); // Fixture controls move below the page once its icon font has loaded.
   if (swipeOnly) await tap('Dark');
   await openInitialBrowser(); await find('访问地址');
-  if (swipeOnly) {
+  if (closeOnly) {
+    await verifyBrowserTabClosing({ adb, find, tap, nodes, screenshot, visit, back, activity });
+  } else if (swipeOnly) {
     await visit('one'); await tap('新标签页'); await visit('two');
     await checkSwipeDismissal();
     await writeFile(path.join(output, 'swipe-result.json'), JSON.stringify({

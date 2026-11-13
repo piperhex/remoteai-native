@@ -30,3 +30,27 @@ it('allocates independent tabs for repeated previews and never restores conversa
   expect(browser.tabs.filter(tab => tab.resource)).toHaveLength(1);
   act(() => root.unmount());
 });
+
+it('closes every retained resource and persists only a fresh browser homepage', () => {
+  const root = createRoot(document.createElement('div'));
+  let browser!: ReturnType<typeof useNativeBrowserTabs>;
+  function Harness() { browser = useNativeBrowserTabs('close-all'); return null; }
+  act(() => root.render(<Harness />));
+  const resource = { title: 'report.pdf', url: 'file:///report.pdf', render: () => null };
+  act(() => { browser.add(resource.url, resource); browser.add('https://example.test'); });
+  const previousIds = browser.tabs.map(tab => tab.id);
+  act(() => browser.closeAll());
+  expect(browser.tabs).toHaveLength(1);
+  expect(browser.tabs[0]).toMatchObject({ url: '', title: '' });
+  expect(previousIds).not.toContain(browser.activeId);
+  expect(browser.tabs[0].resource).toBeUndefined();
+  expect(JSON.parse(storage.setItemSync.mock.calls.at(-1)![1])).toEqual({
+    tabs: [{ url: '', title: '' }], activeIndex: 0,
+  });
+  const homepage = browser.activeId;
+  act(() => browser.remove(homepage));
+  expect(browser.tabs).toHaveLength(1);
+  expect(browser.tabs[0].url).toBe('');
+  expect(browser.activeId).not.toBe(homepage);
+  act(() => root.unmount());
+});

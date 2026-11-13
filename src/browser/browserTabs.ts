@@ -22,11 +22,16 @@ export function newBrowserTab(url = ''): NativeBrowserTab {
   return { id: `browser-${Date.now()}-${++sequence}`, url, title: '' };
 }
 
+export function createBrowserHome(): NativeBrowserTabs {
+  const tab = newBrowserTab();
+  return { tabs: [tab], activeId: tab.id };
+}
+
 export function closeBrowserTab(state: NativeBrowserTabs, id: string): NativeBrowserTabs {
   const index = state.tabs.findIndex(tab => tab.id === id);
   if (index < 0) return state;
   const tabs = state.tabs.filter(tab => tab.id !== id);
-  if (!tabs.length) tabs.push(newBrowserTab());
+  if (!tabs.length) return createBrowserHome();
   const activeId = state.activeId === id ? tabs[Math.min(index, tabs.length - 1)].id : state.activeId;
   return { tabs, activeId };
 }

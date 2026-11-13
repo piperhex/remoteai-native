@@ -44,6 +44,15 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     },
   }), [visible, hasBottomNavigation, close, onActiveChange]);
   const add = () => { Keyboard.dismiss(); browser.add(); setManager(false); };
+  const remove = (id: string) => {
+    browser.remove(id);
+    if (browser.tabs.length === 1 && browser.tabs[0].id === id) {
+      Keyboard.dismiss(); setManager(false); setFullscreen(false);
+    }
+  };
+  const closeAll = () => {
+    Keyboard.dismiss(); browser.closeAll(); setManager(false); setFullscreen(false);
+  };
   return <NativeBrowserContext.Provider value={context}>
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage}>
       <View style={styles.root}>
@@ -67,7 +76,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
           </View>;
         })}
         {visible && manager && <View style={StyleSheet.absoluteFill}>
-          <BrowserTabManager tabs={browser.tabs} activeId={browser.activeId} add={add} remove={browser.remove}
+          <BrowserTabManager tabs={browser.tabs} activeId={browser.activeId} add={add} remove={remove} closeAll={closeAll}
             select={id => { Keyboard.dismiss(); browser.select(id); setManager(false); }} close={() => setManager(false)} />
         </View>}
       </View>

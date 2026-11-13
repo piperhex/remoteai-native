@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Storage from 'expo-sqlite/kv-store';
-import { closeBrowserTab, newBrowserTab, restoreBrowserTabs, serializeBrowserTabs,
+import { closeBrowserTab, createBrowserHome, newBrowserTab, restoreBrowserTabs, serializeBrowserTabs,
   type NativeBrowserTab, type NativeBrowserResource } from './browserTabs';
 import { mappingBrowserUrl } from '../chat/portMapping/useMappingBrowser';
 
@@ -26,6 +26,7 @@ export function useNativeBrowserTabs(scope: string) {
   const visit = (url: string) => setState(current => ({ ...current,
     tabs: current.tabs.map(tab => tab.id === current.activeId ? { ...tab, request: { url } } : tab) }));
   return { ...state, update, add, visit,
+    closeAll: () => setState(createBrowserHome()),
     select: (activeId: string) => setState(current => ({ ...current, activeId })),
     remove: (id: string) => setState(current => closeBrowserTab(current, id)) };
 }
