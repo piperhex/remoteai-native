@@ -11,6 +11,7 @@ import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
 import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
+import { BrowserHome } from '../../browser/BrowserHome';
 import { BrowserPortMappings } from '../../browser/BrowserPortMappings';
 import type { BrowserDevice } from '../../browser/browserMappings';
 import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
@@ -44,7 +45,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     Keyboard.dismiss();
     capturing.current = true;
     try {
-      if (page.current && browser.currentUrl && onPreview) {
+      if (page.current && onPreview) {
         const data = await captureRef(page, { format: 'jpg', quality: 0.55, width: 320, result: 'base64' });
         onPreview(`data:image/jpeg;base64,${data}`);
       }
@@ -55,6 +56,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     if (drawer) setDrawer(undefined);
     else if (settingsOpen) setSettingsOpen(false);
     else if (browser.history[direction]) browser.navigate(direction === 'back' ? 'goBack' : 'goForward');
+    else if (direction === 'back') close();
   };
   const gestures = useBrowserNavigationGestures(visible, () => navigate('back'), () => navigate('forward'));
   useLanguage();
@@ -79,7 +81,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
-      <View style={[StyleSheet.absoluteFill, browser.resourceVisible && { display: 'none' }]}>
+      <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
       <WebView ref={browser.webview} source={browser.source.uri ? browser.source : undefined} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
@@ -106,9 +108,11 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         onError={browser.onError} />
       </View>
       {resource && <View key={browser.resourceGeneration}
-        style={[styles.fill, !browser.resourceVisible && { display: 'none' }]}>
-        {resource.render({ active: visible && browser.resourceVisible, close })}
+        style={[styles.fill, (!browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
+        {resource.render({ active: visible && browser.resourceVisible && !browser.homeVisible, close })}
       </View>}
+      {browser.homeVisible && <BrowserHome devices={devices} visit={browser.visit}
+        bookmarks={() => setDrawer('bookmarks')} />}
       </View>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 import { BookmarkProvider } from '../../vendor/shared/browser/bookmarks/context';
@@ -23,6 +23,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const [visited, setVisited] = useState(false);
   const [requestedVisible, setVisible] = useState(false);
   const visible = active ?? requestedVisible;
+  useEffect(() => { if (visible) setVisited(true); }, [visible]);
   const [manager, setManager] = useState(false);
   const close = useCallback(() => {
     Keyboard.dismiss(); setVisible(false); setManager(false); onActiveChange?.(false);

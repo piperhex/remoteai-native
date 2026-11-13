@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import { setTimeout as delay } from 'node:timers/promises';
+
+export async function verifyBrowserNavigation({ adb, find, tap, nodes, screenshot, prefix }) {
+  const size = await adb('shell', 'wm', 'size');
+  const [width, height] = [...size.matchAll(/(\d+)x(\d+)/g)].at(-1).slice(1).map(Number);
+  const swipe = async side => {
+    const start = side === 'left' ? 18 : width - 18;
+    const end = side === 'left' ? width * .45 : width * .55;
+    const y = Math.round(height * .45);
+    await adb('shell', 'input', 'swipe', String(start), String(y), String(Math.round(end)), String(y), '250');
+    await delay(500);
+  };
+  const back = async () => { await adb('shell', 'input', 'keyevent', '4'); await delay(400); };
+  await tap('浏览器');
+  await find('在上方搜索或输入网址，也可以从这里打开常用链接。');
+  await screenshot(`${prefix}-home-empty`);
+  assert.ok(!(await nodes()).some(node => ['返回', '前进'].includes(node['content-desc'])));
+  await back(); await find('页面预览.html');
+  await tap('网页链接'); await find('Website preview');
+  await tap('Next page'); await find('Second page');
+  await swipe('left'); await find('Website preview');
+  await swipe('right'); await find('Second page');
+  await back(); await find('Website preview');
+  await tap('设置'); await tap('添加书签');
+  await back(); await find('Website preview');
+  await tap('浏览器首页'); await find('Website preview');
+  await tap('测试映射'); await find('本地预览服务');
+  await screenshot(`${prefix}-home-links`);
+  await tap('本地预览服务'); await find('Mapped service');
+  await tap('浏览器首页'); await tap('测试映射');
+  await find('在发现页添加并开启端口映射，连接成功后会显示在这里。');
+  await tap('Website preview'); await find('Next page');
+  await tap('浏览器首页'); await back(); await find('Next page');
+  await screenshot(`${prefix}-page-after-system-back`);
+  await tap('管理标签页（2）'); await find('搜索标签页'); await back(); await find('Next page');
+  await tap('聊天'); await tap('页面预览.html'); await tap('验证交互'); await find('点击成功');
+  await tap('浏览器首页'); await back(); await find('点击成功');
+  await swipe('left'); await find('在上方搜索或输入网址，也可以从这里打开常用链接。');
+  await swipe('right'); await find('点击成功');
+  await swipe('left'); await back(); await find('页面预览.html');
+  await tap('浏览器'); await tap('新标签页'); await tap('Website preview'); await find('Next page');
+  await back(); await find('在上方搜索或输入网址，也可以从这里打开常用链接。');
+  await back(); await find('页面预览.html');
+  console.log(`${prefix}: home, bookmarks, live mappings, retained resource, edge gestures and Android system Back passed.`);
+}

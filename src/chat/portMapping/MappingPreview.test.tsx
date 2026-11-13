@@ -39,6 +39,7 @@ vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' 
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));
 vi.mock('../../browser/BrowserBookmarks', () => ({ BrowserBookmarks: 'Bookmarks' }));
+vi.mock('../../browser/BrowserHome', () => ({ BrowserHome: 'Home' }));
 vi.mock('../../browser/BrowserPortMappings', () => ({ BrowserPortMappings: 'Mappings' }));
 vi.mock('../../browser/BrowserSearchEngines', () => ({ BrowserSearchEngines: 'SearchEngines' }));
 vi.mock('../../browser/searchEngine', () => ({ useNativeSearchEngine: () => ({ engine: 'google' }) }));
@@ -114,7 +115,7 @@ it('tracks navigation history and opens the current page externally without relo
   expect(runtime.openURL).toHaveBeenCalledWith('http://127.0.0.1:3002/next');
   webview().onNavigationStateChange!({ url: 'http://127.0.0.1:3002',
     canGoBack: false, canGoForward: true } as never);
-  expect(browser().history).toEqual({ back: false, forward: true });
+  expect(browser().history).toEqual({ back: true, forward: true });
   browser().navigate('goForward');
   expect(runtime.webview.goForward).toHaveBeenCalledOnce();
 });
@@ -180,7 +181,7 @@ it('retains the resource when browsing websites and reloads the selected website
     canGoBack: false, canGoForward: false, title: 'Example' } as never);
   current().navigate('goBack');
   expect(current().currentUrl).toBe(resource.url);
-  expect(current().history).toEqual({ back: false, forward: true });
+  expect(current().history).toEqual({ back: true, forward: true });
   current().submit('https://example.test/');
   expect(current().resourceVisible).toBe(false);
   expect(runtime.webview.reload).toHaveBeenCalledOnce();
@@ -190,4 +191,38 @@ it('retains the resource when browsing websites and reloads the selected website
   expect(current().resourceGeneration).toBe(1);
   current().navigate('goForward');
   expect(current().currentUrl).toBe('https://example.test/');
+});
+
+it('returns home without replacing a resource and restores it with Back', () => {
+  const resource = { url: 'file:///report.md', title: 'report.md', render: () => null };
+  const current = () => {
+    runtime.cursor = 0; runtime.refCursor = 0;
+    return useMappingBrowser(resource.url, resource);
+  };
+  current().home();
+  expect(current().homeVisible).toBe(true);
+  expect(current().currentUrl).toBe('');
+  expect(current().address).toBe('');
+  current().navigate('goBack');
+  expect(current().homeVisible).toBe(false);
+  expect(current().resourceVisible).toBe(true);
+  expect(current().currentUrl).toBe(resource.url);
+  current().navigate('goBack');
+  expect(current().homeVisible).toBe(true);
+  expect(current().history).toEqual({ back: false, forward: true });
+  current().navigate('goForward');
+  expect(current().resourceVisible).toBe(true);
+  expect(current().homeVisible).toBe(false);
+  expect(current().resourceGeneration).toBe(0);
+});
+
+it('keeps background URL updates out of the home address bar and opens a homepage link', () => {
+  browser().home();
+  webview().onNavigationStateChange!({ url: 'http://127.0.0.1:3002/',
+    canGoBack: false, canGoForward: false } as never);
+  expect(browser().address).toBe('');
+  browser().visit('http://127.0.0.1:3002/');
+  expect(browser().homeVisible).toBe(false);
+  expect(browser().address).toBe('http://127.0.0.1:3002/');
+  expect(runtime.webview.reload).not.toHaveBeenCalled();
 });

@@ -8,6 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Buffer } from 'buffer';
 import { fromByteArray } from 'base64-js';
 import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
+import { useNativeBrowser } from '../src/browser/context';
 import { ChatFileProvider } from '../src/chat/ChatFilePreview';
 import { ChatImageContext } from '../src/chat/ChatImage';
 import { ChatImagePreviewProvider } from '../src/chat/ChatImagePreview';
@@ -16,6 +17,8 @@ import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLan
 import { updateThemeMode } from '../src/theme/store';
 import { textMetrics } from '../src/theme/text';
 import { statusBarTestImage } from './modalStatusBarImage';
+import { DeviceMappingProvider } from '../vendor/shared/port-mapping/deviceRegistry';
+import { browserMappings, browserDevices, browserDeviceIds, toggleBrowserMapping } from './chatBrowserMappings';
 
 setInterfaceLanguage('zh');
 updateThemeMode('light');
@@ -55,16 +58,26 @@ const message = [...Object.keys(files), '阅读文档.pdf', '下载文件.zip', 
   .map(name => `[${name}](C:/fixture/${name})`).join('\n\n')
   + '\n\n[网页链接](http://127.0.0.1:18408/page)\n\n![图片菜单](C:/fixture/photo.png)';
 
+function FixtureFooter() {
+  const browser = useNativeBrowser();
+  return <View style={{ flexDirection: 'row', padding: 12, justifyContent: 'space-around' }}>
+    {['聊天', '浏览器', '深色模式', '测试映射'].map((name, index) => <Pressable key={name} accessibilityRole="button"
+      onPress={() => {
+        if (index === 3) toggleBrowserMapping();
+        else if (index === 2) updateThemeMode('dark');
+        else if (index === 1) browser.open();
+        else browser.close();
+      }}>
+      <Text style={textMetrics(14, 22)}>{name}</Text></Pressable>)}
+  </View>;
+}
+
 function ChatBrowserFixture() {
   const [fonts] = useFonts({ ...Ionicons.font, ...MaterialCommunityIcons.font });
   const [active, setActive] = useState(false);
-  const footer = <View style={{ flexDirection: 'row', padding: 12, justifyContent: 'space-around' }}>
-    {['聊天', '浏览器', '深色模式'].map((name, index) => <Pressable key={name} accessibilityRole="button"
-      onPress={() => index === 2 ? updateThemeMode('dark') : setActive(index === 1)}>
-      <Text style={textMetrics(14, 22)}>{name}</Text></Pressable>)}
-  </View>;
-  return <SafeAreaProvider>{fonts && <NativeBrowserProvider scope="chat-browser-fixture" active={active}
-    onActiveChange={setActive} footer={footer}>
+  return <SafeAreaProvider>{fonts && <DeviceMappingProvider registry={browserMappings.registry} deviceIds={browserDeviceIds}>
+    <NativeBrowserProvider scope="chat-browser-fixture" active={active} devices={browserDevices}
+    onActiveChange={setActive} footer={<FixtureFooter />}>
     <SafeAreaView style={{ flex: 1 }}><ScrollView contentContainerStyle={{ padding: 16 }}>
       <ChatImageContext.Provider value={image}><ChatImagePreviewProvider active={!active}>
         <ChatFileProvider ready active={!active} threadId="fixture" files={client} videos={videos} load={load}>
@@ -72,6 +85,6 @@ function ChatBrowserFixture() {
         </ChatFileProvider>
       </ChatImagePreviewProvider></ChatImageContext.Provider>
     </ScrollView></SafeAreaView>
-  </NativeBrowserProvider>}</SafeAreaProvider>;
+  </NativeBrowserProvider></DeviceMappingProvider>}</SafeAreaProvider>;
 }
 registerRootComponent(ChatBrowserFixture);

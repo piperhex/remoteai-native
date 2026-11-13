@@ -22,6 +22,8 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const webview = useRef<WebView>(null);
   const opening = useRef(false);
   const editing = useRef(false);
+  const [homeReturn, setHomeReturn] = useState<'goBack' | 'goForward' | undefined>();
+  const [homeVisible, setHomeVisible] = useState(!initialUrl && !resource);
   const [resourceVisible, setResourceVisible] = useState(Boolean(resource));
   const [resourceGeneration, setResourceGeneration] = useState(0);
   const [source, setSource] = useState({ uri: resource ? '' : initialUrl });
@@ -31,8 +33,22 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const [history, setHistory] = useState({ back: false, forward: false });
   const [error, setError] = useState('');
   const activity = usePreviewActivity();
+  const home = () => {
+    Keyboard.dismiss(); editing.current = false; setError('');
+    if (!homeVisible) setHomeReturn('goBack');
+    setHomeVisible(true); setAddress('');
+  };
   const navigate = (action: 'goBack' | 'goForward' | 'reload') => {
     editing.current = false;
+    if (homeVisible) {
+      if (action === homeReturn) {
+        setHomeVisible(false); setAddress(resourceVisible ? resource!.url : currentUrl);
+      }
+      return;
+    }
+    if (action === 'goBack' && (resourceVisible || !history.back && !resource)) {
+      setHomeReturn('goForward'); setHomeVisible(true); setAddress(''); return;
+    }
     if (resourceVisible) {
       if (action === 'reload') setResourceGeneration(value => value + 1);
       if (action === 'goForward' && currentUrl) { setResourceVisible(false); setAddress(currentUrl); }
@@ -46,12 +62,13 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const submit = (value = address) => {
     if (resource && value.trim() === resource.url) {
       editing.current = false;
-      Keyboard.dismiss(); setError(''); setAddress(resource.url); setResourceVisible(true); return;
+      Keyboard.dismiss(); setHomeVisible(false); setError(''); setAddress(resource.url); setResourceVisible(true); return;
     }
     const url = browserInput(value, search.engine, 'http:')?.href;
     if (!url) { setError(t('client.runtimeErrors.useAValidServerAddress')); return; }
     editing.current = false;
     Keyboard.dismiss();
+    setHomeVisible(false);
     setResourceVisible(false);
     setAddress(url);
     setError(''); activity.onLoadStart();
@@ -61,6 +78,7 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const visit = (address: string) => {
     const url = mappingBrowserUrl(address);
     if (!url) return;
+    Keyboard.dismiss(); setHomeVisible(false);
     setResourceVisible(false);
     if (url === mappingBrowserUrl(currentUrl)) { setAddress(url); return; }
     editing.current = false;
@@ -70,7 +88,7 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     setHistory({ back: state.canGoBack, forward: state.canGoForward });
     if (!/^https?:\/\//i.test(state.url)) return;
     setCurrentUrl(state.url);
-    if (!editing.current && !resourceVisible) setAddress(state.url);
+    if (!editing.current && !resourceVisible && !homeVisible) setAddress(state.url);
     setTitle(state.title);
     // Native WebViews skip loading an already-current URL. Keep source aligned after Back/Forward
     // so the next address submission is a browser navigation, preserving usable history entries.
@@ -90,10 +108,10 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   };
   const editAddress = (value: string) => { editing.current = true; setAddress(value); };
   return { webview, source, address, setAddress: editAddress,
-    currentUrl: resourceVisible ? resource!.url : currentUrl,
-    title: resourceVisible ? resource!.title : title,
-    history: resourceVisible ? { back: false, forward: Boolean(currentUrl) }
-      : { ...history, back: history.back || Boolean(resource) },
-    resourceVisible, resourceGeneration, error, activity,
+    currentUrl: homeVisible ? '' : resourceVisible ? resource!.url : currentUrl,
+    title: homeVisible ? '' : resourceVisible ? resource!.title : title,
+    history: homeVisible ? { back: homeReturn === 'goBack', forward: homeReturn === 'goForward' }
+      : { back: true, forward: !resourceVisible ? history.forward : Boolean(currentUrl) },
+    home, homeVisible, resourceVisible, resourceGeneration, error, activity,
     navigate, submit, visit, onNavigationStateChange, openExternal, onError };
 }

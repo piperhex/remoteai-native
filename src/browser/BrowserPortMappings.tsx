@@ -26,7 +26,7 @@ export function BrowserPortMappings({ devices, visit, close }: {
   </BottomSheet>;
 }
 
-function MappingAddress({ mapping, deviceName, visit }: {
+export function MappingAddress({ mapping, deviceName, visit }: {
   mapping: DeviceMappingEntry; deviceName?: string; visit: (url: string) => void;
 }) {
   const { runtime, entry } = mapping;

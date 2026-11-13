@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "5756d7848a9f745acfbfd27ae1825178f85e7080",
+  "revision": "854e77e6e9a11c2f2ceaa73d2f895b92bf372b49",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "9f30f94d2434f4d66254911b43caab91af012bd1"
+    "revision": "6ff6139a73c40ba300771c5e87dc90f8252c0263"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.24/remoteai-i18n-0.1.24.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.25/remoteai-i18n-0.1.25.tgz",
   "files": {
     "shared/dependencies.json": "7baf05672d7fd2f5452e0d100068f91c69034684aca1b05436e408fa48ca969f",
     "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",
@@ -29,6 +29,8 @@
     "shared/browser/bookmarks/channel.ts": "a9e9dfbc8f666317dae072dc058a227e34f7825c3e90ce76c86f15696ecb4411",
     "shared/browser/bookmarks/model.ts": "a7fda5c0828d5dfe778fcfa7ac5a9caec898a81ecb0024221aab1ba8d95b8116",
     "apps/desktop/e2e/android-hierarchy.mjs": "9ab90f7470f71237d18608f812d7b06847ffcbbe718be8d615d7e6927ecccc8e",
+    "shared/port-mapping/deviceRegistry.tsx": "c1a43c7cac48b6e2c45af123dce501a924e0f3a79a607b79dac4de0a2a0dddce",
+    "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
     "shared/remote-chat/client/historyLoad.ts": "b74d39fd3369d839bfbe876b4e135663943cf2b807e10b6e57be1a7a3f5798a1",
     "shared/remote-chat/testing/settingsFixture.ts": "ef4fd197fe842662327eda1062d2a17ff8971995e80258abfd6eed37a51cf152",
     "shared/chat/userMessageFixture.json": "2e3a1a1bc14467e6ce7341d154d9ac7e7be416d0f9932aa7cc24b44f16fa6d4d",
@@ -76,8 +78,6 @@
     "shared/chat/attachmentMetadata.ts": "ccbdb2ec4f5af2c8f1e9f6e7f30b83218f69ec22ed3f63c68ef778d0da84d470",
     "shared/remote-chat/packetCipher.ts": "4d01758d749f512a544880f39150dc142909e2b163dc5f7f9d18691c523ca45d",
     "shared/remote-chat/policy.ts": "165e938c60cb2cffcfd28f36739f62ed03fdcbaa26be630aa7aa60a356a5c6bd",
-    "shared/port-mapping/deviceRegistry.tsx": "c1a43c7cac48b6e2c45af123dce501a924e0f3a79a607b79dac4de0a2a0dddce",
-    "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
     "shared/chat/ChatFileReferences.tsx": "11c0697f551233c21fcfc34b143a8c2c5ebbe17bdfc168e87ab8f04acb8269e0",
     "shared/conversation/replyQuotes.ts": "fb8d762fb715f6aa915869948c0e5b056c1e9b1fd7837f60a24ca0c718211e4d",
     "shared/testing/mobileProjectPickerFixture.ts": "d8dadaa3546e94864306ff428c4a024303729acdba0393cc2a8b1f2e5ac82504",

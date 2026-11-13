@@ -6,12 +6,14 @@ import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { verifyBrowserNavigation } from './verify-browser-navigation-android.mjs';
 
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to the physical test device.');
 const app = 'com.codexswitch.mobile.chatbrowsertest';
 const imagesOnly = process.argv.includes('--images-only');
+const navigationOnly = process.argv.includes('--navigation-only');
 const output = fileURLToPath(new URL('../.codex-tmp/chat-browser/', import.meta.url));
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
@@ -32,6 +34,7 @@ async function find(label, index = 0) {
     if (match) return match;
     await delay(400);
   }
+  await screenshot('failure');
   throw new Error(`Missing Android control: ${label}`);
 }
 async function tap(label, index = 0, hold = false) {
@@ -70,10 +73,12 @@ async function verifyImageTaps(prefix) {
   await screenshot(`${prefix}-image-file-after-tap`);
   console.log(`${prefix}: browser image taps retain both tabs; fullscreen image tap still dismisses.`);
 }
-const server = createServer((_request, response) => {
+const server = createServer((request, response) => {
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
-  response.end('<!doctype html><title>Website preview</title>'
-    + '<meta name="viewport" content="width=device-width,initial-scale=1"><h1>Website preview</h1>');
+  const title = request.url === '/next' ? 'Second page' : request.url === '/' ? 'Mapped service' : 'Website preview';
+  response.end(`<!doctype html><title>${title}</title>`
+    + `<meta name="viewport" content="width=device-width,initial-scale=1"><h1>${title}</h1>`
+    + '<a href="/next">Next page</a>');
 });
 await mkdir(output, { recursive: true });
 await new Promise(resolve => server.listen(18408, '127.0.0.1', resolve));
@@ -90,6 +95,9 @@ try {
     if (scale === '1.3') await tap('深色模式');
     const prefix = `android-${scale === '1.3' ? 'dark' : 'light'}-font${scale}`;
     if (imagesOnly) { await verifyImageTaps(prefix); continue; }
+    if (navigationOnly) {
+      await verifyBrowserNavigation({ adb, find, tap, nodes, screenshot, prefix }); continue;
+    }
     await tap('页面预览.html'); await find('管理标签页（2）'); await find('验证交互');
     await tap('验证交互'); await find('点击成功'); await screenshot(`${prefix}-html`);
     await tap('聊天'); await tap('页面预览.html'); await find('管理标签页（3）'); await find('验证交互');
