@@ -8,6 +8,9 @@ export const NativeBrowserContext = createContext<{
   close: () => void;
   visible: boolean;
   hasBottomNavigation: boolean;
+  tabs?: { id: string; at: number }[];
+  closeTabs?: (ids: string[]) => void;
+  reloadTabs?: () => void;
 } | null>(null);
 
 export function useBrowserSafeAreaEdges() {

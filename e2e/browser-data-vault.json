@@ -1,0 +1,21 @@
+[
+  {
+    "id": "vault",
+    "kind": "vault",
+    "salt": "00112233445566778899aabbccddeeff",
+    "check": {
+      "nonce": "9df65bd5c29703af84cf93ac",
+      "ciphertext": "02df1fdc3012644978214c5435701fd00420946b0a5aae6d02399f7d7388cf09d22487ff6b9f9e8bd55ed881d7"
+    }
+  },
+  {
+    "id": "fixture-password",
+    "kind": "password",
+    "salt": "00112233445566778899aabbccddeeff",
+    "at": 1,
+    "secret": {
+      "nonce": "b42035f8ce5a42d573965ffa",
+      "ciphertext": "c38edb9ccfe4aac45477180289eaf26db6a769836845f484bc5e3084d6106e7743243e1a0e4f8f3cbc7aa0b05c4a103b2e5c5a1a61ba6772f77a74d454e65c30d281fe5002b70b50153cd6a1ac4c374d087b9a6c2ed24024bc1072deed451f24c045d4d88e672e718418b014d00b43"
+    }
+  }
+]

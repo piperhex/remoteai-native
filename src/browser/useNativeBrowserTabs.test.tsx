@@ -45,7 +45,7 @@ it('closes every retained resource and persists only a fresh browser homepage', 
   expect(previousIds).not.toContain(browser.activeId);
   expect(browser.tabs[0].resource).toBeUndefined();
   expect(JSON.parse(storage.setItemSync.mock.calls.at(-1)![1])).toEqual({
-    tabs: [{ url: '', title: '' }], activeIndex: 0,
+    tabs: [{ url: '', title: '', visitedAt: expect.any(Number) }], activeIndex: 0,
   });
   const homepage = browser.activeId;
   act(() => browser.remove(homepage));

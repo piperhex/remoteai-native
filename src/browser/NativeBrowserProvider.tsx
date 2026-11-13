@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Keyboard, StatusBar, StyleSheet, View } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
+import { getRandomBytes } from 'expo-crypto';
 import { BookmarkProvider } from '../../vendor/shared/browser/bookmarks/context';
 import type { BookmarkChannel } from '../../vendor/shared/browser/bookmarks/channel';
 import { MappingPreview } from '../chat/portMapping/MappingPreview';
@@ -8,6 +9,7 @@ import { NativeBrowserContext } from './context';
 import type { BrowserDevice } from './browserMappings';
 import { useNativeBrowserTabs } from './useNativeBrowserTabs';
 import { BrowserTabManager } from './BrowserTabManager';
+import { deriveNativeVaultKey } from './vaultCrypto';
 
 const bookmarkStorage = {
   getItem: (key: string) => Storage.getItemSync(key),
@@ -27,6 +29,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   useEffect(() => { if (visible) setVisited(true); }, [visible]);
   useEffect(() => { if (!visible) setFullscreen(false); }, [visible]);
   const [manager, setManager] = useState(false);
+  const [dataGeneration, setDataGeneration] = useState(0);
   const close = useCallback(() => {
     Keyboard.dismiss(); setVisible(false); setManager(false); setFullscreen(false); onActiveChange?.(false);
   }, [onActiveChange]);
@@ -37,12 +40,15 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     onActiveChange?.(true);
   };
   const context = useMemo(() => ({ visible, hasBottomNavigation, close,
+    tabs: browser.tabs.map(tab => ({ id: tab.id, at: tab.visitedAt ?? 0 })),
+    closeTabs: (ids: string[]) => ids.forEach(id => browser.remove(id)),
+    reloadTabs: () => setDataGeneration(value => value + 1),
     open: (url?: string) => { if (url) browser.visit(url); reveal(); },
     openTab: (url: string) => { browser.add(url); reveal(); },
     openResource: (resource: import('./browserTabs').NativeBrowserResource) => {
       browser.add(resource.url, resource); reveal();
     },
-  }), [visible, hasBottomNavigation, close, onActiveChange]);
+  }), [visible, hasBottomNavigation, close, onActiveChange, browser.tabs]);
   const add = () => { Keyboard.dismiss(); browser.add(); setManager(false); };
   const remove = (id: string) => {
     browser.remove(id);
@@ -54,7 +60,8 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     Keyboard.dismiss(); browser.closeAll(); setManager(false); setFullscreen(false);
   };
   return <NativeBrowserContext.Provider value={context}>
-    <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage}>
+    <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage} random={getRandomBytes}
+      derive={deriveNativeVaultKey}>
       <View style={styles.root}>
       {visible && fullscreen && <StatusBar hidden />}
       <View style={styles.root}>
@@ -66,13 +73,14 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
           return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]} collapsable={false}
             pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
             importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-            <MappingPreview initialUrl={tab.url} resource={tab.resource} request={tab.request}
+            <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource} request={tab.request}
               visible={active} devices={devices}
               desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
               fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}
               tabCount={browser.tabs.length} newTab={add} manageTabs={() => setManager(true)}
               onPreview={preview => browser.update(tab.id, { preview })}
-              onNavigate={(url, title) => browser.update(tab.id, { url, title })} close={close} />
+              onNavigate={(url, title) => browser.update(tab.id, { url, title,
+                visitedAt: url !== tab.url ? Date.now() : tab.visitedAt })} close={close} />
           </View>;
         })}
         {visible && manager && <View style={StyleSheet.absoluteFill}>

@@ -20,27 +20,31 @@ import { useBrowserSafeAreaEdges } from '../../browser/context';
 import { useBrowserSiteMode } from '../../browser/useBrowserSiteMode';
 import type { NativeBrowserResource } from '../../browser/browserTabs';
 import { BrowserFullscreenExit } from '../../browser/BrowserFullscreenExit';
+import { BrowserHistory } from '../../browser/BrowserHistory';
+import { BrowserPasswords, NativePasswordCapture } from '../../browser/BrowserPasswords';
+import { useNativeBrowserRecords } from '../../browser/useBrowserRecords';
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
-  fullscreen = false, onFullscreenChange = () => {} }: {
+  fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0 }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
   desktop?: boolean; onDesktopChange?: (desktop: boolean) => void;
-  fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void;
+  fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void; dataGeneration?: number;
 }) {
   const styles = useStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl, resource);
   const site = useBrowserSiteMode(desktop, browser.webview);
+  const records = useNativeBrowserRecords(browser.webview, visible);
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fullscreenMenuOpen, setFullscreenMenuOpen] = useState(false);
-  const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search'>();
+  const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search' | 'history' | 'passwords'>();
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const page = useRef<View>(null);
   const capturing = useRef(false);
@@ -88,7 +92,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
-      <WebView ref={browser.webview} source={browser.source.uri ? browser.source : undefined} style={styles.fill}
+      <WebView key={dataGeneration} ref={browser.webview}
+        source={browser.source.uri ? browser.source : undefined} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
         incognito={false} domStorageEnabled
@@ -98,14 +103,15 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
         // Android enforces this through patch-webview-permissions.cjs, including after redirects.
         geolocationEnabled={false} mediaCapturePermissionGrantType="deny"
-        injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT}
-        injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT}
-        onMessage={event => { if (!site.receive(event)) activity.onMessage(event); }}
+        injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
+        injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
+        onMessage={event => { if (!records.receive(event) && !site.receive(event)) activity.onMessage(event); }}
         onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
         onNavigationStateChange={state => {
           browser.onNavigationStateChange(state);
+          records.navigate(state);
           if (/^https?:\/\//i.test(state.url)) onNavigate?.(state.url, state.title);
         }}
         renderError={() => <View style={styles.empty}>
@@ -130,6 +136,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       bookmarks={() => { setSettingsOpen(false); setDrawer('bookmarks'); }}
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
       search={() => { setSettingsOpen(false); setDrawer('search'); }}
+      history={() => { setSettingsOpen(false); setDrawer('history'); }}
+      passwords={() => { setSettingsOpen(false); setDrawer('passwords'); }}
       dismiss={() => setSettingsOpen(false)} reload={() => browser.navigate('reload')} />}
     {fullscreen && <BrowserFullscreenExit open={fullscreenMenuOpen} setOpen={setFullscreenMenuOpen}
       exit={() => onFullscreenChange(false)} />}
@@ -138,6 +146,11 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     {drawer === 'mappings' && <BrowserPortMappings devices={devices}
       visit={url => { setDrawer(undefined); browser.visit(url); }} close={() => setDrawer(undefined)} />}
     {drawer === 'search' && <BrowserSearchEngines close={() => setDrawer(undefined)} />}
+    {drawer === 'history' && <BrowserHistory controls={records.controls} close={() => setDrawer(undefined)}
+      visit={url => { setDrawer(undefined); browser.visit(url); }} />}
+    {drawer === 'passwords' && <BrowserPasswords currentUrl={browser.currentUrl} fill={records.fill}
+      close={() => setDrawer(undefined)} />}
+    {records.candidate && <NativePasswordCapture login={records.candidate} close={records.closeCapture} />}
     </View>
     </SafeAreaView>;
 }

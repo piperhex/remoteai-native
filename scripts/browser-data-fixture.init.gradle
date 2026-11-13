@@ -1,0 +1,14 @@
+// Isolate browser verification from the installed application and all real account data.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-browser-data'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.browserdatatest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/BrowserDataFixture.tsx')
+        react.debuggableVariants = []
+        react.extraPackagerArgs = ['--reset-cache']
+    }
+}

@@ -43,6 +43,11 @@ vi.mock('../../browser/BrowserBookmarks', () => ({ BrowserBookmarks: 'Bookmarks'
 vi.mock('../../browser/BrowserHome', () => ({ BrowserHome: 'Home' }));
 vi.mock('../../browser/BrowserPortMappings', () => ({ BrowserPortMappings: 'Mappings' }));
 vi.mock('../../browser/BrowserSearchEngines', () => ({ BrowserSearchEngines: 'SearchEngines' }));
+vi.mock('../../browser/BrowserHistory', () => ({ BrowserHistory: 'History' }));
+vi.mock('../../browser/BrowserPasswords', () => ({ BrowserPasswords: 'Passwords', NativePasswordCapture: 'Capture' }));
+vi.mock('../../browser/useBrowserRecords', () => ({ useNativeBrowserRecords: () => ({
+  navigate: vi.fn(), receive: () => false, script: '', controls: {}, fill: vi.fn(), closeCapture: vi.fn(),
+}) }));
 vi.mock('../../browser/searchEngine', () => ({ useNativeSearchEngine: () => ({ engine: 'google' }) }));
 vi.mock('./mappingBrowserStyles', () => ({ useMappingBrowserStyles: () => ({}) }));
 vi.mock('../../components/Modal', () => ({ Modal: 'Modal' }));

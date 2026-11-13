@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { t, useLanguage } from '../../i18n';
 import { marketText } from '../../../vendor/shared/provider-market/i18n';
 import { useThemeColor } from '../../theme/store';
@@ -8,23 +8,25 @@ import { randomUUID } from 'expo-crypto';
 import { useCurrentBookmark } from '../../../vendor/shared/browser/bookmarks/useCurrentBookmark';
 import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/status';
 
-export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappings, search, external, url, title,
+export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappings, search, history, passwords, external, url, title,
   desktop, onDesktopChange, fullscreen }: {
   top: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
+  history: () => void; passwords: () => void;
   external?: () => void;
   url: string; title: string;
   desktop: boolean; onDesktopChange: (desktop: boolean) => void;
   fullscreen: () => void;
 }) {
   const styles = useMappingBrowserStyles();
+  const { height, width } = useWindowDimensions();
   const color = useThemeColor();
   const text = marketText(useLanguage());
   const current = useCurrentBookmark({ url, title, newId: randomUUID });
   return <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
     <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={dismiss} />
-    <View accessibilityRole="menu" accessibilityLabel={t('client.app.settings')}
-      style={[styles.menu, { top }]}>
+    <ScrollView accessibilityRole="menu" accessibilityLabel={t('client.app.settings')}
+      style={[styles.menu, { top, maxHeight: height - top - 100, maxWidth: Math.min(400, width - 16) }]}>
       <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.browserReload')}
         disabled={!url} accessibilityState={{ disabled: !url }} onPress={() => { dismiss(); reload(); }}
         style={({ pressed }) => [styles.menuItem, !url && styles.disabled, pressed && styles.pressed]}>
@@ -66,6 +68,14 @@ export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappin
         <Ionicons name="search-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.browserSearchEngine')}</Text>
       </Pressable>
+      <Pressable accessibilityRole="menuitem" onPress={history} style={styles.menuItem}>
+        <Ionicons name="time-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{text('market.browserHistory')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="menuitem" onPress={passwords} style={styles.menuItem}>
+        <Ionicons name="key-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{text('market.browserPasswords')}</Text>
+      </Pressable>
       <Pressable accessibilityRole="menuitem" onPress={mappings}
         accessibilityLabel={t('client.portForwarding.portMapping')}
         style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
@@ -78,6 +88,6 @@ export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappin
         <Ionicons name="bookmarks-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.bookmarkAll')}</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   </View>;
 }

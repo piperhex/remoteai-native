@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import type { BookmarkChannel } from './channel';
 import { BookmarkStore } from './store';
+import { BrowserDataProvider } from '../data/context';
+import type { RandomBytes, DeriveVaultKey } from '../data/crypto';
 
 type BookmarkStorage = Pick<Storage, 'getItem' | 'setItem'>;
 function browserStorage() {
@@ -9,13 +11,15 @@ function browserStorage() {
 const Context = createContext<BookmarkStore | null>(null);
 let guest: BookmarkStore | undefined;
 
-export function BookmarkProvider({ scope, channel, storage, children }: {
-  scope: string; channel?: BookmarkChannel; storage?: BookmarkStorage; children: ReactNode;
+export function BookmarkProvider({ scope, channel, storage, random, derive, children }: {
+  scope: string; channel?: BookmarkChannel; storage?: BookmarkStorage; random?: RandomBytes;
+  derive?: DeriveVaultKey; children: ReactNode;
 }) {
   const store = useMemo(() => new BookmarkStore(scope || 'guest', storage ?? browserStorage(), channel),
     [scope, channel, storage]);
   useEffect(() => store.start(), [store]);
-  return <Context.Provider value={store}>{children}</Context.Provider>;
+  return <Context.Provider value={store}><BrowserDataProvider scope={scope} channel={channel?.browserData}
+    storage={storage} random={random} derive={derive}>{children}</BrowserDataProvider></Context.Provider>;
 }
 
 export function useBookmarks() {

@@ -11,6 +11,7 @@ export interface NativeBrowserTab {
   url: string;
   title: string;
   preview?: string;
+  visitedAt?: number;
   request?: { url: string };
   desktop?: boolean;
   resource?: NativeBrowserResource;
@@ -19,7 +20,7 @@ export interface NativeBrowserTabs { tabs: NativeBrowserTab[]; activeId: string 
 
 let sequence = 0;
 export function newBrowserTab(url = ''): NativeBrowserTab {
-  return { id: `browser-${Date.now()}-${++sequence}`, url, title: '' };
+  return { id: `browser-${Date.now()}-${++sequence}`, url, title: '', visitedAt: Date.now() };
 }
 
 export function createBrowserHome(): NativeBrowserTabs {
@@ -40,11 +41,14 @@ export function restoreBrowserTabs(raw: string | null, fallbackUrl: string): Nat
   try {
     const value: unknown = JSON.parse(raw ?? 'null');
     if (value && typeof value === 'object' && 'tabs' in value && Array.isArray(value.tabs)) {
-      const tabs = value.tabs.filter((entry): entry is { url: string; title?: string; desktop?: boolean } =>
+      const tabs = value.tabs.filter((entry): entry is {
+        url: string; title?: string; desktop?: boolean; visitedAt?: number;
+      } =>
         !!entry && typeof entry === 'object' && typeof entry.url === 'string'
         && (!entry.url || /^https?:\/\//i.test(entry.url)))
         .map(entry => ({ ...newBrowserTab(entry.url), desktop: entry.desktop === true,
-          title: typeof entry.title === 'string' ? entry.title : '' }));
+          title: typeof entry.title === 'string' ? entry.title : '',
+          visitedAt: typeof entry.visitedAt === 'number' && Number.isFinite(entry.visitedAt) ? entry.visitedAt : 0 }));
       if (tabs.length) {
         const index = 'activeIndex' in value && typeof value.activeIndex === 'number' ? value.activeIndex : 0;
         return { tabs, activeId: (tabs[index] ?? tabs[0]).id };
@@ -58,6 +62,6 @@ export function restoreBrowserTabs(raw: string | null, fallbackUrl: string): Nat
 export function serializeBrowserTabs(state: NativeBrowserTabs): string {
   // Conversation resources depend on live, scoped clients and must never be restored as ordinary URLs.
   const tabs = state.tabs.filter(tab => !tab.resource);
-  return JSON.stringify({ tabs: tabs.map(({ url, title, desktop }) => ({ url, title, desktop })),
+  return JSON.stringify({ tabs: tabs.map(({ url, title, desktop, visitedAt }) => ({ url, title, desktop, visitedAt })),
     activeIndex: Math.max(0, tabs.findIndex(tab => tab.id === state.activeId)) });
 }

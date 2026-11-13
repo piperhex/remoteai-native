@@ -1,21 +1,27 @@
 import { readBookmarkDocument, type BookmarkDocument, type BookmarkReply } from './model';
+import { BrowserDataChannel } from '../data/channel';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 type Listener = (document?: BookmarkDocument) => void;
 
 /** Bookmark RPC shares the account socket; readiness is negotiated for older servers. */
 export class BookmarkChannel {
+  readonly browserData: BrowserDataChannel;
   available = false;
   private listeners = new Set<Listener>();
   private pending = new Map<string, { resolve: (reply: BookmarkReply) => void; reject: () => void }>();
   constructor(private readonly send: (frame: Record<string, unknown>) => boolean,
-    private readonly randomId: () => string = () => crypto.randomUUID()) {}
+    private readonly randomId: () => string = () => crypto.randomUUID()) {
+    this.browserData = new BrowserDataChannel(send, randomId);
+  }
   subscribe = (listener: Listener) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
-  ready(available: boolean) {
+  ready(available: boolean, browserData = false) {
+    this.browserData.ready(browserData);
     this.available = available;
     this.listeners.forEach(listener => listener());
   }
   disconnect() {
+    this.browserData.disconnect();
     this.available = false;
     this.pending.forEach(request => request.reject()); this.pending.clear();
     this.listeners.forEach(listener => listener());
@@ -31,6 +37,7 @@ export class BookmarkChannel {
       ...(document ? { bookmarks: document } : {}) })) fail();
   });
   receive(frame: Record<string, unknown>): boolean {
+    if (this.browserData.receive(frame)) return true;
     const pending = this.pending.get(String(frame.id));
     if (frame.type === 'rejected' && pending) { pending.reject(); return true; }
     if (frame.type !== 'bookmarks') return false;

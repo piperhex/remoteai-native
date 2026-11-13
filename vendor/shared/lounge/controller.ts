@@ -361,7 +361,7 @@ export class LoungeController {
         directResetAvailable: frame.directReset === true,
         contacts: this.state.contacts.filter(contact => contact.user.id !== user.id) });
       this.contactSync.ready(frame.savedContacts === true);
-      this.bookmarks.ready(frame.bookmarks === true);
+      this.bookmarks.ready(frame.bookmarks === true, frame.browserData === true);
       this.deviceSync.ready(user.id, frame.deviceSync === true);
       this.syncWatch(); return;
     }
