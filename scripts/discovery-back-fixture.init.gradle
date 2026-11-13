@@ -1,0 +1,11 @@
+// Run the real app against an isolated, empty account; never replace the user's installed application.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-discovery-back'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.discoverybacktest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.entryFile = new File(project.rootDir, '../e2e/DiscoveryBackFixture.tsx')
+        react.debuggableVariants = []
+    }
+}
