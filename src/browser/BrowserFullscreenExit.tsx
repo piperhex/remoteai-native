@@ -41,7 +41,7 @@ const useStyles = createThemedStyles(color => ({
   button: { alignItems: 'center', justifyContent: 'center', width: FULLSCREEN_CONTROL_SIZE,
     height: FULLSCREEN_CONTROL_SIZE, borderRadius: FULLSCREEN_CONTROL_SIZE / 2, borderWidth: 1,
     borderColor: color('#dfe5df', 'border'), backgroundColor: color('#ffffff', 'surface'), elevation: 4 },
-  circle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: color('#17211b', 'ink') },
+  circle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#b8bec6' },
   menu: { position: 'absolute', padding: 6, borderRadius: 14, borderWidth: 1,
     borderColor: color('#dfe5df', 'border'), backgroundColor: color('#ffffff', 'surface'), elevation: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 12 },
