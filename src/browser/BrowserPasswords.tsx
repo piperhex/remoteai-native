@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { useLanguage } from '../i18n';
+import { useThemeColor } from '../theme/store';
 import { marketText } from '../../vendor/shared/provider-market/i18n';
 import { useBrowserData } from '../../vendor/shared/browser/data/context';
 import { loginOrigin, type Login } from '../../vendor/shared/browser/data/model';
@@ -43,6 +44,7 @@ export function BrowserPasswords({ currentUrl, close, fill }: {
   currentUrl: string; close: () => void; fill: (login: Login) => Promise<void>;
 }) {
   const text = marketText(useLanguage()), styles = useDataStyles(), { vault, passwords, status } = useBrowserData();
+  const color = useThemeColor();
   const [query, setQuery] = useState(''), [editing, setEditing] = useState<Login | SavedLogin>();
   const [removing, setRemoving] = useState<SavedLogin>(), [error, setError] = useState(false);
   useEffect(() => { if (!passwords.unlocked) { setEditing(undefined); setRemoving(undefined); } }, [passwords.unlocked]);
@@ -61,7 +63,8 @@ export function BrowserPasswords({ currentUrl, close, fill }: {
       <Text style={styles.status}>{text(dataStatusKeys[status])}</Text>
       {!passwords.unlocked ? <NativeVaultUnlock /> : <>
         <TextInput style={styles.input} value={query} onChangeText={value => { setQuery(value); vault.touch(); }}
-          placeholder={text('market.browserPasswordSearch')} accessibilityLabel={text('market.browserPasswordSearch')} />
+          placeholder={text('market.browserPasswordSearch')} accessibilityLabel={text('market.browserPasswordSearch')}
+          placeholderTextColor={color('#718078', 'muted')} />
         <View style={styles.row}>
           <Pressable accessibilityRole="button" style={[styles.action, styles.details]} onPress={() => setEditing({
             origin: loginOrigin(currentUrl) ?? '', username: '', password: '',
