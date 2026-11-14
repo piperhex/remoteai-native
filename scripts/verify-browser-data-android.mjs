@@ -32,9 +32,18 @@ async function find(label, first = false) {
   throw new Error(`Missing native label: ${label}`);
 }
 async function tap(label, first = false) {
-  const node = await find(label, first), [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(Number);
+  await tapNode(await find(label, first));
+}
+async function tapNode(node) {
+  const [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(Number);
   await adb('shell', 'input', 'tap', String((left + right) >> 1), String((top + bottom) >> 1));
   await delay(350);
+}
+async function tapField(password = false) {
+  const node = (await nodes()).find(entry => entry.class === 'android.widget.EditText'
+    && !entry['content-desc'] && entry.password === String(password));
+  assert.ok(node, 'The fixture login field must be visible');
+  await tapNode(node);
 }
 async function shot(name) {
   await adb('shell', 'screencap', '-p', '/sdcard/browser-data.png');
@@ -52,17 +61,32 @@ const scaleBefore = await adb('shell', 'settings', 'get', 'system', 'font_scale'
 const results = [];
 try {
   if (process.argv.includes('--login')) {
-    await adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0');
-    await adb('shell', 'pm', 'clear', app);
-    await adb('shell', 'am', 'start', '-S', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
-    await find('Ready'); await tap('Login test'); await tap('Sign in');
-    await find('保存此网站的密码？'); await shot('android-login-save-prompt');
-    await type('密码库口令', 'browser-test-passphrase'); await tap('解锁密码库');
-    await tap('保存'); await tap('Reset form'); await tap('Passwords');
-    await find('native-fixture-user'); await shot('android-login-saved');
-    await tap('填入当前页面'); await find('Filled correctly'); await shot('android-login-filled');
+    for (const scale of ['1.0', '1.3']) {
+      const prefix = `android-login-font-${scale}`;
+      await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
+      await adb('shell', 'pm', 'clear', app);
+      await adb('shell', 'am', 'start', '-S', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+      await find('Ready'); await tap('Login test'); await tap('Sign in');
+      await find('保存此网站的密码？'); await shot(`${prefix}-save-prompt`);
+      await type('密码库口令', 'browser-test-passphrase'); await tap('解锁密码库');
+      await tap('保存'); await tap('Reset form'); await tapField();
+      await find('选择要填入的账号'); await shot(`${prefix}-suggestions`);
+      await tap('native-fixture-user'); await find('Filled correctly'); await shot(`${prefix}-filled`);
+      await adb('shell', 'input', 'keyevent', '3');
+      await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+      await tap('Reset form'); await tapField(true); await find('选择要填入的账号');
+      assert.ok(!(await nodes()).some(node => node['content-desc'] === '密码库口令'));
+      await tap('native-fixture-user'); await find('Filled correctly');
+      await adb('shell', 'am', 'force-stop', app);
+      await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+      await find('Ready'); await tap('Login test'); await tap('Reset form'); await tapField();
+      await find('选择要填入的账号'); await shot(`${prefix}-restart-suggestions`);
+      await tap('native-fixture-user'); await find('Filled correctly');
+      console.log(`Passed native input suggestions, background and restart at font scale ${scale}`);
+    }
     await writeFile(`${output}/android-engine-results.json`, JSON.stringify({ capture: true, save: true,
-      fill: true, nodeCreatedVaultUnlocked: true, physicalDevice: serial }));
+      fill: true, inputSuggestions: true, backgroundRetained: true, restartRetained: true,
+      scales: [1.0, 1.3], nodeCreatedVaultUnlocked: true, physicalDevice: serial }));
     console.log('Native WebView capture, save, fill and cross-platform decryption passed');
   }
   const scales = process.argv.includes('--login') ? [] : process.env.TEST_FONT_SCALE ? [process.env.TEST_FONT_SCALE] : ['1.0', '1.3'];

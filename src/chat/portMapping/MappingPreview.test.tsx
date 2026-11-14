@@ -45,6 +45,7 @@ vi.mock('../../browser/BrowserPortMappings', () => ({ BrowserPortMappings: 'Mapp
 vi.mock('../../browser/BrowserSearchEngines', () => ({ BrowserSearchEngines: 'SearchEngines' }));
 vi.mock('../../browser/BrowserHistory', () => ({ BrowserHistory: 'History' }));
 vi.mock('../../browser/BrowserPasswords', () => ({ BrowserPasswords: 'Passwords', NativePasswordCapture: 'Capture' }));
+vi.mock('../../browser/PasswordSuggestions', () => ({ NativePasswordSuggestions: 'Suggestions' }));
 vi.mock('../../browser/useBrowserRecords', () => ({ useNativeBrowserRecords: () => ({
   navigate: vi.fn(), receive: () => false, script: '', controls: {}, fill: vi.fn(), closeCapture: vi.fn(),
 }) }));

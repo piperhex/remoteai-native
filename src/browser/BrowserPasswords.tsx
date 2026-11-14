@@ -62,14 +62,15 @@ export function BrowserPasswords({ currentUrl, close, fill }: {
     <SheetScrollView keyboardShouldPersistTaps="handled">
       <Text style={styles.status}>{text(dataStatusKeys[status])}</Text>
       {!passwords.unlocked ? <NativeVaultUnlock /> : <>
-        <TextInput style={styles.input} value={query} onChangeText={value => { setQuery(value); vault.touch(); }}
+        <TextInput style={styles.input} value={query} onChangeText={setQuery}
           placeholder={text('market.browserPasswordSearch')} accessibilityLabel={text('market.browserPasswordSearch')}
           placeholderTextColor={color('#718078', 'muted')} />
         <View style={styles.row}>
           <Pressable accessibilityRole="button" style={[styles.action, styles.details]} onPress={() => setEditing({
             origin: loginOrigin(currentUrl) ?? '', username: '', password: '',
           })}><Text style={styles.link}>{text('market.browserPasswordAdd')}</Text></Pressable>
-          <Pressable accessibilityRole="button" style={styles.action} onPress={vault.lock}>
+          <Pressable accessibilityRole="button" style={styles.action}
+            onPress={() => { void vault.lock().catch(() => setError(true)); }}>
             <Text style={styles.link}>{text('market.browserVaultLock')}</Text></Pressable>
         </View>
         {passwords.error && <Text style={styles.error}>{text('market.browserVaultCorrupt')}</Text>}
@@ -80,9 +81,9 @@ export function BrowserPasswords({ currentUrl, close, fill }: {
           <Text style={styles.title}>{entry.origin}</Text><Text style={styles.secondary}>{entry.username}</Text>
           <View style={[styles.row, { flexWrap: 'wrap', paddingVertical: 0 }]}>
             {entry.origin === loginOrigin(currentUrl) && <Pressable accessibilityRole="button" style={styles.action}
-              onPress={() => { vault.touch(); void fill(entry).then(close).catch(() => setError(true)); }}>
+              onPress={() => { void fill(entry).then(close).catch(() => setError(true)); }}>
               <Text style={styles.link}>{text('market.browserPasswordFill')}</Text></Pressable>}
-            <Pressable accessibilityRole="button" style={styles.action} onPress={() => { vault.touch(); setEditing(entry); }}>
+            <Pressable accessibilityRole="button" style={styles.action} onPress={() => setEditing(entry)}>
               <Text style={styles.link}>{text('market.browserPasswordEdit')}</Text></Pressable>
             <Pressable accessibilityRole="button" style={styles.action} onPress={() => setRemoving(entry)}>
               <Text style={styles.link}>{text('market.bookmarkDelete')}</Text></Pressable>
@@ -111,7 +112,7 @@ function NativeVaultConflict() {
 function NativePasswordEditor({ login, close }: { login: Login | SavedLogin; close: () => void }) {
   const text = marketText(useLanguage()), styles = useDataStyles(), { vault } = useBrowserData();
   const [draft, setDraft] = useState<Login>(login), [show, setShow] = useState(false), [error, setError] = useState(false);
-  const update = (key: keyof Login, value: string) => { vault.touch(); setDraft(current => ({ ...current, [key]: value })); };
+  const update = (key: keyof Login, value: string) => setDraft(current => ({ ...current, [key]: value }));
   return <BottomSheet visible title={text('id' in login ? 'market.browserPasswordEdit' : 'market.browserPasswordAdd')}
     onClose={close} maxWidth={540} actions={[{ label: text('market.save'), tone: 'primary', onPress: () => {
       const origin = loginOrigin(draft.origin);
@@ -129,7 +130,7 @@ function NativePasswordEditor({ login, close }: { login: Login | SavedLogin; clo
       <TextInput style={styles.input} value={draft.password} onChangeText={value => update('password', value)}
         secureTextEntry={!show} autoCapitalize="none" autoCorrect={false} maxLength={4096}
         accessibilityLabel={text('market.browserPasswordValue')} />
-      <Pressable accessibilityRole="button" style={styles.action} onPress={() => { vault.touch(); setShow(!show); }}>
+      <Pressable accessibilityRole="button" style={styles.action} onPress={() => setShow(!show)}>
         <Text style={styles.link}>{text(show ? 'market.browserPasswordHide' : 'market.browserPasswordShow')}</Text></Pressable>
       {error && <Text style={styles.error} accessibilityRole="alert">{text('market.browserPasswordInvalid')}</Text>}
     </SheetScrollView>

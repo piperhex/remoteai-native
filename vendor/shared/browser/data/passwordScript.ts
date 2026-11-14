@@ -1,7 +1,7 @@
 import { passwordPageSource } from './passwordPageSource';
-import type { Login } from './model';
+import type { PasswordPageOptions } from './passwordPageFields';
 
 /** Hermes does not retain function source, so use the generated source string on every platform. */
-export function passwordScript(options: { action: 'install' | 'take' | 'fill'; login?: Login; native?: boolean }) {
+export function passwordScript(options: PasswordPageOptions) {
   return `(()=>{${passwordPageSource};return RemoteAIBrowserPassword.passwordPage(${JSON.stringify(options)});})()`;
 }

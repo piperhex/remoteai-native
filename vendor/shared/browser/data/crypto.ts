@@ -38,9 +38,12 @@ export async function unlockVault(passphrase: string, header: VaultHeader, deriv
   if (!passphrase || passphrase.length > 1024) throw new Error('vault-passphrase');
   const key = await derive(passphrase, header.salt);
   try {
-    if (unseal(key, header.check, header.salt) !== CHECK) throw new Error('vault-passphrase');
+    validateVaultKey(key, header);
     return key;
   } catch { key.fill(0); throw new Error('vault-passphrase'); }
+}
+export function validateVaultKey(key: Uint8Array, header: VaultHeader) {
+  if (key.length !== 32 || unseal(key, header.check, header.salt) !== CHECK) throw new Error('vault-passphrase');
 }
 export function validateLogin(value: unknown): value is Login {
   if (!value || typeof value !== 'object') return false;

@@ -23,6 +23,7 @@ import { BrowserFullscreenExit } from '../../browser/BrowserFullscreenExit';
 import { BrowserHistory } from '../../browser/BrowserHistory';
 import { BrowserPasswords, NativePasswordCapture } from '../../browser/BrowserPasswords';
 import { useNativeBrowserRecords } from '../../browser/useBrowserRecords';
+import { NativePasswordSuggestions } from '../../browser/PasswordSuggestions';
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
@@ -151,6 +152,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     {drawer === 'passwords' && <BrowserPasswords currentUrl={browser.currentUrl} fill={records.fill}
       close={() => setDrawer(undefined)} />}
     {records.candidate && <NativePasswordCapture login={records.candidate} close={records.closeCapture} />}
+    {records.focus && <NativePasswordSuggestions focus={records.focus} fill={records.fill}
+      close={records.closeSuggestions} />}
     </View>
     </SafeAreaView>;
 }

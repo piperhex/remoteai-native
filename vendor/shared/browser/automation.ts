@@ -1,4 +1,6 @@
-export interface ManagedBrowserTab { id: string; threadId: string; url: string; title: string; loading?: boolean }
+export interface ManagedBrowserTab {
+  id: string; threadId: string; url: string; title: string; loading?: boolean; icons?: string[];
+}
 export type BrowserCommand = { action: 'list' | 'snapshot' | 'screenshot' | 'back' | 'forward' | 'reload' | 'stop' | 'close' }
   | { action: 'navigate'; url: string }
   | { action: 'open'; url: string; requestId: string }
@@ -10,7 +12,8 @@ export type BrowserCommand = { action: 'list' | 'snapshot' | 'screenshot' | 'bac
 export interface BrowserRequest { threadId: string; tabId?: string; command: BrowserCommand }
 export interface BrowserReply {
   tabs?: ManagedBrowserTab[]; tab?: ManagedBrowserTab;
-  result?: { url?: string; title?: string; loading?: boolean; image?: { mimeType: string; data: string };
+  result?: { url?: string; title?: string; loading?: boolean; icons?: string[];
+    image?: { mimeType: string; data: string };
     viewport?: { width: number; height: number };
     elements?: { reference: string; role: string; name: string; disabled?: boolean;
       bounds?: { x: number; y: number; width: number; height: number } }[] };

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useNativeBrowserRecords } from '../src/browser/useBrowserRecords';
 import { BrowserPasswords, NativePasswordCapture } from '../src/browser/BrowserPasswords';
+import { NativePasswordSuggestions } from '../src/browser/PasswordSuggestions';
 import { textMetrics } from '../src/theme/text';
 
 const url = 'https://browser-fixture.test/';
@@ -27,6 +28,8 @@ export function BrowserLoginFixture({ close }: { close: () => void }) {
     <WebView ref={view} source={source} style={{ flex: 1 }} injectedJavaScript={records.script}
       onNavigationStateChange={records.navigate} onMessage={records.receive} />
     {records.candidate && <NativePasswordCapture login={records.candidate} close={records.closeCapture} />}
+    {records.focus && <NativePasswordSuggestions focus={records.focus} fill={records.fill}
+      close={records.closeSuggestions} />}
     {manager && <BrowserPasswords currentUrl={url} fill={records.fill} close={() => setManager(false)} />}
   </SafeAreaView>;
 }

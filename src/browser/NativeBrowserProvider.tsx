@@ -10,6 +10,7 @@ import type { BrowserDevice } from './browserMappings';
 import { useNativeBrowserTabs } from './useNativeBrowserTabs';
 import { BrowserTabManager } from './BrowserTabManager';
 import { deriveNativeVaultKey } from './vaultCrypto';
+import { nativeVaultKeyStorage } from './vaultKeyStorage';
 
 const bookmarkStorage = {
   getItem: (key: string) => Storage.getItemSync(key),
@@ -61,7 +62,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   };
   return <NativeBrowserContext.Provider value={context}>
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage} random={getRandomBytes}
-      derive={deriveNativeVaultKey}>
+      derive={deriveNativeVaultKey} keyStorage={nativeVaultKeyStorage}>
       <View style={styles.root}>
       {visible && fullscreen && <StatusBar hidden />}
       <View style={styles.root}>
