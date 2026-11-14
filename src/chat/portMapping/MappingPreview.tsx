@@ -68,7 +68,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     else if (browser.history[direction]) browser.navigate(direction === 'back' ? 'goBack' : 'goForward');
     else if (direction === 'back') close();
   };
-  const gestures = useBrowserNavigationGestures(visible, () => navigate('back'), () => navigate('forward'));
+  const gestures = useBrowserNavigationGestures(visible, () => navigate('back'));
   useLanguage();
   useEffect(() => { if (request) browser.visit(request.url); }, [request]);
   useEffect(() => {

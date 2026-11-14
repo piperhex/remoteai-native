@@ -2,8 +2,6 @@ package com.codexswitch.browser
 
 import android.app.Activity
 import android.os.Build
-import android.window.BackEvent
-import android.window.OnBackAnimationCallback
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.annotation.RequiresApi
@@ -53,22 +51,9 @@ class BrowserGesturesModule(private val context: ReactApplicationContext) :
   private object Api33 {
     fun register(activity: Activity, emit: (String) -> Unit): AutoCloseable {
       val target = activity.onBackInvokedDispatcher
-      val handler = if (Build.VERSION.SDK_INT >= 34) Api34.callback(emit) else OnBackInvokedCallback { emit("back") }
+      val handler = OnBackInvokedCallback { emit("back") }
       target.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_OVERLAY, handler)
       return AutoCloseable { target.unregisterOnBackInvokedCallback(handler) }
-    }
-  }
-
-  @RequiresApi(34)
-  private object Api34 {
-    fun callback(emit: (String) -> Unit): OnBackAnimationCallback = object : OnBackAnimationCallback {
-      private var direction = "back"
-      override fun onBackStarted(event: BackEvent) {
-        direction = if (event.swipeEdge == BackEvent.EDGE_RIGHT) "forward" else "back"
-      }
-      override fun onBackProgressed(event: BackEvent) = Unit
-      override fun onBackCancelled() { direction = "back" }
-      override fun onBackInvoked() { emit(direction); direction = "back" }
     }
   }
 
