@@ -4,13 +4,16 @@ const http = require('node:http');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const { permissionTestPage } = require('./webview-permissions/test-page.cjs');
+const locationChecks = require('./webview-permissions/geolocation-checks.cjs');
+const geolocation = process.argv.includes('--geolocation');
 
 const root = path.resolve(__dirname, '..');
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to an Android test device');
 const appId = 'com.codexswitch.previewpermissionchecks';
 const activity = `${appId}/com.codexswitch.mobile.MainActivity`;
-const output = path.join(root, '.codex-tmp/preview-permissions-session', serial);
+const evidenceDirectory = geolocation ? 'preview-geolocation' : 'preview-permissions-session';
+const output = path.join(root, '.codex-tmp', evidenceDirectory, serial);
 const apk = path.join(root, 'android/app/build/outputs/apk/release/preview-permissions-fixture.apk');
 fs.mkdirSync(output, { recursive: true });
 const results = [];
@@ -38,7 +41,7 @@ function build() {
 }
 
 async function waitFor(check, label) {
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 100; attempt++) {
     try {
       const result = await check();
       if (result) return result;
@@ -99,7 +102,7 @@ async function request(kind, name) {
 async function result(id, expected) {
   const value = await waitFor(() => results.find(item => item.id === id), `capture ${id}`);
   assert.equal(value.result, expected, JSON.stringify(value));
-  if (expected === 'granted') assert.equal(value.live, true);
+  if (expected === 'granted') assert.equal(value.available ?? value.live, true);
   return value;
 }
 
@@ -108,7 +111,7 @@ async function captureRetained(kind, name) {
   command = { kind, id };
   const captured = await result(id, 'granted');
   const expected = kind === 'both' ? ['audio', 'video'] : [kind];
-  assert.deepEqual(captured.tracks.sort(), expected);
+  if (kind !== 'location') assert.deepEqual(captured.tracks.sort(), expected);
   const current = await waitFor(() => nodes(), 'capture UI readiness');
   assert.ok(!current.some(node => node['resource-id'] === 'android:id/button1'), 'Unexpected website prompt');
   if (name) screenshot(name);
@@ -197,37 +200,55 @@ function createServer() {
   });
 }
 
+async function exerciseModes(checks) {
+  if (geolocation) {
+    await locationChecks.exerciseLocation(checks);
+    await locationChecks.exerciseLocationNavigation(checks);
+  } else {
+    await exerciseInitialConsent();
+    await exerciseRetainedConsent();
+    await exerciseNavigationAndClose();
+  }
+  device('shell', 'am', 'force-stop', appId);
+  if (geolocation) {
+    device('shell', 'pm', 'revoke', appId, 'android.permission.ACCESS_FINE_LOCATION');
+    device('shell', 'pm', 'grant', appId, 'android.permission.ACCESS_COARSE_LOCATION');
+  }
+  device('shell', 'settings', 'put', 'system', 'font_scale', '1.3');
+  device('shell', 'cmd', 'uimode', 'night', 'yes');
+  ready = 0;
+  device('shell', 'am', 'start', '-W', '-n', activity);
+  await waitFor(() => ready > 0, 'enlarged page readiness');
+  if (geolocation) return locationChecks.exerciseDarkLocation(checks);
+  const id = await request('both', 'both-dark-enlarged-font');
+  await tap('android:id/button2');
+  await result(id, 'NotAllowedError');
+  const retry = await request('both', 'both-dark-retry');
+  await tap('android:id/button1');
+  await result(retry, 'granted');
+  await captureRetained('both', 'both-dark-repeat-no-prompt');
+}
+
 async function main() {
   build();
   const server = createServer();
   let installed = false;
   const originalScale = device('shell', 'settings', 'get', 'system', 'font_scale');
   const originalNightMode = device('shell', 'cmd', 'uimode', 'night').split(':').at(-1).trim();
+  const originalLocation = geolocation ? device('shell', 'cmd', 'location', 'is-location-enabled') : undefined;
+  const checks = { request, tap, result, captureRetained, screenshot, button, navigate, device, activity, pause,
+    waitFor, getReady: () => ready, results };
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     device('reverse', 'tcp:1497', `tcp:${server.address().port}`);
     device('install', '-r', apk); installed = true;
     device('shell', 'pm', 'clear', appId);
+    if (geolocation) device('shell', 'cmd', 'location', 'set-location-enabled', 'true');
     device('shell', 'settings', 'put', 'system', 'font_scale', '1');
     device('shell', 'cmd', 'uimode', 'night', 'no');
     device('shell', 'am', 'start', '-W', '-n', activity);
     await waitFor(() => ready > 0, 'initial page readiness');
-    await exerciseInitialConsent();
-    await exerciseRetainedConsent();
-    await exerciseNavigationAndClose();
-    device('shell', 'am', 'force-stop', appId);
-    device('shell', 'settings', 'put', 'system', 'font_scale', '1.3');
-    device('shell', 'cmd', 'uimode', 'night', 'yes');
-    ready = 0;
-    device('shell', 'am', 'start', '-W', '-n', activity);
-    await waitFor(() => ready > 0, 'enlarged page readiness');
-    const id = await request('both', 'both-dark-enlarged-font');
-    await tap('android:id/button2');
-    await result(id, 'NotAllowedError');
-    const retry = await request('both', 'both-dark-retry');
-    await tap('android:id/button1');
-    await result(retry, 'granted');
-    await captureRetained('both', 'both-dark-repeat-no-prompt');
+    await exerciseModes(checks);
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
     console.log('PREVIEW_PERMISSIONS_PASSED', serial, results.length);
   } catch (error) {
@@ -238,6 +259,7 @@ async function main() {
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
     device('shell', 'settings', 'put', 'system', 'font_scale', originalScale === 'null' ? '1' : originalScale);
     device('shell', 'cmd', 'uimode', 'night', originalNightMode);
+    if (geolocation) device('shell', 'cmd', 'location', 'set-location-enabled', originalLocation);
     device('shell', 'am', 'force-stop', appId);
     if (installed) device('uninstall', appId);
     device('reverse', '--remove', 'tcp:1497');

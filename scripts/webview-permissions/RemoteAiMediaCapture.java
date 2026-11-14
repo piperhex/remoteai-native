@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.PermissionRequest;
+import android.webkit.GeolocationPermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +32,19 @@ public final class RemoteAiMediaCapture {
     private AlertDialog dialog;
 
     public RemoteAiMediaCapture(RNCWebView view) { this.view = view; }
+
+    public void requestGeolocation(String origin, GeolocationPermissions.Callback callback,
+            Consumer<GeolocationPermissions.Callback> authorize) {
+        PermissionRequest location = new RemoteAiGeolocationRequest(origin, callback);
+        request(location, approved -> authorize.accept((ignoredOrigin, allow, retain) -> {
+            if (allow) approved.grant(location.getResources());
+            else approved.deny();
+        }));
+    }
+
+    public void cancelGeolocation() {
+        if (pending != null && pending.original instanceof RemoteAiGeolocationRequest) cancel();
+    }
 
     public void request(PermissionRequest request, Consumer<PermissionRequest> authorize) {
         Activity activity = view.getThemedReactContext().getCurrentActivity();
@@ -78,13 +92,23 @@ public final class RemoteAiMediaCapture {
                 permission = Manifest.permission.RECORD_AUDIO;
             }
             else if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) permission = Manifest.permission.CAMERA;
+            else if (RemoteAiGeolocationRequest.RESOURCE.equals(resource)) permission = resource;
             else return null;
             try {
-                String label = manager.getPermissionInfo(permission, 0).loadLabel(manager).toString();
+                String label = permissionLabel(manager, permission);
                 if (!labels.contains(label)) labels.add(label);
             } catch (PackageManager.NameNotFoundException error) { return null; }
         }
         return labels.isEmpty() ? null : android.text.TextUtils.join("\n\n", labels);
+    }
+
+    private String permissionLabel(PackageManager manager, String permission)
+            throws PackageManager.NameNotFoundException {
+        if (RemoteAiGeolocationRequest.RESOURCE.equals(permission)) {
+            // The OS lets the user choose precision; the website prompt must not imply a fixed accuracy.
+            return manager.getPermissionGroupInfo(Manifest.permission_group.LOCATION, 0).loadLabel(manager).toString();
+        }
+        return manager.getPermissionInfo(permission, 0).loadLabel(manager).toString();
     }
 
     private void constrainWidth(Window window) {

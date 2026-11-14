@@ -72,8 +72,8 @@ const message = (data: string) => webview().onMessage!({ nativeEvent: { data } }
 
 beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.states = []; runtime.refs = []; });
 
-it('asks before website audio and video capture while keeping location disabled', () => {
-  expect(webview()).toMatchObject({ mediaCapturePermissionGrantType: 'prompt', geolocationEnabled: false,
+it('enables website location and prompts before capture', () => {
+  expect(webview()).toMatchObject({ mediaCapturePermissionGrantType: 'prompt', geolocationEnabled: true,
     allowsInlineMediaPlayback: true });
 });
 

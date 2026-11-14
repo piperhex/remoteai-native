@@ -23,6 +23,11 @@ it('enforces deny in both architectures, preserves it on the view and applies id
     expect(client).toContain('if (mWebView.remoteAiDenyMediaCapture)');
     expect(client).toContain('remoteAiMediaCapture.request(request, this::remoteAiRequestMediaCapture)');
     expect(client).toContain('remoteAiMediaCapture.canceledByPage(request)');
+    expect(client).toContain('if (!mWebView.remoteAiAllowGeolocation)');
+    expect(client).toContain('remoteAiMediaCapture.requestGeolocation(origin, callback,');
+    expect(client).toContain('remoteAiMediaCapture.cancelGeolocation()');
+    expect(client).toContain('java.util.Arrays.asList(Manifest.permission.ACCESS_COARSE_LOCATION,');
+    expect(client).toContain('if (remoteAiHasLocationPermission())');
     expect(read(`main/java/${packagePath}/RNCWebView.java`)).toContain('boolean remoteAiDenyMediaCapture = false');
     for (const arch of ['oldarch', 'newarch']) {
       expect(read(`${arch}/${packagePath}/RNCWebViewManager.java`))
@@ -34,6 +39,8 @@ it('enforces deny in both architectures, preserves it on the view and applies id
     expect(view).toContain('new RemoteAiMediaCapture(this)');
     expect(view).toContain('remoteAiMediaCapture.cancel()');
     expect(view).toContain('remoteAiMediaCapture.close()');
+    expect(view).toContain('boolean remoteAiAllowGeolocation = false');
+    expect(read(`main/java/${packagePath}/RNCWebViewManagerImpl.kt`)).toContain('view.remoteAiAllowGeolocation = value');
     expect(read(`main/java/${packagePath}/RNCWebViewClient.java`)).toContain('remoteAiMediaCapture.navigate(url)');
     patchWebViewPermissions(temporary);
     expect(read(clientPath)).toBe(client);

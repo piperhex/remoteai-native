@@ -102,7 +102,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         sharedCookiesEnabled thirdPartyCookiesEnabled={false}
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
         // Ask before first capture; Android retains successful consent for this tab's current site.
-        geolocationEnabled={false} mediaCapturePermissionGrantType="prompt" allowsInlineMediaPlayback
+        geolocationEnabled mediaCapturePermissionGrantType="prompt" allowsInlineMediaPlayback
         injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         onMessage={event => { if (!records.receive(event) && !site.receive(event)) activity.onMessage(event); }}

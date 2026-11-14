@@ -43,7 +43,7 @@ const changes = [
         + '        super.onVisibilityChanged(changedView, visibility);\n'
         + '        if (visibility != View.VISIBLE && remoteAiMediaCapture != null) remoteAiMediaCapture.cancel();\n'
         + '    }\n\n    @Override\n    public void onHostPause() {'],
-  ];
+  ].concat(require('./webview-permissions/geolocation-patch.cjs'));
 
 // Keep consent on the WebView so replacement WebChromeClients share the tab's permission session.
 function patchWebViewPermissions(directory) {
@@ -59,7 +59,9 @@ function patchWebViewPermissions(directory) {
         normalized = normalized.replace(oldSetter, name.startsWith('oldarch/') ? '' : before);
       } else if (before === 'protected boolean messagingEnabled = false;') {
         normalized = normalized.replace(before + '\n    public boolean remoteAiDenyMediaCapture = false;', before);
-      } else if (name.includes('RNCWebChromeClient')) normalized = normalized.replace(oldGuard, before);
+      } else if (before === 'public void onPermissionRequest(final PermissionRequest request) {') {
+        normalized = normalized.replace(oldGuard, before);
+      }
       else if (name.includes('RNCWebViewClient')) {
         normalized = normalized.replace(before + '\n      ((RNCWebView) webView).remoteAiMediaCapture.cancel();', before);
       } else if (before === 'public void destroy() {') {
@@ -71,6 +73,8 @@ function patchWebViewPermissions(directory) {
   for (const [file, source] of updates) fs.writeFileSync(file, source);
   fs.copyFileSync(path.join(__dirname, 'webview-permissions/RemoteAiMediaCapture.java'),
     path.join(directory, 'main/java/' + packagePath + 'RemoteAiMediaCapture.java'));
+  fs.copyFileSync(path.join(__dirname, 'webview-permissions/RemoteAiGeolocationRequest.java'),
+    path.join(directory, 'main/java/' + packagePath + 'RemoteAiGeolocationRequest.java'));
 }
 
 function applyWebViewPermissionsPatch() {
