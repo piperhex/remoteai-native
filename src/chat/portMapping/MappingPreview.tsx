@@ -101,8 +101,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
         sharedCookiesEnabled thirdPartyCookiesEnabled={false}
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
-        // Android enforces this through patch-webview-permissions.cjs, including after redirects.
-        geolocationEnabled={false} mediaCapturePermissionGrantType="deny"
+        // Ask for each site's capture request, even when the app already has OS permission.
+        geolocationEnabled={false} mediaCapturePermissionGrantType="prompt" allowsInlineMediaPlayback
         injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         onMessage={event => { if (!records.receive(event) && !site.receive(event)) activity.onMessage(event); }}

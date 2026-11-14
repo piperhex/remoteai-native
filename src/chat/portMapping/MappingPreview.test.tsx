@@ -72,6 +72,11 @@ const message = (data: string) => webview().onMessage!({ nativeEvent: { data } }
 
 beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.states = []; runtime.refs = []; });
 
+it('asks before website audio and video capture while keeping location disabled', () => {
+  expect(webview()).toMatchObject({ mediaCapturePermissionGrantType: 'prompt', geolocationEnabled: false,
+    allowsInlineMediaPlayback: true });
+});
+
 it('shows activity from initial navigation through outstanding page requests', () => {
   expect(active()).toBe(true);
   message(PREVIEW_NETWORK_BUSY);

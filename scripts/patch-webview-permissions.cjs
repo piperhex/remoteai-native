@@ -7,31 +7,65 @@ function replaceOnce(source, before, after) {
   return source.replace(before, after);
 }
 
-// Keep the decision on the WebView, so redirects and replacement WebChromeClients cannot reset it.
-function patchWebViewPermissions(directory) {
-  const packagePath = 'com/reactnativecommunity/webview/';
-  const setter = '@ReactProp(name = "mediaCapturePermissionGrantType")\n'
+const packagePath = 'com/reactnativecommunity/webview/';
+const setter = '@ReactProp(name = "mediaCapturePermissionGrantType")\n'
     + '    public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {\n'
-    + '        view.getWebView().remoteAiDenyMediaCapture = "deny".equals(value);\n    }';
-  const changes = [
+    + '        view.getWebView().remoteAiDenyMediaCapture = "deny".equals(value);\n'
+    + '        view.getWebView().remoteAiPromptMediaCapture = "prompt".equals(value);\n    }';
+const oldSetter = setter.replace('        view.getWebView().remoteAiPromptMediaCapture = "prompt".equals(value);\n', '');
+const oldGuard = 'public void onPermissionRequest(final PermissionRequest request) {\n'
+    + '        if (mWebView.remoteAiDenyMediaCapture) {\n'
+    + '            request.deny();\n            return;\n        }';
+const changes = [
     ['main/java/' + packagePath + 'RNCWebView.java', 'protected boolean messagingEnabled = false;',
-      'protected boolean messagingEnabled = false;\n    public boolean remoteAiDenyMediaCapture = false;'],
+      'protected boolean messagingEnabled = false;\n    public boolean remoteAiDenyMediaCapture = false;\n'
+        + '    public boolean remoteAiPromptMediaCapture = false;\n'
+        + '    public final RemoteAiMediaCapture remoteAiMediaCapture = new RemoteAiMediaCapture(this);'],
     ['main/java/' + packagePath + 'RNCWebChromeClient.java',
       'public void onPermissionRequest(final PermissionRequest request) {',
-      'public void onPermissionRequest(final PermissionRequest request) {\n'
-        + '        if (mWebView.remoteAiDenyMediaCapture) {\n'
-        + '            request.deny();\n            return;\n        }'],
+      oldGuard + '\n        if (mWebView.remoteAiPromptMediaCapture) {\n'
+        + '            mWebView.remoteAiMediaCapture.request(request, this::remoteAiRequestMediaCapture);\n'
+        + '            return;\n        }\n        remoteAiRequestMediaCapture(request);\n    }\n\n'
+        + '    @Override\n    public void onPermissionRequestCanceled(PermissionRequest request) {\n'
+        + '        mWebView.remoteAiMediaCapture.canceledByPage(request);\n    }\n\n'
+        + '    private void remoteAiRequestMediaCapture(final PermissionRequest request) {'],
     ['newarch/' + packagePath + 'RNCWebViewManager.java',
       'public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}', setter],
     ['oldarch/' + packagePath + 'RNCWebViewManager.java', '@ReactProp(name = "incognito")',
       setter + '\n\n    @ReactProp(name = "incognito")'],
-  ].map(([name, before, after]) => {
+    ['main/java/' + packagePath + 'RNCWebViewClient.java',
+      'super.onPageStarted(webView, url, favicon);',
+      'super.onPageStarted(webView, url, favicon);\n      ((RNCWebView) webView).remoteAiMediaCapture.cancel();'],
+    ['main/java/' + packagePath + 'RNCWebView.java', 'public void destroy() {',
+      'public void destroy() {\n        remoteAiMediaCapture.cancel();'],
+    ['main/java/' + packagePath + 'RNCWebView.java', 'public void onHostPause() {',
+      'protected void onVisibilityChanged(View changedView, int visibility) {\n'
+        + '        super.onVisibilityChanged(changedView, visibility);\n'
+        + '        if (visibility != View.VISIBLE && remoteAiMediaCapture != null) remoteAiMediaCapture.cancel();\n'
+        + '    }\n\n    @Override\n    public void onHostPause() {'],
+  ];
+
+// Keep the decision on the WebView, so redirects and replacement WebChromeClients cannot reset it.
+function patchWebViewPermissions(directory) {
+  const updates = new Map();
+  for (const [name, before, after] of changes) {
     const file = path.join(directory, name);
-    const original = fs.readFileSync(file, 'utf8');
+    const original = updates.get(file) ?? fs.readFileSync(file, 'utf8');
     const newline = original.includes('\r\n') ? '\r\n' : '\n';
-    return { file, source: replaceOnce(original.replace(/\r\n/g, '\n'), before, after).replace(/\n/g, newline) };
-  });
-  changes.forEach(({ file, source }) => fs.writeFileSync(file, source));
+    let normalized = original.replace(/\r\n/g, '\n');
+    // Upgrade installations carrying the previous deny-only patch as well as pristine packages.
+    if (!normalized.includes(after)) {
+      if (name.includes('RNCWebViewManager')) {
+        normalized = normalized.replace(oldSetter, name.startsWith('oldarch/') ? '' : before);
+      } else if (before === 'protected boolean messagingEnabled = false;') {
+        normalized = normalized.replace(before + '\n    public boolean remoteAiDenyMediaCapture = false;', before);
+      } else if (name.includes('RNCWebChromeClient')) normalized = normalized.replace(oldGuard, before);
+    }
+    updates.set(file, replaceOnce(normalized, before, after).replace(/\n/g, newline));
+  }
+  for (const [file, source] of updates) fs.writeFileSync(file, source);
+  fs.copyFileSync(path.join(__dirname, 'webview-permissions/RemoteAiMediaCapture.java'),
+    path.join(directory, 'main/java/' + packagePath + 'RemoteAiMediaCapture.java'));
 }
 
 function applyWebViewPermissionsPatch() {

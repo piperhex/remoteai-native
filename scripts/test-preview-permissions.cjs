@@ -1,128 +1,194 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
-const https = require('node:https');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
+const { permissionTestPage } = require('./webview-permissions/test-page.cjs');
 
 const root = path.resolve(__dirname, '..');
-const native = root, android = path.join(native, 'android');
-const sdk = process.env.ANDROID_HOME || path.join(process.env.LOCALAPPDATA, 'Android/Sdk');
-const adb = path.join(sdk, 'platform-tools/adb');
-const serial = process.env.ANDROID_SERIAL || 'emulator-5580';
-if (!serial.startsWith('emulator-')) throw new Error('This isolated permission test requires an emulator.');
+const serial = process.env.ANDROID_SERIAL;
+assert.ok(serial, 'Set ANDROID_SERIAL to an Android test device');
 const appId = 'com.codexswitch.previewpermissionchecks';
-const output = path.join(root, '.codex-tmp/preview-permissions');
+const activity = `${appId}/com.codexswitch.mobile.MainActivity`;
+const output = path.join(root, '.codex-tmp/preview-permissions', serial);
+const apk = path.join(root, 'android/app/build/outputs/apk/release/preview-permissions-fixture.apk');
 fs.mkdirSync(output, { recursive: true });
-const buildFile = path.join(android, 'app/build.gradle');
-const manifest = path.join(android, 'app/src/main/AndroidManifest.xml');
-const originals = new Map([buildFile, manifest].map(file => [file, fs.readFileSync(file)]));
-for (const [file, contents] of originals) fs.writeFileSync(path.join(output, path.basename(file) + '.original'), contents);
-const apk = path.join(android, 'app/build/outputs/apk/release/app-release.apk');
-const previousApk = fs.existsSync(apk) ? path.join(output, 'regular-app.apk') : undefined;
-if (previousApk) fs.copyFileSync(apk, previousApk);
-const resources = path.join(output, 'res');
 const results = [];
-const servers = [];
+let command;
+let sequence = 0;
+let ready = 0;
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const device = (...args) => execFileSync('adb', ['-s', serial, ...args], {
+  encoding: 'utf8', windowsHide: true, timeout: 30_000, maxBuffer: 8 * 1024 * 1024,
+}).trim();
 
-function run(command, args, cwd = root) {
-  const result = spawnSync(command, args, { cwd, windowsHide: true, encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024, timeout: 600_000,
-    env: { ...process.env, NODE_ENV: 'production', NODE_PATH: path.join(native, 'node_modules') } });
-  if (result.error || result.status !== 0) {
-    throw new Error(`${command}: ${result.error || result.stderr || result.stdout}`);
-  }
-  return result.stdout;
-}
-const device = (...args) => run(adb, ['-s', serial, ...args]);
-
-function prepare() {
+function build() {
+  if (process.argv.includes('--skip-build')) return;
   require('./patch-webview-permissions.cjs').applyWebViewPermissionsPatch();
-  const openssl = process.env.OPENSSL || (process.platform === 'win32'
-    ? 'C:/Program Files/Git/usr/bin/openssl.exe' : 'openssl');
-  fs.mkdirSync(path.join(resources, 'raw'), { recursive: true });
-  fs.mkdirSync(path.join(resources, 'xml'), { recursive: true });
-  run(openssl, ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
-    '-keyout', path.join(output, 'key.pem'), '-out', path.join(resources, 'raw/preview_test_ca.pem'),
-    '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1']);
-  // Trust the generated certificate only in this isolated test APK, never in the regular app.
-  fs.writeFileSync(path.join(resources, 'xml/preview_test_security.xml'), '<network-security-config>'
-    + '<base-config cleartextTrafficPermitted="true"><trust-anchors><certificates src="@raw/preview_test_ca"/>'
-    + '</trust-anchors></base-config></network-security-config>');
-  const entry = path.join(native, 'e2e/previewPermissionChecks.tsx').replaceAll('\\', '/');
-  const changed = originals.get(buildFile).toString().replace(/^\s*entryFile = file\(.*\)$/m,
-    `    entryFile = file('${entry}')`).replace("applicationId 'com.codexswitch.mobile'", `applicationId '${appId}'`)
-    + `\nandroid.sourceSets.main.res.srcDirs += '${resources.replaceAll('\\', '/')}'\n`;
-  assert.ok(changed.includes(`entryFile = file('${entry}')`) && changed.includes(`applicationId '${appId}'`));
-  fs.writeFileSync(buildFile, changed);
-  fs.writeFileSync(manifest, originals.get(manifest).toString()
-    .replace('<application ', '<application android:networkSecurityConfig="@xml/preview_test_security" '));
+  const arch = process.env.ANDROID_ABI || (serial.startsWith('emulator-') ? 'x86_64' : 'arm64-v8a');
+  const args = [':app:assembleRelease', '--no-daemon', `-PreactNativeArchitectures=${arch}`,
+    '--init-script', '../scripts/webview-permissions/fixture.init.gradle'];
+  const windows = process.platform === 'win32';
+  const result = spawnSync(windows ? process.env.ComSpec : './gradlew',
+    windows ? ['/d', '/c', 'gradlew.bat', ...args] : args, {
+      cwd: path.join(root, 'android'), windowsHide: true, stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production', NODE_PATH: path.join(root, 'node_modules') },
+    });
+  assert.equal(result.status, 0, 'Permission fixture build failed');
 }
 
-function serve(request, response) {
-  const url = new URL(request.url, 'http://localhost');
-  response.setHeader('Content-Type', 'text/html');
-  if (url.pathname === '/result') {
-    results.push(Object.fromEntries(url.searchParams)); response.end('ok'); return;
+async function waitFor(check, label) {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const result = await check();
+    if (result) return result;
+    await pause(250);
   }
-  if (url.pathname === '/redirect') {
-    response.writeHead(302, { Location: 'https://localhost:1499/' }); response.end(); return;
-  }
-  response.end(`<!doctype html><h1>Preview camera permission check</h1><script>
-    (async () => {
-      let result;
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach(track => track.stop()); result = 'granted';
-      } catch (error) { result = error.name; }
-      document.body.append(result);
-      await fetch('/result?' + new URLSearchParams({ origin: location.origin, secure: isSecureContext, result }));
-      if (location.protocol === 'http:') location.href = '/redirect';
-    })();</script>`);
+  throw new Error(`Timed out: ${label}`);
+}
+
+function nodes() {
+  device('shell', 'uiautomator', 'dump', '/sdcard/preview-permission-layout.xml');
+  return [...device('shell', 'cat', '/sdcard/preview-permission-layout.xml').matchAll(/<node\b([^>]*)>/g)]
+    .map(match => Object.fromEntries([...match[1].matchAll(/([\w-]+)="([^"]*)"/g)]
+      .map(attribute => [attribute[1], attribute[2]])));
+}
+
+async function button(resource) {
+  return waitFor(() => {
+    const current = nodes();
+    const standard = current.find(node => node['resource-id'].endsWith(resource));
+    const systemButton = [':id/permission_allow_foreground_only_button', ':id/permission_deny_button'].includes(resource);
+    if (standard || !systemButton) return standard;
+    // This MIUI controller omits button IDs: deny, one-time and foreground are in that order.
+    const oem = current.filter(node => node.package === 'com.lbe.security.miui'
+      && node.class === 'android.widget.Button');
+    return oem.length === 3 ? oem[resource === ':id/permission_deny_button' ? 0 : 2] : undefined;
+  }, resource);
+}
+
+async function tap(resource) {
+  const node = await button(resource);
+  const [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));
+  device('shell', 'input', 'tap', String((left + right) >> 1), String((top + bottom) >> 1));
+  // Allow the HTTP fixture to process pending messages while the native dialog closes.
+  await pause(300);
+}
+
+function screenshot(name) {
+  device('shell', 'screencap', '-p', '/sdcard/preview-permission.png');
+  device('pull', '/sdcard/preview-permission.png', path.join(output, name + '.png'));
+}
+
+async function request(kind, name) {
+  const id = String(sequence++);
+  const previousResults = results.length;
+  command = { kind, id };
+  await button('android:id/button1');
+  assert.equal(results.length, previousResults, 'Capture completed before website consent');
+  screenshot(name);
+  return id;
+}
+
+async function result(id, expected) {
+  const value = await waitFor(() => results.find(item => item.id === id), `capture ${id}`);
+  assert.equal(value.result, expected, JSON.stringify(value));
+  if (expected === 'granted') assert.equal(value.live, true);
+  return value;
+}
+
+async function exercise() {
+  let id = await request('audio', 'audio-site-prompt');
+  await tap('android:id/button2');
+  await result(id, 'NotAllowedError');
+  id = await request('audio', 'audio-before-system-prompt');
+  await tap('android:id/button1');
+  await button(':id/permission_allow_foreground_only_button');
+  screenshot('audio-system-prompt');
+  await tap(':id/permission_deny_button');
+  await result(id, 'NotAllowedError');
+  id = await request('audio', 'audio-retry-system-denial');
+  await tap('android:id/button1');
+  await tap(':id/permission_allow_foreground_only_button');
+  assert.deepEqual((await result(id, 'granted')).tracks, ['audio']);
+  id = await request('video', 'video-site-prompt');
+  await tap('android:id/button1');
+  await tap(':id/permission_allow_foreground_only_button');
+  assert.deepEqual((await result(id, 'granted')).tracks, ['video']);
+  id = await request('both', 'both-site-prompt-pregranted');
+  await tap('android:id/button1');
+  assert.deepEqual((await result(id, 'granted')).tracks.sort(), ['audio', 'video']);
+  id = await request('both', 'both-deny-pregranted');
+  await tap('android:id/button2');
+  await result(id, 'NotAllowedError');
+  const canceled = await request('audio', 'navigation-pending');
+  command = { kind: 'navigate' };
+  await waitFor(() => !nodes().some(node => node['resource-id'] === 'android:id/button1'), 'navigation cancellation');
+  id = await request('both', 'redirect-site-prompt');
+  await tap('android:id/button1');
+  const redirected = await result(id, 'granted');
+  assert.equal(redirected.origin, 'http://localhost:1497');
+  assert.notEqual(results.find(item => item.id === canceled)?.result, 'granted');
+  screenshot('capture-success');
+}
+
+function createServer() {
+  return http.createServer((request, response) => {
+    const url = new URL(request.url, 'http://127.0.0.1');
+    if (url.pathname === '/ready') { ready++; response.end('ok'); return; }
+    if (url.pathname === '/command') {
+      response.setHeader('Content-Type', 'application/json');
+      response.end(JSON.stringify(command ?? null)); command = undefined; return;
+    }
+    if (url.pathname === '/result') {
+      let data = '';
+      request.on('data', chunk => { data += chunk; });
+      request.on('end', () => { results.push(JSON.parse(data)); response.end('ok'); });
+      return;
+    }
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    response.end(permissionTestPage);
+  });
 }
 
 async function main() {
+  build();
+  const server = createServer();
   let installed = false;
+  const originalScale = device('shell', 'settings', 'get', 'system', 'font_scale');
+  const originalNightMode = device('shell', 'cmd', 'uimode', 'night').split(':').at(-1).trim();
   try {
-    prepare();
-    console.log('Building isolated preview permission APK');
-    const args = ':app:assembleRelease --no-daemon -PreactNativeArchitectures=x86_64';
-    const build = process.platform === 'win32'
-      ? run(process.env.ComSpec || 'cmd.exe', ['/d', '/c', `gradlew.bat ${args}`], android)
-      : run('./gradlew', args.split(' '), android);
-    fs.writeFileSync(path.join(output, 'build.log'), build);
-    fs.copyFileSync(apk, path.join(output, 'fixture.apk'));
-    for (const [server, port] of [[http.createServer(serve), 1497], [https.createServer({
-      key: fs.readFileSync(path.join(output, 'key.pem')),
-      cert: fs.readFileSync(path.join(resources, 'raw/preview_test_ca.pem')),
-    }, serve), 1499]]) {
-      servers.push(server);
-      await new Promise((resolve, reject) => {
-        server.once('error', reject); server.listen(0, '127.0.0.1', resolve);
-      });
-      device('reverse', `tcp:${port}`, `tcp:${server.address().port}`);
-    }
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    device('reverse', 'tcp:1497', `tcp:${server.address().port}`);
     device('install', '-r', apk); installed = true;
-    device('shell', 'pm', 'grant', appId, 'android.permission.CAMERA');
-    device('shell', 'am', 'start', '-W', '-n', `${appId}/com.codexswitch.mobile.MainActivity`);
-    for (let count = 0; count < 60 && results.length < 2; count++) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    device('shell', 'pm', 'clear', appId);
+    device('shell', 'settings', 'put', 'system', 'font_scale', '1');
+    device('shell', 'cmd', 'uimode', 'night', 'no');
+    device('shell', 'am', 'start', '-W', '-n', activity);
+    await waitFor(() => ready > 0, 'initial page readiness');
+    await exercise();
+    device('shell', 'am', 'force-stop', appId);
+    device('shell', 'settings', 'put', 'system', 'font_scale', '1.3');
+    device('shell', 'cmd', 'uimode', 'night', 'yes');
+    ready = 0;
+    device('shell', 'am', 'start', '-W', '-n', activity);
+    await waitFor(() => ready > 0, 'enlarged page readiness');
+    const id = await request('both', 'both-dark-enlarged-font');
+    await tap('android:id/button2');
+    await result(id, 'NotAllowedError');
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
-    assert.deepEqual(results, [
-      { origin: 'http://127.0.0.1:1497', secure: 'true', result: 'NotAllowedError' },
-      { origin: 'https://localhost:1499', secure: 'true', result: 'NotAllowedError' },
-    ]);
-    console.log('PREVIEW_PERMISSIONS_PASSED', JSON.stringify(results));
+    console.log('PREVIEW_PERMISSIONS_PASSED', serial, results.length);
+  } catch (error) {
+    screenshot('failure');
+    fs.writeFileSync(path.join(output, 'failure-layout.json'), JSON.stringify(nodes(), null, 2));
+    throw error;
   } finally {
-    for (const [file, contents] of originals) fs.writeFileSync(file, contents);
-    if (previousApk) fs.copyFileSync(previousApk, apk);
+    fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
+    device('shell', 'settings', 'put', 'system', 'font_scale', originalScale === 'null' ? '1' : originalScale);
+    device('shell', 'cmd', 'uimode', 'night', originalNightMode);
+    device('shell', 'am', 'force-stop', appId);
     if (installed) device('uninstall', appId);
-    for (const server of servers) { server.closeAllConnections(); server.close(); }
-    for (const port of [1497, 1499]) {
-      try { device('reverse', '--remove', `tcp:${port}`); }
-      catch { console.warn(`No test reverse mapping to remove for ${port}`); }
-    }
+    device('reverse', '--remove', 'tcp:1497');
+    server.closeAllConnections(); server.close();
   }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

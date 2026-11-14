@@ -1,16 +1,11 @@
 import { registerRootComponent } from 'expo';
-import { useEffect, useState } from 'react';
-import { PermissionsAndroid, Text } from 'react-native';
+import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MappingPreview } from '../src/chat/portMapping/MappingPreview';
+import { loadTheme } from '../src/theme/preference';
 
 function App() {
-  const [authorized, setAuthorized] = useState(false);
-  useEffect(() => {
-    void PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA).then(granted => {
-      if (!granted) throw new Error('Grant CAMERA before starting this fixture');
-      console.log('PREVIEW_CAMERA_PREGRANTED'); setAuthorized(true);
-    });
-  }, []);
-  return authorized ? <MappingPreview port={1497} close={() => {}} /> : <Text>Checking camera permission</Text>;
+  useEffect(() => { void loadTheme(); }, []);
+  return <SafeAreaProvider><MappingPreview port={1497} close={() => {}} /></SafeAreaProvider>;
 }
 registerRootComponent(App);
