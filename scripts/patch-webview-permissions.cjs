@@ -35,9 +35,9 @@ const changes = [
       setter + '\n\n    @ReactProp(name = "incognito")'],
     ['main/java/' + packagePath + 'RNCWebViewClient.java',
       'super.onPageStarted(webView, url, favicon);',
-      'super.onPageStarted(webView, url, favicon);\n      ((RNCWebView) webView).remoteAiMediaCapture.cancel();'],
+      'super.onPageStarted(webView, url, favicon);\n      ((RNCWebView) webView).remoteAiMediaCapture.navigate(url);'],
     ['main/java/' + packagePath + 'RNCWebView.java', 'public void destroy() {',
-      'public void destroy() {\n        remoteAiMediaCapture.cancel();'],
+      'public void destroy() {\n        remoteAiMediaCapture.close();'],
     ['main/java/' + packagePath + 'RNCWebView.java', 'public void onHostPause() {',
       'protected void onVisibilityChanged(View changedView, int visibility) {\n'
         + '        super.onVisibilityChanged(changedView, visibility);\n'
@@ -45,7 +45,7 @@ const changes = [
         + '    }\n\n    @Override\n    public void onHostPause() {'],
   ];
 
-// Keep the decision on the WebView, so redirects and replacement WebChromeClients cannot reset it.
+// Keep consent on the WebView so replacement WebChromeClients share the tab's permission session.
 function patchWebViewPermissions(directory) {
   const updates = new Map();
   for (const [name, before, after] of changes) {
@@ -60,6 +60,11 @@ function patchWebViewPermissions(directory) {
       } else if (before === 'protected boolean messagingEnabled = false;') {
         normalized = normalized.replace(before + '\n    public boolean remoteAiDenyMediaCapture = false;', before);
       } else if (name.includes('RNCWebChromeClient')) normalized = normalized.replace(oldGuard, before);
+      else if (name.includes('RNCWebViewClient')) {
+        normalized = normalized.replace(before + '\n      ((RNCWebView) webView).remoteAiMediaCapture.cancel();', before);
+      } else if (before === 'public void destroy() {') {
+        normalized = normalized.replace(before + '\n        remoteAiMediaCapture.cancel();', before);
+      }
     }
     updates.set(file, replaceOnce(normalized, before, after).replace(/\n/g, newline));
   }

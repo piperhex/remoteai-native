@@ -10,14 +10,23 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.PermissionRequest;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
-/** Per-WebView consent. OS permission alone must never authorize a new website request. */
+/** Successful website consent lasts for this tab's current origin, independently of OS permission. */
 public final class RemoteAiMediaCapture {
     private static final int MAX_DIALOG_WIDTH_DP = 400;
     private static final int DIALOG_MARGIN_DP = 24;
     private final RNCWebView view;
+    private final Map<String, Set<String>> grants = new HashMap<>();
+    private String pageOrigin;
     private Pending pending;
     private AlertDialog dialog;
 
@@ -34,9 +43,19 @@ public final class RemoteAiMediaCapture {
         if (message == null) { request.deny(); return; }
         Pending current = new Pending(request);
         pending = current;
+        Set<String> allowed = grants.get(origin(request.getOrigin()));
+        if (pageOrigin != null && allowed != null && allowed.containsAll(Arrays.asList(request.getResources()))) {
+            // Recheck OS permissions even when website consent is retained.
+            authorize.accept(current);
+            return;
+        }
+        prompt(activity, current, message, authorize);
+    }
+
+    private void prompt(Activity activity, Pending current, String message, Consumer<PermissionRequest> authorize) {
         // These labels and actions belong to Android and follow its permission-dialog language.
         dialog = new AlertDialog.Builder(activity)
-                .setTitle(request.getOrigin().toString())
+                .setTitle(current.getOrigin().toString())
                 .setMessage(message)
                 .setNegativeButton(android.R.string.cancel, (button, which) -> current.deny())
                 .setPositiveButton(android.R.string.ok, (button, which) -> {
@@ -81,6 +100,30 @@ public final class RemoteAiMediaCapture {
         dismiss();
     }
 
+    public void navigate(String url) {
+        cancel();
+        String nextOrigin = origin(Uri.parse(url));
+        if (!Objects.equals(pageOrigin, nextOrigin)) grants.clear();
+        pageOrigin = nextOrigin;
+    }
+
+    public void close() {
+        cancel();
+        grants.clear();
+        pageOrigin = null;
+    }
+
+    private static String origin(Uri uri) {
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        if (scheme == null || host == null) return null;
+        scheme = scheme.toLowerCase(Locale.ROOT);
+        if (!scheme.equals("https") && !scheme.equals("http")) return null;
+        int port = uri.getPort();
+        if (port == -1) port = scheme.equals("https") ? 443 : 80;
+        return scheme + "://" + host.toLowerCase(Locale.ROOT) + ":" + port;
+    }
+
     public void canceledByPage(PermissionRequest request) {
         // Chromium has already canceled this request; do not invoke it again.
         if (pending == null || pending.original != request) return;
@@ -104,6 +147,10 @@ public final class RemoteAiMediaCapture {
             pending = null;
             dismiss();
             original.grant(resources);
+            String requestOrigin = origin(getOrigin());
+            if (pageOrigin != null && requestOrigin != null) {
+                grants.computeIfAbsent(requestOrigin, key -> new HashSet<>()).addAll(Arrays.asList(resources));
+            }
         }
         @Override public void deny() {
             if (pending != this) return;

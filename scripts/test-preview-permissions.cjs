@@ -10,7 +10,7 @@ const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to an Android test device');
 const appId = 'com.codexswitch.previewpermissionchecks';
 const activity = `${appId}/com.codexswitch.mobile.MainActivity`;
-const output = path.join(root, '.codex-tmp/preview-permissions', serial);
+const output = path.join(root, '.codex-tmp/preview-permissions-session', serial);
 const apk = path.join(root, 'android/app/build/outputs/apk/release/preview-permissions-fixture.apk');
 fs.mkdirSync(output, { recursive: true });
 const results = [];
@@ -39,8 +39,14 @@ function build() {
 
 async function waitFor(check, label) {
   for (let attempt = 0; attempt < 40; attempt++) {
-    const result = await check();
-    if (result) return result;
+    try {
+      const result = await check();
+      if (result) return result;
+    } catch (error) {
+      // MIUI can kill the read-only hierarchy dumper while applying a display configuration change.
+      if (error.status !== 137 || !error.message.includes('uiautomator dump')) throw error;
+      console.warn('Retrying interrupted UI hierarchy dump');
+    }
     await pause(250);
   }
   throw new Error(`Timed out: ${label}`);
@@ -56,7 +62,7 @@ function nodes() {
 async function button(resource) {
   return waitFor(() => {
     const current = nodes();
-    const standard = current.find(node => node['resource-id'].endsWith(resource));
+    const standard = current.find(node => node['resource-id'].endsWith(resource) || node['content-desc'] === resource);
     const systemButton = [':id/permission_allow_foreground_only_button', ':id/permission_deny_button'].includes(resource);
     if (standard || !systemButton) return standard;
     // This MIUI controller omits button IDs: deny, one-time and foreground are in that order.
@@ -83,6 +89,7 @@ async function request(kind, name) {
   const id = String(sequence++);
   const previousResults = results.length;
   command = { kind, id };
+  await pause(300);
   await button('android:id/button1');
   assert.equal(results.length, previousResults, 'Capture completed before website consent');
   screenshot(name);
@@ -96,7 +103,24 @@ async function result(id, expected) {
   return value;
 }
 
-async function exercise() {
+async function captureRetained(kind, name) {
+  const id = String(sequence++);
+  command = { kind, id };
+  const captured = await result(id, 'granted');
+  const expected = kind === 'both' ? ['audio', 'video'] : [kind];
+  assert.deepEqual(captured.tracks.sort(), expected);
+  const current = await waitFor(() => nodes(), 'capture UI readiness');
+  assert.ok(!current.some(node => node['resource-id'] === 'android:id/button1'), 'Unexpected website prompt');
+  if (name) screenshot(name);
+}
+
+async function navigate(url) {
+  const previousReady = ready;
+  command = { kind: 'navigate', url };
+  await waitFor(() => ready > previousReady, 'navigation readiness');
+}
+
+async function exerciseInitialConsent() {
   let id = await request('audio', 'audio-site-prompt');
   await tap('android:id/button2');
   await result(id, 'NotAllowedError');
@@ -110,25 +134,48 @@ async function exercise() {
   await tap('android:id/button1');
   await tap(':id/permission_allow_foreground_only_button');
   assert.deepEqual((await result(id, 'granted')).tracks, ['audio']);
-  id = await request('video', 'video-site-prompt');
-  await tap('android:id/button1');
-  await tap(':id/permission_allow_foreground_only_button');
-  assert.deepEqual((await result(id, 'granted')).tracks, ['video']);
-  id = await request('both', 'both-site-prompt-pregranted');
-  await tap('android:id/button1');
-  assert.deepEqual((await result(id, 'granted')).tracks.sort(), ['audio', 'video']);
-  id = await request('both', 'both-deny-pregranted');
+  await captureRetained('audio', 'audio-repeat-no-prompt');
+  id = await request('both', 'additional-camera-prompt');
   await tap('android:id/button2');
   await result(id, 'NotAllowedError');
+  await captureRetained('audio');
+  id = await request('both', 'additional-camera-retry');
+  await tap('android:id/button1');
+  await tap(':id/permission_allow_foreground_only_button');
+  assert.deepEqual((await result(id, 'granted')).tracks.sort(), ['audio', 'video']);
+  await captureRetained('both', 'both-repeat-no-prompt');
+  await captureRetained('video');
+}
+
+async function exerciseRetainedConsent() {
+  await navigate('http://127.0.0.1:1497/reloaded');
+  await captureRetained('both', 'same-origin-navigation-no-prompt');
+  await navigate('http://127.0.0.1:1497/reloaded');
+  await captureRetained('audio');
+  device('shell', 'input', 'keyevent', 'KEYCODE_HOME');
+  device('shell', 'am', 'start', '-W', '-n', activity);
+  await pause(500);
+  await captureRetained('both', 'foreground-repeat-no-prompt');
+}
+
+async function exerciseNavigationAndClose() {
+  await navigate('http://localhost:1497/redirected');
   const canceled = await request('audio', 'navigation-pending');
-  command = { kind: 'navigate' };
+  await navigate('http://127.0.0.1:1497/returned');
   await waitFor(() => !nodes().some(node => node['resource-id'] === 'android:id/button1'), 'navigation cancellation');
-  id = await request('both', 'redirect-site-prompt');
+  let id = await request('both', 'returned-site-prompt');
   await tap('android:id/button1');
   const redirected = await result(id, 'granted');
-  assert.equal(redirected.origin, 'http://localhost:1497');
+  assert.equal(redirected.origin, 'http://127.0.0.1:1497');
   assert.notEqual(results.find(item => item.id === canceled)?.result, 'granted');
-  screenshot('capture-success');
+  await captureRetained('both');
+  const previousReady = ready;
+  await tap('新标签页');
+  await waitFor(() => ready > previousReady, 'replacement tab readiness');
+  id = await request('both', 'reopened-tab-prompt');
+  await tap('android:id/button1');
+  await result(id, 'granted');
+  await captureRetained('both', 'reopened-tab-repeat-no-prompt');
 }
 
 function createServer() {
@@ -165,7 +212,9 @@ async function main() {
     device('shell', 'cmd', 'uimode', 'night', 'no');
     device('shell', 'am', 'start', '-W', '-n', activity);
     await waitFor(() => ready > 0, 'initial page readiness');
-    await exercise();
+    await exerciseInitialConsent();
+    await exerciseRetainedConsent();
+    await exerciseNavigationAndClose();
     device('shell', 'am', 'force-stop', appId);
     device('shell', 'settings', 'put', 'system', 'font_scale', '1.3');
     device('shell', 'cmd', 'uimode', 'night', 'yes');
@@ -175,6 +224,10 @@ async function main() {
     const id = await request('both', 'both-dark-enlarged-font');
     await tap('android:id/button2');
     await result(id, 'NotAllowedError');
+    const retry = await request('both', 'both-dark-retry');
+    await tap('android:id/button1');
+    await result(retry, 'granted');
+    await captureRetained('both', 'both-dark-repeat-no-prompt');
     fs.writeFileSync(path.join(output, 'results.json'), JSON.stringify(results, null, 2));
     console.log('PREVIEW_PERMISSIONS_PASSED', serial, results.length);
   } catch (error) {
@@ -188,6 +241,7 @@ async function main() {
     device('shell', 'am', 'force-stop', appId);
     if (installed) device('uninstall', appId);
     device('reverse', '--remove', 'tcp:1497');
+    device('shell', 'rm', '-f', '/sdcard/preview-permission.png', '/sdcard/preview-permission-layout.xml');
     server.closeAllConnections(); server.close();
   }
 }

@@ -101,7 +101,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
         sharedCookiesEnabled thirdPartyCookiesEnabled={false}
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
-        // Ask for each site's capture request, even when the app already has OS permission.
+        // Ask before first capture; Android retains successful consent for this tab's current site.
         geolocationEnabled={false} mediaCapturePermissionGrantType="prompt" allowsInlineMediaPlayback
         injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}

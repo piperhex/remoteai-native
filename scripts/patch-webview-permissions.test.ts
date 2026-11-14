@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module';
-import { cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { expect, it } from 'vitest';
@@ -33,9 +33,19 @@ it('enforces deny in both architectures, preserves it on the view and applies id
     const view = read(`main/java/${packagePath}/RNCWebView.java`);
     expect(view).toContain('new RemoteAiMediaCapture(this)');
     expect(view).toContain('remoteAiMediaCapture.cancel()');
-    expect(read(`main/java/${packagePath}/RNCWebViewClient.java`)).toContain('remoteAiMediaCapture.cancel()');
+    expect(view).toContain('remoteAiMediaCapture.close()');
+    expect(read(`main/java/${packagePath}/RNCWebViewClient.java`)).toContain('remoteAiMediaCapture.navigate(url)');
     patchWebViewPermissions(temporary);
     expect(read(clientPath)).toBe(client);
     expect(read(`main/java/${packagePath}/RNCWebView.java`)).toBe(view);
+    const viewPath = `main/java/${packagePath}/RNCWebView.java`;
+    const navigationPath = `main/java/${packagePath}/RNCWebViewClient.java`;
+    const navigation = read(navigationPath);
+    writeFileSync(join(temporary, viewPath), view.replace('remoteAiMediaCapture.close()', 'remoteAiMediaCapture.cancel()'));
+    writeFileSync(join(temporary, navigationPath),
+      navigation.replace('remoteAiMediaCapture.navigate(url)', 'remoteAiMediaCapture.cancel()'));
+    patchWebViewPermissions(temporary);
+    expect(read(viewPath)).toBe(view);
+    expect(read(navigationPath)).toBe(navigation);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });

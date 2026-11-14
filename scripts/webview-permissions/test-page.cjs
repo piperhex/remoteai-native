@@ -23,7 +23,7 @@ setInterval(async () => {
   polling = true;
   try {
     const command = await (await fetch('/command')).json();
-    if (command?.kind === 'navigate') location.href = 'http://localhost:1497/redirected';
+    if (command?.kind === 'navigate') location.href = command.url;
     else if (command) void capture(command);
   } finally { polling = false; }
 }, 200);
