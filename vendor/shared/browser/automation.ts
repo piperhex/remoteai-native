@@ -1,10 +1,11 @@
 export interface ManagedBrowserTab {
   id: string; threadId: string; url: string; title: string; loading?: boolean; icons?: string[];
+  destination?: 'agentHub' | 'standalone';
 }
 export type BrowserCommand = { action: 'extensions'; request: import('./extensions/model').ExtensionRequest }
   | { action: 'list' | 'snapshot' | 'screenshot' | 'back' | 'forward' | 'reload' | 'stop' | 'close' }
   | { action: 'navigate'; url: string }
-  | { action: 'open'; url: string; requestId: string }
+  | { action: 'open'; url: string; requestId: string; destination?: 'agentHub' | 'standalone' }
   | { action: 'click'; reference: string }
   | { action: 'type'; reference: string; text: string }
   | { action: 'select'; reference: string; value: string }
@@ -12,6 +13,7 @@ export type BrowserCommand = { action: 'extensions'; request: import('./extensio
   | { action: 'key'; key: string };
 export interface BrowserRequest { threadId: string; tabId?: string; command: BrowserCommand }
 export interface BrowserReply {
+  preferences?: import('./extensions/model').AssistantPreferences;
   transfer?: { token: string; size?: number; data?: string };
   supported?: boolean; entries?: import('./extensions/model').BrowserExtension[];
   candidates?: import('./extensions/model').ChromeExtension[];

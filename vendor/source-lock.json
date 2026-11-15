@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "59d40164227a3083662c3985947da0a35747353c",
+  "revision": "6c2d4294e6fb1f02515648747016d4d2719bd73d",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "91ab325e833e6c261f49fda97b65438533702d34"
+    "revision": "b427c98c3f0eb88dc63ab7befc4466cc9f5c13fa"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -493,7 +493,7 @@
     "shared/remote-chat/gitWorkspace.ts": "833a95b0eb2b2b83dd4f87c001784e1a2d876320178ba59815dd9cb1bafdd254",
     "shared/codex-status/status.ts": "8f9eece1c83839cd4d4fa649339c865a84b05b04a1df86d65b7241d9a234ac4e",
     "shared/remote-chat/guiSettings.ts": "dfd720bd42fc2666c345a908219196622937778f31a7fd97998dea49779a0d7c",
-    "shared/browser/automation.ts": "2765e53c842a292216b2781371b80694529a35fda846af4a5ad8706d033847cc",
+    "shared/browser/automation.ts": "02658ebc31ba6e81f5ba3ad5127d5f9f23e5954cd423af1c2352f26200f06403",
     "shared/lounge/groupReceipts.ts": "c9f8f9d826b50b8442b2f1d01a833961bb0275a113c2bbd252bc527060292af6",
     "shared/lounge/deletions.ts": "b1d67b1a4938bac349be5ed63256017089b6f42063cd0f9de936780fca748b4d",
     "shared/remote-chat/linkOptions.ts": "0c1b20d526efaf254d6ac810c022bd2a5f9cab682e8461e829973adc30065506",
@@ -681,7 +681,7 @@
     "shared/conversation/editedMessageDraft.ts": "d4363f20340b10b9f431b35634dda6e10077709d0741a9473f08856328987d0a",
     "shared/remote-chat/filePreviewText.ts": "034328ffddb5fd99b262adc1a0c502980ebb2fa42ffb085b428381c33bf4fce7",
     "shared/conversation/autoSwitchSettings.ts": "856dd57ac2081d1e012001502b93708261eb9def2cd708c77b97d02ca30535b4",
-    "shared/browser/extensions/model.ts": "76ed067f157ac360427a0662414fb50a29b884fd6902b1ea50513397d345cbc9",
+    "shared/browser/extensions/model.ts": "188a2b4bc9e70bb0666f6ddc688732ab9a46beb13cd9af184b8278288d847e94",
     "shared/lounge/accountLabel.ts": "1a7df4efab4db98672a83c9760a49dc6331979ef723ded48f9f599feac3ad6b8",
     "shared/context-usage/settings.d.ts": "afcf322d8d7b659fa19ed0ef0e5c3ee754d7f878674aa16e49601193122b74d0",
     "shared/chat/imageEditorDrawing.ts": "a10f3f1f2af57a923d6fbdf8fd0a4539f3c70b6c1ff8ff652fc40aa58d375b14",
