@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "1efe49f0a1a4449dde10392a531f52af02e221f2",
+  "revision": "59d40164227a3083662c3985947da0a35747353c",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
     "revision": "91ab325e833e6c261f49fda97b65438533702d34"
@@ -827,7 +827,7 @@
     "crates/chat-connectivity/src/route/tests.rs": "85573a2a8b894ddede78f56068899a863747803f08120cae9ba345a9a0ba717c",
     "crates/chat-connectivity/src/route/udp_tests.rs": "44b851033a5d51d10b63893a47220e8ea5ce4134ce99ceeb8cb93dbbd74ef21a",
     "crates/chat-connectivity/src/tests.rs": "d90548c134d4210542b7d97250718dd8b804f022b2697ca36c97deee9b79709a",
-    "crates/chat-connectivity/vendor/easytier-core/CODEX_SWITCH_PATCH.md": "f511dfe59e36dc893ae9fe76e8eb4eea0cfebe2e37b47431829ad023504a8698",
+    "crates/chat-connectivity/vendor/easytier-core/CODEX_SWITCH_PATCH.md": "d154a11f1077e8b51c7644168cca56f655e2c1e4ae15ee2c55fe6e55d8bd5b30",
     "crates/chat-connectivity/vendor/easytier-core/Cargo.toml": "15799b0a2fa5b5d601dc9b654f9854c862890c5d1f82dc59c6b4f45dc29fe771",
     "crates/chat-connectivity/vendor/easytier-core/LICENSE": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
     "crates/chat-connectivity/vendor/easytier-core/src/config/api.rs": "f6ae72456185b6db76673e2c5e7015f50d0db942a4301d05a954889b84b71a51",
@@ -1079,7 +1079,7 @@
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/mod.rs": "8e26eba7e98293f53074cc868ac3be42f19bc4006bbfdfb71bfa5565cec99527",
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/mpsc.rs": "7e7194f4472b5e423787c097cf91cf22ad2244526fe9f45e65e326956fe09399",
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/ring.rs": "b8cbcc727e8f312455a3c8df1118611f5339c84c96e7367b01ce0aafd7db9717",
-    "crates/chat-connectivity/vendor/easytier-core/src/tunnel/secure_datagram.rs": "502b3d31f0594798e0abe4deff5fb4b6ba17804ade1a08c101205445325ac2fa",
+    "crates/chat-connectivity/vendor/easytier-core/src/tunnel/secure_datagram.rs": "45fe0a63bf647fda6210c47dc4e9a9750f9c5f7fc8dcd856e636ebc082c6a59a",
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/stats.rs": "0b2e93812de09eaf34cf867534541a0bf16ea1a0497a6d2245f1eb307adea6e6",
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/tcp.rs": "62f28693f98d99f936d3fe85b9e8e2992727a0d40f4d47d34606e520a771a916",
     "crates/chat-connectivity/vendor/easytier-core/src/tunnel/udp.rs": "10ede6ac565e9bc8eece4b48824f6542072b9f9b38196e4fa01039d8d36a9a74",
