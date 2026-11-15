@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { Pressable, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import { t, useLanguage } from '../../i18n';
 import { marketText } from '../../../vendor/shared/provider-market/i18n';
@@ -7,6 +8,8 @@ import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import type { useMappingBrowser } from './useMappingBrowser';
 
 type Browser = ReturnType<typeof useMappingBrowser>;
+// Unfocused native inputs otherwise retain the caret's horizontal scroll at the URL's end.
+const ADDRESS_START = { start: 0, end: 0 };
 
 function ToolbarButton({ icon, label, onPress, disabled, expanded }: {
   icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void;
@@ -28,12 +31,15 @@ export function MappingBrowserToolbar({ browser, settingsOpen, openSettings, onL
   const styles = useMappingBrowserStyles();
   const text = marketText(useLanguage());
   const color = useThemeColor();
+  const [addressFocused, setAddressFocused] = useState(false);
   return <View style={styles.toolbar} onLayout={onLayout}>
     <ToolbarButton icon="home-outline" label={text('market.browserHome')} onPress={browser.home} />
     <TextInput accessibilityLabel={t('client.portMappingEditing.accessAddress')} style={styles.address}
       placeholder={text('market.browserSearchOrAddress')}
       placeholderTextColor={color('#718078', 'muted')}
       value={browser.address} onChangeText={browser.setAddress}
+      selection={addressFocused ? undefined : ADDRESS_START} textAlign="left"
+      onFocus={() => setAddressFocused(true)} onBlur={() => setAddressFocused(false)}
       onSubmitEditing={event => browser.submit(event.nativeEvent.text)}
       keyboardType="url" returnKeyType="go" autoCapitalize="none" autoCorrect={false} selectTextOnFocus />
     <Pressable accessibilityRole="button" accessibilityLabel={text('market.browserNewTab')}
