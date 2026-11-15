@@ -9,7 +9,7 @@ import { useCurrentBookmark } from '../../../vendor/shared/browser/bookmarks/use
 import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/status';
 
 export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappings, search, history, passwords, external, url, title,
-  desktop, onDesktopChange, fullscreen }: {
+  desktop, onDesktopChange, fullscreen, inspector }: {
   top: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
   history: () => void; passwords: () => void;
@@ -17,6 +17,7 @@ export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappin
   url: string; title: string;
   desktop: boolean; onDesktopChange: (desktop: boolean) => void;
   fullscreen: () => void;
+  inspector?: { available: boolean; open: () => void };
 }) {
   const styles = useMappingBrowserStyles();
   const { height, width } = useWindowDimensions();
@@ -54,6 +55,13 @@ export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappin
         <Ionicons name="expand-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.browserFullscreen')}</Text>
       </Pressable>
+      {inspector && <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.inspectorTitle')}
+        disabled={!inspector.available} accessibilityState={{ disabled: !inspector.available }}
+        onPress={() => { dismiss(); inspector.open(); }}
+        style={({ pressed }) => [styles.menuItem, !inspector.available && styles.disabled, pressed && styles.pressed]}>
+        <Ionicons name="code-slash-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{text('market.inspectorTitle')}</Text>
+      </Pressable>}
       {(current.invalid || current.status === 'storage-error') && <Text style={styles.menuText} accessibilityRole="alert">
         {text(current.invalid ? 'market.bookmarkInvalid' : bookmarkStatusKeys[current.status])}</Text>}
       <Pressable accessibilityRole="menuitem" onPress={external} disabled={!external}

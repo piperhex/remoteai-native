@@ -11,12 +11,13 @@ const bridge = NativeModules.BrowserGestures as BrowserGestureBridge | undefined
 const EDGE_WIDTH = 28;
 
 /** Both system Back edges follow the same browser history and overlay dismissal rules. */
-export function useBrowserBack(enabled: boolean, back: () => void) {
+export function useBrowserBack(enabled: boolean, back: () => void, dismissKeyboard = Keyboard.dismiss) {
   const action = useRef(back); action.current = back;
+  const dismiss = useRef(dismissKeyboard); dismiss.current = dismissKeyboard;
   useEffect(() => {
     if (!enabled) return;
     const navigate = () => {
-      if (Keyboard.isVisible()) Keyboard.dismiss(); else action.current();
+      if (Keyboard.isVisible()) dismiss.current(); else action.current();
     };
     const hardware = BackHandler.addEventListener('hardwareBackPress', () => { navigate(); return true; });
     const events = bridge && Platform.OS === 'android' ? new NativeEventEmitter(bridge) : undefined;
@@ -26,8 +27,8 @@ export function useBrowserBack(enabled: boolean, back: () => void) {
   }, [enabled]);
 }
 
-export function useBrowserNavigationGestures(enabled: boolean, back: () => void) {
-  useBrowserBack(enabled, back);
+export function useBrowserNavigationGestures(enabled: boolean, back: () => void, dismissKeyboard?: () => void) {
+  useBrowserBack(enabled, back, dismissKeyboard);
   const { width } = useWindowDimensions();
   const edge = useRef<'left' | 'right'>('left');
   const action = useRef(back); action.current = back;

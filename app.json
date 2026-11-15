@@ -87,6 +87,7 @@
       "./plugins/withDesktopWindow.cjs",
       "./plugins/withBrowserGestures.cjs",
       "./plugins/withBrowserData.cjs",
+      "./plugins/withBrowserInspector.cjs",
       "./plugins/withModalSystemBars.cjs",
       "./plugins/withChatPacketCipher.cjs",
       "./plugins/withChatHistoryWorker.cjs",

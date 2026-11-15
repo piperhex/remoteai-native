@@ -36,6 +36,11 @@ vi.mock('react-native-view-shot', () => ({ captureRef: vi.fn() }));
 vi.mock('../../browser/useBrowserNavigationGestures', () => ({ useBrowserNavigationGestures: () => ({}) }));
 vi.mock('../../browser/context', () => ({ useBrowserSafeAreaEdges: () => undefined }));
 vi.mock('../../browser/BrowserFullscreenExit', () => ({ BrowserFullscreenExit: 'FullscreenExit' }));
+vi.mock('../../browser/inspector/useBrowserInspector', () => ({
+  browserInspectorAvailable: true,
+  useBrowserInspector: () => ({ open: false, opening: false, failed: false, show: vi.fn(), close: vi.fn() }),
+}));
+vi.mock('../../browser/inspector/BrowserInspectorDock', () => ({ BrowserInspectorDock: 'InspectorDock' }));
 vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' }));
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));

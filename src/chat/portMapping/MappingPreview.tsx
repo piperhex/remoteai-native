@@ -24,6 +24,8 @@ import { BrowserHistory } from '../../browser/BrowserHistory';
 import { BrowserPasswords, NativePasswordCapture } from '../../browser/BrowserPasswords';
 import { useNativeBrowserRecords } from '../../browser/useBrowserRecords';
 import { NativePasswordSuggestions } from '../../browser/PasswordSuggestions';
+import { browserInspectorAvailable, useBrowserInspector } from '../../browser/inspector/useBrowserInspector';
+import { BrowserInspectorDock } from '../../browser/inspector/BrowserInspectorDock';
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
@@ -48,6 +50,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   const [drawer, setDrawer] = useState<'bookmarks' | 'mappings' | 'search' | 'history' | 'passwords'>();
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const page = useRef<View>(null);
+  const inspector = useBrowserInspector(page, visible && !browser.homeVisible && !browser.resourceVisible, dataGeneration);
   const capturing = useRef(false);
   const snapshotThen = async (action: () => void) => {
     if (capturing.current) return;
@@ -65,11 +68,14 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     if (fullscreenMenuOpen) setFullscreenMenuOpen(false);
     else if (drawer) setDrawer(undefined);
     else if (settingsOpen) setSettingsOpen(false);
+    else if (inspector.open) inspector.close();
     else if (fullscreen) onFullscreenChange(false);
     else if (browser.history[direction]) browser.navigate(direction === 'back' ? 'goBack' : 'goForward');
     else if (direction === 'back') close();
   };
-  const gestures = useBrowserNavigationGestures(visible, () => navigate('back'));
+  const gestures = useBrowserNavigationGestures(visible, () => navigate('back'), () => {
+    Keyboard.dismiss(); inspector.hideKeyboard();
+  });
   useLanguage();
   useEffect(() => { if (request) browser.visit(request.url); }, [request]);
   useEffect(() => {
@@ -91,6 +97,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         onLayout={event => setToolbarHeight(event.nativeEvent.layout.height)} />}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
+      <BrowserInspectorDock inspector={inspector}
+        obscured={settingsOpen || !!drawer || fullscreenMenuOpen || !!records.candidate || !!records.focus}>
       <View ref={page} collapsable={false} style={styles.fill}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
       <WebView key={dataGeneration} ref={browser.webview}
@@ -127,10 +135,13 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       {browser.homeVisible && <BrowserHome devices={devices} visit={browser.visit}
         bookmarks={() => setDrawer('bookmarks')} />}
       </View>
+      </BrowserInspectorDock>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbarHeight}
       url={browser.currentUrl} title={browser.title}
       desktop={desktop} onDesktopChange={onDesktopChange}
+      inspector={browserInspectorAvailable ? { available: Boolean(browser.currentUrl)
+        && !browser.homeVisible && !browser.resourceVisible && !inspector.opening, open: inspector.show } : undefined}
       fullscreen={() => { setSettingsOpen(false); onFullscreenChange(true); }}
       external={!browser.resourceVisible && browser.currentUrl
         ? () => { setSettingsOpen(false); void browser.openExternal(); } : undefined}
