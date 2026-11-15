@@ -16,6 +16,7 @@ afterEach(async () => {
   await Promise.all(endpoints.splice(0).map(endpoint => endpoint.close()));
   for (const socket of sockets.splice(0)) socket.close();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 async function socket() {
@@ -63,17 +64,22 @@ it('rejects occupied ports and releases the background lease on failed bind', as
 
 it('bounds queued datagrams and ignores unknown reply destinations', async () => {
   const localPort = await port();
+  const create = vi.spyOn(dgram, 'createSocket');
   const endpoint = await listenUdp(localPort); endpoints.push(endpoint);
+  const nativeSocket = create.mock.results[0].value as dgram.Socket;
+  create.mockRestore();
   const client = await socket();
-  const received = vi.fn(); client.on('message', received);
-  for (let index = 0; index < UDP_QUEUE_SIZE + 10; index++) await send(client, Buffer.from([index]), localPort);
-  await new Promise(resolve => setTimeout(resolve, 50));
+  const source = { address: '127.0.0.1', port: client.address().port };
+  // Kernel UDP buffers may drop bursts before delivery; exercise the application's queue limit directly.
+  for (let index = 0; index < UDP_QUEUE_SIZE + 10; index++) {
+    nativeSocket.emit('message', Buffer.from([index]), source);
+  }
   let count = 0;
   while (count < UDP_QUEUE_SIZE) count += (await endpoint.read()).length;
   expect(count).toBe(UDP_QUEUE_SIZE);
+  const nativeSend = vi.spyOn(nativeSocket, 'send');
   await endpoint.write([{ peer: 'forged-peer', data: 'AA==' }]);
-  await new Promise(resolve => setTimeout(resolve, 20));
-  expect(received).not.toHaveBeenCalled();
+  expect(nativeSend).not.toHaveBeenCalled();
   const pending = expect(endpoint.read()).rejects.toThrow('closed');
   await endpoint.close(); await pending;
 });
