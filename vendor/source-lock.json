@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "aceb9de0e3b2ceaa0472ad47c2897c0af3b4d584",
+  "revision": "1efe49f0a1a4449dde10392a531f52af02e221f2",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "66496dfa4955d50c16a8aeb35c07702375dbf16b"
+    "revision": "91ab325e833e6c261f49fda97b65438533702d34"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -203,7 +203,7 @@
     "shared/chat/groups/context.tsx": "1dbfd8af033a7579b90e37f8bc83bcee2c88402dae48d430a189ce34f8e8d9d2",
     "shared/remote-chat/projectDirectories.ts": "b82f5da4c71bbea6cbc4541e0953d77d82dcf5d48fa4dff7f617200303b476b4",
     "shared/remote-chat/client/useMobileProjectPicker.ts": "0d2ae014950d5529a8dade41a43e07b59de9982ce436cbce29e165bfb7e418ba",
-    "shared/project-explorer/model.ts": "2e0ca731c1f69555a6cb138bf0f128b87779f4077af88e6bee46fc9ac1ed8522",
+    "shared/project-explorer/model.ts": "f7f331e19e8a6dee52dc198d5477b582bcbc0fd0228faa5295a28a32838f87b2",
     "shared/remote-chat/client/useProjectSwitch.ts": "607a2159203e707b83336c190b829af3b761f89c961abf987b8032c875c0475c",
     "shared/remote-chat/client/useQueueSelection.ts": "de1886e18ffd2830338911582591ba07c4e35ab0a7603820711f5525125981be",
     "shared/conversation/turnRequestErrors.ts": "0b2e75986f1e207a38ffb410a08d22e5867b81ad943f34bee7be15761c4ed3d8",
@@ -493,7 +493,7 @@
     "shared/remote-chat/gitWorkspace.ts": "833a95b0eb2b2b83dd4f87c001784e1a2d876320178ba59815dd9cb1bafdd254",
     "shared/codex-status/status.ts": "8f9eece1c83839cd4d4fa649339c865a84b05b04a1df86d65b7241d9a234ac4e",
     "shared/remote-chat/guiSettings.ts": "dfd720bd42fc2666c345a908219196622937778f31a7fd97998dea49779a0d7c",
-    "shared/browser/automation.ts": "00bbfd1f52ab44a59afa1b24c42500765d49adc819865f6a6fc0de6cf7662659",
+    "shared/browser/automation.ts": "2765e53c842a292216b2781371b80694529a35fda846af4a5ad8706d033847cc",
     "shared/lounge/groupReceipts.ts": "c9f8f9d826b50b8442b2f1d01a833961bb0275a113c2bbd252bc527060292af6",
     "shared/lounge/deletions.ts": "b1d67b1a4938bac349be5ed63256017089b6f42063cd0f9de936780fca748b4d",
     "shared/remote-chat/linkOptions.ts": "0c1b20d526efaf254d6ac810c022bd2a5f9cab682e8461e829973adc30065506",
@@ -681,6 +681,7 @@
     "shared/conversation/editedMessageDraft.ts": "d4363f20340b10b9f431b35634dda6e10077709d0741a9473f08856328987d0a",
     "shared/remote-chat/filePreviewText.ts": "034328ffddb5fd99b262adc1a0c502980ebb2fa42ffb085b428381c33bf4fce7",
     "shared/conversation/autoSwitchSettings.ts": "856dd57ac2081d1e012001502b93708261eb9def2cd708c77b97d02ca30535b4",
+    "shared/browser/extensions/model.ts": "76ed067f157ac360427a0662414fb50a29b884fd6902b1ea50513397d345cbc9",
     "shared/lounge/accountLabel.ts": "1a7df4efab4db98672a83c9760a49dc6331979ef723ded48f9f599feac3ad6b8",
     "shared/context-usage/settings.d.ts": "afcf322d8d7b659fa19ed0ef0e5c3ee754d7f878674aa16e49601193122b74d0",
     "shared/chat/imageEditorDrawing.ts": "a10f3f1f2af57a923d6fbdf8fd0a4539f3c70b6c1ff8ff652fc40aa58d375b14",

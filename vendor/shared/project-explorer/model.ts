@@ -5,6 +5,8 @@ export type Translate = (key: MessageKey, values?: TranslationValues) => string;
 export type ExplorerEntry = ProjectDirectory & { directory: boolean };
 export type ExplorerProps = Omit<ProjectPickerProps, 'choose'> & { t: Translate; locale: string } & (
   { mode: 'browse'; choose?: never } | { mode?: 'select'; choose: ProjectPickerProps['choose'] }
+  | { mode: 'selectPath'; choosePath: (path: string) => void; chooseLabel: string;
+      acceptsFile: (name: string) => boolean }
 );
 export const VIEWS = ['extraLarge', 'large', 'medium', 'small', 'list', 'details', 'tiles', 'content'] as const;
 export type View = typeof VIEWS[number];

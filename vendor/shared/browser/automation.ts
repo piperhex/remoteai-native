@@ -1,7 +1,8 @@
 export interface ManagedBrowserTab {
   id: string; threadId: string; url: string; title: string; loading?: boolean; icons?: string[];
 }
-export type BrowserCommand = { action: 'list' | 'snapshot' | 'screenshot' | 'back' | 'forward' | 'reload' | 'stop' | 'close' }
+export type BrowserCommand = { action: 'extensions'; request: import('./extensions/model').ExtensionRequest }
+  | { action: 'list' | 'snapshot' | 'screenshot' | 'back' | 'forward' | 'reload' | 'stop' | 'close' }
   | { action: 'navigate'; url: string }
   | { action: 'open'; url: string; requestId: string }
   | { action: 'click'; reference: string }
@@ -11,6 +12,9 @@ export type BrowserCommand = { action: 'list' | 'snapshot' | 'screenshot' | 'bac
   | { action: 'key'; key: string };
 export interface BrowserRequest { threadId: string; tabId?: string; command: BrowserCommand }
 export interface BrowserReply {
+  transfer?: { token: string; size?: number; data?: string };
+  supported?: boolean; entries?: import('./extensions/model').BrowserExtension[];
+  candidates?: import('./extensions/model').ChromeExtension[];
   tabs?: ManagedBrowserTab[]; tab?: ManagedBrowserTab;
   result?: { url?: string; title?: string; loading?: boolean; icons?: string[];
     image?: { mimeType: string; data: string };
@@ -20,6 +24,8 @@ export interface BrowserReply {
 }
 export interface BrowserClient {
   native: boolean;
+  browseFiles?: (directory: string, includeFiles?: boolean) =>
+    Promise<import('../remote-chat/projectDirectories').ProjectDirectoriesResponse>;
   request: (request: BrowserRequest) => Promise<BrowserReply>;
   subscribe: (callback: (event: BrowserEvent) => void) => Promise<() => void>;
 }
