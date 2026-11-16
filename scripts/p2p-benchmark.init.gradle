@@ -1,0 +1,13 @@
+// A separately installed, bundled Hermes application using the production native modules.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        def sourceRoot = new File(project.rootDir, '..')
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-p2p-benchmark'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.p2pbenchmark'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.root.set(sourceRoot)
+        react.entryFile = new File(sourceRoot, 'e2e/P2pBenchmark.tsx')
+        react.debuggableVariants = []
+    }
+}
