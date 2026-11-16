@@ -14,6 +14,7 @@ internal data class BulkCallbacks(
 private class BlockAssembly(val block: Int, val hash: String, length: Int) {
   val bytes = ByteArray(length)
   var received = 0
+  val requestedAt = System.nanoTime()
 }
 private class Receiving(
   val task: DownloadTask, val manifest: BulkManifest, val info: JSONObject, val committed: MutableSet<Int>,
@@ -41,7 +42,14 @@ internal class BulkDownloads(private val storage: BulkDownloadStorage, private v
     val state = Receiving(task, manifest, info, measureDownload(task, "restoreMs") { storage.restore(task, manifest) })
     active[task.id] = state
     DownloadBulkRouter.register(DownloadBulkRouter.Scope(task.id, state.epoch, info.getString("path")), { bytes, release ->
-      callbacks.execute { try { receive(state, bytes) } finally { release() } }
+      val queuedAt = System.nanoTime()
+      callbacks.execute {
+        try {
+          downloadMeasurement(task, "receiveQueueMs", (System.nanoTime() - queuedAt) / 1_000_000.0)
+          downloadMeasurement(task, "records", 1.0)
+          measureDownload(task, "receiveWorkMs") { receive(state, bytes) }
+        } finally { release() }
+      }
     }, { callbacks.execute { fail(state) } })
   }
 
@@ -80,6 +88,9 @@ internal class BulkDownloads(private val storage: BulkDownloadStorage, private v
       val fragment = measureDownload(state.task, "decryptMs") { state.cipher.decrypt(record) }
       val assembly = requireNotNull(state.requests[fragment.requestId])
       require(fragment.block == assembly.block && fragment.offset == assembly.received)
+      if (assembly.received == 0) {
+        downloadMeasurement(state.task, "requestFirstByteMs", (System.nanoTime() - assembly.requestedAt) / 1_000_000.0)
+      }
       require(assembly.received + fragment.bytes.size <= assembly.bytes.size)
       fragment.bytes.copyInto(assembly.bytes, assembly.received); assembly.received += fragment.bytes.size
       state.lastProgress = System.nanoTime()

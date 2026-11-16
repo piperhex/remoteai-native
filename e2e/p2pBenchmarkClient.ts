@@ -10,6 +10,8 @@ import { getChatPolicy } from '../vendor/shared/remote-chat/policy';
 import type { DownloadClient } from '../vendor/shared/remote-chat/downloads';
 import type { ConnectionMode } from '../vendor/shared/remote-chat/protocol';
 import type { ConnectionEndpoints } from '../vendor/shared/remote-chat/connectionEndpoints';
+import { CONNECTION_ERRORS } from '../vendor/shared/remote-chat/connectionErrors';
+import { observeBenchmarkPeers } from './p2pBenchmarkStats';
 
 export interface BenchmarkOptions {
   session: AuthSession; deviceId: string; path: string; expectedHash: string; runs: number;
@@ -57,11 +59,13 @@ async function sample(options: BenchmarkOptions & { connection: MobileChatConnec
 export async function runNativeP2pBenchmark(options: BenchmarkOptions) {
   if (!NativeModules.FileDownloads?.bulkBinaryAvailable) throw new Error('Native bulk module unavailable');
   await activateSession(options.session, beginLogin());
-  let ready = false, issue = '', mode: ConnectionMode = 'offline';
+  const peers = observeBenchmarkPeers();
+  let ready = false, issue = '', mode: ConnectionMode = 'offline', stage = 'login';
   let endpoints: ConnectionEndpoints | undefined;
   const connection = new MobileChatConnection({ session: options.session, deviceId: options.deviceId,
     mode: value => { mode = value; }, ready: () => { ready = true; }, event: () => {},
-    error: value => { issue = value; }, directEndpoints: value => { endpoints = value; } });
+    error: value => { issue = value; }, stage: value => { stage = value; },
+    directEndpoints: value => { endpoints = value; } });
   const request = <T>(body: object) => connection.request<T>('request', body);
   const client: DownloadClient = { bulk: connection.downloadsBulk,
     open: body => request({ operation: 'downloadOpen', ...body }),
@@ -74,9 +78,17 @@ export async function runNativeP2pBenchmark(options: BenchmarkOptions) {
   try {
     const deadline = Date.now() + 90_000;
     while (!ready && !issue && Date.now() < deadline) await wait();
-    if (!ready) throw new Error('Native connection did not become ready');
+    if (!ready) {
+      const code = Object.entries(CONNECTION_ERRORS).find(([, value]) => value === issue)?.[0] ?? 'unknown';
+      throw new Error(`Native connection did not become ready (${stage}, ${code})`);
+    }
     console.info('NATIVE_P2P_BENCHMARK connection ready');
-    connection.setBulkSupport(await connection.request('connect', chatHandshake));
+    try { connection.setBulkSupport(await connection.request('connect', chatHandshake)); }
+    catch (error) {
+      const message = error instanceof Error ? error.message : error;
+      const code = Object.entries(CONNECTION_ERRORS).find(([, value]) => value === message)?.[0] ?? 'unknown';
+      throw new Error(`Native handshake failed (${code})`);
+    }
     while (connection.downloadsBulk.path() !== 'direct' && Date.now() < deadline) await wait();
     if (!connection.downloadsBulk.available() || connection.downloadsBulk.path() !== 'direct') {
       throw new Error('Native P2P bulk unavailable');
@@ -89,11 +101,11 @@ export async function runNativeP2pBenchmark(options: BenchmarkOptions) {
     const samples = [];
     for (let index = 0; index < options.runs; index++) {
       const result = await sample({ ...options, connection });
-      samples.push({ ...result, endpoints });
+      samples.push({ ...result, endpoints, transport: await peers.snapshot() });
       console.info(`NATIVE_P2P_BENCHMARK ${index + 1}: ${result.MiBps.toFixed(2)} MiB/s; verified`);
     }
     return { capturedAt: new Date().toISOString(), receiver: 'Android production native downloader',
       android: Platform.Version, model: Platform.OS === 'android' ? Platform.constants.Model : '',
       hermes: 'HermesInternal' in globalThis, development: __DEV__, samples };
-  } finally { downloadManager.unbind(files); connection.stop(); await clearSession(); }
+  } finally { downloadManager.unbind(files); connection.stop(); peers.close(); await clearSession(); }
 }

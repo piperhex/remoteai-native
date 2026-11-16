@@ -110,7 +110,10 @@ internal class DownloadEngine(
   }
 
   private fun checkpoint() {
+    val started = System.nanoTime()
     storage.save(jobs().values)
+    val elapsed = (System.nanoTime() - started) / 1_000_000.0
+    jobs().values.filter { it.status == "downloading" }.forEach { downloadMeasurement(it, "checkpointMs", elapsed) }
     lastCheckpoint = clock()
     uncheckpointedBytes = 0
   }

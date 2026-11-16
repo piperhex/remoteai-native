@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +16,8 @@ function argument(name, fallback) {
   return value;
 }
 const serial = argument('--serial');
-if (!/^emulator-\d+$/.test(serial)) throw new Error('Select an Android emulator explicitly.');
+const apk = path.resolve(argument('--apk'));
+if (!/^[a-zA-Z0-9._:-]+$/.test(serial)) throw new Error('Select an Android device serial explicitly.');
 const app = 'com.codexswitch.mobile.p2pbenchmark';
 const port = 18786;
 const adb = async (...values) => (await exec('adb', ['-s', serial, ...values],
@@ -56,24 +58,27 @@ try {
   await new Promise((resolve, fail) => {
     server.once('error', fail); server.listen(port, '127.0.0.1', resolve);
   });
-  await adb('install', '-r', path.resolve(argument('--apk')));
+  await adb('install', '-r', apk);
   await adb('reverse', `tcp:${port}`, `tcp:${port}`);
   await adb('shell', 'am', 'force-stop', app);
   await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
   console.info('Native benchmark started; file bytes use the real P2P transport.');
   timer = setTimeout(() => reject(new Error('Native benchmark timed out')), (120 + 180 * runs) * 1000);
   const report = await result;
-  if (report.failed || report.samples?.length !== runs
-    || report.samples.some(sample => !sample.verified || !sample.savedFileVerified || sample.filePath !== 'direct')) {
-    throw new Error(`Native benchmark failed (${report.reason ?? 'invalid samples'}); inspect emulator logcat`);
-  }
-  report.environment = { serial, abi: await adb('shell', 'getprop', 'ro.product.cpu.abi'),
+  report.environment = { serial, emulator: await adb('shell', 'getprop', 'ro.kernel.qemu') === '1',
+    abi: await adb('shell', 'getprop', 'ro.product.cpu.abi'),
     model: await adb('shell', 'getprop', 'ro.product.model'),
     android: await adb('shell', 'getprop', 'ro.build.version.release'),
-    nativeRevision: (await exec('git', ['rev-parse', 'HEAD'], { windowsHide: true, cwd: root })).stdout.trim() };
+    nativeRevision: (await exec('git', ['rev-parse', 'HEAD'], { windowsHide: true, cwd: root })).stdout.trim(),
+    dirty: !!(await exec('git', ['status', '--porcelain'], { windowsHide: true, cwd: root })).stdout.trim(),
+    apkSha256: createHash('sha256').update(await readFile(apk)).digest('hex') };
   const output = path.resolve(argument('--output'));
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, JSON.stringify(report, null, 2) + '\n');
+  if (report.failed || report.samples?.length !== runs
+    || report.samples.some(sample => !sample.verified || !sample.savedFileVerified || sample.filePath !== 'direct')) {
+    throw new Error(`Native benchmark failed (${report.reason ?? 'invalid samples'}); inspect device logcat`);
+  }
   console.info(JSON.stringify({ output, samples: report.samples.map(({ MiBps, verified }) => ({ MiBps, verified })) }));
 } finally {
   clearTimeout(timer);

@@ -3,6 +3,14 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const PACKAGE_LINE = 'packages.add(com.codexswitch.downloads.DownloadPackage())';
+const CONFIGURE_WEBRTC = 'com.codexswitch.downloads.DownloadWebRtc.configure()';
+
+function configureApplication(source) {
+  const anchor = 'val packages = PackageList(this).packages';
+  if (source.split(anchor).length !== 2) throw new Error('Cannot configure download WebRTC transport.');
+  if (source.includes(CONFIGURE_WEBRTC)) return source;
+  return source.replace(anchor, `${CONFIGURE_WEBRTC}\n            ${anchor}`);
+}
 
 module.exports = function withDownloads(config) {
   require('../scripts/patch-webrtc-bulk.cjs').applyBulkPatch();
@@ -18,7 +26,8 @@ module.exports = function withDownloads(config) {
     return result;
   });
   config = withMainApplication(config, (result) => {
-    const source = result.modResults.contents;
+    const source = configureApplication(result.modResults.contents);
+    result.modResults.contents = source;
     if (!source.includes(PACKAGE_LINE)) {
       if (!source.includes('return packages')) throw new Error('Cannot register download manager.');
       result.modResults.contents = source.replace('return packages', PACKAGE_LINE + '\n            return packages');
@@ -34,3 +43,4 @@ module.exports = function withDownloads(config) {
     return result;
   }]);
 };
+module.exports.configureApplication = configureApplication;

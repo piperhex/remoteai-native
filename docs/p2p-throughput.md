@@ -46,14 +46,71 @@ The parent checkout retains raw local reports in `.codex-tmp/p2p-android/native.
 and `cleanup-check.json`.
 They include connection addresses and are intentionally not committed. They contain no account tokens.
 
+## Physical Android follow-up, 2026-11-16
+
+The physical receiver was a Xiaomi 2109119BC running Android 15 (arm64), connected over 5 GHz Wi-Fi 6.
+The benchmark still used a separate production Hermes package and verified every published file against
+the independently calculated SHA-256 of the same 128 MiB random source. ADB carried configuration and
+results only. Packet headers correlated with the selected file-channel port confirmed LAN-address traffic
+from ZH2 to the phone; this supersedes the emulator's inconclusive route observation for these runs only.
+
+| Sender / Android receiver | Three runs (MiB/s) | Mean | Integrity |
+| --- | --- | --- | --- |
+| Installed ZH2 / original Android, clean recheck | 6.22, 6.54, 6.54 | 6.43 | 3/3 saved-file hashes passed |
+| Installed ZH2 / bounded socket receive buffer and native optimizations | 10.34, 10.47, 10.41 | 10.40 | 3/3 passed |
+| Local release desktop / Rust file encryption, optimized Android | 10.31, 9.71, 9.36 | 9.79 | 3/3 passed |
+
+The original file socket had a 224 KiB receive buffer and thousands of UDP drops. During the clean
+baseline recheck, the phone's UDP `RcvbufErrors` increased by 2,653. The bundled M124 WebRTC factory now
+requests a bounded 1 MiB socket receive buffer before initialization. Linux reported a doubled 2 MiB
+socket accounting limit and zero drops on the active file socket; the clean three-run fix session added
+no system UDP receive-buffer errors. The same-source improvement was approximately 62%.
+This uses the supported `WebRTC-SetSocketReceiveBuffer/Enabled-1024/` field trial, preserves an existing
+explicit setting, and changes neither system sysctls nor the application request window. The upstream
+[M124 transport implementation](https://raw.githubusercontent.com/jitsi/webrtc/M124/p2p/base/p2p_transport_channel.cc)
+parses the value in KiB and applies `OPT_RCVBUF`.
+
+The Android decoder also reuses its cipher/key provider objects while initializing every record's
+distinct nonce, and reads AAD/ciphertext slices without making intermediate arrays. The observer caches
+the immutable channel label and reflection lookup. Cipher reuse alone reduced measured decryption time
+but did not establish an end-to-end throughput gain; neither did the dispatch cache in isolation.
+Decryption in the clean socket-fix session took 1.65-1.69 seconds per file. Summed record queue times
+overlap across records and must not be treated as additional wall-clock stalls. A Wi-Fi low-latency lock
+experiment did not demonstrate a clear improvement and was removed.
+
+The Rust sender is a different source computer, so its results do not isolate the effect of replacing
+JavaScript encryption. It passed real Android decryption, block hashes, final hashes and publication.
+A later diagnostic session with thread sampling measured 9.10, 8.47 and 8.90 MiB/s; it is not a clean
+comparison. Initial test-host setup attempts failed before file transfer, and one earlier socket-fix
+attempt lost its connection partway through. Subsequent successful runs do not prove those transient
+connection failures resolved. The runner now writes failure reports as well as successes.
+
+Raw TCP streaming of the same file measured 31.84 MiB/s from ZH2 and 29.64 MiB/s from the local computer.
+The phone-side hashes passed. These timings cover sender writes and shutdown, including socket buffering;
+they exclude the production encrypted protocol and are not product download rates. They show remaining
+headroom, not a proven hardware ceiling. Rust migration did not eliminate the approximately 10 MiB/s
+product limit. A test-only larger sender DataChannel buffer gave 10.88 MiB/s in one sample, insufficient
+evidence to change the production buffer policy. It was reverted.
+
+Local reports are under the parent `.codex-tmp/p2p-phone/`: `baseline-repeat.json`, `socket-repeat.json`,
+`rust-phone-final.json`, `rust-cpu-final.json` and `rust-buffer-experiment.json`. Source file contents and
+credentials are excluded. Reports now identify APK SHA-256, native revision and dirty status.
+
+Final validation includes native checks, 1,513 unit tests and 46 physical-device instrumentation tests,
+covering authenticated cipher reuse, replay/corruption, cancellation, resume, storage and socket setup.
+The browser cannot set Android socket options; its shared authenticated protocol and download behavior
+remain compatible. These Android-specific changes do not require advancing Native's pinned shared
+dependency snapshot; the Rust sender interoperates with that existing protocol.
+
 ## Reproduction
 
-Start an explicitly selected Android emulator. Create a disposable random file on an authorized,
+Select a physical Android device or emulator explicitly. Create a disposable random file on an authorized,
 signed-in desktop host, and independently calculate its SHA-256. From this repository, build the
 isolated package using the current generated Android project:
 
 ```powershell
 $env:NODE_ENV = 'production'
+# Use arm64-v8a for the physical phone; x86_64 below is for the emulator.
 cd android
 ./gradlew.bat :app:assembleDebug -I ../scripts/p2p-benchmark.init.gradle -PreactNativeArchitectures=x86_64
 cd ..
