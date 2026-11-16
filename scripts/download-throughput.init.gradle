@@ -1,0 +1,7 @@
+// Combine with e2e/downloads.init.gradle. Measure a non-debuggable target; the test runner starts no RN UI.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-download-throughput'))
+        project.android.buildTypes.debug.debuggable = false
+    }
+}

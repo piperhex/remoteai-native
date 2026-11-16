@@ -102,6 +102,50 @@ The browser cannot set Android socket options; its shared authenticated protocol
 remain compatible. These Android-specific changes do not require advancing Native's pinned shared
 dependency snapshot; the Rust sender interoperates with that existing protocol.
 
+## Single-ended receiver measurements, 2026-11-17
+
+The same physical phone ran the production Kotlin decoder and storage classes in a non-debuggable
+arm64 instrumentation target, without React Native, network traffic or JavaScript. The worker used
+background thread priority 10, matching the download engine. Each mode had one warm-up and three
+128 MiB samples; ciphertext generation, manifest preparation and final saved-file hash verification
+were outside the timer. Storage modes included the production durable checkpoint every 4 MiB.
+
+| Stage | Three runs (MiB/s) |
+| --- | --- |
+| Authenticated record decryption | 329.16, 325.24, 330.09 |
+| Block storage and durable checkpoints | 490.52, 393.56, 386.51 |
+| Decrypt, assemble, SHA-256, store and checkpoint | 88.52, 89.32, 89.59 |
+
+All stored outputs passed final hashes. These continuous, warmed workloads measure stage capacity,
+not bursty application download throughput or CPU-governor behavior. They exclude a hard 10 MiB/s
+limit in these processing stages alone; scheduling and the actual transport still need isolation.
+The local report is the parent's `.codex-tmp/p2p-phone/native-stages.json`.
+
+Build the isolated stage/transport instrumentation target from this repository:
+
+```powershell
+cd android
+$env:NODE_ENV = 'production'
+./gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest `
+  -I ../e2e/downloads.init.gradle -I ../scripts/download-throughput.init.gradle `
+  -PreactNativeArchitectures=arm64-v8a
+cd ..
+adb -s <serial> install -r android/app/build-download-throughput/outputs/apk/debug/app-debug.apk
+adb -s <serial> install -r android/app/build-download-throughput/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s <serial> shell am instrument -w -e class com.codexswitch.downloads.BulkThroughputBenchmark `
+  com.codexswitch.mobile.downloadtest.test/com.codexswitch.downloads.DownloadTestRunner
+```
+
+These manual benchmark classes execute only when explicitly named with the instrumentation `class`
+argument. The stage report is also saved in the test target's files directory as `bulk-throughput.json`.
+Use the instrumentation output on non-rooted phones; a non-debuggable package does not permit `run-as`.
+The transport-only companion is orchestrated from the parent repository with
+`node scripts/benchmark-android-data-channel.mjs <serial> <report.json>`.
+It sends synthetic ordered records over WebRTC; the receiver checks record sizes, sequence numbers
+and payload sentinels without application crypto or storage. WebRTC's transport protection remains on.
+ADB reverse carries signaling/results only. This diagnostic does not change the product protocol.
+Uninstall both `com.codexswitch.mobile.downloadtest` and its `.test` package after measurements.
+
 ## Reproduction
 
 Select a physical Android device or emulator explicitly. Create a disposable random file on an authorized,
