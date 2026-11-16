@@ -14,24 +14,30 @@ import java.nio.ByteOrder
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-/** Synthetic transport diagnostic. No product file or application encryption is involved. */
+/** Raw-channel or production file-pipeline diagnostic, without the account/authentication handshake. */
 class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Observer {
   private val finished = CountDownLatch(1)
   private val samples = JSONArray()
   private var channel: DataChannel? = null
-  private var failure: Throwable? = null
+  @Volatile private var failure: Throwable? = null
   private var run = 0
   private var sequence = 0
   private var started = 0L
   private var records = 0
   private var recordBytes = 0
   private var runs = 0
+  private var encrypted: EncryptedBenchmarkSink? = null
 
   fun testTransportWithoutApplicationCryptoOrStorage() {
     if (!(instrumentation as InstrumentationTestRunner).arguments
         .getString("class").orEmpty().contains(javaClass.name)) return
     val config = JSONObject(control("config"))
     records = config.getInt("records"); recordBytes = config.getInt("recordBytes"); runs = config.getInt("runs")
+    if (config.optBoolean("encrypted")) encrypted = EncryptedBenchmarkSink(
+      DownloadStorage(instrumentation.targetContext), { result ->
+        if (result.has("MiBps")) samples.put(result)
+        check(requireNotNull(channel).send(DataChannel.Buffer(ByteBuffer.wrap(result.toString().toByteArray()), false)))
+      }, { error -> if (failure == null) failure = error; finished.countDown() })
     PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions
       .builder(instrumentation.targetContext).setFieldTrials(DownloadWebRtc.fieldTrials(null))
       .createInitializationOptions())
@@ -39,6 +45,10 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
     val observer = ChannelBenchmarkPeer { value -> channel = value; value.registerObserver(this) }
     val configuration = PeerConnection.RTCConfiguration(emptyList())
     val peer = requireNotNull(factory.createPeerConnection(configuration, observer))
+    if (encrypted != null) {
+      channel = peer.createDataChannel("remote-ai-file-v1", DataChannel.Init().apply { negotiated = true; id = 42 })
+      channel!!.registerObserver(this)
+    }
     try {
       negotiate(peer, observer)
       check(finished.await(180, TimeUnit.SECONDS)) { "Data channel benchmark timed out" }
@@ -46,6 +56,7 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
       check(samples.length() == runs && sequence == 0)
       control("report", JSONObject().put("samples", samples).put("verified", true).toString())
     } finally {
+      encrypted?.close()
       channel?.unregisterObserver(); channel?.dispose(); peer.dispose(); factory.dispose()
     }
   }
@@ -70,10 +81,13 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
     // Never unwind through JNI; report failures to the instrumentation thread.
     try {
       if (!buffer.binary) {
-        check(Charsets.UTF_8.decode(buffer.data).toString() == "finish")
-        finished.countDown()
+        val text = Charsets.UTF_8.decode(buffer.data).toString()
+        if (text == "finish") finished.countDown()
+        else requireNotNull(encrypted).begin(JSONObject(text))
+      } else if (encrypted != null) {
+        val bytes = ByteArray(buffer.data.remaining()); buffer.data.get(bytes); encrypted!!.receive(bytes)
       } else receive(buffer.data.order(ByteOrder.BIG_ENDIAN))
-    } catch (error: Throwable) { failure = error; finished.countDown() }
+    } catch (error: Throwable) { if (failure == null) failure = error; finished.countDown() }
   }
 
   private fun receive(data: ByteBuffer) {

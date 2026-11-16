@@ -6,11 +6,15 @@ export interface GitChange {
 export interface GitChanges {
   root: string; branch: string | null; head: string | null; files: GitChange[];
   integration?: GitIntegration | null;
+  updateBackup?: GitUpdateBackup | null;
   repositories?: GitRepositoryEntry[];
   workspaces?: GitChanges[];
   pendingSelection?: { path: string; version: string }[];
 }
-export interface GitIntegration { kind: 'merge' | 'rebase' | 'cherryPick' | 'revert'; version: string }
+export interface GitUpdateBackup {
+  id: string; stash: string | null; native: boolean; phase: 'saving' | 'saved' | 'applying' | 'review';
+}
+export interface GitIntegration { kind: 'merge' | 'rebase' | 'cherryPick' | 'revert' | 'stash'; version: string }
 export interface GitConflict {
   path: string; version: string; base: string | null; ours: string | null; theirs: string | null;
   result: string | null; markerSize: number;

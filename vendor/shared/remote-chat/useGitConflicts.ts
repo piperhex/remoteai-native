@@ -33,7 +33,8 @@ export function useGitConflicts(options: Options) {
     if (!state || options.changes?.files.some(file => file.conflict)) return;
     try {
       await client.continueIntegration(cwd, state.version);
-      if (isCurrent()) setNotice('client.gitConflict.continued');
+      if (isCurrent()) setNotice(state.kind === 'stash'
+        ? 'client.gitUpdate.recoveryClosed' : 'client.gitConflict.continued');
     } finally { if (isCurrent()) await load(); }
   });
   return { conflictPath, conflict, openConflict, saveConflict, continueIntegration,

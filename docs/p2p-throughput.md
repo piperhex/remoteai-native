@@ -175,3 +175,25 @@ source file, test package and emulator process when no longer needed.
 The fixture is Android-specific. It changes no product UI or production download code, so mobile web
 does not require a corresponding behavior change. Native type checking, 1,510 tests, translation checks
 and the Android test APK build passed.
+
+## Native desktop transport pipeline diagnostic (2026-11-17)
+
+`DataChannelThroughputBenchmark` also accepts `encrypted: true` from the parent loopback runner.
+It negotiates file channel 42 and feeds production `BulkRecordCipher`, `BulkDownloadStorage`,
+per-block SHA-256, durable checkpoints and the final saved-file verification. A background worker
+uses a bounded 4 MiB queue with backpressure. Only temporary files in the isolated `downloadtest`
+package are touched. This mode uses a public test key, not the account handshake or product credit RPC.
+
+On the physical Xiaomi phone, the same Rust/Android pipeline measured 13.76, 13.35 and 13.09 MiB/s
+with a 256/64 KiB native SCTP window. At 1024/768 KiB it measured 18.55, 22.85 and 22.37 MiB/s;
+an alternating repeat measured 18.27, 16.75 and 17.08 MiB/s. Adding the real desktop Tauri sender
+and WebView orchestration measured 18.04, 17.65 and 27.43 MiB/s. Each run transferred 128 MiB and
+passed the final file hash. Receiver rates exclude the final verification reread; source generation
+and manifest preparation are outside timings. These results establish a native sending-window
+constraint and retained improvement through the file stages, with significant wireless variation.
+
+Use the parent `scripts/benchmark-android-data-channel.mjs` with `P2P_BENCH_ENCRYPTED=1` and
+`P2P_BENCH_RUST=1` for the stage path, or `P2P_BENCH_NATIVE_APP=1` for its isolated desktop builder.
+See the parent's `docs/p2p-download-throughput.md` for build and window parameters. The runner removes
+its ADB reverse and temporary source; remove the two isolated test packages after finishing diagnostics.
+Native checks, all 1,513 unit tests, translation checks and the instrumentation APK build passed.

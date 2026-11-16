@@ -7,6 +7,7 @@ const PATH_READY_POLL_MS = 25;
 
 export type BulkPath = 'direct' | 'relay';
 export interface BinaryChannel {
+  readonly nativeRtcHandle?: { peer: string; channel: string };
   readonly maxRecordBytes?: number;
   readonly readyState: string; readonly bufferedAmount: number;
   send(bytes: Uint8Array): void; close(): void;
@@ -50,6 +51,7 @@ export class BulkTransport {
     const limit = this.path === 'direct' ? this.channel?.maxRecordBytes : undefined;
     return limit && Number.isFinite(limit) ? Math.min(limit, BULK_LIMITS.recordBytes) : BULK_LIMITS.recordBytes;
   }
+  get nativeRtcHandle() { return this.path === 'direct' ? this.channel?.nativeRtcHandle : undefined; }
 
   get path(): BulkPath | undefined {
     if (this.closed) return undefined;

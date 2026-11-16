@@ -42,6 +42,7 @@ export function createGitWorkspaceClient(source: GitClient, cwd: string) {
       // Carry generated references into the remaining selection once after a partial submission.
       pendingReferences.clear();
       return { ...states[0].changes, files, pendingSelection,
+        updateBackup: integration?.changes.updateBackup ?? null,
         repositories: list.length > 1 ? list : undefined, workspaces: states.map(state => state.changes),
         integration: integration ? { ...integration.changes.integration!,
           version: JSON.stringify([integration.entry.root, integration.changes.integration!.version]) } : null };

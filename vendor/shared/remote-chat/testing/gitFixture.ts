@@ -54,9 +54,6 @@ export function createGitFixture(): SyncGitClient {
     ] }),
     action: input => {
       if (input.action === 'switch') branch = input.target!.replace(/^refs\/(heads|remotes\/origin)\//, '');
-      if ((input.action === 'pull' || input.action === 'update') && files.length) {
-        throw new Error('请先提交本地改动，再拉取或更新项目。');
-      }
     },
     changes: cwd => ({ root: cwd, branch, head, files: [...files] }),
     history: (_cwd, skip) => ({ commits: commits.slice(skip, skip + 3), hasMore: skip + 3 < commits.length }),

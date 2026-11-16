@@ -25,9 +25,7 @@ export function browserUrl(value: string): URL | undefined {
   } catch { return; }
 }
 export function loginOrigin(value: string): string | undefined {
-  const url = browserUrl(value);
-  // Passwords are never offered to cleartext sites, including port-forwarded HTTP services.
-  return url?.protocol === 'https:' ? url.origin : undefined;
+  return browserUrl(value)?.origin;
 }
 const hex = (value: unknown, length: number) => typeof value === 'string'
   && value.length === length && /^[a-f0-9]+$/.test(value);

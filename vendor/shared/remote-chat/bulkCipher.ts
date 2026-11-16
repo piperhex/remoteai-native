@@ -78,4 +78,12 @@ export class BulkCipher {
     bulkAssert(!this.destroyed, 'EPOCH_EXPIRED');
     return { key: this.receiveKey.slice(), transferId: this.context.transferId, epoch: this.context.epoch };
   }
+
+  /** Give the desktop native sender only this epoch's directional file key. */
+  takeSenderMaterial() {
+    bulkAssert(!this.destroyed && this.sent === 0, 'EPOCH_EXPIRED');
+    const material = { key: this.sendKey.slice(), transferId: this.context.transferId, epoch: this.context.epoch };
+    this.destroy();
+    return material;
+  }
 }

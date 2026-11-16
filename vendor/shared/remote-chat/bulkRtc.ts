@@ -2,9 +2,11 @@ import { BULK_LIMITS } from './bulkLimits';
 import type { BinaryChannel } from './bulkTransport';
 
 export function binaryDataChannel(channel: RTCDataChannel, maximum?: () => number | undefined): BinaryChannel {
+  const native = channel as RTCDataChannel & Pick<BinaryChannel, 'nativeRtcHandle'>;
   channel.binaryType = 'arraybuffer';
   channel.bufferedAmountLowThreshold = BULK_LIMITS.transportLowBytes;
   return {
+    get nativeRtcHandle() { return native.nativeRtcHandle; },
     get maxRecordBytes() { return maximum?.(); },
     get readyState() { return channel.readyState; },
     get bufferedAmount() { return channel.bufferedAmount; },

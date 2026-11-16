@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { GitAction, GitChange, GitChanges, GitClient, GitCommit, GitDiff, GitHistory, GitRepository,
+import type { GitChange, GitChanges, GitClient, GitCommit, GitDiff, GitHistory, GitRepository,
   GitFileActionPrompt, GitStrategy } from './gitTypes';
 import { toggleFiles } from './gitFiles';
-import { GIT_ACTION_NOTICE } from './gitActions';
+import { useGitSync } from './useGitSync';
 import { useGitFileList } from './useGitFileList';
 import { gitErrorText, useGitRequests } from './useGitRequests';
 import { readGitSnapshot, refreshGitHistory } from './gitSnapshot';
@@ -62,6 +62,8 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
     onCommitted: () => { setSelected({}); setDetail(null); } });
   const conflicts = useGitConflicts({ client, cwd, scope, changes, busy, run, load, setNotice,
     enabled: active && connected, isCurrent: () => current.current === scope });
+  const sync = useGitSync({ client, cwd, scope, changes, strategy, run, load, setNotice,
+    isCurrent: () => current.current === scope, onDone: () => { setDetail(null); setTab('changes'); } });
   const revisions = useGitRevisionActions({ client, cwd, scope, changes, connected, busy, run, load, setNotice,
     isCurrent: () => current.current === scope, onDone: () => {
       historyTarget.pages.clear(); historyTarget.revision++;
@@ -118,19 +120,6 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
     setFileAction(null); setDetail(null); setNotice(notice);
     await load();
   });
-  const action = (action: GitAction, target?: string) => run(async () => {
-    if (!changes) return;
-    let failure: unknown;
-    try {
-      await client.action({ cwd, action, target, strategy: action === 'update' ? 'merge' : strategy,
-        head: changes.head, branch: changes.branch });
-      if (current.current !== scope) return;
-      setDetail(null); setNotice(GIT_ACTION_NOTICE[action]);
-    } catch (error) { failure = error; }
-    // Failed integration may leave conflicts that must be visible immediately.
-    try { await load(); } catch (error) { failure ??= error; }
-    if (failure) throw failure;
-  });
   const more = () => run(async () => {
     const root = historyTarget.root;
     const revision = ++historyTarget.revision;
@@ -144,7 +133,7 @@ export function useRemoteGit({ client, cwd, active, connected, refreshInterval }
   return { ...conflicts, ...revisions, ...submission, busy, loading, error: error || submission.settingsError,
     notice, changes, commits, hasMore, historyRepository, selectHistoryRepository, selected, tab, setTab,
     detail, setDetail, backDetail: () => setDetail(parentGitDetail), refresh, toggle, selectAll, selectFiles, more,
-    repository, action, strategy, setStrategy, fileList, fileAction, requestFileAction, confirmFileAction,
+    repository, ...sync, strategy, setStrategy, fileList, fileAction, requestFileAction, confirmFileAction,
     cancelFileAction: () => { if (!busy) { setFileAction(null); clearActionError(); } },
   };
 }

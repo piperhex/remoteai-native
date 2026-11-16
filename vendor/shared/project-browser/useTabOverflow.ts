@@ -13,21 +13,22 @@ function revealTab(viewport: HTMLDivElement, path?: string) {
     left: tab.left - bounds.left + viewport.scrollLeft }, viewport.clientWidth, viewport.scrollLeft);
 }
 
-function measureOverflow(bar: HTMLDivElement, viewport: HTMLDivElement): OverflowState {
+function measureOverflow(bar: HTMLDivElement, viewport: HTMLDivElement, reserveActionSpace: boolean): OverflowState {
   const tabs = [...viewport.querySelectorAll<HTMLElement>('[data-overflow-tab]')];
   const bounds = viewport.getBoundingClientRect();
   const gap = Number.parseFloat(getComputedStyle(viewport).columnGap) || 0;
   const totalWidth = tabs.reduce((width, tab) => width + tab.getBoundingClientRect().width, 0)
     + gap * Math.max(0, tabs.length - 1);
-  // Include the menu button's space so it disappears as soon as the tabs can fit without it.
+  // Optional overflow buttons disappear when tabs fit; persistent add/menu controls always reserve their space.
   const result = tabOverflow({ tabs: tabs.map(tab => ({ id: tab.dataset.path ?? '',
     left: tab.getBoundingClientRect().left - bounds.left + viewport.scrollLeft,
     width: tab.getBoundingClientRect().width })), contentWidth: totalWidth,
-    barWidth: bar.clientWidth, viewportWidth: viewport.clientWidth, scrollLeft: viewport.scrollLeft });
+    barWidth: reserveActionSpace ? viewport.clientWidth : bar.clientWidth,
+    viewportWidth: viewport.clientWidth, scrollLeft: viewport.scrollLeft });
   return { ...result, hiddenPaths: result.hiddenIds };
 }
 
-export function useTabOverflow(tabs: { path: string }[], activePath?: string) {
+export function useTabOverflow(tabs: { path: string }[], activePath?: string, reserveActionSpace = false) {
   const bar = useRef<HTMLDivElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<OverflowState>({ overflowing: false, hiddenPaths: [], clippedLeft: false });
@@ -36,7 +37,7 @@ export function useTabOverflow(tabs: { path: string }[], activePath?: string) {
     const container = bar.current, strip = viewport.current;
     if (!container || !strip) return;
     const measure = () => {
-      const next = measureOverflow(container, strip);
+      const next = measureOverflow(container, strip, reserveActionSpace);
       setState(previous => previous.overflowing === next.overflowing && previous.clippedLeft === next.clippedLeft
         && JSON.stringify(previous.hiddenPaths) === JSON.stringify(next.hiddenPaths) ? previous : next);
     };
@@ -46,7 +47,7 @@ export function useTabOverflow(tabs: { path: string }[], activePath?: string) {
     [container, strip, ...strip.children].forEach(element => observer.observe(element));
     strip.addEventListener('scroll', measure, { passive: true });
     return () => { observer.disconnect(); strip.removeEventListener('scroll', measure); };
-  }, [paths, activePath]);
+  }, [paths, activePath, reserveActionSpace]);
   const reveal = (path: string) => { if (viewport.current) revealTab(viewport.current, path); };
   return { bar, viewport, reveal, ...state };
 }

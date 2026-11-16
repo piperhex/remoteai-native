@@ -1,4 +1,5 @@
 import type { DesktopVideoCodec } from './protocol';
+import { nativeDesktopRuntime } from './runtime';
 
 interface DecodeSupport { supported: boolean; powerEfficient: boolean }
 interface CodecEnvironment {
@@ -20,7 +21,9 @@ function environment(): CodecEnvironment {
 }
 
 /** Only advertise HEVC when this receiver reports both RTP support and power-efficient decoding. */
-export async function desktopVideoCodecs(source: CodecEnvironment = environment()): Promise<DesktopVideoCodec[]> {
+export async function desktopVideoCodecs(source?: CodecEnvironment): Promise<DesktopVideoCodec[]> {
+  if (!source && nativeDesktopRuntime()) return nativeDesktopRuntime()!.videoCodecs();
+  source ??= environment();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     if (!source.codecs().some(codec => codec.mimeType.toLowerCase() === 'video/h265') || !source.decode) {

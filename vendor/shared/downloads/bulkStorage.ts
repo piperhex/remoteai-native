@@ -1,4 +1,4 @@
-import { BULK_LIMITS, BulkError } from '../remote-chat/bulkLimits';
+import { BulkError } from '../remote-chat/bulkLimits';
 import { blockLength, type ManifestPage } from '../remote-chat/downloadManifest';
 import { complete, openDownloadDatabase, result } from './storage';
 import type { DownloadTask } from './types';
@@ -30,8 +30,7 @@ interface BlockCommit {
 /** Blocks and their committed bitmap share one transaction. No awaits keep an IDB transaction alive. */
 export class BulkBlockStore {
   private pending: BlockCommit[] = [];
-  private bytes = 0;
-  private timer?: ReturnType<typeof setTimeout>;
+  private scheduled = false;
   private running = Promise.resolve();
   private failed?: unknown;
   constructor(private task: DownloadTask, private readonly update: (task: DownloadTask) => void) {}
@@ -40,14 +39,17 @@ export class BulkBlockStore {
     if (this.failed) return Promise.reject(this.failed);
     return new Promise<void>((resolve, reject) => {
       this.pending.push({ block, blob: new Blob([bytes]), resolve, reject });
-      this.bytes += bytes.length;
-      this.timer ??= setTimeout(() => this.flush(), BULK_LIMITS.commitMs);
-      if (this.bytes >= BULK_LIMITS.commitBytes) this.flush();
+      // Writes hold the shared request window until committed. Waiting for more bytes can
+      // stall a full window, another file sharing it, or the final partial block.
+      if (!this.scheduled) {
+        this.scheduled = true;
+        queueMicrotask(() => this.flush());
+      }
     });
   }
   private flush() {
-    clearTimeout(this.timer); this.timer = undefined;
-    const batch = this.pending; this.pending = []; this.bytes = 0;
+    this.scheduled = false;
+    const batch = this.pending; this.pending = [];
     if (!batch.length) return;
     this.running = this.running.then(() => this.commit(batch)).catch(error => {
       this.failed = error;
