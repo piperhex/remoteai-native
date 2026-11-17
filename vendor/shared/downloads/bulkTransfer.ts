@@ -85,7 +85,7 @@ export async function transferBulkDownload(options: Options) {
     task = { ...await restoreBulkTask({ task, worker, signal, importLegacy }), status: 'downloading', message: '' };
     session.move('downloading'); metrics.add('prepareMs', performance.now() - preparing);
     await storeBulkCheckpoint(task); update(task);
-    await worker.initialize(client.cipher({ transferId: task.id, manifestId: opened.manifest.manifestId, epoch }));
+    await worker.initialize(await client.cipher({ transferId: task.id, manifestId: opened.manifest.manifestId, epoch }));
     receiver = new BulkReceiver({ client, opened, signal, decoder: worker, metrics });
     store = new BulkBlockStore(task, value => {
       task = { ...value, protocol: 'bulk', verified: false };

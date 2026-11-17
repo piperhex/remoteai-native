@@ -11,6 +11,7 @@ export type Signal = import('./tcp/types').TcpSignal
   | { kind: 'ice'; candidate: string; sdpMid: string | null; sdpMLineIndex: number | null };
 export interface IceServer { urls: string | string[]; username?: string; credential?: string; nativeMedia?: boolean }
 export interface Channel {
+  readonly nativeChatTarget?: import('./nativeSessionCipher').NativeChatTarget;
   readonly connectionEndpoints?: import('./connectionEndpoints').ConnectionEndpoints;
   readonly readyState: string;
   readonly bufferedAmount: number;
@@ -22,6 +23,7 @@ export interface Channel {
   onMessage(callback: (data: string, endpoints?: import('./connectionEndpoints').ConnectionEndpoints) => void): void;
 }
 export interface Peer {
+  readonly nativeSyncHandle?: { peer: string; channel: string };
   offer(): Promise<void>;
   accept(signal: Exclude<Signal, { kind: 'key' }>): Promise<void>;
   close(): void;

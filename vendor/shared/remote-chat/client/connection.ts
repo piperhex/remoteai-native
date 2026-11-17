@@ -55,6 +55,8 @@ interface ConnectionOptions extends ConnectionEvents {
   randomBytes: (length: number) => Uint8Array;
   createPacketCipher?: PacketCipherFactory;
   createPacketCompression?: import('../packetCompression').PacketCompressionFactory;
+  createSessionCipher?: import('../nativeSessionCipher').SessionCipherFactory;
+  createKeyPair?: import('../nativeSessionCipher').KeyPairFactory;
   createPeer: (options: import('../protocol').PeerOptions) => import('../protocol').Peer;
 }
 
@@ -64,6 +66,10 @@ const SESSION_UNAVAILABLE_CODE = 4004;
 const MAX_RESUME_UNAVAILABLE_REPLIES = 2;
 
 export class ChatConnection {
+  get nativeSync() {
+    const target = this.link?.nativeSyncHandle, cipher = this.link?.nativeCipher;
+    return target && cipher ? { target, cipher: cipher.handle } : undefined;
+  }
   private bulkSupported = false;
   private mappingStreamsSupported = false;
   readonly mappingStreams = new MappingStreamClient({
@@ -140,7 +146,8 @@ export class ChatConnection {
       const session = await this.options.authorize();
       if (!this.active || generation !== this.generation) return;
       this.options.stage?.('computer');
-      const keys = keyPair(this.options.randomBytes);
+      const keys = this.options.createKeyPair ? await this.options.createKeyPair() : keyPair(this.options.randomBytes);
+      if (!this.active || generation !== this.generation) { keys.secret.fill(0); return; }
       const url = chatSocketUrl(session.baseUrl);
       this.socketUrl = url;
       const socket = (this.options.createSocket ?? browserChatSocket)(url);
@@ -347,6 +354,7 @@ export class ChatConnection {
       createPeer: this.publicEndpoints.wrap(this.options.createPeer),
       nativeTraversal: input.nativeTraversal, createNativePath: this.options.createNativePath,
       createPacketCipher: this.options.createPacketCipher,
+      createSessionCipher: this.options.createSessionCipher,
       createPacketCompression: this.options.createPacketCompression,
       signal: (frame) => {
         if (this.socket?.readyState !== WebSocket.OPEN) throw new Error('Disconnected');

@@ -11,6 +11,8 @@ interface Socket { resource: string; stream: MappingByteStream; remote?: string 
 /** Resource ownership is checked by RemoteFiles before any stream is opened or closed. */
 export class RemoteMappingStreams {
   private session?: { mux: MappingStreamMux; identity: StreamIdentity };
+  private opening?: { identity: StreamIdentity; promise: Promise<MappingStreamMux> };
+  private closed = false;
   private readonly sockets = new Map<string, Socket>();
   constructor(private readonly link: MappingStreamLink) {}
 
@@ -25,7 +27,7 @@ export class RemoteMappingStreams {
     }
     if (body.action !== 'open' || typeof body.url !== 'string') throw new Error('网页连接无效，请重新打开。');
     const identity = this.identity(body);
-    const mux = this.session?.mux ?? this.create(identity);
+    const mux = this.session?.mux ?? await this.create(identity);
     const id = body.id, resource = body.resource;
     const stream = mux.open(id, () => this.release(id));
     const socket: Socket = { resource, stream };
@@ -47,15 +49,25 @@ export class RemoteMappingStreams {
     if (typeof transferId !== 'string' || !UUID.test(transferId) || typeof epoch !== 'string' || !UUID.test(epoch)) {
       throw new Error('网页连接无效，请重新打开。');
     }
-    if (this.session && (this.session.identity.transferId !== transferId || this.session.identity.epoch !== epoch)) {
+    const existing = this.session?.identity ?? this.opening?.identity;
+    if (existing && (existing.transferId !== transferId || existing.epoch !== epoch)) {
       throw new Error('网页连接已变更，请重新连接电脑。');
     }
     return { transferId, epoch };
   }
   private create(identity: StreamIdentity) {
+    if (this.closed) throw new Error('Mapping connection closed');
+    if (this.opening) return this.opening.promise;
+    const promise = this.createMux(identity);
+    this.opening = { identity, promise };
+    void promise.finally(() => { if (this.opening?.promise === promise) this.opening = undefined; }).catch(() => {});
+    return promise;
+  }
+  private async createMux(identity: StreamIdentity) {
     const transport = this.link.bulk;
     if (!transport?.path) throw new Error('网页连接暂不可用，请重试。');
-    const cipher = this.link.createBulkCipher({ ...identity, manifestId: STREAM_MANIFEST });
+    const cipher = await this.link.createBulkCipher({ ...identity, manifestId: STREAM_MANIFEST });
+    if (this.closed) { cipher.destroy(); throw new Error('Mapping connection closed'); }
     const mux = new MappingStreamMux({ transport, cipher, identity });
     this.session = { mux, identity };
     return mux;
@@ -92,5 +104,5 @@ export class RemoteMappingStreams {
   closeResource(resource: string) {
     for (const socket of this.sockets.values()) if (socket.resource === resource) socket.stream.close();
   }
-  close() { this.session?.mux.close(); this.session = undefined; }
+  close() { this.closed = true; this.session?.mux.close(); this.session = undefined; }
 }

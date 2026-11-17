@@ -12,6 +12,7 @@ export class MultipathPeer implements Peer {
   private tcpExhausted = false;
   private closed = false;
   private readonly options: PeerOptions;
+  get nativeSyncHandle() { return this.rtc?.nativeSyncHandle; }
 
   constructor(options: PeerOptions, dependencies: {
     rtc: PeerFactory; network: TcpNetwork; random: (length: number) => Uint8Array;

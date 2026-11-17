@@ -17,6 +17,8 @@ export interface LoungeSyncTransport {
   randomBytes: (length: number) => Uint8Array;
   createPeer: LinkOptions['createPeer'];
   createPacketCipher?: LinkOptions['createPacketCipher'];
+  createSessionCipher?: LinkOptions['createSessionCipher'];
+  createKeyPair?: import('../remote-chat/nativeSessionCipher').KeyPairFactory;
   createPacketCompression?: LinkOptions['createPacketCompression'];
   createSocket?: (url: string) => ChatSocket;
 }
@@ -52,7 +54,10 @@ export class HistorySyncConnection {
     try {
       const { ticket } = await this.options.authorize();
       if (!this.active || generation !== this.generation) return;
-      this.keys = keyPair(this.options.transport.randomBytes);
+      const keys = this.options.transport.createKeyPair ? await this.options.transport.createKeyPair()
+        : keyPair(this.options.transport.randomBytes);
+      if (!this.active || generation !== this.generation) { keys.secret.fill(0); return; }
+      this.keys = keys;
       const socket = (this.options.transport.createSocket ?? browserChatSocket)(chatSocketUrl(this.options.baseUrl));
       this.socket = socket;
       socket.onopen = () => this.send({ type: 'authenticate', role: 'lounge', accessToken: ticket,

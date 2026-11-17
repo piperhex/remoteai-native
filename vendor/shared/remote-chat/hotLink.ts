@@ -1,4 +1,6 @@
 import { SessionCipher } from './cipher';
+import { isNativeSession, type LinkCipher } from './nativeSessionCipher';
+import { NativePackets, nativePacketWireBytes } from './nativePackets';
 import { CompressedPackets, isCompressedPacket } from './compressedPackets';
 import { PACKET_COMPRESSION } from './packetCompression';
 import { BulkTransport } from './bulkTransport';
@@ -35,7 +37,8 @@ export class HotLink {
   private filePeer?: FilePeer;
   private readonly delivery: LinkDelivery;
   private readonly timer: ReturnType<typeof setInterval>;
-  private cipher?: SessionCipher;
+  private cipher?: LinkCipher;
+  private nativePackets?: NativePackets;
   private compressed?: CompressedPackets;
   private compressionEnabled = false;
   private channel?: Channel;
@@ -92,6 +95,8 @@ export class HotLink {
   get resumable() { return !this.closed && Boolean(this.cipher); }
   reportDiagnostic: import('./diagnostics').ConnectionDiagnostic = (event, fields) => this.diagnostic(event, fields);
   get connectionMode() { return this.mode; }
+  get nativeSyncHandle() { return this.peer.nativeSyncHandle; }
+  get nativeCipher() { return this.cipher && isNativeSession(this.cipher) ? this.cipher : undefined; }
   createBulkCipher(context: Parameters<SessionCipher['createBulkCipher']>[0]) {
     if (!this.cipher) throw new Error('Session unavailable');
     return this.cipher.createBulkCipher(context);
@@ -105,7 +110,12 @@ export class HotLink {
 
   private setKey(key: string) {
     if (this.cipher) throw new Error('Session key cannot change');
-    this.cipher = new SessionCipher({ ...this.options, publicKey: key });
+    const options = { ...this.options, publicKey: key };
+    this.cipher = this.options.createSessionCipher?.(options) ?? new SessionCipher(options);
+    if (isNativeSession(this.cipher)) {
+      this.nativePackets = new NativePackets(this.cipher, () => this.receiveFailure(), () => this.flushCompressed());
+      return;
+    }
     if (this.cipher.supportsBinaryPlaintext) {
       const codec = this.options.createPacketCompression?.();
       if (codec) this.compressed = new CompressedPackets(codec, this.cipher,
@@ -156,17 +166,26 @@ export class HotLink {
     const data = 'kind' in frame && frame.kind === 'data';
     const buffered = path === 'relay' ? this.options.relayBuffered()
       : (this.channel?.bufferedAmount ?? MAX_BUFFER_BYTES) + this.directPackets.bufferedAmount;
-    const pending = data ? (this.compressed?.bufferedAmount ?? 0) : 0;
+    const pending = data ? (this.nativePackets?.bufferedAmount ?? this.compressed?.bufferedAmount ?? 0) : 0;
     if (buffered === undefined || buffered + pending >= MAX_BUFFER_BYTES) return false;
     if (path === 'direct' && this.channel?.readyState !== 'open') return false;
     if (path === 'relay' && (!this.relay || this.quotaBlocked)) return false;
     const text = JSON.stringify(frame);
+    if (data && this.nativePackets && buffered + pending + nativePacketWireBytes(text) > MAX_BUFFER_BYTES) return false;
+    if (this.nativePackets) {
+      const delivery = frame as DeliveryData & { lane?: string };
+      return this.nativePackets.send({ text, compress: this.compressionEnabled && data,
+        target: path === 'direct' ? this.channel?.nativeChatTarget : undefined,
+        sendFailed: () => { this.lastPong.direct = 0; this.fallback(); },
+        key: data ? `${path}:${delivery.lane ?? 'ordered'}:${delivery.sequence}` : undefined,
+        write: payload => { this.writePacket(path, payload, data); } });
+    }
     if (this.compressionEnabled && this.compressed && data) {
       const delivery = frame as DeliveryData & { lane?: string };
       return this.compressed.send(`${path}:${delivery.lane ?? 'ordered'}:${delivery.sequence}`, text,
         payload => { if (!this.closed) this.writePacket(path, payload, true); });
     }
-    return this.writePacket(path, this.cipher.encrypt(text), data);
+    return !isNativeSession(this.cipher) && this.writePacket(path, this.cipher.encrypt(text), data);
   }
 
   private writePacket(path: Path, payload: string, data: boolean): boolean {
@@ -202,7 +221,7 @@ export class HotLink {
     if (this.probes.size > MAX_PENDING_PROBES) this.probes.delete(this.probes.keys().next().value!);
     const frame = { kind: 'ping', id, packetBatching: true, parallelResponses: true,
       fileConnectionV1: this.options.binaryBulk === true,
-      packetCompression: this.compressed ? PACKET_COMPRESSION : undefined };
+      packetCompression: this.compressed || this.nativePackets ? PACKET_COMPRESSION : undefined };
     if (!this.transmit(path, frame)) this.probes.delete(id);
   }
 
@@ -223,11 +242,15 @@ export class HotLink {
 
   private receivePacket(payload: string, path: Path, endpoints?: ConnectionEndpoints) {
     if (this.closed || !this.cipher) return;
+    if (this.nativePackets) {
+      this.nativePackets.receive(payload, text => this.acceptFrame(text, path, endpoints)); return;
+    }
     if (isCompressedPacket(payload)) {
       if (!this.compressed) throw new Error('Compression unavailable');
       this.compressed.receive(payload, text => this.acceptFrame(text, path, endpoints));
       return;
     }
+    if (isNativeSession(this.cipher)) return;
     const text = this.cipher.decrypt(payload);
     if (text === null) return;
     this.acceptFrame(text, path, endpoints);
@@ -237,7 +260,7 @@ export class HotLink {
     if (this.closed) return;
     const frame = deliveryFrame(text);
     if ((frame.kind === 'ping' || frame.kind === 'pong') && frame.packetCompression === PACKET_COMPRESSION) {
-      this.compressionEnabled = Boolean(this.compressed);
+      this.compressionEnabled = Boolean(this.compressed || this.nativePackets);
     }
     if (frame.kind === 'close') { this.close(false); return; }
     if ((frame.kind === 'ping' || frame.kind === 'pong') && frame.fileConnectionV1 === true) this.enableFilePeer();
@@ -247,7 +270,7 @@ export class HotLink {
       if (path === 'direct' && frame.packetBatching === true) this.directPackets.enable();
       this.transmit(path, { kind: 'pong', id: frame.id, packetBatching: true, parallelResponses: true,
         fileConnectionV1: this.options.binaryBulk === true,
-        packetCompression: this.compressed ? PACKET_COMPRESSION : undefined,
+        packetCompression: this.compressed || this.nativePackets ? PACKET_COMPRESSION : undefined,
         observedEndpoint: path === 'direct' ? endpoints?.remote : undefined });
     } else if (frame.kind === 'pong') {
       if (frame.parallelResponses === true) this.delivery.enableResponses();
@@ -401,6 +424,7 @@ export class HotLink {
     this.filePeer?.close();
     this.channel?.close();
     this.compressed?.close();
+    this.nativePackets?.close();
     this.cipher?.destroy();
     this.delivery.clear();
     this.probes.clear();

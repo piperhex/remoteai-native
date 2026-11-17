@@ -40,6 +40,7 @@ export class PublicEndpointObserver {
         options.signal(signal);
       } });
       return {
+        get nativeSyncHandle() { return peer.nativeSyncHandle; },
         offer: () => peer.offer(),
         accept: signal => { observe('remote', signal); return peer.accept(signal); },
         // Legacy relay fallback closes the peer; keep facts until the session ends or discovery restarts.

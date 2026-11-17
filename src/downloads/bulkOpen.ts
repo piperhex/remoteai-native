@@ -24,7 +24,7 @@ export async function openNativeBulk(options: {
     negotiateBulk(capability, opened.capability);
     await authenticateManifest({ manifest: opened.manifest, signal: options.signal,
       read: page => client.page(taskId, page), store: page => native.manifestPage!(taskId, JSON.stringify(page)) });
-    const cipher = client.cipher({ transferId: taskId, manifestId: opened.manifest.manifestId, epoch });
+    const cipher = await client.cipher({ transferId: taskId, manifestId: opened.manifest.manifestId, epoch });
     const material = cipher.receiverMaterial(); cipher.destroy();
     const key = bytesToHex(material.key); material.key.fill(0);
     return { ...opened, key };

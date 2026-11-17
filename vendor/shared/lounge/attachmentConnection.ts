@@ -45,7 +45,10 @@ export class AttachmentConnection {
     try {
       const { ticket } = await this.options.authorize();
       if (!this.active || epoch !== this.epoch) return;
-      this.keys = keyPair(this.options.transport.randomBytes);
+      const keys = this.options.transport.createKeyPair ? await this.options.transport.createKeyPair()
+        : keyPair(this.options.transport.randomBytes);
+      if (!this.active || epoch !== this.epoch) { keys.secret.fill(0); return; }
+      this.keys = keys;
       const socket = (this.options.transport.createSocket ?? browserChatSocket)(chatSocketUrl(this.options.baseUrl));
       this.socket = socket;
       socket.onopen = () => this.send({ type: 'authenticate', role: 'lounge', purpose: 'attachments',

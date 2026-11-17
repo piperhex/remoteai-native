@@ -1,5 +1,6 @@
 import { x25519 } from '@noble/curves/ed25519';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+import type { Channel } from '../protocol';
 import { TcpChannel } from './channel';
 import { discover } from './binding';
 import { TcpCandidates, MAX_TCP_CANDIDATES } from './candidates';
@@ -13,12 +14,12 @@ const MAX_DIAL_ATTEMPTS = 5;
 
 /** TCP simultaneous open complements UDP ICE; NATs are allowed to reject either attempt. */
 export class TcpPeer {
-  private readonly secret: Uint8Array;
-  private readonly publicKey: string;
+  private secret: Uint8Array = new Uint8Array(0);
+  private publicKey = '';
   private readonly listeners = new Map<boolean, TcpListener>();
   private readonly pending = new Set<TcpSocket>();
   private readonly discovery = new Set<TcpSocket>();
-  private readonly channels = new Set<TcpChannel>();
+  private readonly channels = new Set<Channel>();
   private readonly addresses = new TcpCandidates();
   private readonly attempts = new Map<string, number>();
   private readonly dialing = new Set<string>();
@@ -30,13 +31,24 @@ export class TcpPeer {
   private readonly timer: ReturnType<typeof setTimeout>;
 
   constructor(private readonly options: TcpPeerOptions, private readonly network: TcpNetwork) {
-    this.secret = options.random(32);
-    this.publicKey = bytesToHex(x25519.getPublicKey(this.secret));
     this.timer = setTimeout(() => this.stopDiscovery(), DISCOVERY_LIFETIME_MS);
+    if (network.crypto) {
+      void network.crypto.keyPair().then(pair => {
+        if (this.closed || this.discoveryStopped) { pair.secret.fill(0); return; }
+        this.secret = pair.secret; this.publicKey = pair.publicKey; this.start();
+      }).catch(() => { if (!this.closed) { this.options.exhausted?.(); this.close(); } });
+    } else {
+      this.secret = options.random(32);
+      this.publicKey = bytesToHex(x25519.getPublicKey(this.secret));
+      this.start();
+    }
+  }
+
+  private start() {
     this.publish();
     void this.collectLocalAddresses();
     for (const ipv6 of [false, true]) void this.prepare(ipv6).catch(() => {
-      options.diagnostic?.('tcp-discovery', { transport: 'tcp', stage: 'failed', ipv6 });
+      this.options.diagnostic?.('tcp-discovery', { transport: 'tcp', stage: 'failed', ipv6 });
     });
   }
 
@@ -140,8 +152,10 @@ export class TcpPeer {
   private attach(socket: TcpSocket) {
     if (!this.remote || this.closed) { socket.close(); return; }
     try {
-      const key = x25519.getSharedSecret(this.secret, hexToBytes(this.remote.publicKey));
-      const channel = new TcpChannel({ ...this.options, socket, key });
+      const channel = this.network.crypto
+        ? this.network.crypto.channel({ ...this.options, socket, secret: this.secret, publicKey: this.remote.publicKey })
+        : new TcpChannel({ ...this.options, socket,
+          key: x25519.getSharedSecret(this.secret, hexToBytes(this.remote.publicKey)) });
       this.channels.add(channel);
       channel.onClose(() => this.channels.delete(channel));
       this.options.channel(channel);

@@ -1,4 +1,6 @@
 import { SessionCipher } from './cipher';
+import { isNativeSession, type LinkCipher } from './nativeSessionCipher';
+import { NativePackets } from './nativePackets';
 import { Assembler } from './framing';
 import { SendQueue } from './sendQueue';
 import type { TransferProgress } from './uploadProgress';
@@ -16,7 +18,8 @@ import { ConnectionEndpointMonitor } from './connectionEndpoints';
 class LegacyChatLink {
   private peer?: Peer;
   private channel?: Channel;
-  private cipher?: SessionCipher;
+  private cipher?: LinkCipher;
+  private nativePackets?: NativePackets;
   private readonly assembler = new Assembler();
   private mode: ConnectionMode = 'connecting';
   private relay = false;
@@ -24,9 +27,14 @@ class LegacyChatLink {
   private closed = false;
   private readonly outgoing = new SendQueue({ capacity: () => this.waitForCapacity(),
     mode: () => this.mode,
-    send: (part, delivered) => {
+    send: async (part, delivered) => {
       if (!this.cipher) throw new Error('正在连接电脑。');
-      const payload = this.cipher.encrypt(part);
+      const target = !this.relay && this.channel?.nativeChatTarget;
+      if (target && isNativeSession(this.cipher) && this.cipher.sendDirect) {
+        await this.cipher.sendDirect(target, part); delivered?.(); return;
+      }
+      const payload = await this.cipher.encrypt(part);
+      if (this.closed) return;
       if (this.relay && !this.quotaBlocked) {
         if (!this.signal({ type: 'relay', payload })) throw new Error(CONNECTION_ERRORS.network);
       } else this.channel!.send(payload);
@@ -72,7 +80,11 @@ class LegacyChatLink {
 
   private setKey(publicKey: string) {
     if (this.cipher) throw new Error('Session key cannot change');
-    this.cipher = new SessionCipher({ ...this.options, publicKey });
+    const options = { ...this.options, publicKey };
+    this.cipher = this.options.createSessionCipher?.(options) ?? new SessionCipher(options);
+    if (isNativeSession(this.cipher)) {
+      this.nativePackets = new NativePackets(this.cipher, () => this.receiveFailure(), () => {}, false);
+    }
     this.ready();
   }
 
@@ -135,14 +147,19 @@ class LegacyChatLink {
   receive(payload: string) {
     if (this.closed || !this.cipher) return;
     try {
-      const text = this.cipher.decrypt(payload);
-      if (text === null) return;
-      const message = this.assembler.accept(text, this.mode);
-      if (message) this.options.message(message);
-    } catch {
-      this.options.error('连接校验失败，请重新连接电脑。');
-      this.close();
-    }
+      if (this.nativePackets) { this.nativePackets.receive(payload, text => this.acceptText(text)); return; }
+      if (!isNativeSession(this.cipher)) this.acceptText(this.cipher.decrypt(payload));
+    } catch { this.receiveFailure(); }
+  }
+
+  private acceptText(text: string | null) {
+    if (text === null || this.closed) return;
+    const message = this.assembler.accept(text, this.mode);
+    if (message) this.options.message(message);
+  }
+
+  private receiveFailure() {
+    this.options.error('连接校验失败，请重新连接电脑。'); this.close();
   }
 
   send(message: RpcMessage, progress?: TransferProgress): Promise<void> {
@@ -169,6 +186,7 @@ class LegacyChatLink {
     clearTimeout(this.fallbackTimer);
     this.peer?.close();
     this.channel?.close();
+    this.nativePackets?.close();
     this.cipher?.destroy();
     this.assembler.clear();
     this.changeMode('offline');
@@ -188,6 +206,10 @@ export class ChatLink {
   }
   get resumable() { return this.implementation instanceof HotLink && this.implementation.resumable; }
   get bulk() { return this.implementation instanceof HotLink ? this.implementation.bulk : undefined; }
+  get nativeCipher() { return this.implementation instanceof HotLink ? this.implementation.nativeCipher : undefined; }
+  get nativeSyncHandle() {
+    return this.implementation instanceof HotLink ? this.implementation.nativeSyncHandle : undefined;
+  }
   createBulkCipher(context: Parameters<SessionCipher['createBulkCipher']>[0]) {
     if (!(this.implementation instanceof HotLink)) throw new Error('Bulk unavailable');
     return this.implementation.createBulkCipher(context);

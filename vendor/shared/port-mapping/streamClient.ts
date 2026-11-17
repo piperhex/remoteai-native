@@ -23,6 +23,8 @@ interface StreamSession {
 
 export class MappingStreamClient {
   private current?: StreamSession;
+  private opening?: { link: MappingStreamLink; promise: Promise<StreamSession> };
+  private generation = 0;
   constructor(private readonly options: {
     link: () => MappingStreamLink | undefined; supported: () => boolean; random: (length: number) => Uint8Array;
     request: <T>(body: object) => Promise<T>;
@@ -34,7 +36,7 @@ export class MappingStreamClient {
     const link = this.options.link();
     if (!this.options.supported()) throw new Error(MAPPING_UPDATE_REQUIRED);
     if (!link?.bulk?.path) throw new Error(MAPPING_RECONNECT_REQUIRED);
-    const session = this.session(link);
+    const session = await this.session(link);
     const receiver = await session.ready.catch(() => { session.mux.close(); return undefined; });
     if (!this.isCurrent(session)) throw new Error('Mapping connection changed');
     if (session.mux.closed) { this.invalidate(session); throw new Error(MAPPING_RECONNECT_REQUIRED); }
@@ -68,10 +70,22 @@ export class MappingStreamClient {
   private session(link: MappingStreamLink) {
     // An epoch and nonce space live for the complete authenticated link. After receiver failure,
     // reconnect instead of reusing keys or silently switching to request/response forwarding.
-    if (this.current?.link === link) return this.current;
+    if (this.current?.link === link) return Promise.resolve(this.current);
+    if (this.opening?.link === link) return this.opening.promise;
     this.close();
+    const generation = this.generation;
+    const promise = this.createSession(link, generation);
+    this.opening = { link, promise };
+    void promise.finally(() => { if (this.opening?.promise === promise) this.opening = undefined; }).catch(() => {});
+    return promise;
+  }
+
+  private async createSession(link: MappingStreamLink, generation: number) {
     const identity = { transferId: this.uuid(), epoch: this.uuid() };
-    const cipher = link.createBulkCipher({ ...identity, manifestId: STREAM_MANIFEST });
+    const cipher = await link.createBulkCipher({ ...identity, manifestId: STREAM_MANIFEST });
+    if (this.generation !== generation || this.options.link() !== link) {
+      cipher.destroy(); throw new Error(MAPPING_RECONNECT_REQUIRED);
+    }
     const mux = new MappingStreamMux({ transport: link.bulk!, cipher, identity });
     const ready = this.register({ mux, identity, receiverKey: cipher.receiverMaterial().key });
     void ready.catch(() => mux.close());
@@ -117,6 +131,7 @@ export class MappingStreamClient {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   }
   close() {
+    this.generation++; this.opening = undefined;
     this.current?.mux.close();
     if (this.current) this.release(this.current);
     this.current = undefined;

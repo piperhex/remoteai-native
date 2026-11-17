@@ -15,11 +15,15 @@ export interface SyncThread {
 export interface SyncBundle {
   id: string; size: number; sha256: string; sessionIds: string[];
   originalSize?: number; resumeToken?: string; written?: number; chunkBytes?: number;
+  binaryVersion?: number;
 }
 export interface SyncPlan { count: number; duplicateIds: string[] }
 export interface SyncResult { completedCount: number; skippedCount: number }
 export type SyncProvider = 'openai' | 'codex-switch-local' | 'codex-switch-gui';
 export type SyncRequest =
+  | { action: 'nativeStart'; id: string; direction: 'send' | 'receive'; transferId: string; epoch: string;
+      size: number; sha256: string; offset: number }
+  | { action: 'nativePoll' | 'nativeClose'; id: string }
   | { action: 'homes' }
   | { action: 'list'; homeId: string; query?: string }
   | { action: 'prepare' | 'export'; homeId: string; sessionIds: string[] }
@@ -39,5 +43,13 @@ export interface SyncHost {
   request: <T>(request: SyncRequest) => Promise<T>;
   close?: () => void;
   mode?: () => 'direct' | 'relay' | 'connecting' | 'offline';
+  nativeLocal?: boolean;
+  nativeLink?: () => { target: { peer: string; channel: string }; cipher: Promise<string> } | undefined;
+  transfer?: (options: SyncTransfer) => Promise<boolean>;
+}
+export interface SyncTransfer {
+  source: SyncHost; destination: SyncHost; sourceBundle: SyncBundle; destinationBundle: SyncBundle;
+  offset: number; signal: AbortSignal;
+  progress: (fraction: number, bytes: number) => void | Promise<void>;
 }
 export interface SyncSource { key: string; host: SyncHost; home: SyncHome; label: string }

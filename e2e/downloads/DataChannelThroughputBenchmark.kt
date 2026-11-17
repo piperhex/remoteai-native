@@ -27,12 +27,17 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
   private var recordBytes = 0
   private var runs = 0
   private var encrypted: EncryptedBenchmarkSink? = null
+  private var chat: ChatBenchmarkSink? = null
 
   fun testTransportWithoutApplicationCryptoOrStorage() {
     if (!(instrumentation as InstrumentationTestRunner).arguments
         .getString("class").orEmpty().contains(javaClass.name)) return
     val config = JSONObject(control("config"))
     records = config.getInt("records"); recordBytes = config.getInt("recordBytes"); runs = config.getInt("runs")
+    if (config.optBoolean("chat")) chat = ChatBenchmarkSink({ result ->
+      if (result.has("MiBps")) samples.put(result)
+      check(requireNotNull(channel).send(DataChannel.Buffer(ByteBuffer.wrap(result.toString().toByteArray()), false)))
+    }, { error -> if (failure == null) failure = error; finished.countDown() })
     if (config.optBoolean("encrypted")) encrypted = EncryptedBenchmarkSink(
       DownloadStorage(instrumentation.targetContext), { result ->
         if (result.has("MiBps")) samples.put(result)
@@ -57,6 +62,7 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
       control("report", JSONObject().put("samples", samples).put("verified", true).toString())
     } finally {
       encrypted?.close()
+      chat?.close()
       channel?.unregisterObserver(); channel?.dispose(); peer.dispose(); factory.dispose()
     }
   }
@@ -83,6 +89,9 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
       if (!buffer.binary) {
         val text = Charsets.UTF_8.decode(buffer.data).toString()
         if (text == "finish") finished.countDown()
+        else if (chat != null) {
+          if (text.startsWith("{")) chat!!.begin(JSONObject(text)) else chat!!.receive(text)
+        }
         else requireNotNull(encrypted).begin(JSONObject(text))
       } else if (encrypted != null) {
         val bytes = ByteArray(buffer.data.remaining()); buffer.data.get(bytes); encrypted!!.receive(bytes)

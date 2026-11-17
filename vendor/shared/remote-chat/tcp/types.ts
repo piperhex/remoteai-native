@@ -16,10 +16,22 @@ export interface TcpSocket {
 }
 export interface TcpListener { port: number; close(): void }
 export interface TcpNetwork {
+  /** Desktop hosts inject native key agreement and authenticated framing. */
+  crypto?: {
+    keyPair(): Promise<{ secret: Uint8Array; publicKey: string }>;
+    channel(options: TcpCryptoOptions): Channel;
+  };
   localAddresses?(): Promise<string[]>;
   listen(ipv6: boolean, accept: (socket: TcpSocket) => void): Promise<TcpListener>;
   connect(address: TcpAddress & { localPort: number; ipv6: boolean }): Promise<TcpSocket>;
   close(): void;
+}
+export interface TcpCryptoOptions {
+  socket: TcpSocket;
+  secret: Uint8Array;
+  publicKey: string;
+  sessionId: string;
+  desktop: boolean;
 }
 export interface TcpPeerOptions {
   sessionId: string;

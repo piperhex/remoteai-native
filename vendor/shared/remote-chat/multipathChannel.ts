@@ -23,6 +23,10 @@ export class MultipathChannel implements Channel {
 
   constructor(private readonly options: Pick<PeerOptions, 'stateChanged' | 'disconnected' | 'diagnostic'>) {}
   get readyState() { return this.state; }
+  get nativeChatTarget() {
+    const target = this.state === 'open' ? this.selected?.channel.nativeChatTarget : undefined;
+    return target ? { ...target, envelopes: target.envelopes + 1 } : undefined;
+  }
   get bufferedAmount() { return this.selected?.channel.bufferedAmount ?? 0; }
   get connectionEndpoints() { return this.state === 'open' ? this.selected?.channel.connectionEndpoints : undefined; }
   onOpen(callback: () => void) { this.opened.add(callback); }

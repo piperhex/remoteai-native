@@ -31,5 +31,5 @@ export interface BulkClient {
   page: (transferId: string, page: number) => Promise<ManifestPage>;
   request: (request: BulkRequest) => Promise<void>;
   cancel: (transferId: string, epoch: string) => Promise<void>;
-  cipher: (options: { transferId: string; manifestId: string; epoch: string }) => BulkCipher;
+  cipher: (options: { transferId: string; manifestId: string; epoch: string }) => BulkCipher | Promise<BulkCipher>;
 }

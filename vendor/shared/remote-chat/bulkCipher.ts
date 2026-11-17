@@ -21,7 +21,12 @@ export class BulkCipher {
   private streamSequences?: Uint32Array;
   private streamHighest = 0;
 
-  constructor(root: Uint8Array, private readonly context: BulkCipherContext) {
+  constructor(root: Uint8Array | { sendKey: Uint8Array; receiveKey: Uint8Array },
+    private readonly context: BulkCipherContext | Pick<BulkCipherContext, 'transferId' | 'epoch'>) {
+    if (!(root instanceof Uint8Array)) {
+      this.sendKey = root.sendKey.slice(); this.receiveKey = root.receiveKey.slice(); return;
+    }
+    bulkAssert('sessionId' in context, 'INVALID_RECORD');
     const binding = utf8ToBytes(JSON.stringify(['remote-ai:file-bulk:v1', context.sessionId,
       context.desktopKey, context.clientKey, context.transferId, context.manifestId, context.epoch]));
     const derive = (direction: string) => hkdf(sha256, root, binding, direction, 32);

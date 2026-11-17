@@ -24,7 +24,7 @@ export class SendQueue {
   private closed = false;
 
   constructor(private readonly transport: {
-    capacity: () => Promise<void>; send: (part: string, delivered?: () => void) => void;
+    capacity: () => Promise<void>; send: (part: string, delivered?: () => void) => void | Promise<void>;
     acknowledgedResponses?: boolean;
     mode?: () => ConnectionMode;
     prefix?: string;
@@ -55,7 +55,7 @@ export class SendQueue {
       while (!this.closed && (this.ordered.length || this.responses.length)) {
         await this.transport.capacity();
         if (this.closed) break;
-        if (!this.sendNext()) break;
+        if (!await this.sendNext()) break;
         // Yield only after actual CPU work, never impose a delay on every fragment.
         if (performance.now() - started >= UI_WORK_SLICE_MS) {
           await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -67,7 +67,7 @@ export class SendQueue {
     } finally { this.running = false; }
   }
 
-  private sendNext() {
+  private async sendNext() {
     const queue = this.ordered.length ? this.ordered : this.responses;
     const pending = queue === this.ordered ? queue[0]
       : queue.slice(0, INTERLEAVED_RESPONSES).find(entry => !entry.awaitingAck);
@@ -81,7 +81,7 @@ export class SendQueue {
       // Enqueueing the last fragment does not free the receiver's assembly. Keep its slot
       // until cumulative delivery acknowledges it, including every earlier fragment.
       pending.awaitingAck = !!frame && frame.index === frame.total - 1;
-      this.transport.send(part.value, pending.awaitingAck ? () => {
+      await this.transport.send(part.value, pending.awaitingAck ? () => {
         delivered?.(); this.remove(queue, pending);
         if (!this.running && !this.closed) void this.drain();
       } : delivered);

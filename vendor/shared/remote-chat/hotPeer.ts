@@ -18,6 +18,7 @@ export class HotPeer {
   private closed = false;
   private readonly sessionPaths?: MultipathChannel;
   private readonly nativePath?: NativePathRecovery;
+  get nativeSyncHandle() { return this.peer?.nativeSyncHandle; }
   constructor(private readonly options: {
     bulkChannel?: import('./protocol').PeerOptions['bulkChannel'];
     desktop: boolean; iceServers: IceServer[]; createPeer: PeerFactory;
