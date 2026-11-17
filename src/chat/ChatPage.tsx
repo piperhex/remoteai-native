@@ -248,7 +248,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
       <ImageAiContext.Provider value={{ enabled: active && ready && !state.selectedArchived
         && !state.sending && !state.settingsBusy && !state.workspaceBusy && !state.compacting,
         send: imageAiSender(controller, prepareImageEdit) }}>
-      <ChatImagePreviewProvider key={state.selected?.id ?? 'new'} active={active}>
+      <ChatImagePreviewProvider key={state.selected?.id ?? 'new'} active={active} turns={state.selected?.turns}>
       <ChatFileProvider key={state.selected?.id ?? 'new'} threadId={state.selected?.id ?? null}
         active={active} ready={ready} load={controller.textPreview} videos={controller.videos} files={controller.files}>
       <ChatAttachmentMetadata controller={controller} ready={ready} threadId={state.selected?.id ?? null}>

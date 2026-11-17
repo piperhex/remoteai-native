@@ -43,8 +43,8 @@ export function ChatImage({ source, description = t("client.chat.image"), sent =
       accessibilityLabel={t("client.chat.enlarge", { value1: description })}
       onLongPress={browser?.openResource ? () => setMenu(true) : undefined}
       onPointerDown={event => { if (event.nativeEvent.button === 2 && browser?.openResource) setMenu(true); }}
-      onPress={() => { if (image.url) openPreview({ key: image.key, thumbnail: image.url,
-        description, load: image.original, save: image.save }); }}>
+      onPress={() => { if (image.url && source) openPreview({ source, thumbnail: image.url,
+        description, options: context }); }}>
       <Image key={image.key} source={{ uri: image.url }} accessibilityLabel={description}
         resizeMode="contain" fadeDuration={0} style={imageStyles.thumbnail} onError={image.fail}
         onLoad={sent ? ({ nativeEvent: { source: size } }) => {

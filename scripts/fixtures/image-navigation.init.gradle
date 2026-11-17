@@ -1,0 +1,11 @@
+// Use a dedicated package and output directory, leaving the installed app intact.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-image-navigation'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.imagenavigationtest'
+        project.android.buildTypes.debug.debuggable = false
+        def react = project.extensions.getByName('react')
+        react.entryFile = new File(project.rootDir, '../scripts/fixtures/image-navigation-app.tsx')
+        react.debuggableVariants = []
+    }
+}

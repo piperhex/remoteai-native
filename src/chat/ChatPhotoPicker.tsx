@@ -25,6 +25,11 @@ export function ChatPhotoPicker({ photos, disabled, active, upload, reconnecting
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const preview = photos.photos.find((photo) => photo.id === previewId);
+  const previewIndex = photos.photos.findIndex(photo => photo.id === previewId);
+  const navigation = {
+    previous: previewIndex > 0 ? () => setPreviewId(photos.photos[previewIndex - 1].id) : undefined,
+    next: previewIndex < photos.photos.length - 1 ? () => setPreviewId(photos.photos[previewIndex + 1].id) : undefined,
+  };
   const editing = photos.photos.find((photo) => photo.id === editingId);
   useEffect(() => { if (!active || !preview) setPreviewId(null); }, [active, preview]);
   const busy = disabled || photos.busy;
@@ -59,7 +64,7 @@ export function ChatPhotoPicker({ photos, disabled, active, upload, reconnecting
     </Pressable>}
     {active && preview && <ImageViewer key={preview.id} thumbnail={preview.uri}
       description={t("client.mobile.photo", { value1: photos.photos.indexOf(preview) + 1 })} load={async () => preview.dataUrl}
-      close={() => setPreviewId(null)} />}
+      navigation={navigation} close={() => setPreviewId(null)} />}
     {active && !busy && editing && <ChatPhotoEditor key={editing.id} photo={editing}
       save={(dataUrl) => photos.replace(editing, dataUrl)} close={() => setEditingId(null)} />}
   </View>;

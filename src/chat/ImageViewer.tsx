@@ -15,15 +15,19 @@ import { useSaveImage } from './useSaveImage';
 import type { PreviewImageLoader } from '../../vendor/shared/remote-chat/previewProgress';
 import { PreviewTransferProgress } from './PreviewTransferProgress';
 import { ImageAiToolbar } from './ImageAiToolbar';
+import { ImageNavigation } from './ImageNavigation';
+import type { ImageNavigation as Navigation } from '../../vendor/shared/chat/ImageGallery';
 
 interface Props {
   thumbnail?: string; description: string; load: PreviewImageLoader; close: () => void;
   save?: (url: string) => Promise<void>;
   embedded?: boolean;
   active?: boolean;
+  navigation?: Navigation;
 }
 
-export function ImageViewer({ thumbnail, description, load, close, save, embedded = false, active = true }: Props) {
+export function ImageViewer({ thumbnail, description, load, close, save, embedded = false,
+  active = true, navigation }: Props) {
   const styles = useStyles();
   useLanguage();
   const image = useImageViewer(load);
@@ -82,6 +86,7 @@ export function ImageViewer({ thumbnail, description, load, close, save, embedde
             </Pressable>
           </View>
         </SafeAreaView>
+        {navigation && <ImageNavigation navigation={navigation} />}
       </GestureHandlerRootView>
   </>;
   if (embedded) return content;

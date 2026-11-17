@@ -35,7 +35,7 @@ export function CliConversation({ host, connection, active, ready, swipe }: {
       </ChatDrawerSurface> : <>
       <ChatDrawerSurface {...swipe}>
       <ChatImageContext.Provider value={{ threadId, ready, load: host.imagePreview }}>
-        <ChatImagePreviewProvider key={threadId ?? 'new'} active={active}>
+        <ChatImagePreviewProvider key={threadId ?? 'new'} active={active} turns={thread?.turns}>
           <ChatFileProvider threadId={threadId} ready={ready} active={active}
             load={host.textPreview} videos={host.videos} files={host.files}>
             <ChatMessages key={`${state.engine}:${threadId ?? 'new'}`} thread={thread} offline={!ready} active={active}

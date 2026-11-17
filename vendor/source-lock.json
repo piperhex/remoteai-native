@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "c08dd277a4747b45f777cb9f9196b2056ef26eac",
+  "revision": "cb385bf4fafbcad2b65bcbda633ac80c88da4e12",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "3467ca9b3f07d0d8251d8352f3c5113fbac577d7"
+    "revision": "4a8af5283e30e401db49a8f67cc69e5025319217"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -177,6 +177,8 @@
     "shared/remote-chat/useGuiUpdate.ts": "a57811db26062ae3fc25937645c9d9d2f239563b81d34e168173832ca4db276b",
     "shared/remote-chat/client/useChatImage.ts": "bc3174db918bc3dffc159c1089e17cc6a84df35605fc6dce1521d002eae7382a",
     "shared/file-preview/resourceAddress.ts": "b97db5217dccfdd72237e939c50adcc4eeba9e52cf8286a4b0d3d873dbaa7b38",
+    "shared/chat/ImageGallery.tsx": "ef56a020918197c50dabf74c7ecd7b693670269ed2b0f0c0ddb0a6f4373f9275",
+    "shared/chat/imageGallerySources.ts": "f22b2bae0f876381ad61f87caab9bec420211cbb23b08d9aa49f5ad1529d25a2",
     "shared/remote-chat/guiAccountAvatar.ts": "f5f9630200127d3dac7fb52934b04611877bdf928eb9c27ca8df375777c4b454",
     "shared/remote-chat/client/useGuiAccounts.ts": "f6f592ff62a43b5477fa5985c328963aa980b59c06b79b2d754f2ee6e1c4e14d",
     "shared/chat/messageReferences.ts": "6514ddb19fa356dcc7e3291e13a1a51e061f28163df1cf845df0f7982b47ef46",
