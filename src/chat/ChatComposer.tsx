@@ -179,12 +179,12 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
     setAttachmentError('');
     const text = replyWithQuotes(action === 'continue' ? CONTINUE_MESSAGE : draft.text, submittedQuotes);
     const sent = await draft.submit({ text, goalMode: goalMode.enabled,
-      images: submittedPhotos.map((photo) => photo.dataUrl), attachments: submittedAttachments });
-    if (sent) {
-      goalMode.exit();
-      photos.clearSubmitted(submittedPhotos); attachments.clearSubmitted(submittedAttachments);
-      quoteDraft?.clearSubmitted(submittedQuotes);
-    }
+      images: submittedPhotos.map((photo) => photo.dataUrl), attachments: submittedAttachments,
+      onAccepted: () => {
+        photos.clearSubmitted(submittedPhotos); attachments.clearSubmitted(submittedAttachments);
+        quoteDraft?.clearSubmitted(submittedQuotes);
+      } });
+    if (sent) goalMode.exit();
   };
   const chooseAdd = (choice: ComposerAddAction) => {
     setAdding(false); setAttachmentError('');

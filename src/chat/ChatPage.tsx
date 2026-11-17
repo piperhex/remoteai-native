@@ -161,8 +161,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
   const newChat = (project?: ChatProject) => {
     if (state.sending || cli.state.busy) return;
     closeDrawer(() => {
-      cli.controller.newConversation();
-      cli.controller.patch({ cwd: project?.cwd ?? '' });
+      cli.controller.newConversation(project?.cwd);
       controller.back(project);
     });
   };

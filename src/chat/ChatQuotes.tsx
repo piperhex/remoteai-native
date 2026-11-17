@@ -1,5 +1,6 @@
 import { displayError } from '../i18n/index';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
+import { useScopedDraft } from '../../vendor/shared/chat/useScopedDraft';
 import { Toast } from '../components/AppToast';
 
 import { appendQuote, clearSubmittedQuotes, quoteKey, type ChatQuote } from './replyQuotes';
@@ -22,27 +23,21 @@ export const QuoteSourceContext = createContext<{
 export function ChatQuotesProvider({ children, active, enabled, scope }: {
   children: ReactNode; active: boolean; enabled: boolean; scope: string | null;
 }) {
-  const [state, setState] = useState<{ scope: string | null; quotes: ChatQuote[] }>({ scope, quotes: [] });
-  const quotes = state.scope === scope ? state.quotes : [];
-  useEffect(() => {
-    setState((value) => value.scope === scope ? value : { scope, quotes: [] });
-  }, [scope]);
+  const [quotes, setQuotes] = useScopedDraft<ChatQuote[]>(scope, () => []);
   const current = useRef(quotes);
   current.current = quotes;
-  const add = useCallback((quote: ChatQuote) => {
+  const add = (quote: ChatQuote) => {
     if (!enabled) return false;
     const result = appendQuote(current.current, quote);
     if (result.error) { Toast.fail(displayError(result.error)); return false; }
     current.current = result.quotes;
-    setState({ scope, quotes: result.quotes });
+    setQuotes(result.quotes);
     return true;
-  }, [enabled, scope]);
-  const value = useMemo<QuotesContext>(() => ({ active, enabled, quotes, add,
-    remove: (key) => setState((value) => value.scope === scope
-      ? { scope, quotes: value.quotes.filter((quote) => quoteKey(quote) !== key) } : value),
-    clearSubmitted: (submitted) => setState((value) => value.scope === scope
-      ? { scope, quotes: clearSubmittedQuotes(value.quotes, submitted) } : value),
-  }), [active, enabled, quotes, add, scope]);
+  };
+  const value: QuotesContext = { active, enabled, quotes, add,
+    remove: key => setQuotes(value => value.filter(quote => quoteKey(quote) !== key)),
+    clearSubmitted: submitted => setQuotes(value => clearSubmittedQuotes(value, submitted)),
+  };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 

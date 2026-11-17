@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
+import { useScopedDraft } from '../../vendor/shared/chat/useScopedDraft';
 import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync, EncodingType } from 'expo-file-system';
 import type { AttachmentReference, ComposerPlugin } from '../../vendor/shared/conversation/attachmentTypes';
@@ -12,7 +13,7 @@ export function attachmentErrorMessage(cause: unknown) {
 }
 
 export function useComposerAttachments({ threadId, sending }: { threadId: string | null; sending: boolean }) {
-  const [items, setItems] = useState<AttachmentReference[]>([]);
+  const [items, setItems] = useScopedDraft<AttachmentReference[]>(threadId, () => [], sending);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const picking = useRef(false);
@@ -26,7 +27,7 @@ export function useComposerAttachments({ threadId, sending }: { threadId: string
     scope.current = threadId;
     if (creating) return;
     generation.current += 1;
-    setItems([]); setError('');
+    setError('');
   }, [threadId, sending]);
   const pick = async () => {
     if (picking.current || sending) return;

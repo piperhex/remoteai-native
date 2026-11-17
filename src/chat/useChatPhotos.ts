@@ -2,13 +2,14 @@ import { t } from '../i18n';
 import { ImagePolicyError } from '../../vendor/shared/remote-chat/compressImage';
 import { validateChatImages } from '../../vendor/shared/remote-chat/attachments';
 import { useEffect, useRef, useState } from 'react';
+import { useScopedDraft } from '../../vendor/shared/chat/useScopedDraft';
 import { Linking } from 'react-native';
 import { getPendingResultAsync, type ImagePickerResult, type ImagePickerErrorResult } from 'expo-image-picker';
 import { MAX_CHAT_PHOTOS, PhotoPermissionError, preparePhoto, selectPhotos, validatePhotos,
   type ChatPhoto, type PhotoSource } from './chatPhotos';
 
 export function useChatPhotos({ threadId, sending }: { threadId: string | null; sending: boolean }) {
-  const [photos, setPhotos] = useState<ChatPhoto[]>([]);
+  const [photos, setPhotos] = useScopedDraft<ChatPhoto[]>(threadId, () => [], sending);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [settingsRequired, setSettingsRequired] = useState(false);
@@ -23,7 +24,7 @@ export function useChatPhotos({ threadId, sending }: { threadId: string | null; 
     scope.current = threadId;
     if (creating) return;
     generation.current += 1;
-    setPhotos([]); setError(''); setSettingsRequired(false);
+    setError(''); setSettingsRequired(false);
   }, [threadId, sending]);
 
   const appendResult = async (result: ImagePickerResult | ImagePickerErrorResult | null, current = generation.current) => {

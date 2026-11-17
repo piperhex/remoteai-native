@@ -261,6 +261,25 @@ describe('mobile chat actions', () => {
     controller.stop();
   });
 
+  it('retains the first-send scope with its conversation and starts a fresh draft in that project', async () => {
+    const controller = await connectedController();
+    mocks.request.mockImplementation(async (_method, body) => body?.operation === 'list'
+      ? { data: [thread], nextCursor: null } : { thread });
+    const project = { cwd: '/new-project', label: 'New project' };
+    const empty = controller.snapshot().draftScope;
+    controller.back(project);
+    const original = controller.snapshot().draftScope;
+    expect(await controller.send({ text: 'create conversation', access: 'workspace-write' })).toBe(true);
+    expect(controller.snapshot().draftScope).toBe(original);
+    controller.back(project);
+    expect(controller.snapshot().draftScope).not.toBe(original);
+    await controller.select(thread);
+    expect(controller.snapshot().draftScope).toBe(original);
+    controller.back();
+    expect(controller.snapshot().draftScope).toBe(empty);
+    controller.stop();
+  });
+
   it('queues a supplement on the PC and stops the original turn', async () => {
     const controller = await connectedController();
     const running = { ...thread, turns: [{ id: 'turn', status: 'inProgress', items: [] }] };

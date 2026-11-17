@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useScopedDraft } from '../../chat/useScopedDraft';
 import { ChatImageError, MAX_CHAT_IMAGES, validateChatImages, type DraftImage } from '../attachments';
 import type { SendInput } from './types';
 import type { AttachmentReference } from '../../conversation/attachmentTypes';
@@ -22,7 +23,8 @@ interface Options {
 }
 
 export function useChatDraft({ threadId, sending, disabled, selection, send, recovered, consumeRecovered }: Options) {
-  const [content, setContent] = useState(emptySkillDraft);
+  const submitting = useRef(false);
+  const [content, setContent] = useScopedDraft(threadId, emptySkillDraft, submitting.current);
   const { text } = content;
   const setText = (value: string) => setContent((draft) => editSkillDraft(draft, value));
   const appendDictation = (value: string) => {
@@ -34,8 +36,8 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
     setContent((draft) => insertDraftSkill(draft, range, skill));
   const removeText = (range: TextSelection, expected: string) => setContent((draft) => draft.text === expected
     ? editSkillDraft(draft, expected.slice(0, range.start) + expected.slice(range.end)) : draft);
-  const [images, setImages] = useState<DraftImage[]>([]);
-  const [references, setReferences] = useState<AttachmentReference[]>([]);
+  const [images, setImages] = useScopedDraft<DraftImage[]>(threadId, () => [], submitting.current);
+  const [references, setReferences] = useScopedDraft<AttachmentReference[]>(threadId, () => [], submitting.current);
   const restore = (message: QueueDraft) => {
     setContent(queuedMessageText(message)); setImages(message.images.map(url => draftImage(url)));
     setReferences(message.attachments ?? []); setError('');
@@ -45,7 +47,6 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
   const scope = useRef(threadId);
   const generation = useRef(0);
   const busy = useRef(false);
-  const submitting = useRef(false);
   const recoveredEdits = useRef(new WeakSet<QueueDraft>());
   useEffect(() => () => { generation.current += 1; }, []);
   useEffect(() => {
@@ -57,7 +58,7 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
     generation.current += 1;
     busy.current = false;
     submitting.current = false;
-    setText(''); setImages([]); setReferences([]); setError(''); setPicking(false);
+    setError(''); setPicking(false);
   }, [threadId]);
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
   };
   const submit = async (override: {
     text?: string; images?: string[]; attachments?: AttachmentReference[]; goalMode?: boolean;
+    onAccepted?: () => void;
   } = {}) => {
     const submittedText = override.text ?? text;
     const submittedImages = override.images ?? images.map((image) => image.url);
@@ -108,11 +110,12 @@ export function useChatDraft({ threadId, sending, disabled, selection, send, rec
         ...(override.goalMode ? { goalMode: true } : {}),
         ...(submittedReferences.length ? { attachments: submittedReferences } : {}),
         ...(skills.length ? { skills } : {}) });
-      if (!sent || current !== generation.current) return false;
-      setContent((value) => value.text === text ? emptySkillDraft() : value);
+      if (!sent) return false;
+      setContent((value) => value === content ? emptySkillDraft() : value);
       setImages((value) => value.filter((image) => !images.includes(image)));
       setReferences((value) => value.filter((item) => !submittedReferences.includes(item)));
-      return true;
+      override.onAccepted?.();
+      return current === generation.current;
     } catch {
       if (current === generation.current) setError('消息未发送，请稍后重试。');
       return false;

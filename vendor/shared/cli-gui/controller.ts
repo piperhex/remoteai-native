@@ -39,6 +39,12 @@ export class CliController {
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   patch = (patch: Partial<CliState>) => {
+    if (!this.state.selected && patch.selected === undefined && patch.cwd !== undefined
+      && patch.cwd !== this.state.cwd) {
+      this.saveDraft();
+      const key = `${this.state.engine}:draft:${patch.cwd}`;
+      patch = { draft: this.drafts.get(key) ?? '', images: this.imageDrafts.get(key) ?? [], ...patch };
+    }
     this.state = { ...this.state, ...patch };
     if (this.older && !this.isOlderCurrent(this.older)) {
       this.older = undefined;
@@ -46,7 +52,7 @@ export class CliController {
     } else if (this.older) this.state.loading = true;
     this.listeners.forEach(fn => fn());
   };
-  private key() { return `${this.state.engine}:${this.state.selected?.id ?? 'draft'}`; }
+  private key() { return `${this.state.engine}:${this.state.selected?.id ?? `draft:${this.state.cwd}`}`; }
   private saveDraft() {
     this.drafts.set(this.key(), this.state.draft);
     this.imageDrafts.set(this.key(), this.state.images);
@@ -100,15 +106,16 @@ export class CliController {
     if (this.state.selected || this.state.busy || this.state.engine === engine) return;
     this.saveDraft(); this.revision++;
     this.patch({ engine, history: null, catalog: null, model: '', effort: '', mode: '', loading: false, error: '',
-      draft: this.drafts.get(`${engine}:draft`) ?? '', images: this.imageDrafts.get(`${engine}:draft`) ?? [] });
+      draft: this.drafts.get(`${engine}:draft:${this.state.cwd}`) ?? '',
+      images: this.imageDrafts.get(`${engine}:draft:${this.state.cwd}`) ?? [] });
     if (engine !== 'codex') void this.refresh().then(this.loadCatalog);
   };
-  newConversation = () => {
+  newConversation = (cwd = '') => {
     if (this.state.busy) return;
     this.saveDraft(); this.revision++;
-    this.patch({ selected: null, history: null, catalog: null, model: '', effort: '', loading: false, error: '',
-      draft: this.drafts.get(`${this.state.engine}:draft`) ?? '',
-      images: this.imageDrafts.get(`${this.state.engine}:draft`) ?? [] });
+    this.patch({ selected: null, cwd, history: null, catalog: null, model: '', effort: '', loading: false, error: '',
+      draft: this.drafts.get(`${this.state.engine}:draft:${cwd}`) ?? '',
+      images: this.imageDrafts.get(`${this.state.engine}:draft:${cwd}`) ?? [] });
     if (this.state.engine !== 'codex') void this.loadCatalog();
   };
   open = (selected: CliSession) => {
@@ -204,6 +211,7 @@ export class CliController {
   };
   send = async () => {
     const { engine, selected, cwd, model, mode, draft, images, catalog } = this.state;
+    const draftKey = this.key();
     if (engine === 'codex' || this.state.busy || (!draft.trim() && !images.length) || selected?.archived) return;
     if (images.some(image => !image.url)) return;
     if (catalog?.status !== 'ready' || this.state.runtime[engine]?.status !== 'ready'
@@ -220,12 +228,12 @@ export class CliController {
         ...(mode ? { mode } : {}) });
       if (revision === this.revision && !selected) {
         this.patch({ selected: target, history: null });
-        this.drafts.delete(`${engine}:draft`); this.imageDrafts.delete(`${engine}:draft`); this.saveDraft();
+        this.drafts.delete(draftKey); this.imageDrafts.delete(draftKey); this.saveDraft();
       }
       await this.read({ engine, action: 'send', id: target.id, text: draft, messageId: this.createMessageId(),
         ...(images.length ? { images: images.map(image => image.url!) } : {}), model, effort: effort || undefined });
-      this.drafts.delete(`${engine}:${selected?.id ?? 'draft'}`);
-      this.imageDrafts.delete(`${engine}:${selected?.id ?? 'draft'}`);
+      this.drafts.delete(draftKey);
+      this.imageDrafts.delete(draftKey);
       if (revision === this.revision) { this.patch({ draft: '', images: [] }); this.saveDraft(); }
       await this.refresh();
     } catch (error) { this.report(error); }

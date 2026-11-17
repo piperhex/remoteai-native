@@ -1,0 +1,9 @@
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-agent-drafts'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.agentdraftstest'
+        project.extensions.getByName('react').entryFile =
+            new File(project.rootDir, '../scripts/fixtures/agent-drafts-app.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}

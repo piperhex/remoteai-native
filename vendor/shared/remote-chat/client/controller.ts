@@ -54,6 +54,7 @@ import { canSelectProject, canMoveThreadToProject } from '../projects';
 import { CONVERSATION_METRICS_OPERATION, type ReadConversationMetrics } from '../conversationMetrics';
 import { TOKEN_SUMMARY_OPERATION, type ReadTokenSummary } from '../tokenSummary';
 import { decodeTokenSummary, QUOTA_HISTORY_FORMAT, type TokenSummaryResponse } from '../tokenSummaryCodec';
+import { DraftScopes } from './draftScopes';
 import { initialChatState, type ApprovalReply, type ChatProject, type ChatState, type GuiEvent,
   type ListResponse, type Request, type SendInput, type SkillsResponse, type Thread } from './types';
 
@@ -92,9 +93,13 @@ export class ChatController {
       ? this.applySidebar(result as SidebarSnapshot) : this.completeThreadMutation(body),
     refresh: () => this.list({ background: true }) });
   readonly goals = new RemoteGoals({ snapshot: () => this.state, update: (patch) => this.update(patch),
-    request: (body) => this.request(body), created: (id, settings) => this.composer.created(id, settings),
+    request: (body) => this.request(body), created: (id, settings) => {
+      this.draftScopes.created(this.state.draftScope ?? '', id);
+      return this.composer.created(id, settings);
+    },
     generation: () => this.synchronization });
   private state = initialChatState();
+  private readonly draftScopes = new DraftScopes();
   private readErrorSource?: ReadErrorSource;
   private readonly listeners = new Set<() => void>();
   private readonly eventListeners = new Set<(event: GuiEvent) => void>();
@@ -249,6 +254,12 @@ export class ChatController {
   private update(patch: Partial<ChatState>, readErrorSource?: ReadErrorSource) {
     if ('error' in patch) this.readErrorSource = readErrorSource;
     const previous = this.state;
+    // Project pickers and worktree creation also switch the unsent conversation's owner.
+    if (!previous.selected && patch.selected === undefined && patch.draftScope === undefined
+      && patch.draftProject !== undefined && patch.draftProject?.cwd !== previous.draftProject?.cwd) {
+      this.selectionGeneration += 1;
+      patch = { ...patch, draftScope: this.draftScopes.project(patch.draftProject?.cwd) };
+    }
     this.state = syncChatProcessing({ ...this.state, ...patch }, this.state);
     if (previous.selected?.id !== this.state.selected?.id) {
       void this.syncConversationView().catch(error => this.failure(error));
@@ -661,7 +672,7 @@ export class ChatController {
     const cached = this.histories.get(thread.id);
     if (cached) this.historyPages.set(thread.id, cached.page);
     else this.historyPages.delete(thread.id);
-    this.update({ selected: cached?.thread ?? thread, draftProject: null, draftScope: thread.id,
+    this.update({ selected: cached?.thread ?? thread, draftProject: null, draftScope: this.draftScopes.thread(thread.id),
       selectedArchived: this.state.archived, error: '', historyOffline: Boolean(this.offline),
       historyHasMore: this.historyPages.get(thread.id)?.hasMore ?? false, historyLoad: undefined });
     if (this.offline && !this.state.ready) await this.readOffline(false);
@@ -775,7 +786,7 @@ export class ChatController {
     this.refreshThreadId = null;
     this.loadedThreadId = null;
     this.update({ selected: null, draftProject: project ? { cwd: project.cwd, label: project.label } : null,
-      draftScope: `draft:${this.selectionGeneration}`,
+      draftScope: this.draftScopes.project(project?.cwd),
       selectedArchived: false, error: '', historyHasMore: false, historyLoading: false, historyLoadingMore: false });
     void this.flushCache();
     if (!this.offline || this.transportConnected) void this.composer.select(inherit);
@@ -798,6 +809,7 @@ export class ChatController {
       const created = !thread;
       if (!thread) {
         thread = await this.createMessageThread({ selection, cwd: this.state.draftProject?.cwd,
+          draftScope: this.state.draftScope ?? '',
           selectionGeneration: this.selectionGeneration, synchronization: generation });
       }
       this.ensureCurrent(generation);
@@ -832,7 +844,7 @@ export class ChatController {
     this.ensureCurrent(target.synchronization);
     const created = !target.thread;
     if (!target.thread) {
-      target.thread = await this.createMessageThread({ selection: settings, cwd: target.cwd,
+      target.thread = await this.createMessageThread({ selection: settings, cwd: target.cwd, draftScope: target.scope,
         selectionGeneration: target.selectionGeneration, synchronization: target.synchronization,
         created: thread => { target.thread = thread; } });
     }
@@ -849,14 +861,15 @@ export class ChatController {
     }
   }
 
-  private async createMessageThread({ selection, cwd, selectionGeneration, synchronization, created }: {
-    selection: ComposerSettings; cwd?: string; selectionGeneration: number; synchronization: number;
+  private async createMessageThread({ selection, cwd, draftScope, selectionGeneration, synchronization, created }: {
+    selection: ComposerSettings; cwd?: string; draftScope: string; selectionGeneration: number; synchronization: number;
     created?: (thread: Thread) => void;
   }) {
     const { thread } = await this.request<{ thread: Thread }>({ operation: 'start',
       model: selection.model || undefined, access: selection.access, cwd });
     created?.(thread);
     this.ensureCurrent(synchronization);
+    this.draftScopes.created(draftScope, thread.id);
     this.threadList.upsert(thread, false);
     if (this.selectionGeneration === selectionGeneration) {
       this.listRequests.reset();

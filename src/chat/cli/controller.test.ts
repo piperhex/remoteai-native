@@ -51,6 +51,26 @@ it('isolates engine drafts and refuses unavailable models after switching accoun
   stop();
 });
 
+it('retains independent empty-project and project drafts alongside existing conversations', async () => {
+  const fixture = createCliFixture();
+  const controller = new CliController(fixture.transport, () => 'native-draft');
+  controller.chooseEngine('claude');
+  for (const cwd of ['', '/project-a', '/project-b']) {
+    controller.newConversation(cwd);
+    expect(controller.getSnapshot().draft).toBe('');
+    controller.edit(`Draft ${cwd}`);
+  }
+  controller.open(fixture.sessions[0]);
+  controller.edit('Existing draft');
+  for (const cwd of ['/project-a', '', '/project-b']) {
+    controller.newConversation(cwd);
+    expect(controller.getSnapshot().draft).toBe(`Draft ${cwd}`);
+  }
+  controller.open(fixture.sessions[0]);
+  expect(controller.getSnapshot().draft).toBe('Existing draft');
+  await controller.refresh();
+});
+
 it('stops refreshing after the native view becomes inactive and resumes its selected session', async () => {
   vi.useFakeTimers();
   const fixture = createCliFixture();
