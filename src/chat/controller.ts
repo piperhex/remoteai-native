@@ -9,6 +9,7 @@ import { createPreviewDownloads } from '../downloads/previews';
 import { downloadOwner } from '../downloads/manager';
 import { createIosPreviewDownloads } from '../downloads/iosPreviews';
 import { createNativeSshProfiles } from '../api/sshProfiles';
+import { nativeDirectoryStorage } from './offline/directory';
 
 export class ChatController extends SharedController {
   constructor(session: AuthSession, deviceId: string) {
@@ -16,6 +17,7 @@ export class ChatController extends SharedController {
     super((events) => new MobileChatConnection({ session, deviceId, ...events }),
       new SqliteHistoryStore(session, deviceId, prepare), prepare ? new AsyncHistoryVersionCache(prepare) : undefined,
       createNativeSshProfiles(session));
+    this.directoryStorage = nativeDirectoryStorage(session, deviceId);
     if (Platform.OS === 'android') {
       this.previewDownloads = createPreviewDownloads({ owner: downloadOwner(session), deviceId });
     } else this.previewDownloads = createIosPreviewDownloads(this, { owner: downloadOwner(session), deviceId });

@@ -9,7 +9,7 @@ it('retries only models after a model failure and recovers without reconnecting'
   vi.useFakeTimers();
   let fail = true;
   const request = vi.fn(async (method: string, body?: Record<string, unknown>) => {
-    if (method === 'connect') return { ...chatHandshake, approvals: [] };
+    if (method === 'connect') return { ...chatHandshake, directorySyncV1: false, approvals: [] };
     if (body?.operation === 'models') {
       if (fail) throw new Error('Model catalog unavailable');
       return { data: [{ id: 'test', model: 'test', displayName: 'test' }], nextCursor: null,
@@ -41,7 +41,7 @@ it('retries only models after a model failure and recovers without reconnecting'
 it('cancels pending model recovery when stopped', async () => {
   vi.useFakeTimers();
   const request = vi.fn(async (method: string, body?: Record<string, unknown>) => {
-    if (method === 'connect') return { ...chatHandshake, approvals: [] };
+    if (method === 'connect') return { ...chatHandshake, directorySyncV1: false, approvals: [] };
     if (body?.operation === 'models') throw new Error('Model catalog unavailable');
     return { data: [], nextCursor: null };
   });

@@ -21,6 +21,13 @@ export class ThreadListCache {
 
   constructor(private readonly fetch: (query: ThreadListQuery, force?: boolean) => Promise<Snapshot>) {}
 
+  replace(query: ThreadListQuery, snapshot: Snapshot) {
+    this.lists.set(keyOf(query), { query, snapshot, valid: true });
+    for (const thread of snapshot.data) {
+      this.known.set(thread.id, thread); this.archived.set(thread.id, query.archived);
+    }
+  }
+
   peek(query: Scope): Snapshot | undefined { return this.lists.get(keyOf(query))?.snapshot; }
 
   get(query: Scope): Snapshot | undefined {

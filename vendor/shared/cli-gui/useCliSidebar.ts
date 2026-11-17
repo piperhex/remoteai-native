@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { Thread } from '../conversation/types';
 import { orderThreadsByActivity } from '../chat/threadOrder';
 import { useCliGui } from './context';
@@ -16,7 +16,11 @@ export function useCliSidebar({ threads, archived, query = '' }: {
 }) {
   const cli = useCliGui();
   const sessions = cli?.state.sessions;
-  useEffect(() => { cli?.controller.filter(archived); }, [archived, cli?.controller]);
+  useEffect(() => { cli?.controller.filter(archived, query); }, [archived, query, cli?.controller]);
+  useEffect(() => {
+    cli?.controller.setListVisible(true);
+    return () => cli?.controller.setListVisible(false);
+  }, [cli?.controller]);
   const entries = useMemo(() => new Map((sessions ?? [])
     .filter(session => session.archived === archived
       && `${session.title} ${session.cwd}`.toLowerCase().includes(query.trim().toLowerCase()))
@@ -25,5 +29,10 @@ export function useCliSidebar({ threads, archived, query = '' }: {
     ...threads, ...Array.from(entries.values(), cliSidebarThread),
   ], { isRunning: thread => thread.status?.type === 'active' }), [threads, entries]);
   const selected = cli?.state.selected ? cliSidebarThread(cli.state.selected) : null;
-  return { threads: combined, selected, session: (thread: Thread) => entries.get(thread.id) };
+  const more = cli?.state.listMore;
+  const hasMore = useCallback((threads: Thread[]) => threads.some(thread => {
+    const session = entries.get(thread.id);
+    return session && more?.[session.engine];
+  }), [entries, more]);
+  return { threads: combined, selected, session: (thread: Thread) => entries.get(thread.id), hasMore };
 }

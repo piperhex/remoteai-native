@@ -12,6 +12,7 @@ import { monitorDownloadSpeed } from './monitorDownloadSpeed';
 import type { DownloadConnection, DownloadSource, DownloadTask } from './types';
 import { sshDownloadClient } from '../terminal/sshDownloadClient';
 import { managedDownloadHandler, subscribeManagedDownloads } from './managedTasks';
+import { browserDownloadConnected, controlBrowserDownload } from './browserTasks';
 
 const MAX_ACTIVE_DOWNLOADS = 2;
 const MAX_DOWNLOAD_RECORDS = 500;
@@ -68,7 +69,10 @@ export class WebDownloadManager {
   };
   initialize = () => this.initialization ??= listDownloads().then(tasks => {
     this.tasks = tasks.map(task => ({ ...task, bytesPerSecond: undefined,
-      status: ['queued', 'preparing', 'downloading', 'verifying'].includes(task.status) ? 'paused'
+      ...(task.browser && task.status !== 'completed' ? { browser: { ...task.browser,
+        awaitingConfirmation: false, canResume: false }, message: 'client.downloads.browser.unavailable' } : {}),
+      status: task.browser && task.status !== 'completed' ? 'failed'
+        : ['queued', 'preparing', 'downloading', 'verifying'].includes(task.status) ? 'paused'
         : task.status === 'saving' ? 'ready' : task.status }));
     this.emit();
   }).catch(() => {
@@ -103,10 +107,22 @@ export class WebDownloadManager {
     this.emit();
   }
   private connected(task: DownloadTask) {
+    if (task.browser) return browserDownloadConnected(task);
     if (task.sync) return managedDownloadHandler(task)?.connected(task);
     return this.connectionForSource(task.source)?.ready;
   }
   taskConnected = (task: DownloadTask) => !!this.connected(task);
+  /** Browser engines own their transfer; snapshots must never enter the file-transfer scheduler. */
+  async updateBrowser(task: DownloadTask) {
+    await this.initialize();
+    if (this.failure) throw new Error(this.failure);
+    if (!task.browser) return;
+    const exists = this.tasks.some(current => current.id === task.id);
+    if (!exists && this.tasks.length >= MAX_DOWNLOAD_RECORDS) throw new Error('client.downloads.browser.limit');
+    await storeDownload(task);
+    if (exists) this.update(task);
+    else { this.tasks = [...this.tasks, task]; this.emit(); }
+  }
   async updateManaged(task: DownloadTask) {
     if (this.tasks.some(current => current.id === task.id)) await this.persist(task);
   }
@@ -143,6 +159,8 @@ export class WebDownloadManager {
     return task.id;
   }
   async pause(id: string) {
+    const browserTask = this.tasks.find(task => task.id === id && task.browser);
+    if (browserTask) return controlBrowserDownload(browserTask, 'pause');
     this.paused.add(id);
     this.clearRetry(id);
     const flight = this.flights.get(id);
@@ -157,6 +175,7 @@ export class WebDownloadManager {
   }
   async resume(id: string) {
     const task = this.tasks.find(task => task.id === id);
+    if (task?.browser) return controlBrowserDownload(task, 'resume');
     if (!task || this.flights.has(id) || ['completed', 'ready', 'saving'].includes(task.status)) return;
     this.clearRetry(id);
     this.paused.delete(id);
@@ -164,7 +183,9 @@ export class WebDownloadManager {
     this.schedule();
   }
   async remove(id: string) {
-    await this.pause(id);
+    const browserTask = this.tasks.find(task => task.id === id && task.browser);
+    if (browserTask) await controlBrowserDownload(browserTask, 'remove');
+    else await this.pause(id);
     const task = this.tasks.find(task => task.id === id);
     if (task) await managedDownloadHandler(task)?.remove?.(task);
     await deleteDownload(id);
@@ -174,6 +195,7 @@ export class WebDownloadManager {
   }
   async save(id: string) {
     const task = this.tasks.find(task => task.id === id);
+    if (task?.browser) return;
     if (task?.sync) return;
     if (!task || !['completed', 'ready'].includes(task.status)) return;
     // Invoke the picker in the click stack before an IndexedDB await consumes user activation.
@@ -194,6 +216,7 @@ export class WebDownloadManager {
   }
   async open(id: string, opener: DownloadOpener = openBrowserDownload) {
     const task = this.tasks.find(task => task.id === id);
+    if (task?.browser) return controlBrowserDownload(task, 'open');
     if (task?.sync) return;
     if (!task || !['completed', 'ready'].includes(task.status)) return;
     try { await opener(task); }
@@ -214,7 +237,8 @@ export class WebDownloadManager {
     for (const task of this.tasks) {
       if (this.flights.size >= MAX_ACTIVE_DOWNLOADS) return;
       const connection = this.connectionForSource(task.source);
-      if (task.status !== 'queued' || this.flights.has(task.id) || this.retryTimers.has(task.id) || this.paused.has(task.id)
+      if (task.browser || task.status !== 'queued' || this.flights.has(task.id)
+        || this.retryTimers.has(task.id) || this.paused.has(task.id)
         || !this.connected(task)) continue;
       const controller = new AbortController();
       const done = Promise.resolve().then(() => this.run(task, connection, controller.signal)).finally(() => {

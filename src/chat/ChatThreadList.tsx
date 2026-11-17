@@ -17,6 +17,7 @@ import { NativeGroupIcon } from './groups/GroupChoice';
 import { useCliSidebar } from '../../vendor/shared/cli-gui/useCliSidebar';
 import { useCliGui } from '../../vendor/shared/cli-gui/context';
 import { engineNames } from './cli/engine';
+import { DirectoryMore, CliDirectoryMore } from './DirectoryMore';
 
 interface Props {
   state: ChatState; newChat: (project?: ChatProject) => void; select: (thread: Thread) => void;
@@ -40,7 +41,7 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
   const sidebar = useCliSidebar({ threads: state.threads, archived: state.archived });
   const selected = cli && cli.state.engine !== 'codex' ? sidebar.selected : state.selected;
   useLanguage();
-  const { groups, toggle, toggleCollapse } = useThreadGroups({ ...state, threads: sidebar.threads, selected });
+  const { groups, toggle, toggleCollapse } = useThreadGroups({ ...state, threads: sidebar.threads, selected }, sidebar.hasMore);
   const layoutKey = JSON.stringify(groups.map(group => [group.id, group.data.length, group.canToggle]));
   const pagination = useThreadListScroll(state, controller, layoutKey);
   const ready = state.ready;
@@ -55,7 +56,7 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
       stickySectionHeadersEnabled={false} keyboardShouldPersistTaps="handled"
       refreshing={Boolean(state.listRefreshing)} onRefresh={() => { void controller.list(); void cli?.controller.refresh(); }}
       onLayout={pagination.onLayout} onContentSizeChange={pagination.onContentSizeChange}
-      onScroll={pagination.onScroll} scrollEventThrottle={16}
+      onScroll={pagination.onScroll} onScrollBeginDrag={pagination.onScrollBeginDrag} scrollEventThrottle={16}
       renderSectionHeader={({ section }) => <View style={[styles.row,
         { paddingLeft: Math.min(section.depth, MAX_INDENT_DEPTH) * LEVEL_INDENT }]}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: !section.collapsed }}
@@ -85,12 +86,25 @@ export function ChatThreadList({ state, newChat, select, controller, bottomInset
           disabled={state.sending} style={[listStyles.add, state.sending && styles.disabled]}
           onPress={() => newChat(section)}><Text style={listStyles.plus}>＋</Text></Pressable>}
       </View>}
-      renderSectionFooter={({ section }) => section.canToggle ? <Pressable accessibilityRole="button"
+      renderSectionFooter={({ section }) => <>
+      {section.expanded && !section.collapsed && <>
+        <DirectoryMore visible={Boolean(state.directorySync && ready && section.kind === 'group'
+          && state.groupCursors?.[section.id.slice(6)] !== null)} busy={state.groupLoading?.[section.id.slice(6)]}
+          style={[listStyles.more, { marginLeft: section.contentIndent }]}
+          load={() => controller.loadGroup(section.id.slice(6), Boolean(state.groupCursors?.[section.id.slice(6)]))} />
+        <CliDirectoryMore threads={section.data} style={[listStyles.more, { marginLeft: section.contentIndent }]} />
+      </>}
+      {section.canToggle ? <Pressable accessibilityRole="button"
         accessibilityLabel={`${section.expanded ? t("client.chat.collapse") : t("client.chat.showMore.83ad87")}：${section.label}`}
         accessibilityState={{ expanded: section.expanded }}
-        style={[listStyles.more, { marginLeft: section.contentIndent }]} onPress={() => toggle(section.id)}>
+        style={[listStyles.more, { marginLeft: section.contentIndent }]} onPress={() => {
+          toggle(section.id);
+          if (!section.expanded && section.kind === 'group' && state.groupCursors?.[section.id.slice(6)] === undefined) {
+            void controller.loadGroup(section.id.slice(6));
+          }
+        }}>
         <Text style={styles.subtitle}>{section.expanded ? t("client.chat.collapse") : t("client.chat.showMore.83ad87")}</Text>
-      </Pressable> : null}
+      </Pressable> : null}</>}
       renderItem={({ item, section }) => {
         const view = threadPresentation(item, state.sidebar, displayText);
         const session = sidebar.session(item);

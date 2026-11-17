@@ -172,6 +172,8 @@ export interface ListResponse<T> { data: T[]; nextCursor: string | null }
 export interface Settings { cwd: string; model: string; effort: string; access: AccessMode }
 export interface ThreadReadState { turnId: string; unread: boolean }
 export interface GuiState {
+    groupCursors?: Record<string, string | null>;
+    groupLoading?: Record<string, boolean>;
   capacityRetry?: import("./capacityRetry").CapacityRetryState;
   modelSettingsLoading?: boolean;
   modelCatalogLoading?: boolean;

@@ -3,7 +3,7 @@ import type { GuiEvent } from './client/types';
 
 // Increment only for breaking chat changes. Earlier PCs and phones use the same version without metadata.
 export const CHAT_PROTOCOL_VERSION = 1;
-export const chatHandshake = { protocolVersion: CHAT_PROTOCOL_VERSION };
+export const chatHandshake = { protocolVersion: CHAT_PROTOCOL_VERSION, directorySyncV1: true };
 
 export function validateChatHandshake(body: unknown) {
   if (body === undefined) return;

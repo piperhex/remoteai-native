@@ -35,7 +35,7 @@ it.each([
   expect(controller.snapshot()).toMatchObject({ ready: false, error });
   expect(request.mock.calls.filter(([method]) => method === 'connect')).toHaveLength(2);
   request.mockImplementation(async (method) => method === 'connect'
-    ? { ...chatHandshake, approvals: [] } : { data: [], nextCursor: null });
+    ? { ...chatHandshake, directorySyncV1: false, approvals: [] } : { data: [], nextCursor: null });
   await vi.advanceTimersByTimeAsync(3000);
   expect(controller.snapshot()).toMatchObject({ ready: true, error: '' });
   controller.stop();
@@ -73,7 +73,7 @@ it('retries GUI initialization immediately once, cancelling the pending automati
   expect(controller.snapshot()).toMatchObject({ ready: false, connecting: true, retryAt: null });
   await vi.advanceTimersByTimeAsync(3000);
   expect(request.mock.calls.filter(([method]) => method === 'connect')).toHaveLength(2);
-  finish({ ...chatHandshake, approvals: [] });
+  finish({ ...chatHandshake, directorySyncV1: false, approvals: [] });
   await vi.advanceTimersByTimeAsync(0);
   expect(controller.snapshot()).toMatchObject({ ready: true, connecting: false, retryAt: null });
   controller.stop();

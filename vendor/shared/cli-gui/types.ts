@@ -16,6 +16,7 @@ export interface CliCatalog {
   defaultMode?: string;
 }
 export interface CliRuntimeStatus {
+  directorySyncV1?: boolean;
   status: 'missing' | 'installing' | 'ready' | 'error';
   version: string;
   error?: string;
@@ -28,6 +29,7 @@ export interface CliPermission {
   questions?: { question: string; options: string[]; multiple?: boolean }[];
 }
 export interface CliSession {
+  permissionCount?: number;
   id: string; engine: ExternalEngine; title: string; cwd: string; model: string;
   status: string; updatedAt: string; archived: boolean;
   effort?: string;
@@ -48,6 +50,8 @@ export type CliRequest = { engine: ExternalEngine } & (
   | { action: 'status' | 'install' }
   | { action: 'catalog'; cwd?: string; id?: string }
   | { action: 'list'; archived: boolean }
+  | { action: 'syncList'; archived: boolean; search?: string; more?: boolean;
+      checkpoint?: import('../chat/directory/protocol').DirectoryCheckpoint }
   | { action: 'create'; cwd: string; model: string; mode?: string; effort?: string }
   | { action: 'read'; id: string; cursor?: CliCursor }
   | { action: 'send'; id: string; text: string; messageId: string; images?: string[]; model?: string; effort?: string }
@@ -58,6 +62,19 @@ export type CliRequest = { engine: ExternalEngine } & (
 );
 export interface CliTransport {
   request<T>(request: CliRequest): Promise<T>;
-  subscribe(listener: () => void): Promise<() => void> | (() => void);
+  subscribe(listener: (change?: CliChange) => void): Promise<() => void> | (() => void);
+  directoryStorage?: import('../chat/directory/storage').DirectoryStorage;
   subscribeAccountChange?(listener: () => void): Promise<() => void> | (() => void);
+}
+
+export type CliDirectoryEntry = { key: string; kind: 'session'; value: CliSession }
+  | { key: '@page'; kind: 'page'; cursor: string | null; complete: boolean };
+export interface CliChange {
+  changes?: CliChange[];
+  engine?: ExternalEngine;
+  id?: string;
+  history?: boolean;
+  runtime?: boolean;
+  invalidated?: boolean;
+  batch?: import('../chat/directory/protocol').DirectoryBatch<CliDirectoryEntry>;
 }

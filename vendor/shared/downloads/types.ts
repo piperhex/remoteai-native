@@ -24,6 +24,7 @@ export interface DownloadTask {
   exported?: boolean;
   preparation?: import('../remote-chat/archiveDownload').ArchiveProgress;
   sync?: import('../conversation/sync/taskTypes').SyncDownload;
+  browser?: import('./browserTasks').BrowserDownload;
 }
 export interface DownloadConnection {
   owner: string; deviceId: string; deviceName: string; ready: boolean; mode: ConnectionMode;

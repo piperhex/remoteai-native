@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { previewThreads, THREAD_GROUP_PREVIEW_COUNT } from '../../chat/threadGroupPreview';
 import { orderSidebarThreads, projectThreadGroups } from '../sidebar';
-import type { ChatState } from './types';
+import type { ChatState, Thread } from './types';
 import { groupingTree, flattenGroupingTree } from '../../chat/groups/tree';
 
 function toggleProject(previous: Set<string>, cwd: string) {
@@ -11,7 +11,7 @@ function toggleProject(previous: Set<string>, cwd: string) {
   return next;
 }
 
-export function useThreadGroups(state: ChatState) {
+export function useThreadGroups(state: ChatState, hasMore?: (threads: Thread[]) => boolean) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const filtering = Boolean(state.search.trim());
@@ -23,10 +23,13 @@ export function useThreadGroups(state: ChatState) {
     // Custom groups can combine conversations from several project sections.
     const ordered = orderSidebarThreads(group.data, state.sidebar);
     const visibleThreads = showAll ? ordered : previewThreads(ordered, state.selected?.id ?? null);
+    const unloadedGroup = state.directorySync && group.kind === 'group' && state.groupCursors?.[group.id.slice(6)] !== null;
     return { ...group, expanded: showAll, collapsed: isCollapsed,
-      canToggle: !isCollapsed && !filtering && group.data.length > THREAD_GROUP_PREVIEW_COUNT,
+      canToggle: !isCollapsed && !filtering
+        && Boolean(group.data.length > THREAD_GROUP_PREVIEW_COUNT || unloadedGroup || hasMore?.(group.data)),
       data: isCollapsed ? [] : visibleThreads };
-  }), [state.threads, state.sidebar, state.selected?.id, filtering, expanded, collapsed]);
+  }), [state.threads, state.sidebar, state.selected?.id, state.directorySync, state.groupCursors,
+    filtering, expanded, collapsed, hasMore]);
   const toggle = (cwd: string) => setExpanded(previous => toggleProject(previous, cwd));
   const toggleCollapse = (cwd: string) => {
     setCollapsed(previous => toggleProject(previous, cwd));

@@ -1,14 +1,18 @@
-import type { CliCatalog, CliEntry, CliHistory, CliRequest, CliRuntimeStatus, CliSession,
+import type { CliCatalog, CliChange, CliEntry, CliHistory, CliRequest, CliRuntimeStatus, CliSession,
   CliTransport, ExternalEngine, GuiEngine } from './types';
 import { modelSelectionError, resolveModelSelection } from '../conversation/modelSelection';
 import { cliPickerModels, cliRequestEffort } from './modelSelection';
 import type { DraftImage } from '../chat/draftImages';
+import { CliListDirectory } from './directory';
 
 const LIVE_REFRESH_DELAY_MS = 80;
 const FALLBACK_REFRESH_DELAY_MS = 1000;
-const METADATA_REFRESH_INTERVAL_MS = 2000;
+const METADATA_REFRESH_INTERVAL_MS = 60_000;
 
 export interface CliState {
+  search?: string;
+  listMore?: Partial<Record<ExternalEngine, boolean>>;
+  listLoading?: boolean;
   engine: GuiEngine; selected: CliSession | null; sessions: CliSession[]; history: CliHistory | null;
   runtime: Partial<Record<ExternalEngine, CliRuntimeStatus>>; catalog: CliCatalog | null;
   cwd: string; model: string; effort: string; mode: string; draft: string;
@@ -34,8 +38,21 @@ export class CliController {
   private unsubscribe?: () => void;
   private unsubscribeAccount?: () => void;
   private older?: { revision: number; generation: number; history: CliHistory };
+  private listVisible = false;
+  private readonly directory: CliListDirectory;
   constructor(private readonly transport: CliTransport,
-    private readonly createMessageId: () => string = () => crypto.randomUUID()) {}
+    private readonly createMessageId: () => string = () => crypto.randomUUID()) {
+    this.directory = new CliListDirectory({ transport, failed: error => this.report(error),
+      apply: (query, sessions, more) => {
+        if (query.archived !== this.state.archived || query.search !== (this.state.search ?? '')) return;
+        const previous = this.state.sessions.filter(session => session.engine === query.engine);
+        if (previous.length === sessions.length && sessions.every(session => previous.includes(session))
+          && this.state.listMore?.[query.engine] === more) return;
+        this.patch({ sessions: [...this.state.sessions.filter(session => session.engine !== query.engine), ...sessions]
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+        listMore: { ...this.state.listMore, [query.engine]: more } });
+      } });
+  }
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   patch = (patch: Partial<CliState>) => {
@@ -79,15 +96,28 @@ export class CliController {
         if (this.active && generation === this.generation) this.unsubscribeAccount = stop; else stop();
       }).catch(this.report);
     }
-    void Promise.resolve(this.transport.subscribe(() => this.schedule(true))).then(unsubscribe => {
+    void Promise.resolve(this.transport.subscribe(this.changed)).then(unsubscribe => {
       if (this.active && generation === this.generation) this.unsubscribe = unsubscribe; else unsubscribe();
     }).catch(this.report);
-    void this.refresh();
+    if (this.listVisible || this.state.engine !== 'codex') void this.refresh();
     return () => { if (generation !== this.generation) return;
       ++this.generation; this.active = false; this.unsubscribe?.(); this.unsubscribeAccount?.();
+      this.directory.disconnect();
       if (this.older) { this.older = undefined; this.patch({ loading: false }); }
       clearTimeout(this.timer); this.timer = undefined; };
   }
+  setListVisible = (visible: boolean) => {
+    this.listVisible = visible;
+    if (visible && this.active) void this.refresh();
+  };
+  private changed = (change?: CliChange) => {
+    if (change?.changes) { change.changes.forEach(this.changed); return; }
+    if (!change || !Object.keys(change).length) { this.schedule(true); return; }
+    if (change.batch) this.directory.receive(change);
+    if (change.history && this.state.selected?.id === change.id && this.state.engine === change.engine) this.schedule(true);
+    if (change.runtime) { this.metadataRefreshedAt = -Infinity; void this.refresh(); }
+    if (change.invalidated) void this.synchronizeLists(change.engine).catch(this.report);
+  };
   private schedule = (live = false) => {
     const immediate = live && Boolean(this.state.selected);
     if (!this.active || (this.timer && (!immediate || this.scheduledLive))) return;
@@ -150,27 +180,49 @@ export class CliController {
     const revision = this.revision;
     if (historyOnly && this.state.selected) {
       await this.synchronizeHistory(revision);
-      if (Date.now() - this.metadataRefreshedAt < METADATA_REFRESH_INTERVAL_MS) return;
+      return;
     }
     await this.synchronizeMetadata();
     if (!historyOnly || !this.state.selected) await this.synchronizeHistory(revision);
   }
   private async synchronizeMetadata() {
-    const archived = this.state.archived;
+    const generation = this.generation;
+    if (Date.now() - this.metadataRefreshedAt < METADATA_REFRESH_INTERVAL_MS) {
+      await this.synchronizeLists(); return;
+    }
     const wasReady = this.state.engine !== 'codex' && this.state.runtime[this.state.engine]?.status === 'ready';
     const runtimes = await Promise.all((['claude', 'gemini'] as const).map(async engine =>
       [engine, await this.read<CliRuntimeStatus>({ engine, action: 'status' })] as const));
+    if (generation !== this.generation) return;
     this.patch({ runtime: Object.fromEntries(runtimes) });
     if (runtimes.some(([, value]) => value.status === 'installing')) { this.schedule(); return; }
     if (!runtimes.some(([, value]) => value.status === 'ready')) return;
-    const lists = await Promise.all((['claude', 'gemini'] as const).map(engine =>
-      this.read<CliSession[]>({ engine, action: 'list', archived })));
-    if (archived === this.state.archived) {
-      this.patch({ sessions: lists.flat().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)) });
-    }
+    await this.synchronizeLists();
     this.metadataRefreshedAt = Date.now();
     if (!wasReady && this.state.engine !== 'codex') void this.loadCatalog();
   }
+  private async synchronizeLists(only?: ExternalEngine, more = false) {
+    const { archived, search = '' } = this.state;
+    const generation = this.generation;
+    await Promise.all((only ? [only] : ['claude', 'gemini'] as const).map(async engine => {
+      const runtime = this.state.runtime[engine];
+      if (runtime?.status !== 'ready') return;
+      if (runtime.directorySyncV1) return this.directory.read({ engine, archived, search }, more);
+      const sessions = await this.read<CliSession[]>({ engine, action: 'list', archived });
+      if (generation !== this.generation || archived !== this.state.archived || search !== (this.state.search ?? '')) return;
+      this.patch({ sessions: [...this.state.sessions.filter(session => session.engine !== engine), ...sessions]
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)) });
+    }));
+  }
+  loadMoreSessions = async (engines: readonly ExternalEngine[] = ['claude', 'gemini']) => {
+    if (this.state.listLoading) return;
+    this.patch({ listLoading: true });
+    try {
+      await Promise.all(engines.filter(engine => this.state.listMore?.[engine])
+        .map(engine => this.synchronizeLists(engine, true)));
+    } catch (error) { this.report(error); }
+    finally { this.patch({ listLoading: false }); }
+  };
   private async synchronizeHistory(revision: number) {
     const { selected } = this.state;
     if (!selected || revision !== this.revision) return;
@@ -181,9 +233,9 @@ export class CliController {
         ? history.session : session) });
     if (history.session.status === 'running' || history.session.permissions.length) this.schedule();
   }
-  filter = (archived: boolean) => {
-    if (this.state.archived === archived) return;
-    this.patch({ archived, sessions: [] });
+  filter = (archived: boolean, search = '') => {
+    if (this.state.archived === archived && (this.state.search ?? '') === search) return;
+    this.patch({ archived, search, sessions: [], listMore: {} });
     void this.refresh();
   };
   loadCatalog = async () => {

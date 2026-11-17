@@ -9,6 +9,7 @@ vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
   useEffect: vi.fn(), useContext: () => null,
   useMemo: <T,>(compute: () => T) => compute(),
+  useCallback: <T,>(callback: T) => callback,
   useState: <T,>(initial: () => T) => {
     const slot = hooks.slot++;
     if (!(slot in hooks.states)) hooks.states[slot] = initial();
@@ -92,7 +93,7 @@ it.each(['/project', ''])('moves running native rows to the front of %j and rest
   } };
   const active = render(state);
   expect(ids(active.sections[0])).toEqual(['chat-5', 'chat-6', 'chat-0', 'chat-1', 'chat-2']);
-  active.renderSectionFooter({ section: active.sections[0] }).props.onPress();
+  active.renderSectionFooter({ section: active.sections[0] }).props.children[1].props.onPress();
   expect(ids(render(state).sections[0])).toEqual(['chat-5', 'chat-6', 'chat-0', 'chat-1', 'chat-2', 'chat-3', 'chat-4']);
   state.sidebar = { ...state.sidebar, revision: 2, threads: Object.fromEntries(
     Object.entries(state.sidebar.threads).map(([id, value]) => [id, { ...value, running: false }]),

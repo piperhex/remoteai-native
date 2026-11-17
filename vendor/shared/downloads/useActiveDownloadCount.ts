@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 interface CountableDownload {
   status: string;
   source: { owner: string; preview?: unknown };
+  browser?: { awaitingConfirmation: boolean };
 }
 
 interface DownloadStore {
@@ -22,7 +23,7 @@ export function useActiveDownloadCount({ manager, owners, enabled = true }: {
 }) {
   const count = useSyncExternalStore(enabled ? manager.subscribe : subscribeDisabled, () => enabled
     ? manager.snapshot().filter(task => owners.includes(task.source.owner)
-      && !task.source.preview && ACTIVE_STATUSES.has(task.status)).length : 0, () => 0);
+      && !task.source.preview && (ACTIVE_STATUSES.has(task.status) || task.browser?.awaitingConfirmation)).length : 0, () => 0);
   useEffect(() => { if (enabled) void manager.initialize(); }, [manager, enabled]);
   return count;
 }

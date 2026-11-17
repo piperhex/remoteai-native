@@ -23,6 +23,10 @@ import { createRemoteGroups } from './groups';
 import { ThreadListRequests } from './threadListRequests';
 import { ThreadListCache } from './threadListCache';
 import { mergeThreadList } from './threadListSnapshot';
+import { RemoteDirectory } from './directory';
+import { DIRECTORY_EVENT, type DirectoryEvent } from '../../chat/directory/protocol';
+import type { ChatDirectoryEntry, DirectoryQuery } from '../../chat/directory/documents';
+import type { DirectoryStorage } from '../../chat/directory/storage';
 import { forkConversation } from './forkConversation';
 import { RemoteMessageEditor } from './messageEdit';
 import { OfflineWriter, type OfflineHistoryStore } from './offline';
@@ -99,6 +103,13 @@ export class ChatController {
     },
     generation: () => this.synchronization });
   private state = initialChatState();
+  readonly directory = new RemoteDirectory({ request: body => this.connection.request('request', body),
+    apply: (query, projection) => this.applyDirectory(query, projection), failed: () => this.cacheFailure() });
+  subscribeDirectory = this.directory.subscribe;
+  private directoryViews = new Map<string, { threads: Thread[]; sidebar: SidebarSnapshot; cursor: string | null }>();
+  set directoryStorage(store: DirectoryStorage | undefined) {
+    this.directory.storage = store; this.cliGui.directoryStorage = store;
+  }
   private readonly draftScopes = new DraftScopes();
   private readErrorSource?: ReadErrorSource;
   private readonly listeners = new Set<() => void>();
@@ -238,7 +249,9 @@ export class ChatController {
       if (event.method === 'guiAccounts/selectionChanged' || event.method === 'claudeAccounts/changed') listener();
     }),
     request: request => this.connection.request('request', { operation: 'cliGui', request }),
-    subscribe: listener => this.subscribeEvents(event => { if (event.method === 'cliGui/changed') listener(); }),
+    subscribe: listener => this.subscribeEvents(event => {
+      if (event.method === 'cliGui/changed') listener(event.params as import('../../cli-gui/types').CliChange);
+    }),
   };
   readonly claudeAccounts: import('../../accounts/claudeAccounts').ClaudeAccountTransport = {
     request: request => this.connection.request('request', { operation: 'claudeAccounts', request }),
@@ -315,6 +328,8 @@ export class ChatController {
     this.historyReader.reset();
     this.queueConnection.reset();
     if (mode === 'offline') {
+      this.directory.disconnect();
+      this.update({ groupLoading: {} });
       this.threadList.invalidate();
       this.skillGeneration += 1;
       this.composer.reset();
@@ -340,12 +355,16 @@ export class ChatController {
     if (this.stopped || !event?.params || typeof event.method !== 'string') return;
     if (!isTextDelta(event)) this.stream.flush();
     for (const listener of this.eventListeners) listener(event);
+    if (event.method === DIRECTORY_EVENT) {
+      this.directory.receive(event.params as unknown as DirectoryEvent<ChatDirectoryEntry>); return;
+    }
     if (isTextDelta(event)) { this.stream.push(event); return; }
     if (event.method === 'thread/deleted' && event.params.threadId) {
       this.completeThreadMutation({ operation: 'delete', threadId: event.params.threadId });
     }
     if (event?.method === HISTORY_CHANGED) {
       if (event.params.threadId === this.state.selected?.id) this.scheduleHistory();
+      if (this.directory.enabled) return;
       if (event.params.thread) {
         this.threadList.receive({ ...event, method: event.params.reason ?? 'thread/started' });
         const cached = this.threadList.peek(this.state);
@@ -360,12 +379,17 @@ export class ChatController {
       return;
     }
     if (event?.method === COMPOSER_EVENT) { this.composer.receive(event.params as unknown as ComposerSnapshot); return; }
-    if (event?.method === SIDEBAR_EVENT) { this.applySidebar(event.params as unknown as SidebarSnapshot); return; }
+    if (event?.method === SIDEBAR_EVENT) {
+      if (!this.directory.enabled) this.applySidebar(event.params as unknown as SidebarSnapshot);
+      return;
+    }
     if (event?.method === QUEUE_EVENT) { this.applyQueue(event.params as unknown as QueueSnapshot); return; }
-    const missingSummary = this.threadList.receive(event);
+    const missingSummary = !this.directory.enabled && this.threadList.receive(event);
     const cached = this.threadList.peek(this.state);
+    const directoryThreads = this.state.threads;
     this.state = applyChatEvent(this.state, event);
-    if (cached) this.state = { ...this.state, threads: cached.data };
+    if (this.directory.enabled) this.state = { ...this.state, threads: directoryThreads };
+    else if (cached) this.state = { ...this.state, threads: cached.data };
     this.emit();
     this.markViewed();
     if (event?.method === 'turn/completed' && event.params.threadId === this.state.selected?.id) {
@@ -410,7 +434,7 @@ export class ChatController {
     this.connection.start();
   }
 
-  flushCache = () => this.offlineWriter?.flush() ?? Promise.resolve();
+  flushCache = async () => { await Promise.all([this.offlineWriter?.flush(), this.directory.flush()]); };
 
   private async listOffline() {
     if (!this.offline) return;
@@ -446,6 +470,7 @@ export class ChatController {
   };
 
   stop() {
+    this.directory.disconnect();
     this.viewGeneration++;
     this.viewSync = Promise.resolve();
     this.stream.flush();
@@ -483,6 +508,8 @@ export class ChatController {
       const response = await this.connection.request<unknown>('connect', chatHandshake);
       if (!this.active || generation !== this.synchronization) return;
       const approvals = chatApprovals(response);
+      this.directory.enabled = !!response && typeof response === 'object'
+        && 'directorySyncV1' in response && response.directorySyncV1 === true;
       this.update({ taskRecoverySupported: !!response && typeof response === 'object'
         && 'taskRecoveryV1' in response && response.taskRecoveryV1 === true });
       this.conversationViewsSupported = !!response && typeof response === 'object'
@@ -526,6 +553,38 @@ export class ChatController {
       ? { selected: { ...selected, cwd: entry.cwd } } : {}) });
     this.markViewed();
   }
+
+  private applyDirectory(query: DirectoryQuery, projection: {
+    threads: Thread[]; sidebar: SidebarSnapshot; cursor: string | null;
+  }) {
+    if (query.archived !== this.state.archived || query.search !== this.state.search) return;
+    if (this.directoryViews.get(query.groupId ?? '') === projection) return;
+    this.directoryViews.set(query.groupId ?? '', projection);
+    if (!query.groupId) this.threadList.replace(query, { data: projection.threads, nextCursor: projection.cursor });
+    const main = this.threadList.peek(query);
+    const views = [...this.directoryViews.values()].sort((a, b) => a.sidebar.revision - b.sidebar.revision);
+    const threads = [...new Map(views.flatMap(view => view.threads).map(thread => [thread.id, thread])).values()];
+    const latest = views.at(-1)!.sidebar;
+    const sidebar = { ...latest, threads: Object.assign({}, ...views.map(view => view.sidebar.threads)),
+      readState: Object.assign({}, ...views.map(view => view.sidebar.readState)),
+      grouping: latest.grouping ? { ...latest.grouping,
+        threads: Object.assign({}, ...views.map(view => view.sidebar.grouping?.threads)) } : undefined };
+    this.update({ threads, sidebar, cursor: main?.nextCursor ?? null,
+      directorySync: true, ...(query.groupId ? { groupCursors: { ...this.state.groupCursors,
+        [query.groupId]: projection.cursor } } : {}) });
+    this.markViewed();
+  }
+
+  loadGroup = async (groupId: string, more = false) => {
+    if (!this.directory.enabled) return;
+    const generation = this.synchronization;
+    this.update({ groupLoading: { ...this.state.groupLoading, [groupId]: true } });
+    try { await this.directory.read({ archived: this.state.archived, search: this.state.search, groupId }, more); }
+    catch (error) { this.failure(error, 'list'); }
+    finally {
+      if (generation === this.synchronization) this.update({ groupLoading: { ...this.state.groupLoading, [groupId]: false } });
+    }
+  };
 
   private applyQueue(queue: QueueSnapshot) {
     if (!queue || !Number.isSafeInteger(queue.revision) || queue.revision < this.state.queue.revision
@@ -603,8 +662,11 @@ export class ChatController {
   });
 
   /** Search without replacing the sidebar list or its pagination. */
-  searchThreads = (options: { search: string; archived: boolean; cursor?: string }) =>
-    this.threadList.read(options);
+  searchThreads = async (options: { search: string; archived: boolean; cursor?: string }) => {
+    if (!this.directory.enabled) return this.threadList.read(options);
+    const result = await this.directory.read(options, !!options.cursor);
+    return { data: result.threads, nextCursor: result.cursor };
+  };
 
   list(options: { search?: string; archived?: boolean; more?: boolean; background?: boolean; force?: boolean } = {}) {
     const search = options.search ?? this.state.search;
@@ -613,6 +675,8 @@ export class ChatController {
     const manual = !options.background && !options.more && options.search === undefined && options.archived === undefined;
     const changedScope = search !== this.state.search || archived !== this.state.archived;
     if (changedScope) {
+      this.directoryViews.clear();
+      this.update({ groupCursors: {}, groupLoading: {} });
       const cached = this.threadList.peek({ search, archived });
       this.update({ search, archived, threads: cached?.data ?? [], cursor: cached?.nextCursor ?? null });
     }
@@ -647,13 +711,20 @@ export class ChatController {
       return;
     }
     try {
+      if (this.directory.enabled) {
+        await this.directory.read({ search, archived }, more, options.force);
+        return;
+      }
       const result = await this.threadList.read({ search, archived, cursor }, options.force);
       if (!this.listRequests.accepts(generation, revision)) return;
       const { threads, summaries } = mergeThreadList({ before, current: this.state.threads,
         incoming: result.data, more });
       void this.offline?.updateSummaries?.(summaries, archived).catch(this.cacheFailure);
       this.update({ threads, cursor: result.nextCursor, ...this.recoveredRead('list') });
-    } catch (error) { if (this.listRequests.accepts(generation, revision)) this.failure(error, 'list'); }
+    } catch (error) {
+      if (this.listRequests.accepts(generation, revision)) this.failure(error, 'list');
+      if (this.directory.enabled && this.synchronizing === this.synchronization) throw error;
+    }
     finally {
       if (generation === this.listRequests.generation) this.update({ loading: false });
     }

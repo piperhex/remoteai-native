@@ -37,8 +37,13 @@ export function useChatSearch({ controller, query, archived, ready }: Options) {
       } finally { reading = false; }
     };
     request.current = (more) => { void read(more); };
+    const unsubscribe = controller.subscribeDirectory?.((query, projection) => {
+      if (disposed || query.search !== search || query.archived !== archived || query.groupId) return;
+      cursor = projection.cursor;
+      setResult({ threads: projection.threads, cursor, loading: false, error: '' });
+    });
     if (ready && search) timer = setTimeout(() => { void read(false); }, SEARCH_DELAY_MS);
-    return () => { disposed = true; clearTimeout(timer); request.current = () => {}; };
+    return () => { disposed = true; unsubscribe?.(); clearTimeout(timer); request.current = () => {}; };
   }, [controller, search, archived, ready]);
   return { ...result, reload: () => request.current(false), loadMore: () => request.current(true) };
 }

@@ -1,0 +1,9 @@
+// Keep synthetic fixture data separate from the installed application and its account storage.
+gradle.afterProject { project ->
+    if (project.path == ':app') {
+        project.layout.buildDirectory.set(new File(project.projectDir, 'build-directory-sync'))
+        project.android.defaultConfig.applicationId = 'com.codexswitch.mobile.directorysynctest'
+        project.extensions.getByName('react').entryFile = new File(project.rootDir, '../e2e/DirectorySyncFixture.tsx')
+        project.extensions.getByName('react').debuggableVariants = []
+    }
+}
