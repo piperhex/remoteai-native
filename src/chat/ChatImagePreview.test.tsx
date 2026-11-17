@@ -46,7 +46,8 @@ afterEach(async () => {
   await act(async () => root.render(null));
   vi.clearAllMocks(); state.mounts = 0; state.unmounts = 0;
 });
-const button = (label: string) => [...container.querySelectorAll('button')].find(node => node.textContent === label)!;
+const button = (label: string) => Array.from(container.querySelectorAll('button'))
+  .find(node => node.textContent === label)!;
 async function click(label: string) { await act(async () => button(label).click()); }
 
 it('pages through unmounted history, resets each image and keeps the original loader on the selected source', async () => {

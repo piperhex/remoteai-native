@@ -37,7 +37,7 @@ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 const roots: ReturnType<typeof createRoot>[] = [];
 afterEach(async () => { for (const root of roots.splice(0)) await act(async () => root.unmount()); });
 const click = (host: Element, label: string) => act(async () => {
-  [...host.querySelectorAll('button')].find(button => button.textContent === label)!.click();
+  Array.from(host.querySelectorAll('button')).find(button => button.textContent === label)!.click();
 });
 function fixture() {
   const host = document.createElement('div');
