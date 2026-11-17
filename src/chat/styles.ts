@@ -83,6 +83,7 @@ export const useStyles = createThemedStyles((color) => ({
     includeFontPadding: true, textAlignVertical: 'center', flexShrink: 1 },
   composerAdd: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20 },
   composerAddText: { color: color(palette.ink, 'ink'), fontSize: 28, lineHeight: 32 },
+  composerAddExpanded: { transform: [{ rotate: '45deg' }], color: color(palette.green, 'accent') },
   input: { minHeight: 40, maxHeight: 150, fontSize: 16, lineHeight: 23, color: color(palette.ink, 'ink'),
     paddingHorizontal: 8, paddingVertical: 8, textAlignVertical: 'top' },
   compactButton: { minHeight: 36, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,

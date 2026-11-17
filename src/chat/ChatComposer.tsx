@@ -197,7 +197,6 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
     void photos.pick(choice);
   };
   const menuContent = () => {
-    if (adding) return <ComposerAddMenu busy={attachmentBusy} choose={chooseAdd} />;
     if (menu.ssh) return <ComposerSshMenu query={menu.query} profiles={sshProfiles}
       ready={ready && !attachmentBusy} close={menu.close}
       choose={reference => { if (attachments.add(reference)) menu.consumeTrigger(); }} />;
@@ -224,8 +223,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
     {!!(attachmentError || attachments.error) && <Text accessibilityRole="alert" style={styles.error}>
       {displayError(attachmentError || attachments.error)}</Text>}
     {attachments.busy && <Text style={styles.status}>{t("client.chat.loadingFile")}</Text>}
-    {(adding || menu.open) && <ComposerPopover anchor={anchor} anchorHeight={anchorHeight} wide={!adding}
-      close={() => { setAdding(false); menu.close(); }}>
+    {menu.open && <ComposerPopover anchor={anchor} anchorHeight={anchorHeight} wide close={menu.close}>
       {menuContent()}
     </ComposerPopover>}
     <View ref={anchor} collapsable={false} style={[styles.composerField, compactField && styles.composerFieldCompact]}
@@ -246,6 +244,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
       <ComposerSuggestion text={suggestion.text} accept={suggestion.accept} />
       <ComposerInput ref={menu.input} accessibilityLabel={t("client.chat.chatMessage")} compact={compactField}
         multiline value={draft.text} maxLength={100_000} selection={menu.selection} editable={!queueEditor.loading}
+        onFocus={() => setAdding(false)}
         onSelectionChange={(event) => menu.setSelection(event.nativeEvent.selection)}
         onChangeText={text => {
           if (text) suggestion.dismiss(); else suggestion.restore();
@@ -256,12 +255,14 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
       </ScrollView>
       <View pointerEvents="box-none" style={[styles.composerActions, compactField && styles.composerActionsCompact]}>
         <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.addContent")} style={styles.composerAdd}
-          accessibilityState={{ expanded: adding }} onPress={() => { menu.close(); setAdding((current) => !current); }}>
-          <Text style={styles.composerAddText}>+</Text>
+          accessibilityState={{ expanded: adding }} onPress={() => {
+            menu.close(); menu.input.current?.blur(); Keyboard.dismiss(); setAdding(current => !current);
+          }}>
+          <Text style={[styles.composerAddText, adding && styles.composerAddExpanded]}>+</Text>
         </Pressable>
         <View style={styles.composerTrailing}>
           <ComposerModelButton models={models} selection={selection} compact={compactField}
-            onPress={() => setSettings(true)} />
+            onPress={() => { setAdding(false); setSettings(true); }} />
           {dictation ? <ComposerDictation key={`dictation:${threadId}:${cwd}`} client={dictation}
             active={active && ready && !sending && !compacting && !settings && !settingsBusy && !goalBusy}
             visible={action === 'send' && !hasDraft}
@@ -287,5 +288,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
       readConversationMetrics={readConversationMetrics}
       saving={settingsBusy} error={settingsError} ready={ready} refreshModels={refreshModels}
       updateSettings={updateSettings} onClose={() => setSettings(false)} />}
-  </View></View>;
+  </View>
+    {adding && <ComposerAddMenu busy={attachmentBusy} choose={chooseAdd} close={() => setAdding(false)} />}
+  </View>;
 }
