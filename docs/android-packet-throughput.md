@@ -162,3 +162,24 @@ compression, binary AAD, concurrent calls and destruction.
 This Android implementation optimization preserves browser/iOS wire behavior and requires no Web
 implementation change. No product UI changed. These fixtures do not verify a complete installed-app
 chat synchronization flow, account integration, or a production release.
+
+## LAN sender follow-up, 2026-11-17
+
+The later investigation instrumented desktop sending and this Android receiver together. The receiver
+now reports `queueIdleMs` (waiting for the next packet, excluding initial startup), `wireDecodeMs`
+(DataChannel UTF-8 text decoding), and `maxQueued` (a sampled queue depth after taking a packet).
+These are diagnostic fields only. The bounded 64-packet queue and production Android codec are unchanged.
+Wire decoding runs on the callback thread and overlaps the worker, so its time must not be added to
+worker decode/validation/idle totals as if all stages were sequential.
+
+The old desktop 256/64 KiB SCTP window left the receiver idle for about 2.7-3.2 seconds per 31.3 MiB
+sample. A 512/384 KiB window raised useful throughput from 7.87 to 11.76 MiB/s median in an alternating
+comparison, and from 7.17 to 11.35 MiB/s with reversed order on a new connection. All plaintexts matched.
+The sender's application-window wait fell from roughly 3 seconds to 1.1-1.3 seconds. A 1 MiB chat window
+was less stable and was rejected. The receiver still has idle time; these tests do not establish the
+Wi-Fi capacity or a full installed-app synchronization rate.
+
+The production follow-up changes only the desktop Rust chat-channel window. Android and mobile Web
+retain their compatible protocol. See the parent `docs/chat-sync-throughput.md` for all window samples,
+sender timing definitions, final default-policy verification and reproduction. Local raw reports use
+the parent `.codex-tmp/chat-lan-window-*.json` paths.

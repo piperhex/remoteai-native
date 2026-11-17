@@ -113,10 +113,12 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
     // Never unwind through JNI; report failures to the instrumentation thread.
     try {
       if (!buffer.binary) {
+        val decoding = System.nanoTime()
         val text = Charsets.UTF_8.decode(buffer.data).toString()
+        val decodeNs = System.nanoTime() - decoding
         if (text == "finish") finished.countDown()
         else if (chat != null) {
-          if (text.startsWith("{")) chat!!.begin(JSONObject(text)) else chat!!.receive(text)
+          if (text.startsWith("{")) chat!!.begin(JSONObject(text)) else chat!!.receive(text, decodeNs)
         }
         else requireNotNull(encrypted).begin(JSONObject(text))
       } else if (encrypted != null) {
