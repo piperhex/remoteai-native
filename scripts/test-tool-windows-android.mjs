@@ -13,6 +13,8 @@ import { hierarchy, prepareHierarchy } from '../vendor/apps/desktop/e2e/android-
 const serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to an exclusively available test device.');
 const fontScales = (process.env.ANDROID_FONT_SCALES ?? '1.0,1.3').split(',');
+const modes = (process.env.ANDROID_THEME_MODES ?? 'LIGHT,DARK').split(',');
+assert.ok(modes.every(mode => ['LIGHT', 'DARK'].includes(mode)));
 assert.ok(fontScales.length && fontScales.every(font => ['1.0', '1.3'].includes(font)));
 const output = fileURLToPath(new URL(`../.codex-tmp/tool-windows/${serial}/`, import.meta.url));
 const app = 'com.codexswitch.mobile.toolwindowstest';
@@ -76,7 +78,7 @@ const tools = [
   { id: 'files', menu: zh['client.projectBrowser.browseFiles'], marker: 'README.md',
     close: zh['client.projectBrowser.closeFileBrowser'] },
   { id: 'mappings', menu: zh['client.portForwarding.portMapping'], marker: '关闭端口映射', close: '关闭端口映射' },
-  { id: 'terminal', menu: zh['client.projectBrowser.terminal'], marker: '自动换行', close: zh['client.chat.hideTerminal'] },
+  { id: 'terminal', menu: zh['client.projectBrowser.terminal'], marker: '自动换行', close: zh['client.projectBrowser.close'] },
   { id: 'git', menu: 'Git', marker: '关闭Git', close: '关闭Git' },
   { id: 'desktop', menu: zh['client.remoteDesktop.remoteDesktop'],
     marker: zh['client.remoteDesktop.remoteDesktopTouchpad'], close: '关闭' },
@@ -85,6 +87,14 @@ async function openTool(tool) {
   await tap(zh['client.git.openTools']); await tap(tool.menu); await find(tool.marker);
   // Let rotation and WebView startup settle before injecting an edge gesture.
   await delay(600);
+}
+async function verifyOpened(tool, opened) {
+  if (tool.id === 'mappings') return;
+  await tap(zh['client.git.openTools']);
+  const item = (await nodes()).find(node => node['content-desc'] === tool.menu);
+  assert.equal(item?.selected, String(opened), `${tool.id}: retained menu state`);
+  await adb('shell', 'input', 'keyevent', '4');
+  await find('Tools fixture');
 }
 async function revealDesktopClose(label) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -125,7 +135,11 @@ async function verifyTool(tool, prefix) {
     if (/mInputShown=true/.test(await adb('shell', 'dumpsys', 'input_method'))) {
       await gesture(side); await find(tool.marker);
     }
-    await gesture(side); await find('Tools fixture');
+    await gesture(side);
+    // An immersive window may consume the first edge swipe to reveal Android's system bars.
+    if (tool.id === 'desktop' && !(await nodes()).some(node => matches(node, 'Tools fixture'))) await gesture(side);
+    await find('Tools fixture');
+    await verifyOpened(tool, true);
     await openTool(tool);
     await screenshot(`${prefix}-${tool.id}-${side}-reopened`);
   }
@@ -134,6 +148,7 @@ async function verifyTool(tool, prefix) {
   await openTool(tool);
   if (tool.id === 'desktop') await revealDesktopClose(tool.close);
   await tap(tool.close); await find('Tools fixture');
+  await verifyOpened(tool, false);
   await tap('ACCOUNTS'); await tap('CHAT'); await find('Tools fixture');
   assert.ok(!(await nodes()).some(node => matches(node, tool.close)), 'Closed tool must stay closed after tabs.');
   console.log(`${prefix}: ${tool.id} passed right/left system Back, KEYCODE_BACK, reopen, X and tab return.`);
@@ -146,19 +161,35 @@ const scale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
   for (const font of fontScales) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', font);
-    for (const mode of ['LIGHT', 'DARK']) {
+    for (const mode of modes) {
       // Start each matrix group in the Activity's initial orientation after the landscape desktop viewer.
       await adb('shell', 'am', 'start', '-W', '-S', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
       await find('Tools fixture');
       await tap(mode);
       await preparePortrait();
       const prefix = `android-${mode.toLowerCase()}-font-${font}`;
-      for (const tool of tools) await verifyTool(tool, prefix);
+      for (const tool of tools.filter(tool => !process.env.ANDROID_TOOL || tool.id === process.env.ANDROID_TOOL)) {
+        await verifyTool(tool, prefix);
+      }
+      for (const tool of tools.filter(tool => tool.id !== 'mappings')) {
+        await openTool(tool);
+        await adb('shell', 'input', 'keyevent', '4');
+        await find('Tools fixture');
+      }
+      await tap(zh['client.git.openTools']);
+      await screenshot(`${prefix}-all-tools-retained-green`);
+      await adb('shell', 'input', 'keyevent', '4');
+      for (const tool of tools.filter(tool => tool.id !== 'mappings')) {
+        await openTool(tool);
+        if (tool.id === 'desktop') await revealDesktopClose(tool.close);
+        await tap(tool.close); await find('Tools fixture');
+        await verifyOpened(tool, false);
+      }
       await screenshot(`${prefix}-all-tools-closed`);
     }
   }
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ serial, passed: true,
-    modes: ['light', 'dark'], fontScales, tools: tools.map(tool => tool.id),
+    modes: modes.map(mode => mode.toLowerCase()), fontScales, tools: tools.map(tool => tool.id),
     cases: ['right and left system back', 'KEYCODE_BACK', 'same tool reopens three times', 'different tools alternate',
       'Git detail returns one level', 'X closes', 'closed tools stay closed after tabs'] }, null, 2));
 } catch (error) {

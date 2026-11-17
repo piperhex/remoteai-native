@@ -29,10 +29,11 @@ import { handleNativeScriptAction, nativeScriptState } from '../../vendor/shared
 import { useChatFileReference, useChatFileSelection } from '../../vendor/shared/chat/ChatFileReferences';
 import { getChatPolicy, isDirectChat, subscribeChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
-export function ProjectBrowser({ client, cwd, connected, active, onClose, title, subtitle,
+export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide, title, subtitle,
   host: suppliedHost, ssh, children, scripts }: {
   client: ProjectBrowserClient; cwd: string; connected: boolean; active: boolean; onClose: () => void;
   title?: string; subtitle?: string; host?: BrowserHost; children?: ReactNode;
+  onHide?: () => void;
   scripts?: ScriptPanel;
   ssh?: { settings: NonNullable<BrowserSettings['ssh']>; onAction: (action: NativeSshBrowserAction) => void };
 }) {
@@ -100,7 +101,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
   useEffect(() => { if (ready) update(); },
     [ready, connected, active, cwd, language, color, mode, preferences, host, ssh, scripts, policy, previewMode]);
   // Backgrounding the app must not unmount the WebView and discard its unsaved document.
-  return <Modal visible={active} animationType="slide" onRequestClose={close}
+  return <Modal visible={active} animationType="slide" onRequestClose={onHide ?? close}
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>
     <SafeAreaProvider><SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -141,7 +142,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, title,
                 saveBrowserSession(client, cwd, message.snapshot as DocumentsSnapshot);
               }
               if (message.type === 'snapshot') return;
-              onClose();
+              if (focusAfterClose.current && onHide) onHide(); else onClose();
               if (focusAfterClose.current) requestAnimationFrame(focusAfterClose.current);
               return;
             }

@@ -17,7 +17,9 @@ interface Props {
   launchId?: number; hideTrigger?: boolean;
   sshOnly?: boolean;
 }
-export type ChatTerminalPanel = ReturnType<typeof useRemoteTerminalLauncher>;
+type Launcher = ReturnType<typeof useRemoteTerminalLauncher>;
+type RetentionActions = 'opened' | 'anyOpened' | 'show' | 'close';
+export type ChatTerminalPanel = Omit<Launcher, RetentionActions> & Partial<Pick<Launcher, RetentionActions>>;
 
 /** Project views may disappear; shells stay on their PC until the user explicitly closes them. */
 export function ChatTerminal(props: Props & { panel?: ChatTerminalPanel }) {
@@ -35,7 +37,8 @@ function TerminalView({ client, cwd, active, connected, deviceName, launchId = 0
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
-  useToolLaunch(launchId, panel.toggle, connected && !panel.busy);
+  useToolLaunch(launchId, panel.show ?? panel.toggle,
+    !panel.busy && (connected || Boolean(panel.tabs.length || panel.error)));
   const selected = panel.tabs.find(tab => tab.id === panel.selected);
   const disabled = panel.busy || (!connected && !panel.tabs.length && !panel.error);
   const hide = () => { Keyboard.dismiss(); panel.hide(); };
@@ -47,15 +50,16 @@ function TerminalView({ client, cwd, active, connected, deviceName, launchId = 0
       <Ionicons name="terminal-outline" size={24} color={panel.error ? resolveThemeColor(palette.danger, 'danger') : resolveThemeColor(palette.ink, 'ink')} />
     </Pressable>}
     {!selected && <BottomSheet visible={active && panel.open} title={t("client.chat.remoteTerminal")} subtitle={deviceName}
-      onClose={hide} maxWidth={400} actions={[{ label: panel.error ? t("client.terminal.retry") : t("client.chat.newTerminal"),
+      onClose={panel.close ?? hide} onHide={hide} maxWidth={400}
+      actions={[{ label: panel.error ? t("client.terminal.retry") : t("client.chat.newTerminal"),
         onPress: panel.retry, disabled: !connected, loading: panel.busy }]}>
       <TerminalTabs panel={panel} client={client} cwd={cwd} connected={connected} active={active && !!panel.open}
         sshOnly={sshOnly} />
       {panel.busy ? <ActivityIndicator color={color(palette.green, 'accent')} />
         : !!panel.error && <Text accessibilityRole="alert" style={styles.status}>{displayError(panel.error)}</Text>}
     </BottomSheet>}
-    {selected && <TerminalSession client={client} session={selected.session} deviceName={deviceName}
-      visible={active && panel.open} hide={hide} notice={panel.error}
+    {selected && panel.opened !== false && <TerminalSession client={client} session={selected.session} deviceName={deviceName}
+      visible={active && panel.open} hide={hide} close={panel.close} notice={panel.error}
       tabs={<TerminalTabs key={cwd} panel={panel} client={client} cwd={cwd} connected={connected}
         active={active && !!panel.open} sshOnly={sshOnly} />} />}
   </>;

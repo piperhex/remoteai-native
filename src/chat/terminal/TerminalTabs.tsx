@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Keyboard, Pressable, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { GuiToolsClient } from '../../../vendor/shared/remote-chat/guiTools';
-import type { useRemoteTerminalLauncher } from '../../../vendor/shared/remote-chat/useRemoteTerminalLauncher';
-import { MAX_REMOTE_TERMINALS } from '../../../vendor/shared/remote-chat/useRemoteTerminalPanel';
+import { MAX_REMOTE_TERMINALS, type useRemoteTerminalPanel } from '../../../vendor/shared/remote-chat/useRemoteTerminalPanel';
 import { sshLabel } from '../../../vendor/shared/terminal/sshProfiles';
 import { t, useLanguage } from '../../i18n';
 import { useThemeColor } from '../../theme/store';
@@ -23,7 +22,8 @@ function terminalLabel(session: TerminalInfo, index: number) {
 }
 
 export function TerminalTabs({ panel, client, cwd, connected, active, sshOnly }: {
-  panel: ReturnType<typeof useRemoteTerminalLauncher>; client: GuiToolsClient['terminal'];
+  panel: Pick<ReturnType<typeof useRemoteTerminalPanel>, 'tabs' | 'selected' | 'busy' | 'select' | 'remove' | 'add' | 'adopt'>;
+  client: GuiToolsClient['terminal'];
   cwd: string; connected: boolean; active: boolean;
   sshOnly?: boolean;
 }) {

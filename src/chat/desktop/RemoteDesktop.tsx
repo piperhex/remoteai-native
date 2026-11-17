@@ -1,7 +1,7 @@
 import { displayError, displayText } from '../../i18n/index';
 import { useThemeColor } from '../../theme/store';
 import { t, useLanguage } from '../../i18n';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { Modal } from '../../components/Modal';
 import { SafeAreaProvider, SafeAreaView, type Edge } from 'react-native-safe-area-context';
@@ -37,13 +37,15 @@ const createPeer = (configuration: RTCConfiguration) =>
     ...(configuration.iceTransportPolicy ? { iceTransportPolicy: configuration.iceTransportPolicy } : {})
   }) as unknown as globalThis.RTCPeerConnection;
 
-export function RemoteDesktop({ client, active, close }: {
+export function RemoteDesktop({ client, active, close, hide, keepAlive = false, connected = true }: {
   client: DesktopClient; active: boolean; close: () => void;
+  hide?: () => void; keepAlive?: boolean; connected?: boolean;
 }) {
   const s = useS();
   const color = useThemeColor();
   useLanguage();
-  const session = useDesktopSession({ client, active, createPeer });
+  const session = useDesktopSession({ client, active: keepAlive || active, connected, createPeer });
+  useEffect(() => { if (!active) session.pointer.release(); }, [active, session.pointer]);
   const statusAction = desktopStatusAction(session);
   const viewOnly = session.capabilities.control === false;
   const audioUnavailable = !session.hasAudio || session.stats?.audio === 'unavailable';
@@ -109,7 +111,7 @@ export function RemoteDesktop({ client, active, close }: {
       {tool.icon === 'mouse' ? <MaterialCommunityIcons name="mouse" size={22} color={color("#e7edf8", 'faint')} />
         : <Ionicons name={tool.icon} size={22} color={color("#e7edf8", 'faint')} />}<Text style={s.label}>{tool.label}</Text>
     </Pressable>);
-  return <Modal visible={active} onRequestClose={close} statusBarStyle="light"
+  return <Modal visible={active} onRequestClose={hide ?? close} statusBarStyle="light"
     hardwareAccelerated statusBarTranslucent navigationBarTranslucent
     onShow={orientation.onShow} presentationStyle="fullScreen"
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>

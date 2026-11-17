@@ -4,6 +4,7 @@ export function useDesktopLauncher() {
   const [opened, setOpened] = useState(false);
   const [minimized, setMinimized] = useState(false);
   return { opened, minimized, setMinimized,
+    hide: () => setMinimized(true),
     open: () => { setOpened(true); setMinimized(false); },
     close: () => { setOpened(false); setMinimized(false); } };
 }

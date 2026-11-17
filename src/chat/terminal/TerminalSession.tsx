@@ -20,9 +20,10 @@ import { useTerminalStyles as useStyles } from './styles';
 import { useZmodemFiles } from './useZmodemFiles';
 import { ZmodemSheet } from './ZmodemSheet';
 
-export function TerminalSession({ client, session, visible, deviceName, hide, tabs, notice }: {
+export function TerminalSession({ client, session, visible, deviceName, hide, close, tabs, notice }: {
   client: GuiToolsClient['terminal']; session: TerminalInfo; visible: boolean; deviceName?: string;
   hide: () => void;
+  close?: () => void;
   tabs?: ReactNode; notice?: string;
 }) {
   const resolveThemeColor = useThemeColor();
@@ -97,6 +98,9 @@ export function TerminalSession({ client, session, visible, deviceName, hide, ta
               size={22} color={color("#17211b", 'ink')} /></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.hideTerminal")} style={styles.button} onPress={hide}>
             <Ionicons name="chevron-down" size={24} color={color("#17211b", 'ink')} /></Pressable>
+          {close && <Pressable accessibilityRole="button" accessibilityLabel={t('client.projectBrowser.close')}
+            style={styles.button} onPress={close}>
+            <Ionicons name="close" size={24} color={color('#17211b', 'ink')} /></Pressable>}
         </View>
         {!orientation.landscape && tabs}
         {html ? <WebView key={generation} ref={webview} source={source}

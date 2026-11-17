@@ -41,6 +41,8 @@ interface BottomSheetProps {
   truncateTitle?: boolean;
   subtitle?: string;
   onClose: () => void;
+  /** Back, backdrop and drag can hide a retained tool without closing it. */
+  onHide?: () => void;
   onBack?: () => void;
   children?: ReactNode;
   /** Covers the entire modal window, including the sheet header. */
@@ -67,6 +69,7 @@ export function BottomSheet({
   truncateTitle = false,
   subtitle,
   onClose,
+  onHide,
   onBack,
   children,
   overlay,
@@ -92,11 +95,11 @@ export function BottomSheet({
   useLanguage();
   const layer = useSheetLayers(visible);
   const { translateY, scrollGesture, panHandlers, handleHandlers } = useBottomSheetDrag({
-    visible, enabled: dismissible && !fullscreen && !overlay && !layer.covered, onClose,
+    visible, enabled: dismissible && !fullscreen && !overlay && !layer.covered, onClose: onHide ?? onClose,
   });
 
   const close = () => {
-    if (dismissible) onClose();
+    if (dismissible) (onHide ?? onClose)();
   };
 
   const headingTitle = <Text style={[styles.title, compactHeader && styles.compactTitle,
@@ -109,7 +112,7 @@ export function BottomSheet({
     animationType="slide"
     statusBarTranslucent
     supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}
-    onRequestClose={() => { if (dismissible) (onBack ?? onClose)(); }}
+    onRequestClose={() => { if (dismissible) (onBack ?? onHide ?? onClose)(); }}
   >
     {/* Measure the modal window, not the animated sheet: fractional insets can otherwise feed back into its height. */}
     <SafeAreaProvider>

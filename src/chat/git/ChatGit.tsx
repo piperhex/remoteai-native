@@ -24,6 +24,7 @@ import { GitRepositoryMenu } from './GitHistoryRepository';
 interface Props {
   client: GitClient; cwd: string; active: boolean; connected: boolean; onClose: () => void;
   downloads?: DownloadClient;
+  onHide?: () => void;
 }
 
 export function ChatGit(props: Props) {
@@ -41,7 +42,7 @@ export function ChatGit(props: Props) {
     else if (panel.revisionAction) panel.cancelRevisionAction();
     else if (menu) setMenu(null);
     else if (repositoriesOpen) setRepositoriesOpen(false);
-    else props.onClose();
+    else (props.onHide ?? props.onClose)();
   };
   const detail = panel.detail;
   const detailCwd = detail?.commit?.repository ?? props.cwd;
@@ -49,7 +50,7 @@ export function ChatGit(props: Props) {
   const diff = useGitDiff(client, detailCwd, panel.detail, props.active && props.connected);
   const { height } = useWindowDimensions();
   const hasOverlay = Boolean(menu || repositoriesOpen || panel.fileAction || panel.revisionAction);
-  return <BottomSheet visible={props.active} title="Git" onClose={close}
+  return <BottomSheet visible={props.active} title="Git" onClose={props.onClose} onHide={close}
     onBack={detail && !hasOverlay ? panel.backDetail : undefined}
     tall fullWidthContent compactHeader
     overlay={hasOverlay ? <>

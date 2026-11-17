@@ -22,17 +22,23 @@ export function useRemoteTerminalPanel(options: {
 }) {
   const { client, cwd, connected } = options;
   const project = terminalProjectKey(cwd);
-  const scope = useMemo(() => ({ pending: false, generation: 0 }), [client, project]);
-  const [state, setState] = useState({ ...EMPTY_PANEL, scope });
-  // Drop the old project's view during render, before any terminal can attach or accept input.
-  const panel = state.scope === scope ? state : EMPTY_PANEL;
+  const projects = useMemo(() => new Map<string, { pending: boolean; generation: number; panel: Panel }>(), [client]);
+  const scope = useMemo(() => {
+    const retained = projects.get(project) ?? { pending: false, generation: 0, panel: EMPTY_PANEL };
+    projects.set(project, retained);
+    return retained;
+  }, [projects, project]);
+  const [, render] = useState(0);
+  const panel = scope.panel;
   const update = (change: Partial<Panel> | ((previous: Panel) => Partial<Panel>)) => {
-    setState(previous => {
-      const current = previous.scope === scope ? previous : EMPTY_PANEL;
-      return { ...current, ...(typeof change === 'function' ? change(current) : change), scope };
-    });
+    const current = scope.panel;
+    scope.panel = { ...current, ...(typeof change === 'function' ? change(current) : change) };
+    render(version => version + 1);
   };
-  useEffect(() => () => { scope.generation += 1; }, [scope]);
+  useEffect(() => () => {
+    scope.generation += 1;
+    scope.panel = { ...scope.panel, busy: false };
+  }, [scope]);
 
   const run = async (action: (current: () => boolean) => Promise<void>) => {
     if (scope.pending) return;
@@ -92,9 +98,9 @@ export function useRemoteTerminalPanel(options: {
     await create(current, directory, npmScript);
   }); };
   const add = () => addInDirectory(cwd);
-  const toggle = () => {
-    if (panel.open) { update({ open: false }); return; }
-    if (panel.tabs.length) { update({ open: true }); return; }
+  const show = () => {
+    if (scope.panel.open) return;
+    if (scope.panel.tabs.length) { update({ open: true }); return; }
     void run(async current => {
       const sessions = await list();
       if (!current()) return;
@@ -103,6 +109,7 @@ export function useRemoteTerminalPanel(options: {
       else await create(current);
     });
   };
+  const toggle = () => { if (scope.panel.open) update({ open: false }); else show(); };
   const removeTabs = (ids: string[]) => { void run(async current => {
     for (const id of ids) {
       await client.close(id);
@@ -125,6 +132,6 @@ export function useRemoteTerminalPanel(options: {
   const exited = (id: string) => update(previous => ({
     tabs: previous.tabs.map(tab => tab.id === id ? { ...tab, exited: true } : tab),
   }));
-  return { ...panel, add, adopt, projectCwd: cwd, addInDirectory, remove, removeTabs, toggle, select, exited,
+  return { ...panel, add, adopt, projectCwd: cwd, addInDirectory, remove, removeTabs, show, toggle, select, exited,
     hide: () => update({ open: false }) };
 }

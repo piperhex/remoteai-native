@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "32b1ef76d89df3cef211ab0ceb01e6ef323390a1",
+  "revision": "c08dd277a4747b45f777cb9f9196b2056ef26eac",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "5022c3a7054bd11869f843aed375ce4fff9bc4bb"
+    "revision": "3467ca9b3f07d0d8251d8352f3c5113fbac577d7"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -30,7 +30,7 @@
     "shared/browser/bookmarks/model.ts": "a7fda5c0828d5dfe778fcfa7ac5a9caec898a81ecb0024221aab1ba8d95b8116",
     "shared/browser/data/context.tsx": "3d04651e3ecbe76b8e5e095f9d09444e78d1b33901177656d64fb6f25798d881",
     "shared/browser/data/model.ts": "fa42deb87321ff72510a1fb47a9c1361b61c767be5f2c4a26bb7543d42182812",
-    "apps/desktop/e2e/android-hierarchy.mjs": "9ab90f7470f71237d18608f812d7b06847ffcbbe718be8d615d7e6927ecccc8e",
+    "apps/desktop/e2e/android-hierarchy.mjs": "96b09424e4721c100f8331572ac411d4410ff59c38b6da3541e742be7b9776b3",
     "shared/remote-chat/downloads.ts": "66c7d42d7cc62a736ea72475c2a5e1341d0a183df385f179e534c7dd8eda3c97",
     "shared/port-mapping/deviceRegistry.tsx": "c1a43c7cac48b6e2c45af123dce501a924e0f3a79a607b79dac4de0a2a0dddce",
     "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
@@ -216,13 +216,14 @@
     "shared/remote-chat/settingsMenu.ts": "aa66dc8a20c32a19b5a5f29333033ed6f9d50664bcd7d6e84f0bd26fc0c9d271",
     "shared/remote-chat/settingSegments.ts": "ecde60e26dff9f105f79a74c76001f819ed02f0e164dc1f76e36839527f7f7e1",
     "shared/remote-chat/taskStatus.ts": "1312566552dff9b0fa0a766b77ac609a30bbc78a04fc21eeabd5291fd929740d",
-    "shared/remote-chat/useRemoteTerminalLauncher.ts": "dcf7ac0fb92f69d4dcac9c2f75696909931b5f60416bab4905c49576c40bc63b",
+    "shared/remote-chat/useRemoteTerminalLauncher.ts": "3ac6335d8d0fd7fcb53ea5fd556d042288215950435adfc2d5719ea29fe8a491",
     "shared/remote-chat/useToolLaunch.ts": "bde7048507977139fc3f3c3c4fb0a267784492a12ea59faeb553673702df22a6",
     "shared/remote-chat/client/useThreadActions.ts": "9f7d0f62c0bc3abd2a47195df0e0ae5c0daf404106806ece531b9751668d117f",
     "shared/remote-chat/client/useThreadGroups.ts": "562f43322f2f4dac0582fe8acf620b910641632a6f0b0f951b8105283f6bf02f",
     "shared/remote-chat/client/threadActions.ts": "bb23d8bf9583359bf06891685aefcf9da3823aa74ec4c76f144725ff16391065",
     "shared/chat/toolResult.ts": "7c9c2a4fbfa543bd8bb2d7fb2a04d2db2a17919d31babe79ec6a1ef28d7a322b",
-    "shared/remote-desktop/useDesktopLauncher.ts": "6802c8a5d0827786b1b30185617a7de4e65ea5f63ec18fbb3422aa633041134c",
+    "shared/remote-desktop/useDesktopLauncher.ts": "8b312acf073fbec0cafc7c6780c133219ae20e13dabbdbd23ad060497aaeb22e",
+    "shared/remote-chat/useRetainedProjects.ts": "00f52e925be2cb4bc223844e5c74bd2f9e52f7930cec8eda0bce200b9f59739e",
     "shared/remote-chat/accountCredits.ts": "19d4dc332288e78664ce5f80442a46f5da05759c59e2f35e8d327dfdac73bf8a",
     "shared/remote-chat/client/useChatUsage.ts": "5a2b151270e2d1abac6e49651a4996343d5383d7c656d8fddccc913b7a4e407c",
     "shared/remote-chat/client/useConversationMetrics.ts": "64fd4768aa597bd28970efeaafa74116e89b101e49ab44a46167bca97b876a4e",
@@ -359,7 +360,7 @@
     "shared/terminal/sshTransfers.ts": "edf058caa251ef49ae9e197610fed7853ece72357f5abae2c2464ef00a1c7078",
     "shared/remote-chat/terminalApi.ts": "5b3d8acb832ff1de39aca308b7286ffd420b324e0ee1d3af754816b3c73b5905",
     "shared/terminal/webviewBridge.ts": "1fce23799304ce125f1f5b0c1a5715cedcf2258205aa2615a7d95950ae9df202",
-    "shared/remote-chat/useRemoteTerminalPanel.ts": "7296dac71de1171c5a2bc047f4442b319420c31d62dcb8e57bf44eb0756a53c8",
+    "shared/remote-chat/useRemoteTerminalPanel.ts": "a3714b59e3b876fdc7e46fb64903ec2ca20ffa4a66a8e7365726202dfffb168b",
     "shared/tabs/overflow.ts": "d30de782a2273746367ba6465b5d138710ad858e5c717b4895cc198e267a8546",
     "shared/terminal/zmodem.ts": "0ed5eec20843d09455c090cd7d0627c8abba5a00505f68914f6c2c7e1de2ae9a",
     "shared/terminal/zmodemMessage.ts": "8d1a316f008f17079acfcdb7a90ab2febd7a742fb583698e9897fb9795b4ed77",
