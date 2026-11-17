@@ -3,5 +3,8 @@ gradle.afterProject { project ->
     if (project.path == ':app') {
         project.layout.buildDirectory.set(new File(project.projectDir, 'build-download-throughput'))
         project.android.buildTypes.debug.debuggable = false
+        project.android.sourceSets.debug.java.srcDir(new File(project.rootDir, '../e2e/downloads-app'))
+        project.android.sourceSets.debug.manifest.srcFile(
+            new File(project.rootDir, '../e2e/downloads-app/AndroidManifest.xml'))
     }
 }

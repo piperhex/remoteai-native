@@ -16,12 +16,21 @@ internal class PacketCipher(private val key: ByteArray, private val context: Byt
     private const val TAG_BYTES = 16
     private const val MAX_PLAIN_BYTES = MAX_PACKET_HEX / 2 - NONCE_BYTES - TAG_BYTES
     private const val HEX = "0123456789abcdef"
+    private val HEX_VALUES = IntArray(128) { code ->
+      when (code) {
+        in '0'.code..'9'.code -> code - '0'.code
+        in 'a'.code..'f'.code -> code - 'a'.code + 10
+        else -> -1
+      }
+    }
+
+    private fun hexValue(char: Char): Int = if (char.code < HEX_VALUES.size) HEX_VALUES[char.code] else -1
 
     fun fromHex(value: String): ByteArray {
       require(value.length % 2 == 0 && value.length <= MAX_PACKET_HEX)
       return ByteArray(value.length / 2) { index ->
-        val high = HEX.indexOf(value[index * 2])
-        val low = HEX.indexOf(value[index * 2 + 1])
+        val high = hexValue(value[index * 2])
+        val low = hexValue(value[index * 2 + 1])
         require(high >= 0 && low >= 0)
         ((high shl 4) or low).toByte()
       }

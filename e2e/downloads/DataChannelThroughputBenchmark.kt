@@ -4,6 +4,8 @@ package com.codexswitch.downloads
 
 import android.test.InstrumentationTestCase
 import android.test.InstrumentationTestRunner
+import android.content.Intent
+import android.app.Activity
 import org.json.JSONArray
 import org.json.JSONObject
 import org.webrtc.*
@@ -37,7 +39,9 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
     if (config.optBoolean("chat")) chat = ChatBenchmarkSink({ result ->
       if (result.has("MiBps")) samples.put(result)
       check(requireNotNull(channel).send(DataChannel.Buffer(ByteBuffer.wrap(result.toString().toByteArray()), false)))
-    }, { error -> if (failure == null) failure = error; finished.countDown() })
+    }, { error -> if (failure == null) failure = error; finished.countDown() },
+      config.optBoolean("chatLegacy"), ChatBenchmarkOptions(config.optBoolean("chatCompare"),
+        if (config.optBoolean("chatHint")) instrumentation.targetContext else null))
     if (config.optBoolean("encrypted")) encrypted = EncryptedBenchmarkSink(
       DownloadStorage(instrumentation.targetContext), { result ->
         if (result.has("MiBps")) samples.put(result)
@@ -50,11 +54,15 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
     val observer = ChannelBenchmarkPeer { value -> channel = value; value.registerObserver(this) }
     val configuration = PeerConnection.RTCConfiguration(emptyList())
     val peer = requireNotNull(factory.createPeerConnection(configuration, observer))
+    var foreground: Activity? = null
     if (encrypted != null) {
       channel = peer.createDataChannel("remote-ai-file-v1", DataChannel.Init().apply { negotiated = true; id = 42 })
       channel!!.registerObserver(this)
     }
     try {
+      if (config.optBoolean("chatForeground")) {
+        foreground = openForeground()
+      }
       negotiate(peer, observer)
       check(finished.await(180, TimeUnit.SECONDS)) { "Data channel benchmark timed out" }
       failure?.let { throw it }
@@ -64,7 +72,25 @@ class DataChannelThroughputBenchmark : InstrumentationTestCase(), DataChannel.Ob
       encrypted?.close()
       chat?.close()
       channel?.unregisterObserver(); channel?.dispose(); peer.dispose(); factory.dispose()
+      foreground?.let { activity -> instrumentation.runOnMainSync { activity.finish() } }
     }
+  }
+
+  private fun openForeground(): Activity {
+    val intent = Intent().setClassName(instrumentation.targetContext,
+      "com.codexswitch.downloads.PacketBenchmarkActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val activity = instrumentation.startActivitySync(intent)
+    val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+    var focused = false
+    while (!focused && System.nanoTime() < deadline) {
+      instrumentation.runOnMainSync { focused = activity.hasWindowFocus() }
+      if (!focused) Thread.sleep(10)
+    }
+    if (!focused) {
+      instrumentation.runOnMainSync { activity.finish() }
+      error("Benchmark window did not gain focus")
+    }
+    return activity
   }
 
   private fun negotiate(peer: PeerConnection, observer: ChannelBenchmarkPeer) {
