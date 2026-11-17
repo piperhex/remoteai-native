@@ -106,6 +106,7 @@ await mkdir(output, { recursive: true });
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 const originalRotation = await adb('shell', 'settings', 'get', 'system', 'user_rotation');
 const originalAutoRotation = await adb('shell', 'settings', 'get', 'system', 'accelerometer_rotation');
+const originalFixedRotation = await adb('shell', 'wm', 'fixed-to-user-rotation');
 await prepareHierarchy({ adb, output });
 await preparePinch();
 const images = await Promise.all([1, 2, 3].map(async index => 'data:image/png;base64,' +
@@ -118,7 +119,7 @@ const server = createServer((request, response) => {
 await new Promise((resolve, reject) => { server.once('error', reject); server.listen(15987, '127.0.0.1', resolve); });
 try {
   await adb('reverse', 'tcp:15987', 'tcp:15987');
-  for (const scale of ['1.0', '1.3']) {
+  for (const scale of process.argv.includes('--landscape-only') ? [] : ['1.0', '1.3']) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
     await adb('shell', 'am', 'force-stop', app);
     await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
@@ -127,17 +128,22 @@ try {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0');
   await adb('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0');
   await adb('shell', 'settings', 'put', 'system', 'user_rotation', '1');
+  await adb('shell', 'wm', 'fixed-to-user-rotation', 'enabled');
+  await adb('shell', 'wm', 'user-rotation', 'lock', '1');
   await adb('shell', 'am', 'force-stop', app);
   await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
   await tap('放大查看：Image 3'); await arrows(true, false);
   await tap('上一个'); await find('Image 2'); await arrows(true, true);
   await capture('native-landscape-middle');
+  const screenshot = await readFile(path.join(output, 'native-landscape-middle.png'));
+  assert.ok(screenshot.readUInt32BE(16) > screenshot.readUInt32BE(20), 'Landscape capture must be wider than tall');
   await back();
   console.log('Android landscape navigation verified');
 } finally {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);
   await adb('shell', 'settings', 'put', 'system', 'user_rotation', originalRotation);
   await adb('shell', 'settings', 'put', 'system', 'accelerometer_rotation', originalAutoRotation);
+  await adb('shell', 'wm', 'fixed-to-user-rotation', originalFixedRotation);
   await adb('shell', 'am', 'force-stop', app);
   await adb('reverse', '--remove', 'tcp:15987');
   server.close();
