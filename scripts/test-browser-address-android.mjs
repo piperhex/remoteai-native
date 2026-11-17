@@ -78,6 +78,13 @@ async function submit(url) {
 }
 async function verifyEditing(prefix) {
   await tap('访问地址');
+  await screenshot(`${prefix}-focus-selected`);
+  await adb('shell', 'input', 'text', 'example.test');
+  await assertAddress('example.test');
+  await tapPageControl('draft');
+  await tap('访问地址');
+  await adb('shell', 'input', 'text', firstUrl);
+  await assertAddress(firstUrl);
   await adb('shell', 'input', 'keyevent', '123');
   await adb('shell', 'input', 'keyevent', '21');
   await adb('shell', 'input', 'text', 'X');
