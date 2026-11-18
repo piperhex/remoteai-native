@@ -1,18 +1,21 @@
 import { forwardRef } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { requireNativeComponent, StyleSheet, Text, TextInput, View,
+  type TextInputProps, type ViewProps } from 'react-native';
 import { useThemeColor } from '../theme/store';
 import { useStyles } from './styles';
 
-type Props = Omit<TextInputProps, 'style'> & { compact: boolean; displayValue?: string };
+type Props = Omit<TextInputProps, 'style'> & { compact: boolean; displayValue?: string; onSendShortcut?: () => void };
+
+const ComposerShortcutView = requireNativeComponent<ViewProps & Pick<Props, 'onSendShortcut'>>('ComposerShortcut');
 
 export const ComposerInput = forwardRef<TextInput, Props>(function ComposerInput(
-  { compact, placeholder, displayValue, ...props }, ref,
+  { compact, placeholder, displayValue, onSendShortcut, ...props }, ref,
 ) {
   const color = useThemeColor();
   const chatStyles = useStyles();
   const hintColor = color('#999999', 'muted');
   const showHint = !(displayValue ?? props.value) && !!placeholder;
-  return <View style={compact && styles.compactSpacing}>
+  return <ComposerShortcutView style={compact && styles.compactSpacing} onSendShortcut={onSendShortcut}>
     <TextInput {...props} ref={ref} style={[chatStyles.input, compact && styles.compactInput]}
       placeholder={showHint ? undefined : placeholder} placeholderTextColor={hintColor}
       accessibilityHint={showHint ? placeholder : props.accessibilityHint} underlineColorAndroid="transparent" />
@@ -22,7 +25,7 @@ export const ComposerInput = forwardRef<TextInput, Props>(function ComposerInput
       style={styles.placeholder}>
       <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.hint, { color: hintColor }]}>{placeholder}</Text>
     </View>}
-  </View>;
+  </ComposerShortcutView>;
 });
 
 const styles = StyleSheet.create({

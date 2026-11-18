@@ -46,6 +46,7 @@ export function CliComposer({ host, connection, active, ready }: {
         <CliMessageInput key={scope} accessibilityLabel={t('client.cliGui.message')}
           compact={false} multiline value={state.draft}
           maxLength={100_000} editable={!busy && !selected?.archived} onChangeText={controller.edit}
+          onSendShortcut={() => { if (canSend) void controller.send(); }}
           placeholder={t(ready ? 'client.cliGui.messageHint' : 'client.chat.connectToSendAMessage')} />
         <View style={styles.composerActions}>
           <Pressable accessibilityRole="button" accessibilityLabel={t('client.chat.addContent')}

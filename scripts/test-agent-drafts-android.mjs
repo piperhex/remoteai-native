@@ -19,9 +19,12 @@ const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   windowsHide: true, maxBuffer: 4 * 1024 * 1024,
 })).stdout.trim();
 async function nodes() {
-  let xml = await hierarchy(adb);
   // Android releases resolve the legacy UiAutomator dump directory differently.
-  if (!xml.startsWith('<?xml')) xml = await adb('exec-out', 'cat', '/data/local/tmp/chat-live.xml');
+  const xml = await hierarchy(async (...args) => {
+    if (args[0] !== 'exec-out') return adb(...args);
+    const result = await adb(...args).catch(() => '');
+    return result.includes('<hierarchy') ? result : adb('exec-out', 'cat', '/data/local/tmp/local/tmp/chat-live.xml');
+  });
   await writeFile(path.join(output, 'latest.xml'), xml);
   return [...xml.matchAll(/<node\b([^>]*)>/g)].map(match => Object.fromEntries(
     [...match[1].matchAll(/([\w-]+)="([^"]*)"/g)].map(value => [value[1], value[2]])));
@@ -42,6 +45,21 @@ async function tap(label) {
 }
 const input = value => waitFor(node => node.class === 'android.widget.EditText' && node.text === value);
 const drafts = { empty: '10101', 'project-a': '20202', 'project-b': '30303', existing: '40404' };
+async function checkSendShortcut(scale) {
+  await tap('project-a');
+  await tap('聊天消息');
+  await adb('shell', 'input', 'keyevent', 'KEYCODE_MOVE_END', 'KEYCODE_DPAD_LEFT', 'KEYCODE_ENTER');
+  const draft = drafts['project-a'];
+  const message = `${draft.slice(0, -1)}&#10;${draft.at(-1)}`;
+  await input(message);
+  await adb('shell', 'screencap', '-p', '/sdcard/agent-drafts-test.png');
+  await adb('pull', '/sdcard/agent-drafts-test.png', path.join(output, `android-${scale}-shortcut-draft.png`));
+  await adb('shell', 'input', 'keycombination', 'KEYCODE_CTRL_LEFT', 'KEYCODE_ENTER');
+  await waitFor(node => node['content-desc'] === 'sent-message' && node.text === message);
+  await input('');
+  await adb('shell', 'screencap', '-p', '/sdcard/agent-drafts-test.png');
+  await adb('pull', '/sdcard/agent-drafts-test.png', path.join(output, `android-${scale}-shortcut-sent.png`));
+}
 async function prepareInput() {
   const sdk = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT;
   assert.ok(sdk, 'Set ANDROID_HOME to the Android SDK directory.');
@@ -65,6 +83,8 @@ await prepareInput();
 await adb('install', '-r', apk);
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
+  await adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
+  await adb('shell', 'wm', 'dismiss-keyguard');
   for (const scale of ['1.0', '1.3']) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
     await adb('shell', 'am', 'force-stop', app);
@@ -83,8 +103,9 @@ try {
       await adb('shell', 'screencap', '-p', '/sdcard/agent-drafts-test.png');
       await adb('pull', '/sdcard/agent-drafts-test.png', path.join(output, `android-${scale}-${target}-restored.png`));
     }
+    await checkSendShortcut(scale);
   }
-  console.log('PASS native Android draft switching at font scales 1.0 and 1.3');
+  console.log('PASS native Android draft switching, Enter, and Ctrl+Enter at font scales 1.0 and 1.3');
 } finally {
   await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);
   await adb('shell', 'am', 'force-stop', app);

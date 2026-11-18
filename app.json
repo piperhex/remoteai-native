@@ -82,6 +82,7 @@
       ],
       "expo-notifications",
       "./plugins/withChatBackground.cjs",
+      "./plugins/withComposerShortcut.cjs",
       "./plugins/withChatTextSelection.cjs",
       "./plugins/withChatScroll.cjs",
       "./plugins/withDesktopWindow.cjs",

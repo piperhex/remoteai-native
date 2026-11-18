@@ -245,6 +245,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
       <ComposerInput ref={menu.input} accessibilityLabel={t("client.chat.chatMessage")} compact={compactField}
         multiline value={draft.text} maxLength={100_000} selection={menu.selection} editable={!queueEditor.loading}
         onFocus={() => setAdding(false)}
+        onSendShortcut={() => { if (active && action !== 'pause') void submit(); }}
         onSelectionChange={(event) => menu.setSelection(event.nativeEvent.selection)}
         onChangeText={text => {
           if (text) suggestion.dismiss(); else suggestion.restore();

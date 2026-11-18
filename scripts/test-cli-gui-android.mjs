@@ -168,8 +168,13 @@ async function checkSentInput(prefix, engine, index) {
   console.log(`${prefix}: checking ${engine} send ${index}`);
   await enterMessage();
   await waitFor('text="Check project"');
-  await adb('shell', 'input', 'keyevent', '4');
-  await tap('发送消息');
+  if (index === 1) {
+    await adb('shell', 'input', 'keyevent', '4');
+    await tap('发送消息');
+  } else {
+    await tap('消息');
+    await adb('shell', 'input', 'keycombination', 'KEYCODE_CTRL_LEFT', 'KEYCODE_ENTER');
+  }
   await waitFor('更新项目说明');
   await screenshot(`${prefix}-${engine}-sent-${index}-cleared`);
   const xml = await waitFor(/text=""[^>]*class="android.widget.EditText"/);

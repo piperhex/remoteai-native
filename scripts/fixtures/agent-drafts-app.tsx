@@ -3,7 +3,7 @@ import { registerRootComponent } from 'expo';
 import { useFonts } from 'expo-font';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +30,7 @@ const noAction = async () => {};
 
 function Screen() {
   const state = useSyncExternalStore(controller.subscribe, controller.snapshot);
+  const [sent, setSent] = useState('');
   const choose = (target: string) => {
     Keyboard.dismiss();
     if (target === 'existing') void controller.select(thread);
@@ -43,6 +44,7 @@ function Screen() {
           <Text style={textMetrics(14, 22)}>{target}</Text>
         </Pressable>)}
     </View>
+    {sent && <Text accessibilityLabel="sent-message" style={textMetrics(14, 22)}>{sent}</Text>}
     <View style={{ flex: 1 }} />
     <ChatQuotesProvider active enabled scope={state.draftScope ?? null}>
       <ChatComposer threadId={state.selected?.id ?? null} draftScope={state.draftScope}
@@ -51,7 +53,8 @@ function Screen() {
         updateSettings={noAction} refreshModels={noAction} readUsage={readUsage}
         readConversationMetrics={async () => ({ totalOutputTokens: 0, totalOutputTimeMs: 0, outputRequestCount: 0 })}
         contextSettings={controller.contextSettings} connection={{ client: fixture.accounts, chooseDevice() {} }}
-        send={async () => true} interrupt={noAction} compacting={false} compactReason={null}
+        send={async input => { setSent(input.text); return true; }}
+        interrupt={noAction} compacting={false} compactReason={null}
         compact={async () => true} catalog={{ skills: [], loaded: true, loading: false, error: '', refresh() {} }}
         loadCatalog={async () => ({ data: [], plugins: [] })}
         loadFiles={async () => ({ directory: '/', parent: null, entries: [], truncated: false })}
