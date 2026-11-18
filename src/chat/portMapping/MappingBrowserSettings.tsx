@@ -8,9 +8,10 @@ import { randomUUID } from 'expo-crypto';
 import { useCurrentBookmark } from '../../../vendor/shared/browser/bookmarks/useCurrentBookmark';
 import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/status';
 
-export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappings, search, history, passwords, external, url, title,
+export function MappingBrowserSettings({ top, width, height, dismiss, reload, bookmarks, mappings, search, history,
+  passwords, external, url, title,
   desktop, onDesktopChange, fullscreen, inspector }: {
-  top: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
+  top: number; width: number; height: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
   history: () => void; passwords: () => void;
   external?: () => void;
@@ -20,14 +21,16 @@ export function MappingBrowserSettings({ top, dismiss, reload, bookmarks, mappin
   inspector?: { available: boolean; open: () => void };
 }) {
   const styles = useMappingBrowserStyles();
-  const { height, width } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const maxWidth = Math.min(400, Math.max(0, (width || windowWidth) - 16));
+  const maxHeight = Math.max(0, (height || windowHeight) - top - 8);
   const color = useThemeColor();
   const text = marketText(useLanguage());
   const current = useCurrentBookmark({ url, title, newId: randomUUID });
   return <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
     <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={dismiss} />
     <ScrollView accessibilityRole="menu" accessibilityLabel={t('client.app.settings')}
-      style={[styles.menu, { top, maxHeight: height - top - 100, maxWidth: Math.min(400, width - 16) }]}>
+      style={[styles.menu, { top, maxHeight, minWidth: Math.min(220, maxWidth), maxWidth }]}>
       <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.browserReload')}
         disabled={!url} accessibilityState={{ disabled: !url }} onPress={() => { dismiss(); reload(); }}
         style={({ pressed }) => [styles.menuItem, !url && styles.disabled, pressed && styles.pressed]}>

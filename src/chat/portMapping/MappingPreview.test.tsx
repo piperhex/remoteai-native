@@ -38,9 +38,7 @@ vi.mock('../../browser/context', () => ({ useBrowserSafeAreaEdges: () => undefin
 vi.mock('../../browser/BrowserFullscreenExit', () => ({ BrowserFullscreenExit: 'FullscreenExit' }));
 vi.mock('../../browser/inspector/useBrowserInspector', () => ({
   browserInspectorAvailable: true,
-  useBrowserInspector: () => ({ open: false, opening: false, failed: false, show: vi.fn(), close: vi.fn() }),
 }));
-vi.mock('../../browser/inspector/BrowserInspectorDock', () => ({ BrowserInspectorDock: 'InspectorDock' }));
 vi.mock('./MappingPreviewActivity', () => ({ MappingPreviewActivity: 'Activity' }));
 vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }));
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));

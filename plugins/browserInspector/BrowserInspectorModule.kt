@@ -49,7 +49,6 @@ class BrowserInspectorModule(private val context: ReactApplicationContext) :
         check(view != null && view.isShown && view.url?.matches(Regex("https?://.*")) == true)
         val hostTag = request.getInt("hostTag")
         val panel = UIManagerHelper.getUIManagerForReactTag(context, hostTag)?.resolveView(hostTag) as? InspectorHostView
-        // Fabric can report layout just before attaching the new surface; the host waits for surfaceCreated.
         check(panel != null)
         val extras = options(request).apply { putString("id", id); putInt("processId", Process.myPid()) }
         stop(); owner = id; host = panel

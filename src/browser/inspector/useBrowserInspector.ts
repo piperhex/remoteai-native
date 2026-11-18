@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { AppState, findNodeHandle, NativeModules, Platform, type View } from 'react-native';
 import { randomUUID } from 'expo-crypto';
 import { t, useLanguage } from '../../i18n';
@@ -8,8 +8,8 @@ import { inspectorSession, type InspectorBridge } from './session';
 const bridge: InspectorBridge | undefined = NativeModules.BrowserInspector;
 export const browserInspectorAvailable = Platform.OS === 'android' && bridge?.supported === true;
 
-export function useBrowserInspector(target: RefObject<View | null>, active: boolean, generation: number) {
-  const [open, setOpen] = useState(false);
+export function useBrowserInspector(tabId: string, generation: number) {
+  const [target, setTarget] = useState<RefObject<View | null>>();
   const [opening, setOpening] = useState(false);
   const [failed, setFailed] = useState(false);
   const host = useRef<View>(null);
@@ -17,20 +17,21 @@ export function useBrowserInspector(target: RefObject<View | null>, active: bool
   const language = useLanguage();
   const theme = useThemeMode();
   const color = useThemeColor();
-  const close = () => {
+  const close = useCallback(() => {
     const previous = session.current; session.current = undefined; previous?.stop();
-    setOpen(false); setOpening(false); setFailed(false);
-  };
-  useEffect(() => {
-    close();
-    return () => { session.current?.stop(); session.current = undefined; };
-  }, [active, generation]);
+    setTarget(undefined); setOpening(false); setFailed(false);
+  }, []);
+  const hideKeyboard = useCallback(() => session.current?.hideKeyboard(), []);
+  useEffect(close, [tabId, generation, close]);
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => { if (state !== 'active') close(); });
-    return () => listener.remove();
-  }, []);
+    return () => {
+      listener.remove();
+      session.current?.stop(); session.current = undefined;
+    };
+  }, [close]);
   const attach = async () => {
-    if (!active || !open || session.current || !bridge) return;
+    if (!target || session.current || !bridge) return;
     const tag = findNodeHandle(target.current);
     const hostTag = findNodeHandle(host.current);
     if (tag === null || hostTag === null) { setFailed(true); return; }
@@ -43,7 +44,10 @@ export function useBrowserInspector(target: RefObject<View | null>, active: bool
     finally { if (session.current === current) setOpening(false); }
   };
   const fail = () => { session.current?.stop(); setFailed(true); setOpening(false); };
-  return { open, opening, failed, host, close, fail, hideKeyboard: () => session.current?.hideKeyboard(),
+  return { open: Boolean(target), opening, failed, host, close, fail, hideKeyboard,
     attach: () => { void attach(); },
-    show: () => { if (active && browserInspectorAvailable) setOpen(true); } };
+    show: setTarget };
 }
+
+export type BrowserInspectorControls = Pick<ReturnType<typeof useBrowserInspector>,
+  'open' | 'opening' | 'show' | 'close' | 'hideKeyboard'>;

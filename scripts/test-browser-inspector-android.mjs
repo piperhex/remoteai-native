@@ -15,7 +15,8 @@ const app = 'com.codexswitch.mobile.chatbrowsertest';
 const fontScale = process.env.INSPECTOR_FONT_SCALE ?? '1.0';
 const dark = process.env.INSPECTOR_THEME === 'dark';
 const prefix = `android-${dark ? 'dark' : 'light'}-font-${fontScale}`;
-const output = fileURLToPath(new URL('../.codex-tmp/browser-inspector/', import.meta.url));
+const output = process.env.INSPECTOR_OUTPUT ??
+  fileURLToPath(new URL('../.codex-tmp/browser-inspector/', import.meta.url));
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
 })).stdout.trim();
@@ -63,15 +64,31 @@ async function tapFrontend(selector) {
   await delay(600);
 }
 
-async function verifyConsoleKeyboard() {
+async function enterConsoleNumber(value) {
   await tapFrontend('#console-prompt');
-  await adb('shell', 'input', 'text', 'window.fromTouch=17');
+  // Numeric input keeps the check independent of the device's keyboard language.
+  await adb('shell', 'input', 'text', String(value));
   await adb('shell', 'input', 'keyevent', '66');
   await delay(500);
-  assert.equal(await pageValue('fromTouch'), 17, 'Native keyboard input evaluates in the inspected website');
+  const result = await frontend.evaluate(`(await target.runtimeAgent().invoke_evaluate({
+    expression:'$_',includeCommandLineAPI:true,returnByValue:true})).result.value`);
+  assert.equal(result, value, 'Native keyboard input evaluates in the inspected website');
+  if (!/mInputShown=true/.test(await adb('shell', 'dumpsys', 'input_method'))) return;
   await adb('shell', 'input', 'keyevent', '4');
   await delay(600);
   assert.match(await adb('shell', 'dumpsys', 'input_method'), /mInputShown=false/, 'Back hides the remote keyboard');
+}
+
+async function switchToChatWithInspector() {
+  await tap('聊天');
+  await find('页面预览.html');
+  await find('开发者工具');
+}
+
+async function returnToInspectedBrowser() {
+  await tap('浏览器');
+  await find('Inspector fixture');
+  await find('开发者工具');
 }
 
 async function landscapeBreakpoint() {
@@ -85,6 +102,10 @@ async function landscapeBreakpoint() {
   assert.equal((await find('停靠在右侧')).selected, 'true', 'Landscape uses right docking');
   assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true);
   await screenshot('landscape-right-breakpoint');
+  await switchToChatWithInspector();
+  assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true);
+  await screenshot('landscape-right-chat-breakpoint');
+  await returnToInspectedBrowser();
   await adb('shell', 'settings', 'put', 'system', 'user_rotation', '0');
   await delay(1200); await tap('停靠在底部');
 }
@@ -94,7 +115,13 @@ async function verifyDocking() {
   await tap('停靠在右侧'); await delay(800);
   assert.ok(await frontend.evaluate('innerWidth') < originalWidth, 'Right docking resizes the same frontend');
   assert.equal(await pageValue('document.querySelector("input").value'), 'Edited draft');
+  const [addressLeft, addressTop, addressRight, addressBottom] =
+    (await find('访问地址')).bounds.match(/\d+/g).map(Number);
+  assert.ok(addressRight - addressLeft > 2 * (addressBottom - addressTop),
+    'The address remains readable beside the right dock');
   await screenshot('right');
+  await tap('设置'); await find('刷新'); await screenshot('right-settings');
+  await adb('shell', 'input', 'keyevent', '4');
   await tap('停靠在底部'); await delay(800);
   assert.equal(await frontend.evaluate('innerWidth'), originalWidth);
   const divider = await find('调整开发者工具大小');
@@ -238,7 +265,7 @@ try {
   await delay(1500);
   await screenshot('elements');
   await verifyDocking();
-  await tap('设置'); await find('全屏展示'); await screenshot('settings-over-inspector');
+  await tap('设置'); await find('刷新'); await screenshot('settings-over-inspector');
   await adb('shell', 'input', 'keyevent', '4');
   assert.equal(await pageValue('fixtureState'), 42, 'Opening the menu keeps the same inspector session');
   await frontend.evaluate(`window.networkSeen=[];
@@ -256,7 +283,14 @@ try {
     .tabbedPane.selectedTabId`), 'console', 'Touch input reaches the embedded remote surface');
   await delay(400);
   await screenshot('console');
-  await verifyConsoleKeyboard();
+  await enterConsoleNumber(17);
+  await switchToChatWithInspector();
+  assert.equal(await pageValue('fixtureState'), 42, 'The inspector keeps debugging the same website from Chat');
+  await enterConsoleNumber(23);
+  await screenshot('chat-console');
+  await returnToInspectedBrowser();
+  assert.equal(await pageValue('document.querySelector("input").value'), 'Edited draft');
+  await screenshot('browser-restored-console');
   await frontend.evaluate(`await (await import('./ui/legacy/legacy.js')).InspectorView.InspectorView.instance().showPanel('sources')`);
   await frontend.evaluate('await target.debuggerAgent().invoke_enable()');
   const breakpoint = await frontend.evaluate(`await target.debuggerAgent().invoke_setBreakpointByUrl({

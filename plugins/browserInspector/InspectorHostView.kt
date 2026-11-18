@@ -20,6 +20,9 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.annotations.ReactProp
 
+private const val INSPECTOR_READY = "topInspectorReady"
+private const val INSPECTOR_FAILED = "topInspectorFailure"
+
 internal class InspectorHostView(private val reactContext: ThemedReactContext) :
   FrameLayout(reactContext), SurfaceHolder.Callback {
   private val surface = SurfaceView(context)
@@ -93,13 +96,20 @@ internal class InspectorHostView(private val reactContext: ThemedReactContext) :
   private fun fail() {
     val pending = completion != null
     complete(false)
-    if (!pending && bound && isAttachedToWindow) {
-      UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)?.dispatchEvent(
-        InspectorFailureEvent(UIManagerHelper.getSurfaceId(reactContext), id))
-    }
+    if (!pending && bound && isAttachedToWindow) dispatchInspectorEvent(INSPECTOR_FAILED)
   }
 
-  override fun surfaceCreated(holder: SurfaceHolder) { created = true; attach() }
+  private fun dispatchInspectorEvent(name: String) {
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)?.dispatchEvent(
+      InspectorEvent(UIManagerHelper.getSurfaceId(reactContext), id, name))
+  }
+
+  override fun surfaceCreated(holder: SurfaceHolder) {
+    created = true
+    attach()
+    // React layout can arrive before Fabric exposes this host to the inspector module.
+    dispatchInspectorEvent(INSPECTOR_READY)
+  }
   override fun surfaceDestroyed(holder: SurfaceHolder) { created = false; close() }
   override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
     attach()
@@ -123,12 +133,14 @@ internal class InspectorHostManager : SimpleViewManager<InspectorHostView>() {
   override fun createViewInstance(context: ThemedReactContext) = InspectorHostView(context)
   override fun onDropViewInstance(view: InspectorHostView) { view.close(); super.onDropViewInstance(view) }
   override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> =
-    mapOf("topInspectorFailure" to mapOf("registrationName" to "onFailure"))
+    mapOf(INSPECTOR_READY to mapOf("registrationName" to "onReady"),
+      INSPECTOR_FAILED to mapOf("registrationName" to "onFailure"))
   @ReactProp(name = "interactive", defaultBoolean = true)
   fun setInteractive(view: InspectorHostView, interactive: Boolean) { view.setInteractive(interactive) }
 }
 
-private class InspectorFailureEvent(surfaceId: Int, viewTag: Int) : Event<InspectorFailureEvent>(surfaceId, viewTag) {
-  override fun getEventName() = "topInspectorFailure"
+private class InspectorEvent(surfaceId: Int, viewTag: Int, private val name: String) :
+  Event<InspectorEvent>(surfaceId, viewTag) {
+  override fun getEventName() = name
   override fun getEventData() = Arguments.createMap()
 }
