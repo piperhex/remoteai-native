@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Keyboard } from 'react-native';
 import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 import { useDesktopLauncher } from '../../vendor/shared/remote-desktop/useDesktopLauncher';
@@ -11,6 +11,7 @@ import { ChatToolsMenu } from './ChatToolsMenu';
 import { PortMappings } from './portMapping/PortMappings';
 import type { AuthSession } from '../types';
 import { ProjectBrowser } from './ProjectBrowser';
+import { useHasProjectBrowserWindowHost } from './ProjectBrowserWindow';
 import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
 }
 
 export function ChatTools(props: Props) {
+  const canPrepareFiles = useHasProjectBrowserWindowHost();
+  const [menu, setMenu] = useState<{ preparing?: string } | null>(null);
   const [mapping, setMapping] = useState(false);
   const files = useRetainedProjects();
   const git = useRetainedProjects();
@@ -30,7 +33,11 @@ export function ChatTools(props: Props) {
   const terminal = useRemoteTerminalLauncher({ client: props.client.terminal, cwd: terminalCwd,
     connected: props.connected });
   const hideTools = () => { files.hide(); git.hide(); desktop.hide(); terminal.hide(); Keyboard.dismiss(); };
-  const openFiles = () => { hideTools(); setTerminalCwd(props.cwd); files.open(props.cwd); };
+  const showFiles = () => { hideTools(); setTerminalCwd(props.cwd); files.open(props.cwd); setMenu(null); };
+  const openFiles = () => {
+    if (!canPrepareFiles || files.projects.includes(props.cwd) || !props.cwd) showFiles();
+    else setMenu({ preparing: props.cwd });
+  };
   const openTerminal = () => {
     hideTools(); setTerminalCwd(props.cwd); setTerminalLaunch(value => value + 1);
   };
@@ -39,15 +46,22 @@ export function ChatTools(props: Props) {
   } };
   const visible = props.active;
   const live = visible && (props.foreground ?? true);
+  const pending = live && menu?.preparing === props.cwd ? menu.preparing : undefined;
+  useEffect(() => {
+    if (!live || (menu?.preparing && menu.preparing !== props.cwd)) setMenu(null);
+  }, [live, menu?.preparing, props.cwd]);
+  const projects = pending ? [...files.projects, pending] : files.projects;
   return <>
-    <ChatToolsMenu active={visible} foreground={props.foreground} connected={props.connected} cwd={props.cwd}
+    <ChatToolsMenu visible={live && !!menu} changeMenu={open => setMenu(open ? {} : null)}
+      preparingFiles={!!pending} connected={props.connected} cwd={props.cwd}
       opened={{ desktop: desktop.opened, terminal: terminal.anyOpened,
         git: git.projects.length > 0, files: files.projects.length > 0 }}
       openMappings={() => { hideTools(); setMapping(true); }}
       openDesktop={() => { hideTools(); desktop.open(); }} openTerminal={openTerminal}
       openGit={() => { hideTools(); git.open(props.cwd); }} openFiles={openFiles} />
-    {files.projects.map(cwd => <ProjectBrowser key={cwd} client={props.client.projectBrowser} cwd={cwd}
+    {projects.map(cwd => <ProjectBrowser key={cwd} client={props.client.projectBrowser} cwd={cwd}
       active={visible && files.visible === cwd && !terminal.open} connected={props.connected}
+      onPrepared={pending === cwd ? showFiles : undefined}
       onHide={files.hide} onClose={() => files.close(cwd)} scripts={scripts} />)}
     <ChatTerminal {...props} client={props.client.terminal} cwd={terminalCwd} panel={terminal}
       active={visible} launchId={terminalLaunch} hideTrigger />

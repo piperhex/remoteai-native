@@ -6,14 +6,17 @@ import { ChatTools } from './ChatTools';
 import type { GuiToolsClient } from '../../vendor/shared/remote-chat/guiTools';
 
 vi.mock('react-native', () => ({ Keyboard: { dismiss: vi.fn() } }));
+vi.mock('./ProjectBrowserWindow', () => ({ useHasProjectBrowserWindowHost: () => true }));
 vi.mock('./ChatToolsMenu', () => ({ ChatToolsMenu: (props: {
   opened: Record<string, boolean>; openFiles: () => void; openGit: () => void; openDesktop: () => void;
-}) => <nav><button onClick={props.openFiles}>files</button><button onClick={props.openGit}>git</button>
+  visible: boolean; changeMenu: (open: boolean) => void;
+}) => <nav data-open={props.visible}><button onClick={() => props.changeMenu(false)}>dismiss</button>
+  <button onClick={props.openFiles}>files</button><button onClick={props.openGit}>git</button>
   <button onClick={props.openDesktop}>desktop</button><output>{JSON.stringify(props.opened)}</output></nav> }));
 vi.mock('./ChatTerminal', () => ({ ChatTerminal: () => null }));
 vi.mock('./portMapping/PortMappings', () => ({ PortMappings: () => null }));
 vi.mock('./ProjectBrowser', () => ({ ProjectBrowser: (props: {
-  cwd: string; active: boolean; onClose: () => void; onHide: () => void;
+  cwd: string; active: boolean; onClose: () => void; onHide: () => void; onPrepared?: () => void;
 }) => <RetainedView {...props} name="files" /> }));
 vi.mock('./git/ChatGit', () => ({ ChatGit: (props: {
   cwd: string; active: boolean; onClose: () => void; onHide: () => void;
@@ -24,10 +27,11 @@ vi.mock('./desktop/RemoteDesktop', () => ({ RemoteDesktop: (props: {
   <button onClick={props.hide}>hide</button><button onClick={props.close}>close</button></section> }));
 
 function RetainedView(props: {
-  name: string; cwd: string; active: boolean; onHide: () => void; onClose: () => void;
+  name: string; cwd: string; active: boolean; onHide: () => void; onClose: () => void; onPrepared?: () => void;
 }) {
   const [draft, setDraft] = useState(0);
   return <section data-tool={props.name} data-cwd={props.cwd} hidden={!props.active}>
+    {props.onPrepared && <button onClick={props.onPrepared}>paint</button>}
     <button onClick={() => setDraft(value => value + 1)}>edit</button><output>{draft}</output>
     <button onClick={props.onHide}>hide</button><button onClick={props.onClose}>close</button>
   </section>;
@@ -52,11 +56,13 @@ it('keeps Git and file drafts across dismiss, navigation and project switches; X
   for (const tool of ['files', 'git']) {
     await click(test.host.querySelector('nav')!, tool);
     const first = test.host.querySelector(`[data-tool="${tool}"]`)!;
+    if (tool === 'files') await click(first, 'paint');
     await click(first, 'edit'); await click(first, 'hide');
     expect(first.hasAttribute('hidden')).toBe(true);
     expect(test.host.querySelector('nav output')!.textContent).toContain(`"${tool}":true`);
     await test.render('/second'); await click(test.host.querySelector('nav')!, tool);
     expect(test.host.querySelectorAll(`[data-tool="${tool}"]`)).toHaveLength(2);
+    if (tool === 'files') await click(test.host.querySelector('[data-cwd="/second"]')!, 'paint');
     await test.render('/first', false); await test.render();
     await click(test.host.querySelector('nav')!, tool);
     expect(first.hasAttribute('hidden')).toBe(false);
@@ -65,6 +71,29 @@ it('keeps Git and file drafts across dismiss, navigation and project switches; X
     expect(test.host.contains(first)).toBe(false);
     await test.render();
   }
+});
+
+it('presents a fresh file browser only after paint and drops a cancelled preparation', async () => {
+  const test = fixture(); await test.render();
+  const menu = test.host.querySelector('nav')!;
+  const browser = () => test.host.querySelector('[data-tool="files"]')!;
+  await click(menu, 'files');
+  expect(menu.getAttribute('data-open')).toBe('true');
+  expect(browser().hasAttribute('hidden')).toBe(true);
+  await click(menu, 'dismiss');
+  expect(browser()).toBeNull();
+  await click(menu, 'files');
+  const prepared = browser();
+  await click(prepared, 'paint');
+  expect(menu.getAttribute('data-open')).toBe('false');
+  expect(browser()).toBe(prepared);
+  expect(prepared.hasAttribute('hidden')).toBe(false);
+  await click(prepared, 'close');
+  await click(menu, 'files');
+  expect(browser()).not.toBe(prepared);
+  expect(browser().hasAttribute('hidden')).toBe(true);
+  await test.render('/other');
+  expect(browser()).toBeNull();
 });
 
 it('keeps the desktop session mounted while hidden, navigating and backgrounded until explicit X', async () => {

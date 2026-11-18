@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Pressable, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { ActivityIndicator, Keyboard, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createThemedStyles } from '../theme/styles';
 import { textMetrics } from '../theme/text';
@@ -9,7 +9,7 @@ import { ChatToolsPopover } from './ChatToolsPopover';
 import { palette, useStyles } from './styles';
 
 interface Props {
-  active: boolean; foreground?: boolean; connected: boolean; cwd: string;
+  visible: boolean; changeMenu: (open: boolean) => void; preparingFiles: boolean; connected: boolean; cwd: string;
   opened: Record<'desktop' | 'terminal' | 'git' | 'files', boolean>;
   openMappings: () => void; openDesktop: () => void; openTerminal: () => void;
   openGit: () => void; openFiles: () => void;
@@ -21,9 +21,6 @@ export function ChatToolsMenu(props: Props) {
   const menuStyles = useMenuStyles();
   const color = useThemeColor();
   const anchor = useRef<View>(null);
-  const [menu, setMenu] = useState(false);
-  useEffect(() => { if (!props.active || props.foreground === false) setMenu(false); },
-    [props.active, props.foreground]);
   const items: { id: keyof Props['opened'] | 'mappings'; icon: keyof typeof Ionicons.glyphMap;
     label: string; open: () => void; disabled?: boolean }[] = [
     { id: 'mappings', icon: 'swap-horizontal-outline', label: t('client.portForwarding.portMapping'),
@@ -38,18 +35,20 @@ export function ChatToolsMenu(props: Props) {
   ];
   return <>
     <Pressable ref={anchor} collapsable={false} accessibilityRole="button" accessibilityLabel={t('client.git.openTools')}
-      accessibilityState={{ expanded: menu && props.active }} style={styles.back}
-      onPress={() => { Keyboard.dismiss(); setMenu(value => !value); }}>
+      accessibilityState={{ expanded: props.visible }} style={styles.back}
+      onPress={() => { Keyboard.dismiss(); props.changeMenu(!props.visible); }}>
       <Ionicons name="construct-outline" size={24} color={color(palette.ink, 'ink')} /></Pressable>
-    {menu && props.active && <ChatToolsPopover anchor={anchor} close={() => setMenu(false)}>
+    {props.visible && <ChatToolsPopover anchor={anchor} close={() => props.changeMenu(false)}>
       {items.map(item => {
         const opened = item.id !== 'mappings' && props.opened[item.id];
-        return <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={item.label} disabled={item.disabled}
-          accessibilityState={{ disabled: item.disabled, selected: opened }}
+        const busy = item.id === 'files' && props.preparingFiles;
+        return <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={item.label}
+          disabled={item.disabled || busy} accessibilityState={{ disabled: item.disabled || busy, busy, selected: opened }}
           style={({ pressed }) => [menuStyles.item, pressed && menuStyles.pressed, item.disabled && styles.disabled]}
-          onPress={() => { setMenu(false); item.open(); }}>
-          <Ionicons name={item.icon} size={20}
-            color={opened ? color(palette.green, 'accent') : color(palette.ink, 'ink')} />
+          onPress={() => { if (item.id !== 'files') props.changeMenu(false); item.open(); }}>
+          {busy ? <ActivityIndicator style={menuStyles.progress} size="small" color={color(palette.green, 'accent')} />
+            : <Ionicons name={item.icon} size={20}
+              color={opened ? color(palette.green, 'accent') : color(palette.ink, 'ink')} />}
           <Text style={menuStyles.label}>{item.label}</Text>
         </Pressable>;
       })}
@@ -58,6 +57,7 @@ export function ChatToolsMenu(props: Props) {
 }
 
 const useMenuStyles = createThemedStyles(color => ({
+  progress: { width: 20, height: 20 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, borderRadius: 8, padding: 12 },
   pressed: { backgroundColor: color('#eef4f1', 'canvas') },
   label: { color: color(palette.ink, 'ink'), ...textMetrics(14, 20), flexShrink: 1 },

@@ -29,11 +29,16 @@ import { handleNativeScriptAction, nativeScriptState } from '../../vendor/shared
 import { useChatFileReference, useChatFileSelection } from '../../vendor/shared/chat/ChatFileReferences';
 import { getChatPolicy, isDirectChat, subscribeChatPolicy } from '../../vendor/shared/remote-chat/policy';
 
-export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide, title, subtitle,
+// The initial checkpoint can arrive before the WebView has painted its first frame.
+const notifyAfterPaint = `requestAnimationFrame(() => requestAnimationFrame(() =>
+  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'painted' })))); true;`;
+
+export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide, onPrepared, title, subtitle,
   host: suppliedHost, ssh, children, scripts }: {
   client: ProjectBrowserClient; cwd: string; connected: boolean; active: boolean; onClose: () => void;
   title?: string; subtitle?: string; host?: BrowserHost; children?: ReactNode;
   onHide?: () => void;
+  onPrepared?: () => void;
   scripts?: ScriptPanel;
   ssh?: { settings: NonNullable<BrowserSettings['ssh']>; onAction: (action: NativeSshBrowserAction) => void };
 }) {
@@ -59,11 +64,12 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
   useEffect(() => () => transfer.abort(), [transfer]);
   const [html, setHtml] = useState('');
   const [error, setError] = useState('');
-  const [ready, setReady] = useState(false);
+  const [renderState, setRenderState] = useState<'loading' | 'mounted' | 'painted'>('loading');
+  const ready = renderState !== 'loading';
   const [fullscreen, setFullscreen] = useState(false);
   const [generation, setGeneration] = useState(0);
   const currentGeneration = useRef(generation);
-  const recover = () => { setReady(false); setFullscreen(false); setGeneration(++currentGeneration.current); };
+  const recover = () => { setRenderState('loading'); setFullscreen(false); setGeneration(++currentGeneration.current); };
   const mode = useThemeMode();
   const source = useWebviewSource(html, { mode, background: color('#fff', 'surface'),
     foreground: color('#202c29', 'ink'), variables: { '--panel': color('#fff', 'surface') } });
@@ -101,6 +107,11 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
       '--browser-on-accent': color('#fff', 'canvas') } });
   useEffect(() => { if (ready) update(); },
     [ready, active, browserConnected, cwd, language, color, mode, preferences, host, ssh, scripts, policy, previewMode]);
+  const preparing = !!onPrepared;
+  useEffect(() => {
+    if (preparing && renderState === 'mounted' && preferences.ready) webview.current?.injectJavaScript(notifyAfterPaint);
+  }, [preparing, renderState, preferences.ready, generation]);
+  useEffect(() => { if (renderState === 'painted' || error) onPrepared?.(); }, [renderState, error, onPrepared]);
   const receive = (raw: string) => {
     if (generation !== currentGeneration.current) return;
     let message: unknown;
@@ -112,6 +123,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
     } catch (error) { setError(displayError(error)); return; }
     if (isNativeSshBrowserAction(message)) { ssh?.onAction(message); return; }
     if (message.type === 'ready') { update(); return; }
+    if (message.type === 'painted') { setRenderState('painted'); return; }
     if (message.type === 'fullscreen' && 'active' in message && typeof message.active === 'boolean') {
       setFullscreen(message.active); return;
     }
@@ -122,7 +134,10 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
         saveBrowserSession(client, cwd, message.snapshot as DocumentsSnapshot);
       }
       // The first checkpoint is posted after the file browser has mounted with its initial settings.
-      if (message.type === 'snapshot') { setReady(true); return; }
+      if (message.type === 'snapshot') {
+        setRenderState(state => state === 'loading' ? 'mounted' : state);
+        return;
+      }
       const focus = focusAfterClose.current;
       focusAfterClose.current = null;
       if (focus && onHide) {
@@ -142,7 +157,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
       signal: transfer.signal })
       .then(reply => { if (reply) emit(reply); });
   };
-  return <ProjectBrowserWindow active={active} onHide={onHide} onClose={close}>
+  return <ProjectBrowserWindow active={active} preparing={preparing} onHide={onHide} onClose={close}>
     <SafeAreaProvider><SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.header, fullscreen && styles.hidden]}>
@@ -155,7 +170,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
         </View>
         <View style={styles.fill}>
           {!!html && <WebView key={generation} ref={webview} source={source} style={styles.screen} javaScriptEnabled
-            containerStyle={styles.screen} onLoadStart={() => setReady(false)}
+            containerStyle={styles.screen} onLoadStart={() => setRenderState('loading')}
             onContentProcessDidTerminate={recover} onRenderProcessGone={recover}
             scrollEnabled={false} bounces={false} originWhitelist={['about:blank']}
             allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
@@ -164,7 +179,8 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
             onShouldStartLoadWithRequest={({ url }) => url === 'about:blank'}
             onMessage={({ nativeEvent }) => receive(nativeEvent.data)}
             onError={() => {
-              setReady(false); setFullscreen(false); setError('client.projectBrowser.theFileBrowserCouldNotLoadPleaseReopenIt');
+              setRenderState('loading'); setFullscreen(false);
+              setError('client.projectBrowser.theFileBrowserCouldNotLoadPleaseReopenIt');
             }} />}
           {!ready && !error && <View style={styles.loading}>
             <ActivityIndicator color={color('#138475', 'accent')} />

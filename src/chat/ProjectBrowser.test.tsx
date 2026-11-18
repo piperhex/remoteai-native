@@ -1,4 +1,4 @@
-import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
+import React, { Children, isValidElement, useEffect, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { WebViewProps } from 'react-native-webview';
 import type { ProjectBrowserClient } from '../../vendor/shared/project-browser/protocol';
@@ -15,7 +15,9 @@ vi.mock('react', async original => ({ ...await original<typeof React>(),
   useState: (initial: unknown) => {
     const slot = runtime.cursor++;
     if (!(slot in runtime.state)) runtime.state[slot] = initial;
-    return [runtime.state[slot], (value: unknown) => { runtime.state[slot] = value; }];
+    return [runtime.state[slot], (value: unknown) => {
+      runtime.state[slot] = typeof value === 'function' ? value(runtime.state[slot]) : value;
+    }];
   },
   useRef: (initial: unknown) => {
     const slot = runtime.refCursor++;
@@ -48,9 +50,10 @@ function descendants(tree: ReactNode): ReactElement<WebViewProps & { children?: 
   return Children.toArray(tree).flatMap(child => isValidElement<WebViewProps & { children?: ReactNode }>(child)
     ? [child, ...descendants(child.props.children)] : []);
 }
-const elements = (client: ProjectBrowserClient, close = vi.fn(), active = true) => {
+const elements = (client: ProjectBrowserClient, close = vi.fn(), active = true, onPrepared?: () => void) => {
   runtime.cursor = 0; runtime.refCursor = 0;
-  const tree = ProjectBrowser({ client, cwd: '/project', active, connected: true, onClose: close, onHide: vi.fn() });
+  const tree = ProjectBrowser({ client, cwd: '/project', active, connected: true, onClose: close, onHide: vi.fn(),
+    onPrepared });
   return descendants(tree);
 };
 const render = (client: ProjectBrowserClient, close = vi.fn(), active = true) =>
@@ -62,7 +65,7 @@ const client = (): ProjectBrowserClient => ({ list: vi.fn(), read: vi.fn(), save
 
 beforeEach(() => {
   vi.stubGlobal('React', React); vi.clearAllMocks();
-  runtime.refs = []; runtime.state = ['<html/>', '', true, 0];
+  runtime.refs = []; runtime.state = ['<html/>', '', 'mounted', false, 0];
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -84,6 +87,32 @@ it('keeps one loading indicator until the project content mounts', () => {
   expect(loading()).toBe(true);
   receive(view, { type: 'snapshot', cwd: '/project', snapshot: { tabs: [] } });
   expect(loading()).toBe(false);
+});
+
+it('waits for the WebView paint acknowledgement before presenting a prepared browser', () => {
+  const api = client();
+  const prepared = vi.fn();
+  const update = () => {
+    vi.mocked(useEffect).mockClear();
+    const view = elements(api, vi.fn(), false, prepared).find(child => child.type === 'WebView')!;
+    // The fixture already supplies the HTML asset. Run the effects that respond to bridge state changes.
+    for (const [effect, dependencies] of vi.mocked(useEffect).mock.calls) {
+      if (dependencies?.length) effect();
+    }
+    return view;
+  };
+  const view = render(api);
+  view.props.onLoadStart!({} as Parameters<NonNullable<WebViewProps['onLoadStart']>>[0]);
+  receive(view, { type: 'ready' });
+  update();
+  expect(runtime.inject).not.toHaveBeenCalledWith(expect.stringContaining('requestAnimationFrame'));
+  receive(view, { type: 'snapshot', cwd: '/project', snapshot: { tabs: [] } });
+  update();
+  expect(runtime.inject).toHaveBeenCalledWith(expect.stringContaining('requestAnimationFrame'));
+  expect(prepared).not.toHaveBeenCalled();
+  receive(view, { type: 'painted' });
+  update();
+  expect(prepared).toHaveBeenCalledOnce();
 });
 
 it('keeps checkpoints before close and restores them after renderer termination', () => {
