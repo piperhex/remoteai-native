@@ -10,6 +10,7 @@ export type AssistantTarget = 'chrome' | 'agentHub' | 'standalone';
 export interface AssistantPreferences { order: AssistantTarget[] }
 export type PanelCommand = { action: 'open'; extension?: string }
   | { action: 'close' | 'reload' | 'capture' }
+  | { action: 'activity'; active: boolean }
   | { action: 'resize'; width: number; height: number }
   | { action: 'click'; x: number; y: number }
   | { action: 'text'; text: string }

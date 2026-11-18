@@ -29,23 +29,27 @@ export function readDirectoryQuery(input: unknown): DirectoryQuery {
   return { archived: query.archived, search: query.search, ...(query.groupId ? { groupId: query.groupId } : {}) };
 }
 
+/** Per-thread metadata is independent of global group definitions and pin order. */
+export function sidebarThreadEntries(sidebar: SidebarSnapshot, id: string): ChatDirectoryEntry[] {
+  const entries: ChatDirectoryEntry[] = [];
+  if (sidebar.threads[id]) entries.push({ key: `presentation:${id}`, kind: 'presentation', id,
+    value: sidebar.threads[id] });
+  if (sidebar.readState[id]) entries.push({ key: `read:${id}`, kind: 'read', id, value: sidebar.readState[id] });
+  if (sidebar.grouping && Object.hasOwn(sidebar.grouping.threads, id)) {
+    entries.push({ key: `groupThread:${id}`, kind: 'groupThread', id, value: sidebar.grouping.threads[id] });
+  }
+  return entries;
+}
+
 export function sidebarEntries(sidebar: SidebarSnapshot, ids: Set<string>, icon: (source: string) => string) {
   const entries: ChatDirectoryEntry[] = [{ key: '@metadata', kind: 'metadata', revision: sidebar.revision }];
-  for (const id of ids) {
-    if (sidebar.threads[id]) entries.push({ key: `presentation:${id}`, kind: 'presentation', id,
-      value: sidebar.threads[id] });
-    if (sidebar.readState[id]) entries.push({ key: `read:${id}`, kind: 'read', id, value: sidebar.readState[id] });
-  }
+  for (const id of ids) entries.push(...sidebarThreadEntries(sidebar, id));
   sidebar.pins?.forEach((id, value) => entries.push({ key: `pin:${id}`, kind: 'pin', id, value }));
   sidebar.pinnedProjects?.forEach((id, value) => entries.push({ key: `projectPin:${id}`, kind: 'projectPin', id, value }));
   for (const group of sidebar.grouping?.groups ?? []) entries.push({ key: `group:${group.id}`, kind: 'group',
     id: group.id, value: { ...group, ...(group.icon ? { icon: icon(group.icon) } : {}) } });
   for (const [id, value] of Object.entries(sidebar.grouping?.projects ?? {})) {
     entries.push({ key: `groupProject:${id}`, kind: 'groupProject', id, value });
-  }
-  // Membership is separate from summary loading. Older members remain discoverable through the group query.
-  for (const [id, value] of Object.entries(sidebar.grouping?.threads ?? {})) {
-    if (ids.has(id)) entries.push({ key: `groupThread:${id}`, kind: 'groupThread', id, value });
   }
   return entries;
 }

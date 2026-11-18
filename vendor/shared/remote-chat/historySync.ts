@@ -4,6 +4,7 @@ import type { Thread, Turn, Item } from './client/types';
 
 export const HISTORY_CHANGED = 'remote-chat/history-changed';
 type Fields = Record<string, unknown>;
+type HashValue = (value: unknown) => string;
 interface Fingerprint { hash: string; length?: number }
 type Manifest = Record<string, Fingerprint>;
 interface ItemVersion { id: string; fields: Manifest }
@@ -55,22 +56,22 @@ function fields(value: object, omit: string): Fields {
   return Object.fromEntries(Object.entries(value).filter(([key, entry]) => key !== omit && entry !== undefined));
 }
 
-function manifest(value: Fields): Manifest {
-  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key,
-    { hash: contentHash(entry), ...(typeof entry === 'string' ? { length: entry.length } : {}) }]));
+export function historyFields(value: object, omit = '', hash: HashValue = contentHash): Manifest {
+  return Object.fromEntries(Object.entries(fields(value, omit)).map(([key, entry]) => [key,
+    { hash: hash(entry), ...(typeof entry === 'string' ? { length: entry.length } : {}) }]));
 }
 
 /** Only fingerprints and string lengths travel back to the PC, never synchronized message bodies. */
 export function historyVersion(thread: Thread): HistoryVersion {
-  return { fields: manifest(fields(thread, 'turns')), turns: (thread.turns ?? []).map((turn) => turnVersion(turn)) };
+  return { fields: historyFields(thread, 'turns'), turns: (thread.turns ?? []).map((turn) => turnVersion(turn)) };
 }
 
 function itemVersion(item: Item): ItemVersion {
-  return { id: item.id, fields: manifest(fields(item, '')) };
+  return { id: item.id, fields: historyFields(item) };
 }
 
 function turnVersion(turn: Turn, readItem = itemVersion): TurnVersion {
-  return { id: turn.id, fields: manifest(fields(turn, 'items')), items: turn.items.map(readItem) };
+  return { id: turn.id, fields: historyFields(turn, 'items'), items: turn.items.map(readItem) };
 }
 
 /** For immutable client snapshots only; mutable PC history must use historyVersion directly. */
@@ -87,7 +88,7 @@ export class HistoryVersionCache {
   };
 
   read(thread: Thread): HistoryVersion {
-    return { fields: manifest(fields(thread, 'turns')), turns: (thread.turns ?? []).map((turn) => {
+    return { fields: historyFields(thread, 'turns'), turns: (thread.turns ?? []).map((turn) => {
       const cached = this.turns.get(turn);
       if (cached) return cached;
       const version = turnVersion(turn, this.readItem);
@@ -97,14 +98,16 @@ export class HistoryVersionCache {
   }
 }
 
-function difference(current: Fields, known: Manifest = {}): Patch {
+function difference(current: Fields, known: Manifest = {}, hash: HashValue): Patch {
   const patch: Patch = { set: {}, append: {}, remove: Object.keys(known).filter((key) => !(key in current)) };
   for (const [key, value] of Object.entries(current)) {
     const previous = known[key];
-    if (previous?.hash === contentHash(value)) continue;
     const length = previous?.length;
+    // Different string lengths cannot have equal content. Check just the known prefix of an append.
+    if (previous && (typeof value !== 'string' || length === undefined || length === value.length)
+      && previous.hash === hash(value)) continue;
     if (typeof value === 'string' && Number.isSafeInteger(length) && length! >= 0
-      && length! <= value.length && contentHash(value.slice(0, length)) === previous.hash) {
+      && length! < value.length && hash(value.slice(0, length)) === previous.hash) {
       patch.append[key] = value.slice(length);
     } else patch.set[key] = value;
   }
@@ -115,11 +118,11 @@ function changed(patch: Patch) {
   return patch.remove.length > 0 || Object.keys(patch.set).length > 0 || Object.keys(patch.append).length > 0;
 }
 
-function turnDifference(turn: Turn, known?: TurnVersion): TurnPatch | undefined {
+function turnDifference(turn: Turn, known: TurnVersion | undefined, hash: HashValue): TurnPatch | undefined {
   const previous = new Map(known?.items.map((item) => [item.id, item]));
   const items = turn.items.map((item) => ({ id: item.id,
-    patch: difference(fields(item, ''), previous.get(item.id)?.fields) })).filter((item) => changed(item.patch));
-  const patch = difference(fields(turn, 'items'), known?.fields);
+    patch: difference(fields(item, ''), previous.get(item.id)?.fields, hash) })).filter((item) => changed(item.patch));
+  const patch = difference(fields(turn, 'items'), known?.fields, hash);
   const order = turn.items.map((item) => item.id);
   if (!changed(patch) && !items.length && JSON.stringify(order) === JSON.stringify(known?.items.map((i) => i.id))) {
     return undefined;
@@ -128,11 +131,11 @@ function turnDifference(turn: Turn, known?: TurnVersion): TurnPatch | undefined 
 }
 
 /** Stateless fingerprints allow reconnects and PC restarts without resending unchanged history. */
-export function historyDelta(thread: Thread, known?: HistoryVersion): HistoryDelta {
+export function historyDelta(thread: Thread, known?: HistoryVersion, hash: HashValue = contentHash): HistoryDelta {
   const previous = new Map(known?.turns.map((turn) => [turn.id, turn]));
-  return { threadId: thread.id, patch: difference(fields(thread, 'turns'), known?.fields),
+  return { threadId: thread.id, patch: difference(fields(thread, 'turns'), known?.fields, hash),
     order: (thread.turns ?? []).map((turn) => turn.id),
-    turns: (thread.turns ?? []).flatMap((turn) => turnDifference(turn, previous.get(turn.id)) ?? []) };
+    turns: (thread.turns ?? []).flatMap((turn) => turnDifference(turn, previous.get(turn.id), hash) ?? []) };
 }
 
 function applyFields<T extends object>(value: T, patch: Patch): T {
@@ -144,6 +147,8 @@ function applyFields<T extends object>(value: T, patch: Patch): T {
 
 export function applyHistoryDelta(before: Thread, delta: HistoryDelta): Thread {
   if (before.id !== delta.threadId) throw new Error('聊天已切换，请重新加载。');
+  if (!changed(delta.patch) && !delta.turns.length && before.turns?.length === delta.order.length
+    && before.turns.every((turn, index) => turn.id === delta.order[index])) return before;
   const turns = new Map(before.turns?.map((turn) => [turn.id, turn]));
   for (const update of delta.turns) {
     const turn = turns.get(update.id) ?? { id: update.id, status: 'inProgress', items: [] };

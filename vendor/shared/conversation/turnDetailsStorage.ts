@@ -21,19 +21,46 @@ function validDetails(value: unknown): value is TurnDetails {
     isRecord(step) && typeof step.step === "string" && typeof step.status === "string"));
 }
 
-function readRecords(): TurnDetails[] {
+function readRecords(): { raw?: string; records: TurnDetails[] } {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw || raw.length > MAX_CACHE_CHARACTERS) return [];
+    if (!raw || raw.length > MAX_CACHE_CHARACTERS) return { records: [] };
     const records: unknown = JSON.parse(raw);
-    return Array.isArray(records) ? records.filter(validDetails).slice(-MAX_RECORDS) : [];
-  } catch { return []; } // Browser privacy settings can disable optional session storage.
+    return { raw, records: Array.isArray(records) ? records.filter(validDetails).slice(-MAX_RECORDS) : [] };
+  } catch { return { records: [] }; } // Browser privacy settings can disable optional session storage.
 }
 
 /** app-server history has file items, but does not replay turn plan/net-diff notifications. */
 export function cachedTurnDetails(threadId: string): Map<string, TurnDetails> {
-  return new Map(readRecords().filter((record) => record.threadId === threadId).map((record) =>
+  return new Map(readRecords().records.filter((record) => record.threadId === threadId).map((record) =>
     [record.turnId, record]));
+}
+
+function encodeNewest(record: TurnDetails) {
+  const limit = MAX_CACHE_CHARACTERS - 2; // Leave room for the surrounding array.
+  // An oversized diff cannot fit even before JSON adds escapes and field names.
+  if ((record.diff?.length ?? 0) <= limit) {
+    const encoded = JSON.stringify(record);
+    if (encoded.length <= limit) return encoded;
+  }
+  if (record.diff === undefined) return;
+  const { diff: _diff, ...metadata } = record;
+  if (metadata.plan === undefined && metadata.planExplanation == null && !metadata.modelChanges?.length) return;
+  const encoded = JSON.stringify(metadata);
+  if (encoded.length <= limit) return encoded;
+}
+
+function encodeCache(records: TurnDetails[], newest?: string) {
+  const entries = newest === undefined ? [] : [newest];
+  let characters = 2 + (newest?.length ?? 0);
+  // Walk the newest suffix once. Encoded lengths include escapes, brackets and commas.
+  for (let index = records.length - 1; index >= 0 && entries.length < MAX_RECORDS; index--) {
+    const encoded = JSON.stringify(records[index]);
+    characters += encoded.length + Number(entries.length > 0);
+    if (characters > MAX_CACHE_CHARACTERS) break;
+    entries.push(encoded);
+  }
+  return `[${entries.reverse().join(",")}]`;
 }
 
 export function rememberTurnDetails(value: Conversation, turnId: string) {
@@ -41,10 +68,13 @@ export function rememberTurnDetails(value: Conversation, turnId: string) {
   if (!turn) return;
   const modelChanges = modelChangeRecords(turn.items);
   if (turn.diff === undefined && turn.plan === undefined && !modelChanges.length) return;
-  const records = readRecords().filter((record) => record.threadId !== value.thread.id || record.turnId !== turnId);
-  records.push({ threadId: value.thread.id, turnId, diff: turn.diff, plan: turn.plan,
-    planExplanation: turn.planExplanation, modelChanges });
-  while (records.length > MAX_RECORDS || JSON.stringify(records).length > MAX_CACHE_CHARACTERS) records.shift();
-  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+  const { raw, records } = readRecords();
+  const prior = records.filter((record) => record.threadId !== value.thread.id || record.turnId !== turnId);
+  try {
+    const newest = encodeNewest({ threadId: value.thread.id, turnId, diff: turn.diff, plan: turn.plan,
+      planExplanation: turn.planExplanation, modelChanges });
+    const next = encodeCache(prior, newest);
+    if (next !== raw) sessionStorage.setItem(STORAGE_KEY, next);
+  }
   catch { /* History file items remain available if the optional cache reaches the browser quota. */ }
 }

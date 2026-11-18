@@ -16,24 +16,29 @@ export class HistoryReader {
 
   reset() { this.legacy = false; this.generation++; }
 
-  async read(selected: Thread, window: HistoryWindow) {
+  async read(selected: Thread, window: HistoryWindow, isCurrent?: () => boolean) {
     const generation = this.generation;
+    const current = () => generation === this.generation && isCurrent?.() !== false;
+    const check = () => { if (!current()) throw new Error('聊天连接已更新，请重试。'); };
+    check();
     if (!this.legacy) {
       try {
         const preparation = this.versions.read(selected);
         const known = preparation instanceof Promise ? await preparation : preparation;
-        if (generation !== this.generation) throw new Error('聊天连接已更新，请重试。');
+        check();
         const result = await this.request<PagedHistoryDelta>({ operation: 'syncHistory', threadId: selected.id,
           known, window });
+        check();
         const thread = applyHistoryDelta(selected, result);
         return result.page ? { thread, page: result.page } : sliceHistory(thread, window);
       } catch (error) {
         const message = error instanceof Error ? error.message : error;
-        if (message !== UNSUPPORTED_OPERATION || generation !== this.generation) throw error;
+        if (message !== UNSUPPORTED_OPERATION || !current()) throw error;
         this.legacy = true;
       }
     }
     const { thread } = await this.request<{ thread: Thread }>({ operation: 'read', threadId: selected.id });
+    check();
     if (thread?.id !== selected.id) throw new Error('聊天已切换，请重新打开。');
     return sliceHistory(thread, window);
   }

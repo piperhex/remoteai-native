@@ -13,6 +13,7 @@ export type BrowserCommand = { action: 'extensions'; request: import('./extensio
   | { action: 'key'; key: string };
 export interface BrowserRequest { threadId: string; tabId?: string; command: BrowserCommand }
 export interface BrowserReply {
+  panelActivity?: boolean;
   preferences?: import('./extensions/model').AssistantPreferences;
   transfer?: { token: string; size?: number; data?: string };
   supported?: boolean; entries?: import('./extensions/model').BrowserExtension[];

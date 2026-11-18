@@ -1,5 +1,18 @@
 import type { GuiAutoSwitchSettings } from '../conversation/autoSwitchSettings';
 
+export type HomeMode = 'copy' | 'fresh' | 'restore';
+export interface HomeChange { path: string; mode: HomeMode }
+export interface HomeLocations {
+  current: string;
+  history: { id: string; path: string }[];
+  pending: HomeChange | null;
+  failed: boolean;
+}
+export interface HomeClient extends Pick<import('./projectDirectories').ProjectPickerProps, 'load' | 'mutate'> {
+  read: () => Promise<HomeLocations>;
+  change: (change: HomeChange | null) => Promise<HomeLocations>;
+}
+
 export interface SettingsStore<T> {
   read: () => Promise<T>;
   write: (settings: T) => Promise<T>;
@@ -52,12 +65,18 @@ export interface ModelContextSettingsApi {
 }
 
 export const GUI_SETTINGS_OPERATIONS = new Set([
-  'guiSettingsAccounts', 'guiAutoSwitchRead', 'guiAutoSwitchWrite',
+  'guiHomeRead', 'guiHomeChange', 'guiSettingsAccounts', 'guiAutoSwitchRead', 'guiAutoSwitchWrite',
   'guiModelContextRead', 'guiModelContextWrite', 'guiSystemPromptsRead', 'guiSystemPromptsWrite',
 ]);
 
 export function createGuiSettingsClient(request: <T>(body: object) => Promise<T>) {
   return {
+    home: {
+      read: () => request<HomeLocations>({ operation: 'guiHomeRead' }),
+      change: change => request<HomeLocations>({ operation: 'guiHomeChange', change }),
+      load: (directory, includeFiles = false) => request({ operation: 'projectDirectories', directory, includeFiles }),
+      mutate: input => request({ operation: 'projectEntryAction', ...input }),
+    } satisfies HomeClient,
     accounts: () => request<GuiSettingsAccounts>({ operation: 'guiSettingsAccounts' }),
     autoSwitch: {
       read: () => request<GuiAutoSwitchSettings>({ operation: 'guiAutoSwitchRead' }),

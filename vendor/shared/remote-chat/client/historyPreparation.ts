@@ -9,7 +9,7 @@ export interface HistoryVersionSource { read(thread: Thread): HistoryVersion | P
 /** Platform workers own expensive fingerprints; immutable objects share their prepared cache records. */
 export class AsyncHistoryVersionCache implements HistoryVersionSource {
   private readonly turns = new WeakMap<Turn, Promise<HistoryVersion['turns'][number]>>();
-  constructor(private readonly prepare: PrepareHistoryObject) {}
+  constructor(private readonly prepare: (value: object, omit?: string) => Promise<{ fields: HistoryFields }>) {}
 
   async read(thread: Thread): Promise<HistoryVersion> {
     const [metadata, turns] = await Promise.all([

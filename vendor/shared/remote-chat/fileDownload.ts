@@ -2,15 +2,16 @@ import { base64Bytes, checkDownloadSize, getChatPolicy } from './policy';
 import type { ConnectionMode } from './protocol';
 
 export const FILE_CHUNK_BYTES = 256 * 1024;
+export type DocumentPreviewKind = 'pdf' | 'html';
 export interface FileInfo { id: string; size: number; name: string; mimeType: string; revision?: string }
-export interface FileRead { threadId: string; id: string; offset: number; length: number; preview?: 'pdf' }
+export interface FileRead { threadId: string; id: string; offset: number; length: number; preview?: DocumentPreviewKind }
 export interface FileChunk { offset: number; data: string }
 export type FileRequest =
-  | { operation: 'fileOpen'; threadId: string; path: string; maxBytes?: number; preview?: 'pdf' }
+  | { operation: 'fileOpen'; threadId: string; path: string; maxBytes?: number; preview?: DocumentPreviewKind }
   | ({ operation: 'fileRead'; maxBytes?: number } & FileRead)
   | { operation: 'fileClose'; threadId: string; id: string };
 export interface FileClient {
-  open: (threadId: string, path: string, options?: { preview: 'pdf' }) => Promise<FileInfo>;
+  open: (threadId: string, path: string, options?: { preview: DocumentPreviewKind }) => Promise<FileInfo>;
   read: (request: FileRead) => Promise<FileChunk>;
   close: (threadId: string, id: string) => Promise<unknown>;
 }
@@ -23,7 +24,7 @@ export interface DownloadOptions {
   client: FileClient; threadId: string; path: string; signal: AbortSignal;
   target: (info: FileInfo) => Promise<DownloadTarget>;
   progress: (received: number, total: number) => void;
-  preview?: 'pdf';
+  preview?: DocumentPreviewKind;
   checkSize?: (size: number) => void;
 }
 export class DownloadCancelled extends Error {}
@@ -59,7 +60,7 @@ interface ChunkTransferOptions {
   write: (chunk: FileChunk, received: number) => Promise<void>;
   mode?: () => ConnectionMode;
   checkSize?: (size: number) => void;
-  preview?: 'pdf';
+  preview?: DocumentPreviewKind;
 }
 /** Bound both outstanding reads and buffered replies; commit resumed ranges in file order. */
 export async function transferFileChunks(options: ChunkTransferOptions) {

@@ -32,11 +32,15 @@ export type PreviewLoader = ((path: string, options: {
 }) => Promise<Blob>) & { mode?: ConnectionMode };
 
 export function previewByteLimit(path: string, mode?: ConnectionMode) {
-  return filePreviewKind(path) === 'pdf' ? textPreviewByteLimit(mode) : PREVIEW_BYTE_LIMIT;
+  switch (filePreviewKind(path)) {
+    case 'html': return Number.MAX_SAFE_INTEGER;
+    case 'pdf': return textPreviewByteLimit(mode);
+    default: return PREVIEW_BYTE_LIMIT;
+  }
 }
 export function checkPreviewSize(size: number, path = '', mode?: ConnectionMode) {
   if (filePreviewKind(path) === 'pdf') { checkFilePreviewSize(size, mode); return; }
-  if (!Number.isSafeInteger(size) || size < 0 || size > PREVIEW_BYTE_LIMIT) {
+  if (!Number.isSafeInteger(size) || size < 0 || size > previewByteLimit(path, mode)) {
     throw new Error('client.filePreview.tooLarge');
   }
 }

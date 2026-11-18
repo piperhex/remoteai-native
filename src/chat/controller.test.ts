@@ -299,6 +299,9 @@ describe('mobile chat actions', () => {
     let completeFirst: (result: { thread: Thread }) => void = () => undefined;
     mocks.request.mockImplementationOnce(() => new Promise((resolve) => { completeFirst = resolve; }));
     const first = controller.select(thread);
+    await vi.waitFor(() => expect(mocks.request).toHaveBeenCalledWith('request', expect.objectContaining({
+      operation: 'syncHistory', threadId: thread.id,
+    })));
     const second = { ...thread, id: 'second', name: 'Second task' };
     mocks.request.mockResolvedValue({ thread: second });
     await controller.select(second);
