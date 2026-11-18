@@ -27,6 +27,7 @@ vi.mock('react-native', () => ({ ActivityIndicator: 'Spinner', KeyboardAvoidingV
   Modal: 'Modal', Platform: { OS: 'android' }, Pressable: 'Button', Text: 'Text', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'View', SafeAreaView: 'View' }));
 vi.mock('react-native-webview', () => ({ WebView: 'WebView' }));
+vi.mock('./ProjectBrowserWindow', () => ({ ProjectBrowserWindow: 'Window' }));
 vi.mock('@expo/vector-icons', () => ({ Ionicons: 'Icon' }));
 vi.mock('expo-asset', () => ({ Asset: {} }));
 vi.mock('expo-file-system', () => ({ readAsStringAsync: vi.fn() }));
@@ -36,7 +37,7 @@ vi.mock('../theme/store', () => ({ useThemeColor: () => (value: string) => value
 vi.mock('../theme/styles', () => ({ createThemedStyles: () => () => ({}) }));
 vi.mock('../theme/text', () => ({ textMetrics: () => ({}) }));
 vi.mock('../theme/useWebviewSource', () => ({ useWebviewSource: (html: string) => ({ html }) }));
-vi.mock('../settings/filePreferences', () => ({ useFilePreferences: () => ({ ready: true, delay: 0 }),
+vi.mock('../settings/filePreferences', () => ({ useFilePreferences: () => ({ ready: true, delay: 1000 }),
   setFileAutoSave: vi.fn() }));
 vi.mock('./projectBrowserHost', () => ({ projectBrowserHost: () => ({}) }));
 vi.mock('../../vendor/shared/chat/ChatFileReferences', () => ({
@@ -47,11 +48,13 @@ function descendants(tree: ReactNode): ReactElement<WebViewProps & { children?: 
   return Children.toArray(tree).flatMap(child => isValidElement<WebViewProps & { children?: ReactNode }>(child)
     ? [child, ...descendants(child.props.children)] : []);
 }
-const render = (client: ProjectBrowserClient, close = vi.fn()) => {
+const elements = (client: ProjectBrowserClient, close = vi.fn(), active = true) => {
   runtime.cursor = 0; runtime.refCursor = 0;
-  const tree = ProjectBrowser({ client, cwd: '/project', active: true, connected: true, onClose: close });
-  return descendants(tree).find(child => child.type === 'WebView')!;
+  const tree = ProjectBrowser({ client, cwd: '/project', active, connected: true, onClose: close, onHide: vi.fn() });
+  return descendants(tree);
 };
+const render = (client: ProjectBrowserClient, close = vi.fn(), active = true) =>
+  elements(client, close, active).find(child => child.type === 'WebView')!;
 const receive = (view: ReactElement<WebViewProps>, message: object) =>
   view.props.onMessage!({ nativeEvent: { data: JSON.stringify(message) } } as
     Parameters<NonNullable<WebViewProps['onMessage']>>[0]);
@@ -62,6 +65,26 @@ beforeEach(() => {
   runtime.refs = []; runtime.state = ['<html/>', '', true, 0];
 });
 afterEach(() => vi.unstubAllGlobals());
+
+it('retains the directory connection and pauses autosave while hidden', () => {
+  const api = client();
+  for (const active of [true, false, true]) {
+    receive(render(api, vi.fn(), active), { type: 'ready' });
+    expect(runtime.inject).toHaveBeenLastCalledWith(expect.stringContaining('"connected":true'));
+    expect(runtime.inject).toHaveBeenLastCalledWith(expect.stringContaining(`"autoSaveDelay":${active ? 1000 : 0}`));
+  }
+});
+
+it('keeps one loading indicator until the project content mounts', () => {
+  const api = client();
+  const view = render(api);
+  const loading = () => elements(api).some(child => child.type === 'Spinner');
+  view.props.onLoadStart!({} as Parameters<NonNullable<WebViewProps['onLoadStart']>>[0]);
+  receive(view, { type: 'ready' });
+  expect(loading()).toBe(true);
+  receive(view, { type: 'snapshot', cwd: '/project', snapshot: { tabs: [] } });
+  expect(loading()).toBe(false);
+});
 
 it('keeps checkpoints before close and restores them after renderer termination', () => {
   const api = client(); const close = vi.fn(); const view = render(api, close);

@@ -89,6 +89,7 @@ import { useNativeLounge } from './src/lounge/useNativeLounge';
 import { isDiscoveryPage } from './vendor/shared/navigation/discovery';
 import { usePageStyles as useTotpPageStyles } from './src/totp/pageStyles';
 import { ChatPage } from './src/chat/ChatPage';
+import { ProjectBrowserWindowHost } from './src/chat/ProjectBrowserWindow';
 import { SshPage } from './src/discovery/SshPage';
 import { useDirectSsh } from './src/ssh/useDirectSsh';
 import { PrimaryPagePager } from './src/navigation/PrimaryPagePager';
@@ -1291,7 +1292,7 @@ export default function App() {
     <StartupErrorBoundary>
       <AndroidUpdateInstallPrompt />
       <StartupUpdatePrompt />
-      <AppContent />
+      <ProjectBrowserWindowHost><AppContent /></ProjectBrowserWindowHost>
     </StartupErrorBoundary>
     <AppToastHost />
     </View>

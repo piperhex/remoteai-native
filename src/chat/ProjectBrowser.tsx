@@ -1,8 +1,8 @@
 import { messageKeys } from '../../vendor/shared/project-browser/messageKeys';
 import { displayText, displayError } from '../i18n/index';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
-import { Modal } from '../components/Modal';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ProjectBrowserWindow } from './ProjectBrowserWindow';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
@@ -41,6 +41,7 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
   const color = useThemeColor();
   const styles = useStyles();
   const preferences = useFilePreferences();
+  const browserConnected = connected && (active || !!onHide);
   const policy = useSyncExternalStore(subscribeChatPolicy, () => getChatPolicy('relay'));
   const previewMode = useSyncExternalStore(subscribeChatPolicy,
     () => client.previewMode ?? (isDirectChat() ? 'direct' : 'relay'));
@@ -88,8 +89,8 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
   }, []);
   const update = () => emit({ type: 'settings', language, cwd, themeMode: mode,
     pdfPreview: { policy, mode: previewMode },
-    connected: connected && active && preferences.ready,
-    autoSaveDelay: preferences.delay, snapshot: readBrowserSession(client, cwd),
+    connected: browserConnected && preferences.ready,
+    autoSaveDelay: active ? preferences.delay : 0, snapshot: readBrowserSession(client, cwd),
     scripts: scripts && !ssh ? nativeScriptState(scripts) : undefined,
     ssh: ssh?.settings, capabilities: { entryActions: host.entryActions, downloadDirectory: host.downloadDirectory,
       reference: !!host.reference, quoteSelection: !!host.quoteSelection, blame: !!client.blame },
@@ -99,10 +100,49 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
       '--line': color('#dfe5e1', 'border'), '--green': color('#138475', 'accent'),
       '--browser-on-accent': color('#fff', 'canvas') } });
   useEffect(() => { if (ready) update(); },
-    [ready, connected, active, cwd, language, color, mode, preferences, host, ssh, scripts, policy, previewMode]);
-  // Backgrounding the app must not unmount the WebView and discard its unsaved document.
-  return <Modal visible={active} animationType="slide" onRequestClose={onHide ?? close}
-    supportedOrientations={['portrait', 'landscape-left', 'landscape-right']}>
+    [ready, active, browserConnected, cwd, language, color, mode, preferences, host, ssh, scripts, policy, previewMode]);
+  const receive = (raw: string) => {
+    if (generation !== currentGeneration.current) return;
+    let message: unknown;
+    try { message = JSON.parse(raw); } catch { return; }
+    if (!message || typeof message !== 'object' || !('type' in message)) return;
+    try {
+      if (handleNativeScriptAction(message, { panel: ssh ? undefined : scripts, cwd,
+        connected: connected && active })) { setError(''); return; }
+    } catch (error) { setError(displayError(error)); return; }
+    if (isNativeSshBrowserAction(message)) { ssh?.onAction(message); return; }
+    if (message.type === 'ready') { update(); return; }
+    if (message.type === 'fullscreen' && 'active' in message && typeof message.active === 'boolean') {
+      setFullscreen(message.active); return;
+    }
+    if (message.type === 'snapshot' || message.type === 'closed') {
+      if (message.type === 'snapshot' && (!('cwd' in message) || message.cwd !== cwd)) return;
+      if ('snapshot' in message && message.snapshot && typeof message.snapshot === 'object'
+        && 'tabs' in message.snapshot && Array.isArray(message.snapshot.tabs)) {
+        saveBrowserSession(client, cwd, message.snapshot as DocumentsSnapshot);
+      }
+      // The first checkpoint is posted after the file browser has mounted with its initial settings.
+      if (message.type === 'snapshot') { setReady(true); return; }
+      const focus = focusAfterClose.current;
+      focusAfterClose.current = null;
+      if (focus && onHide) {
+        // A completed reference closes the renderer's bridge. Restore its checkpoint for the next visit.
+        onHide(); recover();
+      } else onClose();
+      if (focus) requestAnimationFrame(focus);
+      return;
+    }
+    if (message.type === 'preferences' && 'delay' in message && typeof message.delay === 'number') {
+      void setFileAutoSave(message.delay).then(saved => {
+        if (!saved) setError('未能保存设置，请重试。');
+      });
+      return;
+    }
+    void handleBrowserRequest(raw, { client, cwd, host, connected: browserConnected,
+      signal: transfer.signal })
+      .then(reply => { if (reply) emit(reply); });
+  };
+  return <ProjectBrowserWindow active={active} onHide={onHide} onClose={close}>
     <SafeAreaProvider><SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.header, fullscreen && styles.hidden]}>
@@ -113,62 +153,34 @@ export function ProjectBrowser({ client, cwd, connected, active, onClose, onHide
           <Pressable accessibilityRole="button" accessibilityLabel={t("client.projectBrowser.closeFileBrowser")}
             style={styles.close} onPress={close}><Ionicons name="close" size={24} color={color('#202c29', 'ink')} /></Pressable>
         </View>
-        {!html && !error && <ActivityIndicator style={styles.fill} color={color('#138475', 'accent')} />}
-        {html && <WebView key={generation} ref={webview} source={source} style={styles.screen} javaScriptEnabled
-          onContentProcessDidTerminate={recover} onRenderProcessGone={recover}
-          scrollEnabled={false} bounces={false} originWhitelist={['about:blank']}
-          allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
-          sharedCookiesEnabled={false} thirdPartyCookiesEnabled={false} setSupportMultipleWindows={false}
-          javaScriptCanOpenWindowsAutomatically={false} keyboardDisplayRequiresUserAction
-          onShouldStartLoadWithRequest={({ url }) => url === 'about:blank'}
-          onMessage={({ nativeEvent }) => {
-            if (generation !== currentGeneration.current) return;
-            let message: unknown;
-            try { message = JSON.parse(nativeEvent.data); } catch { return; }
-            if (!message || typeof message !== 'object' || !('type' in message)) return;
-            try {
-              if (handleNativeScriptAction(message, { panel: ssh ? undefined : scripts, cwd,
-                connected: connected && active })) { setError(''); return; }
-            } catch (error) { setError(displayError(error)); return; }
-            if (isNativeSshBrowserAction(message)) { ssh?.onAction(message); return; }
-            if (message.type === 'ready') { setReady(true); update(); return; }
-            if (message.type === 'fullscreen' && 'active' in message && typeof message.active === 'boolean') {
-              setFullscreen(message.active); return;
-            }
-            if (message.type === 'snapshot' || message.type === 'closed') {
-              if (message.type === 'snapshot' && (!('cwd' in message) || message.cwd !== cwd)) return;
-              if ('snapshot' in message && message.snapshot && typeof message.snapshot === 'object'
-                && 'tabs' in message.snapshot && Array.isArray(message.snapshot.tabs)) {
-                saveBrowserSession(client, cwd, message.snapshot as DocumentsSnapshot);
-              }
-              if (message.type === 'snapshot') return;
-              if (focusAfterClose.current && onHide) onHide(); else onClose();
-              if (focusAfterClose.current) requestAnimationFrame(focusAfterClose.current);
-              return;
-            }
-            if (message.type === 'preferences' && 'delay' in message && typeof message.delay === 'number') {
-              void setFileAutoSave(message.delay).then(saved => {
-                if (!saved) setError('未能保存设置，请重试。');
-              });
-              return;
-            }
-            void handleBrowserRequest(nativeEvent.data, { client, cwd, host, connected: connected && active,
-              signal: transfer.signal })
-              .then(reply => { if (reply) emit(reply); });
-          }}
-          onError={() => {
-            setReady(false); setFullscreen(false); setError('client.projectBrowser.theFileBrowserCouldNotLoadPleaseReopenIt');
-          }} />}
+        <View style={styles.fill}>
+          {!!html && <WebView key={generation} ref={webview} source={source} style={styles.screen} javaScriptEnabled
+            containerStyle={styles.screen} onLoadStart={() => setReady(false)}
+            onContentProcessDidTerminate={recover} onRenderProcessGone={recover}
+            scrollEnabled={false} bounces={false} originWhitelist={['about:blank']}
+            allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
+            sharedCookiesEnabled={false} thirdPartyCookiesEnabled={false} setSupportMultipleWindows={false}
+            javaScriptCanOpenWindowsAutomatically={false} keyboardDisplayRequiresUserAction
+            onShouldStartLoadWithRequest={({ url }) => url === 'about:blank'}
+            onMessage={({ nativeEvent }) => receive(nativeEvent.data)}
+            onError={() => {
+              setReady(false); setFullscreen(false); setError('client.projectBrowser.theFileBrowserCouldNotLoadPleaseReopenIt');
+            }} />}
+          {!ready && !error && <View style={styles.loading}>
+            <ActivityIndicator color={color('#138475', 'accent')} />
+          </View>}
+        </View>
         {!!error && <Text accessibilityRole="alert" style={styles.error}>{displayError(error)}</Text>}
         {children}
       </KeyboardAvoidingView>
     </SafeAreaView></SafeAreaProvider>
-  </Modal>;
+  </ProjectBrowserWindow>;
 }
 
 const useStyles = createThemedStyles(color => ({
   screen: { flex: 1, backgroundColor: color('#fff', 'surface') },
   fill: { flex: 1 },
+  loading: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', backgroundColor: color('#fff', 'surface') },
   hidden: { display: 'none' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, minHeight: 60,
     borderBottomWidth: 1, borderBottomColor: color('#dfe5e1', 'border') },

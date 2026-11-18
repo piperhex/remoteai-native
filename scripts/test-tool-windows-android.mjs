@@ -126,6 +126,11 @@ async function preparePortrait() {
 }
 async function verifyTool(tool, prefix) {
   await openTool(tool);
+  if (tool.id === 'files') {
+    await tap('src');
+    await find('main.ts');
+    await screenshot(`${prefix}-files-before-back`);
+  }
   if (tool.id === 'git') {
     await tap('查看 src/chat/menu.ts'); await find('返回上一层');
     await gesture('right'); await find(tool.marker);
@@ -141,6 +146,9 @@ async function verifyTool(tool, prefix) {
     await find('Tools fixture');
     await verifyOpened(tool, true);
     await openTool(tool);
+    if (tool.id === 'files') {
+      assert.ok((await nodes()).some(node => matches(node, 'main.ts')), 'Back must retain the expanded directory');
+    }
     await screenshot(`${prefix}-${tool.id}-${side}-reopened`);
   }
   await foreground();

@@ -6,6 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ChatTools } from '../src/chat/ChatTools';
+import { ProjectBrowserWindowHost } from '../src/chat/ProjectBrowserWindow';
 import { ChatOverlay } from '../src/chat/ChatOverlay';
 import { NativeBrowserProvider } from '../src/browser/NativeBrowserProvider';
 import { ChatFileReferencesProvider } from '../vendor/shared/chat/ChatFileReferences';
@@ -23,7 +24,8 @@ function ToolWindowsFixture() {
   const [fonts] = useFonts({ ...Ionicons.font, ...MaterialCommunityIcons.font });
   const [active, setActive] = useState(true);
   const color = useThemeColor();
-  return <SafeAreaProvider><ChatFileReferencesProvider><NativeBrowserProvider scope="tool-windows-fixture">
+  return <SafeAreaProvider><ProjectBrowserWindowHost><ChatFileReferencesProvider>
+    <NativeBrowserProvider scope="tool-windows-fixture">
     <ThemeStatusBar /><SafeAreaView style={{ flex: 1, backgroundColor: color('#fff', 'canvas') }}>
       <ChatOverlay>
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
@@ -40,6 +42,6 @@ function ToolWindowsFixture() {
         </View>
       </ChatOverlay>
     </SafeAreaView>
-  </NativeBrowserProvider></ChatFileReferencesProvider></SafeAreaProvider>;
+  </NativeBrowserProvider></ChatFileReferencesProvider></ProjectBrowserWindowHost></SafeAreaProvider>;
 }
 registerRootComponent(ToolWindowsFixture);
