@@ -1,15 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { supportsScreenControl } from './screenControl';
+import { screenPowerError, screenPowerPath, supportsScreenControl, type ScreenPowerRequest } from './screenControl';
 
 const FAILURE = 'client.deviceScreen.failed';
 const REQUEST_TIMEOUT_MS = 35_000;
-const ERRORS = [FAILURE, 'client.deviceScreen.updateRequired', 'client.deviceScreen.openComputerApp'] as const;
-type Notice = typeof ERRORS[number] | 'client.deviceScreen.changing'
+type Notice = ReturnType<typeof screenPowerError> | 'client.deviceScreen.changing'
   | 'client.deviceScreen.offSent' | 'client.deviceScreen.onSent';
 interface Device { deviceId: string; platform: string; online: boolean }
 interface Options {
   scope: string;
-  request: (path: string, init: RequestInit) => Promise<unknown>;
+  request: ScreenPowerRequest;
   notify: (message: Notice, failed: boolean) => void;
 }
 
@@ -30,13 +29,12 @@ export function useDeviceScreenControl({ scope, request, notify }: Options) {
     }, REQUEST_TIMEOUT_MS);
     controller.signal.addEventListener('abort', () => clearTimeout(timeout), { once: true });
     try {
-      await request(`/devices/${encodeURIComponent(device.deviceId)}/screen-power`, {
+      await request(screenPowerPath(device.deviceId), {
         method: 'POST', signal: controller.signal, body: JSON.stringify({ action: enabled ? 'off' : 'on' }),
       });
       if (!controller.signal.aborted) notify(enabled ? 'client.deviceScreen.offSent' : 'client.deviceScreen.onSent', false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      if (!controller.signal.aborted) notify(ERRORS.find(key => key === message) ?? FAILURE, true);
+      if (!controller.signal.aborted) notify(screenPowerError(error), true);
     } finally {
       clearTimeout(timeout);
       if (pending.current === controller) pending.current = undefined;

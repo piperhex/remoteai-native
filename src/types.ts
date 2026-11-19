@@ -79,7 +79,7 @@ export interface ResetCreditsSummary {
 
 export type RemoteControlCapability =
   | 'provider-switch' | 'provider-group-switch' | 'restart-codex' | 'gui-model-switch'
-  | 'aggregate-switch' | 'gui-aggregate-switch' | 'screen-power';
+  | 'aggregate-switch' | 'gui-aggregate-switch' | 'screen-power' | 'screen-power-status';
 
 export interface RemoteDevice {
   guiAccountId?: string | null;

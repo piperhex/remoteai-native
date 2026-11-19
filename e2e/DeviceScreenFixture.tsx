@@ -3,21 +3,26 @@ import { registerRootComponent } from 'expo';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { DeviceManagementList } from '../src/devices/DeviceManagementList';
 import { useDeviceScreenControl } from '../vendor/shared/remote-desktop/useDeviceScreenControl';
 import { textMetrics } from '../src/theme/text';
 import { t } from '../src/i18n';
 import type { RemoteDevice } from '../src/types';
+import type { ScreenPowerState } from '../vendor/shared/remote-desktop/screenControl';
 
 const devices: RemoteDevice[] = [{ deviceId: 'computer', name: '工作电脑', platform: 'Windows', online: true,
-  capabilities: ['screen-power'], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' }];
+  capabilities: ['screen-power', 'screen-power-status'], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' }];
 
 function DeviceScreenFixture() {
   const [fonts] = useFonts(Ionicons.font);
   const [result, setResult] = useState('');
-  const screen = useDeviceScreenControl({ scope: 'fixture', request: async () => undefined,
+  const state = useRef<ScreenPowerState>('on');
+  const read = useCallback(async () => state.current, []);
+  const change = useDeviceScreenControl({ scope: 'fixture', request: async (_path, init) => {
+    state.current = init.body === '{"action":"off"}' ? 'off' : 'on';
+  },
     notify: key => setResult(t(key)) });
   return <SafeAreaProvider><SafeAreaView style={{ flex: 1 }}>
     <Text style={textMetrics(14, 22)}>{result}</Text>
@@ -27,7 +32,7 @@ function DeviceScreenFixture() {
       modelSwitch={{ switchingAccountId: null, switchingProvider: null, onSwitchAccount: async () => false,
         onSwitchProvider: async () => false, onSwitchProviderGroup: async () => false }}
       onRefresh={async () => {}} onSelectAuthAccount={() => {}}
-      onDelete={() => {}} onRevokeService={() => {}} onScreenControl={screen} />}
+      onDelete={() => {}} onRevokeService={() => {}} screenControl={{ change, read }} />}
   </SafeAreaView></SafeAreaProvider>;
 }
 

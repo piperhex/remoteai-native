@@ -61,6 +61,8 @@ export const useStyles = createThemedStyles((color) => ({
   screenExplanation: { ...textMetrics(14, 23), color: color(deviceColors.muted, 'muted') },
   option: { flexDirection: 'row', alignItems: 'center', minHeight: 52, padding: 10, gap: 12, borderRadius: 12 },
   optionLabel: { ...textMetrics(16, 24), flex: 1, color: color(deviceColors.ink, 'ink') },
+  optionCopy: { flex: 1, minWidth: 0, maxWidth: 400 },
+  screenActionLabel: { ...textMetrics(16, 24), color: color(deviceColors.ink, 'ink') },
   danger: { color: color(deviceColors.danger, 'danger') },
   disabled: { opacity: 0.45 },
 }));

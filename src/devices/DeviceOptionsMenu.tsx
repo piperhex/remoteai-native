@@ -2,10 +2,11 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
-import { supportsScreenControl } from '../../vendor/shared/remote-desktop/screenControl';
+import { supportsScreenControl, type ScreenPowerControl } from '../../vendor/shared/remote-desktop/screenControl';
+import { useScreenPowerStatus } from '../../vendor/shared/remote-desktop/useScreenPowerStatus';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
 import { deviceColors, useStyles } from './styles';
 import { RemoteModelSwitchContent, type RemoteModelSwitchContentProps } from './RemoteModelSwitchContent';
@@ -25,7 +26,7 @@ interface DeviceOptionsMenuProps {
   onClose: () => void;
   onDelete: (device: RemoteDevice) => void;
   onRevokeService: (device: RemoteDevice) => void;
-  onScreenControl: (device: RemoteDevice, enabled: boolean) => void;
+  screenControl: ScreenPowerControl;
   onSelectAuthAccount: (deviceId: string) => void;
 }
 
@@ -43,6 +44,11 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
   const authDisabled = !device.online || Boolean(switchingAuthDeviceId);
   const confirmScreen = page === 'confirmScreen';
   const showModel = page === 'model';
+  const screen = useScreenPowerStatus(device, !showModel, props.screenControl.read);
+  const runScreenAction = () => {
+    if (screen.action === 'off') setPage('confirmScreen');
+    if (screen.action === 'on') { onClose(); props.screenControl.change(device, false); }
+  };
   const title = showModel ? t('client.app.switchModel')
     : confirmScreen ? t('client.deviceScreen.confirmTitle') : device.name;
   const subtitle = showModel ? t('client.app.chooseTheModelSourceForThisComputer', { value1: device.name })
@@ -51,8 +57,11 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
     onBack={showModel && !switchingModel ? () => setPage('actions') : undefined}
     dismissible={!showModel || !switchingModel}
     fullWidthContent tall={showModel} maxWidth={showModel ? undefined : SHEET_READABLE_WIDTH}
-    actions={confirmScreen ? [{ label: t('client.deviceScreen.turnOff'), tone: 'primary', disabled: !device.online,
-      onPress: () => { onClose(); props.onScreenControl(device, true); } }] : []}>
+    actions={confirmScreen ? [{ label: t('client.deviceScreen.turnOff'), tone: 'primary',
+      disabled: screen.action !== 'off', onPress: () => {
+        if (screen.action !== 'off') return;
+        onClose(); props.screenControl.change(device, true);
+      } }] : []}>
     {showModel ? <RemoteModelSwitchContent {...modelSwitch} device={device}
       accounts={props.accounts} providers={props.providers} switchingProviderId={switchingProviderId} onClose={onClose} />
     : <SheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.optionsContent}>
@@ -64,21 +73,16 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
           <Text style={styles.optionLabel}>{t('client.app.switchModel')}</Text>
           <Ionicons name="chevron-forward" size={18} color={color(deviceColors.muted, 'muted')} />
         </Pressable>
-        {supportsScreenControl(device) && <>
-          <Pressable accessibilityRole="button" disabled={!device.online}
-            accessibilityState={{ disabled: !device.online }} onPress={() => setPage('confirmScreen')}
-            style={({ pressed }) => [styles.option, pressed && styles.pressed, !device.online && styles.disabled]}>
-            <Ionicons name="desktop-outline" size={21} color={color(deviceColors.green, 'accent')} />
-            <Text style={styles.optionLabel}>{t('client.deviceScreen.turnOff')}</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" disabled={!device.online}
-            accessibilityState={{ disabled: !device.online }}
-            onPress={() => { onClose(); props.onScreenControl(device, false); }}
-            style={({ pressed }) => [styles.option, pressed && styles.pressed, !device.online && styles.disabled]}>
-            <Ionicons name="sunny-outline" size={21} color={color(deviceColors.green, 'accent')} />
-            <Text style={styles.optionLabel}>{t('client.deviceScreen.restore')}</Text>
-          </Pressable>
-        </>}
+        {supportsScreenControl(device) && <Pressable accessibilityRole="button" disabled={!screen.action}
+          accessibilityState={{ disabled: !screen.action }} onPress={runScreenAction}
+          style={({ pressed }) => [styles.option, pressed && styles.pressed]}>
+          <Ionicons name={screen.action === 'on' ? 'sunny-outline' : 'desktop-outline'} size={21}
+            color={color(deviceColors.green, 'accent')} />
+          <View style={styles.optionCopy}>
+            <Text style={styles.screenActionLabel}>{t(screen.label)}</Text>
+            {screen.detail && <Text style={styles.hintText}>{t(screen.detail)}</Text>}
+          </View>
+        </Pressable>}
         <Pressable accessibilityRole="button" accessibilityState={{ disabled: authDisabled }} disabled={authDisabled}
           onPress={() => { onClose(); onSelectAuthAccount(device.deviceId); }}
           style={({ pressed }) => [styles.option, pressed && styles.pressed, authDisabled && styles.disabled]}>

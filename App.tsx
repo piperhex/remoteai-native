@@ -531,7 +531,7 @@ function DeviceManagementPage({
 }) {
   useLanguage();
   const revokeService = useRevokeDesktopService(session);
-  const onScreenControl = useDeviceScreenControl(session);
+  const screenControl = useDeviceScreenControl(session);
   const [openAiAuthDeviceId, setOpenAiAuthDeviceId] = useState<string | null>(null);
   const sortedDevices = useMemo(() => [...devices].sort((left, right) => {
     if (left.online !== right.online) return left.online ? -1 : 1;
@@ -570,7 +570,7 @@ function DeviceManagementPage({
       onRefresh={onRefresh}
       onDelete={confirmDelete}
       onRevokeService={revokeService}
-      onScreenControl={onScreenControl}
+      screenControl={screenControl}
       onSelectAuthAccount={setOpenAiAuthDeviceId}
     />
     <OpenAiAuthAccountDrawer

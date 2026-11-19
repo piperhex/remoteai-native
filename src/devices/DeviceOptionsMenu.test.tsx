@@ -4,9 +4,14 @@ import { Pressable } from 'react-native';
 import { DeviceOptionsMenu } from './DeviceOptionsMenu';
 import { RemoteModelSwitchContent } from './RemoteModelSwitchContent';
 import type { RemoteDevice } from '../types';
+import type { ScreenPowerReading } from '../../vendor/shared/remote-desktop/screenControl';
 
 type MenuPage = 'actions' | 'model' | 'confirmScreen';
-const runtime = vi.hoisted(() => ({ page: 'actions' as MenuPage }));
+const runtime = vi.hoisted(() => ({ page: 'actions' as MenuPage, reading: 'on' as ScreenPowerReading }));
+vi.mock('../../vendor/shared/remote-desktop/useScreenPowerStatus', async () => {
+  const { screenPowerAction } = await import('../../vendor/shared/remote-desktop/screenControl');
+  return { useScreenPowerStatus: (device: RemoteDevice) => screenPowerAction(device, runtime.reading) };
+});
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
   useState: () => [runtime.page, (page: MenuPage) => { runtime.page = page; }],
   useEffect: vi.fn(), useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
@@ -28,12 +33,15 @@ function button(tree: ReactNode, label: string) {
     && nodes(node.props.children).some(child => child.props.children === label));
 }
 const device: RemoteDevice = { deviceId: 'pc', name: '工作电脑', platform: 'Windows', online: true,
-  capabilities: [], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' };
+  capabilities: ['screen-power', 'screen-power-status'], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' };
 const props = { device, deletingDeviceId: null, switchingAuthDeviceId: null, accounts: [], providers: [],
   modelSwitch: { switchingAccountId: null, switchingProvider: null, onSwitchAccount: vi.fn(),
     onSwitchProvider: vi.fn(), onSwitchProviderGroup: vi.fn() },
-  onClose: vi.fn(), onDelete: vi.fn(), onRevokeService: vi.fn(), onSelectAuthAccount: vi.fn(), onScreenControl: vi.fn() };
-beforeEach(() => { vi.clearAllMocks(); runtime.page = 'actions'; vi.stubGlobal('React', React); });
+  onClose: vi.fn(), onDelete: vi.fn(), onRevokeService: vi.fn(), onSelectAuthAccount: vi.fn(),
+  screenControl: { change: vi.fn(), read: vi.fn() } };
+beforeEach(() => {
+  vi.clearAllMocks(); runtime.page = 'actions'; runtime.reading = 'on'; vi.stubGlobal('React', React);
+});
 
 it('opens model selection for the same device and returns to the actions', () => {
   button(DeviceOptionsMenu(props), '切换模型')!.props.onPress!();
@@ -55,9 +63,10 @@ it('disables switching on offline devices and while a switch is pending', () => 
 
 it('confirms shutdown in a drawer with one action and closes without sending a command', () => {
   const menu = DeviceOptionsMenu(props);
+  expect(button(menu, '恢复电脑屏幕')).toBeUndefined();
   button(menu, '关闭电脑屏幕')!.props.onPress!();
   expect(runtime.page).toBe('confirmScreen');
-  expect(props.onScreenControl).not.toHaveBeenCalled();
+  expect(props.screenControl.change).not.toHaveBeenCalled();
   const confirmation = DeviceOptionsMenu(props);
   expect(confirmation!.props.maxWidth).toBe(440);
   expect(confirmation!.props.title).toBe('暂时关闭电脑屏幕？');
@@ -66,7 +75,7 @@ it('confirms shutdown in a drawer with one action and closes without sending a c
   expect(confirmation!.props.actions).toHaveLength(1);
   confirmation!.props.onClose();
   expect(props.onClose).toHaveBeenCalledOnce();
-  expect(props.onScreenControl).not.toHaveBeenCalled();
+  expect(props.screenControl.change).not.toHaveBeenCalled();
 });
 
 it('confirms screen shutdown for the selected computer and disables confirmation when offline', () => {
@@ -74,24 +83,27 @@ it('confirms screen shutdown for the selected computer and disables confirmation
   const confirmation = DeviceOptionsMenu(props);
   confirmation!.props.actions[0].onPress();
   expect(props.onClose).toHaveBeenCalledOnce();
-  expect(props.onScreenControl).toHaveBeenCalledExactlyOnceWith(device, true);
+  expect(props.screenControl.change).toHaveBeenCalledExactlyOnceWith(device, true);
   const offline = DeviceOptionsMenu({ ...props, device: { ...device, online: false } });
   expect(offline!.props.actions[0].disabled).toBe(true);
 });
 
 it('restores screens without a shutdown confirmation', () => {
-  button(DeviceOptionsMenu(props), '恢复电脑屏幕')!.props.onPress!();
+  runtime.reading = 'off';
+  const menu = DeviceOptionsMenu(props);
+  expect(button(menu, '关闭电脑屏幕')).toBeUndefined();
+  button(menu, '恢复电脑屏幕')!.props.onPress!();
   expect(props.onClose).toHaveBeenCalledOnce();
-  expect(props.onScreenControl).toHaveBeenCalledExactlyOnceWith(device, false);
+  expect(props.screenControl.change).toHaveBeenCalledExactlyOnceWith(device, false);
 });
 
-it('disables both actions offline and hides them on unsupported platforms', () => {
+it('shows one disabled display row until the screen status is available', () => {
+  runtime.reading = undefined;
+  expect(button(DeviceOptionsMenu(props), '显示器')!.props.disabled).toBe(true);
   const offline = DeviceOptionsMenu({ ...props, device: { ...device, online: false } });
-  expect(button(offline, '关闭电脑屏幕')!.props.disabled).toBe(true);
-  expect(button(offline, '恢复电脑屏幕')!.props.disabled).toBe(true);
+  expect(button(offline, '显示器')!.props.disabled).toBe(true);
   for (const platform of ['macOS', 'linux']) {
     const menu = DeviceOptionsMenu({ ...props, device: { ...device, platform } });
-    expect(button(menu, '关闭电脑屏幕')).toBeUndefined();
-    expect(button(menu, '恢复电脑屏幕')).toBeUndefined();
+    expect(button(menu, '显示器')).toBeUndefined();
   }
 });

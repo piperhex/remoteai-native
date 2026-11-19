@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "ad119a44f445deec060d369c41afd39bc26c2d6d",
+  "revision": "84e08525c7a00d359c63eccdd8ba71d9b2bcbe8e",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "6bbc6805f9a102bb2f3689cba1cc1eccb9d3f6ec"
+    "revision": "92d3dfb050f7f7ce290169f82a42a91d7c62e4c6"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -46,7 +46,8 @@
     "shared/chat/groups/model.ts": "7469034a76726f5f214d1396ec86f417c22919fc13f49aa7b74c3602dc5a8b1c",
     "shared/chat/groups/mutations.ts": "e52dd878299430f43652032a910f743e9f16566aff5a95d739beeaa04a1edd01",
     "shared/remote-desktop/protocol.ts": "8ca32bd2bc2cd0f8025101f2814686bf95416cfc7c993aad55654194c160465a",
-    "shared/remote-desktop/useDeviceScreenControl.ts": "7fbec6beebc3f4d3e7197c371d090e82340167ae3ade0bcca9748113bb041992",
+    "shared/remote-desktop/useDeviceScreenControl.ts": "b42cf3cbe4cc8fc935b715ba9c88477b57a51c6dd8cea695a27483ff37f88f7d",
+    "shared/remote-desktop/screenControl.ts": "a31f3502b7f4493c754cda3bb32fb103fca3e69f6a0e39003085fdee65ba0f58",
     "shared/remote-chat/dictation.ts": "9087669ca49b7735570009ba5989ccf37266148dc663c2f7ca0fee04e364df64",
     "shared/terminal/sshProfiles.ts": "d51e7b61af87973de7ddada79d6bc2e5e7ee1fc004b690ae6088b303973bd3ee",
     "shared/terminal/sshCredentials.ts": "0237763e11563418bbbbc1a2f06165c47cba99adbc235739e853309711f12ee0",
@@ -380,7 +381,7 @@
     "shared/chat/useVirtualText.ts": "1dcd16ff8d6b23062622994fef713224c0b93aea0f086ac70beff169bba290f6",
     "shared/chat/virtualText.ts": "1f5a0bbfb3539f663f49d6b3cee98fca054a3e492e81fb4bc4759d92566667c7",
     "shared/sheets/dragDismiss.ts": "2b2ab19c531377d64a47ab89a254e01a1b3f0d83a726aa744deb9cb12ecf797f",
-    "shared/remote-desktop/screenControl.ts": "149576a864c6e69ecdda1af596507df6fdae84c127e3fd8ac5db99a201def2d8",
+    "shared/remote-desktop/useScreenPowerStatus.ts": "58e3cb258910dd6dde15a855e0a8c59acb8e5c871f4eed22fd93725a50718e97",
     "shared/terminal/useSshDiscovery.ts": "e5a5c312fb95d34a19480f4f7b4875a09ad5fa8e6d5b7cac6ffdaa6a681b9d23",
     "shared/remote-chat/bulkControl.ts": "a51f7c663fbebe3a69a86a9a034b333d43b29f7fbe130c911543fdf2ca8ebdf9",
     "shared/remote-chat/downloadManifest.ts": "1e7a19b877a7dde693edb2457a509fcd52c7af684c80d443913b67b702c19ba9",

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
+import type { ScreenPowerControl } from '../../vendor/shared/remote-desktop/screenControl';
 import { DeviceCard } from './DeviceCard';
 import { DeviceOptionsMenu, type DeviceModelSwitch } from './DeviceOptionsMenu';
 import { DevicePageHeader } from './DevicePageHeader';
@@ -21,7 +22,7 @@ interface DeviceManagementListProps {
   onBack: () => void;
   onDelete: (device: RemoteDevice) => void;
   onRevokeService: (device: RemoteDevice) => void;
-  onScreenControl: (device: RemoteDevice, enabled: boolean) => void;
+  screenControl: ScreenPowerControl;
   onSelectAuthAccount: (deviceId: string) => void;
 }
 
@@ -79,7 +80,7 @@ export function DeviceManagementList(props: DeviceManagementListProps) {
     {menuDevice && <DeviceOptionsMenu key={menuDevice.deviceId} device={menuDevice}
       accounts={props.accounts} providers={props.providers} modelSwitch={props.modelSwitch}
       deletingDeviceId={props.deletingDeviceId}
-      onScreenControl={props.onScreenControl}
+      screenControl={props.screenControl}
       switchingAuthDeviceId={props.switchingAuthDeviceId}
       onClose={() => setMenuDeviceId(current => current === menuDevice.deviceId ? null : current)}
       onDelete={props.onDelete} onRevokeService={props.onRevokeService} onSelectAuthAccount={props.onSelectAuthAccount} />}

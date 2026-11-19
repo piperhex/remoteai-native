@@ -55,17 +55,20 @@ try {
     await find('设备管理');
     await screenshot(`devices-${scale}`);
     await tap('工作电脑 的更多操作');
-    await find('恢复电脑屏幕');
+    await find('关闭电脑屏幕');
     await screenshot(`menu-${scale}`);
     await tap('关闭电脑屏幕');
     await find('暂时关闭电脑屏幕？');
     await screenshot(`confirm-${scale}`);
-    await tap('取消');
+    await tap('关闭暂时关闭电脑屏幕？');
+    await tap('工作电脑 的更多操作');
     await tap('关闭电脑屏幕');
     await tap('关闭电脑屏幕');
     await find('已发送关闭屏幕指令');
     await find('设备管理');
     await tap('工作电脑 的更多操作');
+    await find('恢复电脑屏幕');
+    await screenshot(`display-off-${scale}`);
     await tap('恢复电脑屏幕');
     await find('已发送恢复显示指令');
     await find('设备管理');
@@ -76,5 +79,4 @@ try {
   if (originalScale === 'null') await adb('shell', 'settings', 'delete', 'system', 'font_scale');
   else await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);
   await adb('shell', 'am', 'force-stop', app);
-  await adb('shell', 'am', 'start', '-W', '-n', 'com.codexswitch.mobile/com.codexswitch.mobile.MainActivity');
 }
