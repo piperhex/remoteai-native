@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
 import { DeviceCard } from './DeviceCard';
-import { DeviceOptionsMenu } from './DeviceOptionsMenu';
+import { DeviceOptionsMenu, type DeviceModelSwitch } from './DeviceOptionsMenu';
 import { DevicePageHeader } from './DevicePageHeader';
 import { deviceColors, useStyles } from './styles';
 
@@ -15,14 +15,13 @@ interface DeviceManagementListProps {
   providers: RemoteProviderSummary[];
   refreshing: boolean;
   deletingDeviceId: string | null;
-  switchingModelDeviceId: string | null;
+  modelSwitch: DeviceModelSwitch;
   switchingAuthDeviceId: string | null;
   onRefresh: () => Promise<void>;
   onBack: () => void;
   onDelete: (device: RemoteDevice) => void;
   onRevokeService: (device: RemoteDevice) => void;
   onScreenControl: (device: RemoteDevice, enabled: boolean) => void;
-  onSwitchModel: (deviceId: string) => void;
   onSelectAuthAccount: (deviceId: string) => void;
 }
 
@@ -56,6 +55,8 @@ export function DeviceManagementList(props: DeviceManagementListProps) {
   const [menuDeviceId, setMenuDeviceId] = useState<string | null>(null);
   const { devices, refreshing, onRefresh } = props;
   const menuDevice = devices.find((device) => device.deviceId === menuDeviceId) ?? null;
+  const switchingModelDeviceId = props.modelSwitch.switchingProvider?.deviceId
+    ?? (props.modelSwitch.switchingAccountId ? menuDeviceId : null);
   return <>
     <DevicePageHeader onBack={props.onBack} onRefresh={onRefresh} refreshing={refreshing} />
     <ScrollView style={styles.page} contentContainerStyle={styles.scroll}
@@ -64,8 +65,7 @@ export function DeviceManagementList(props: DeviceManagementListProps) {
       <DeviceOverview devices={devices} />
       {devices.map((device) => <DeviceCard key={device.deviceId} device={device}
         accounts={props.accounts} providers={props.providers}
-        busy={props.switchingModelDeviceId === device.deviceId || props.deletingDeviceId === device.deviceId}
-        onSwitchModel={() => props.onSwitchModel(device.deviceId)}
+        busy={switchingModelDeviceId === device.deviceId || props.deletingDeviceId === device.deviceId}
         onOpenMenu={() => setMenuDeviceId(device.deviceId)} />)}
       {devices.length ? <View style={styles.hint}>
         <Ionicons name="information-circle-outline" size={23} color={color(deviceColors.green, 'accent')} />
@@ -76,9 +76,12 @@ export function DeviceManagementList(props: DeviceManagementListProps) {
         <Text style={styles.emptyText}>{t("client.app.signInWithTheSameAccountOnYourComputerTo")}</Text>
       </View>}
     </ScrollView>
-    <DeviceOptionsMenu device={menuDevice} deletingDeviceId={props.deletingDeviceId}
+    {menuDevice && <DeviceOptionsMenu key={menuDevice.deviceId} device={menuDevice}
+      accounts={props.accounts} providers={props.providers} modelSwitch={props.modelSwitch}
+      deletingDeviceId={props.deletingDeviceId}
       onScreenControl={props.onScreenControl}
-      switchingAuthDeviceId={props.switchingAuthDeviceId} onClose={() => setMenuDeviceId(null)}
-      onDelete={props.onDelete} onRevokeService={props.onRevokeService} onSelectAuthAccount={props.onSelectAuthAccount} />
+      switchingAuthDeviceId={props.switchingAuthDeviceId}
+      onClose={() => setMenuDeviceId(current => current === menuDevice.deviceId ? null : current)}
+      onDelete={props.onDelete} onRevokeService={props.onRevokeService} onSelectAuthAccount={props.onSelectAuthAccount} />}
   </>;
 }

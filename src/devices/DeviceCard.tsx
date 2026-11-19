@@ -54,7 +54,7 @@ function DeviceIdentity({ device, busy }: { device: RemoteDevice; busy: boolean 
   const color = useThemeColor();
   useLanguage();
   const platform = platformInfo(device.platform);
-  return <View style={[styles.cardTop, styles.topInset]}>
+  return <View style={styles.cardTop}>
     <View style={styles.platform}><Ionicons name={platform.icon} size={25} color={color(deviceColors.green, 'accent')} /></View>
     <View style={styles.identity}>
       <Text style={styles.name} numberOfLines={2}>{device.name}</Text>
@@ -68,24 +68,20 @@ function DeviceIdentity({ device, busy }: { device: RemoteDevice; busy: boolean 
   </View>;
 }
 
-export function DeviceCard({ device, accounts, providers, busy, onSwitchModel, onOpenMenu }: {
+export function DeviceCard({ device, accounts, providers, busy, onOpenMenu }: {
   device: RemoteDevice;
   accounts: AccountSummary[];
   providers: RemoteProviderSummary[];
   busy: boolean;
-  onSwitchModel: () => void;
   onOpenMenu: () => void;
 }) {
   const styles = useStyles();
-  const color = useThemeColor();
   useLanguage();
   const account = accounts.find((item) => item.id === device.activeAccountId);
   const authAccount = accounts.find((item) => item.id === device.openaiAuthAccountId);
-  const disabled = !device.online || busy;
-  return <View>
-    <Pressable accessibilityRole="button" accessibilityLabel={`${device.name}，${device.online ? t("client.chat.online") : t("client.chat.offline")}`}
-      accessibilityHint={device.online ? t("client.mobile.openModelSelection") : t("client.mobile.connectTheDeviceToSwitchModels")}
-      accessibilityState={{ disabled, busy }} disabled={disabled} onPress={onSwitchModel}
+  return <Pressable accessibilityRole="button"
+      accessibilityLabel={t("client.app.moreActionsFor", { value1: device.name })}
+      accessibilityState={{ busy }} onPress={onOpenMenu}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <DeviceIdentity device={device} busy={busy} />
       <View style={styles.divider} />
@@ -97,10 +93,5 @@ export function DeviceCard({ device, accounts, providers, busy, onSwitchModel, o
       <DeviceDetail icon="key-outline" label={t("client.app.proxySignIn")}
         value={authAccount?.email ?? (device.openaiAuthAccountId ? t("client.app.accountInformationUnavailable") : t("client.accounts.notSet"))} />
       <DeviceDetail icon="time-outline" label={t("client.app.lastOnline")} value={lastSeenLabel(device)} />
-    </Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel={t("client.app.moreActionsFor", { value1: device.name })}
-      onPress={onOpenMenu} style={({ pressed }) => [styles.menuTrigger, pressed && styles.pressed]}>
-      <Ionicons name="ellipsis-vertical" size={20} color={color(deviceColors.muted, 'muted')} />
-    </Pressable>
-  </View>;
+    </Pressable>;
 }

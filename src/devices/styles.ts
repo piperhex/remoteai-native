@@ -43,11 +43,6 @@ export const useStyles = createThemedStyles((color) => ({
   muted: { color: color(deviceColors.muted, 'muted') },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00aa7d' },
   dotOffline: { backgroundColor: color(deviceColors.offline, 'border') },
-  menuTrigger: {
-    position: 'absolute', right: 6, top: 14, width: 36, height: 44,
-    alignItems: 'center', justifyContent: 'center', borderRadius: 12,
-  },
-  topInset: { paddingRight: 28 },
   divider: { height: 1, backgroundColor: color(deviceColors.border, 'border'), marginVertical: 12 },
   detail: { flexDirection: 'row', alignItems: 'center', gap: 9, minHeight: 29, paddingVertical: 3 },
   detailLabel: { ...textMetrics(12, 20), color: color(deviceColors.muted, 'muted'), width: 72 },

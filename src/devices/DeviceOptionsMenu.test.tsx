@@ -2,11 +2,13 @@ import React, { Children, isValidElement, type ReactElement, type ReactNode } fr
 import { beforeEach, expect, it, vi } from 'vitest';
 import { Pressable } from 'react-native';
 import { DeviceOptionsMenu } from './DeviceOptionsMenu';
+import { RemoteModelSwitchContent } from './RemoteModelSwitchContent';
 import type { RemoteDevice } from '../types';
 
-const runtime = vi.hoisted(() => ({ confirming: false }));
+type MenuPage = 'actions' | 'model' | 'confirmScreen';
+const runtime = vi.hoisted(() => ({ page: 'actions' as MenuPage }));
 vi.mock('react', async () => ({ ...await vi.importActual<typeof import('react')>('react'),
-  useState: () => [runtime.confirming, (value: boolean) => { runtime.confirming = value; }],
+  useState: () => [runtime.page, (page: MenuPage) => { runtime.page = page; }],
   useEffect: vi.fn(), useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
 }));
 vi.mock('react-native', () => ({ Modal: 'Modal', View: 'View', Text: 'Text', Pressable: 'Pressable', ScrollView: 'ScrollView',
@@ -27,14 +29,34 @@ function button(tree: ReactNode, label: string) {
 }
 const device: RemoteDevice = { deviceId: 'pc', name: '工作电脑', platform: 'Windows', online: true,
   capabilities: [], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' };
-const props = { device, deletingDeviceId: null, switchingAuthDeviceId: null,
+const props = { device, deletingDeviceId: null, switchingAuthDeviceId: null, accounts: [], providers: [],
+  modelSwitch: { switchingAccountId: null, switchingProvider: null, onSwitchAccount: vi.fn(),
+    onSwitchProvider: vi.fn(), onSwitchProviderGroup: vi.fn() },
   onClose: vi.fn(), onDelete: vi.fn(), onRevokeService: vi.fn(), onSelectAuthAccount: vi.fn(), onScreenControl: vi.fn() };
-beforeEach(() => { vi.clearAllMocks(); runtime.confirming = false; vi.stubGlobal('React', React); });
+beforeEach(() => { vi.clearAllMocks(); runtime.page = 'actions'; vi.stubGlobal('React', React); });
+
+it('opens model selection for the same device and returns to the actions', () => {
+  button(DeviceOptionsMenu(props), '切换模型')!.props.onPress!();
+  const sheet = DeviceOptionsMenu(props);
+  expect(sheet.props.title).toBe('切换模型');
+  expect(sheet.props.children.type).toBe(RemoteModelSwitchContent);
+  expect(sheet.props.children.props.device).toBe(device);
+  sheet.props.onBack();
+  expect(DeviceOptionsMenu(props).props.title).toBe(device.name);
+  expect(props.onClose).not.toHaveBeenCalled();
+});
+
+it('disables switching on offline devices and while a switch is pending', () => {
+  expect(button(DeviceOptionsMenu({ ...props, device: { ...device, online: false } }), '切换模型')!
+    .props.disabled).toBe(true);
+  const modelSwitch = { ...props.modelSwitch, switchingProvider: { deviceId: device.deviceId, providerId: 'provider' } };
+  expect(button(DeviceOptionsMenu({ ...props, modelSwitch }), '切换模型')!.props.disabled).toBe(true);
+});
 
 it('confirms shutdown in a drawer with one action and closes without sending a command', () => {
   const menu = DeviceOptionsMenu(props);
   button(menu, '关闭电脑屏幕')!.props.onPress!();
-  expect(runtime.confirming).toBe(true);
+  expect(runtime.page).toBe('confirmScreen');
   expect(props.onScreenControl).not.toHaveBeenCalled();
   const confirmation = DeviceOptionsMenu(props);
   expect(confirmation!.props.maxWidth).toBe(440);
@@ -48,7 +70,7 @@ it('confirms shutdown in a drawer with one action and closes without sending a c
 });
 
 it('confirms screen shutdown for the selected computer and disables confirmation when offline', () => {
-  runtime.confirming = true;
+  runtime.page = 'confirmScreen';
   const confirmation = DeviceOptionsMenu(props);
   confirmation!.props.actions[0].onPress();
   expect(props.onClose).toHaveBeenCalledOnce();

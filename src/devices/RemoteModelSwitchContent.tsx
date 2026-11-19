@@ -1,12 +1,12 @@
 import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
+import { textMetrics } from '../theme/text';
 import { t, useLanguage } from '../i18n';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useState } from 'react';
 import { isRemoteAggregateId, remoteModelOptions, type RemoteModelTarget } from '../../vendor/shared/remote-chat/modelTarget';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
-import { BottomSheet } from './BottomSheet';
-import { SheetScrollView } from './SheetScrollView';
+import { SheetScrollView } from '../components/SheetScrollView';
 
 interface ModelOptionProps {
   badge: string;
@@ -57,8 +57,8 @@ function ModelOption({
   </Pressable>;
 }
 
-interface RemoteModelSwitchSheetProps {
-  device: RemoteDevice | null;
+export interface RemoteModelSwitchContentProps {
+  device: RemoteDevice;
   accounts: AccountSummary[];
   providers: RemoteProviderSummary[];
   switchingAccountId: string | null;
@@ -69,7 +69,7 @@ interface RemoteModelSwitchSheetProps {
   onSwitchProviderGroup: (deviceId: string, group: string) => Promise<boolean>;
 }
 
-export function RemoteModelSwitchSheet({
+export function RemoteModelSwitchContent({
   device,
   accounts,
   providers,
@@ -79,7 +79,7 @@ export function RemoteModelSwitchSheet({
   onSwitchAccount,
   onSwitchProvider,
   onSwitchProviderGroup,
-}: RemoteModelSwitchSheetProps) {
+}: RemoteModelSwitchContentProps) {
   const styles = useStyles();
   useLanguage();
   const [target, setTarget] = useState<RemoteModelTarget>('proxy');
@@ -102,15 +102,7 @@ export function RemoteModelSwitchSheet({
     if (await onSwitchProviderGroup(device.deviceId, group)) onClose();
   };
 
-  return <BottomSheet fullWidthContent
-    visible={Boolean(device)}
-    title={t("client.app.switchModel")}
-    subtitle={device ? t("client.app.chooseTheModelSourceForThisComputer", { value1: device.name }) : undefined}
-    onClose={onClose}
-    dismissible={!busy}
-    tall
-  >
-    <SheetScrollView style={styles.scroll}>
+  return <SheetScrollView style={styles.scroll}>
       <View style={styles.targetRow} accessibilityRole="tablist">
         {(['proxy', 'gui'] as const).map((value) => <Pressable key={value}
           accessibilityRole="tab" accessibilityState={{ selected: target === value, disabled: busy }}
@@ -178,27 +170,26 @@ export function RemoteModelSwitchSheet({
         {target === 'gui' ? t("client.app.futureCodexGuiRequestsWillUseTheSelectedSourceNo")
           : t("client.app.restartChatgptCodexAfterSwitchingBetweenOfficialModelsAndThird")}
       </Text>
-    </SheetScrollView>
-  </BottomSheet>;
+    </SheetScrollView>;
 }
 
 const useStyles = createThemedStyles((color) => ({
   targetRow: { flexDirection: 'row', backgroundColor: color('#eaf2ed', 'elevated'), borderRadius: 12, padding: 4, gap: 4 },
   targetButton: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 10, borderRadius: 9 },
   targetSelected: { backgroundColor: color('#fff', 'surface') },
-  targetText: { fontSize: 12, fontWeight: '700', color: color('#7c8c83', 'muted'), textAlign: 'center' },
+  targetText: { ...textMetrics(12, 18), fontWeight: '700', color: color('#7c8c83', 'muted'), textAlign: 'center' },
   targetTextSelected: { color: color('#0b6e59', 'accent') },
-  description: { color: color('#7c8c83', 'muted'), fontSize: 11, lineHeight: 17, marginVertical: 12, maxWidth: 400 },
+  description: { ...textMetrics(11, 17), color: color('#7c8c83', 'muted'), marginVertical: 12, maxWidth: 400 },
   scroll: { maxHeight: 610 },
-  sectionTitle: { color: color('#52675c', 'ink'), fontSize: 12, fontWeight: '800', marginBottom: 9 },
+  sectionTitle: { ...textMetrics(12, 18), color: color('#52675c', 'ink'), fontWeight: '800', marginBottom: 9 },
   providerHeading: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  hint: { color: color('#b06b28', 'warning'), fontSize: 10, marginBottom: 9, maxWidth: 190, textAlign: 'right' },
-  emptyText: { color: color('#7c8c83', 'muted'), fontSize: 12, lineHeight: 18, paddingVertical: 12 },
+  hint: { ...textMetrics(10, 16), color: color('#b06b28', 'warning'), marginBottom: 9, maxWidth: 190, textAlign: 'right' },
+  emptyText: { ...textMetrics(12, 18), color: color('#7c8c83', 'muted'), paddingVertical: 12 },
   option: {
     alignItems: 'center',
     backgroundColor: color('#fff', 'surface'),
@@ -223,13 +214,13 @@ const useStyles = createThemedStyles((color) => ({
     width: 40,
   },
   badgeCurrent: { backgroundColor: color('#ccecdf', 'accentSoft') },
-  badgeText: { color: color('#14806f', 'accent'), fontSize: 14, fontWeight: '900' },
+  badgeText: { ...textMetrics(14, 20), color: color('#14806f', 'accent'), fontWeight: '900' },
   badgeTextCurrent: { color: color('#0b6e59', 'accent') },
   optionCopy: { flex: 1, minWidth: 0 },
-  optionTitle: { color: color('#17352a', 'ink'), fontSize: 13, fontWeight: '800' },
-  optionSubtitle: { color: color('#7c8c83', 'muted'), fontSize: 10, marginTop: 5 },
+  optionTitle: { ...textMetrics(13, 19), color: color('#17352a', 'ink'), fontWeight: '800' },
+  optionSubtitle: { ...textMetrics(10, 16), color: color('#7c8c83', 'muted'), marginTop: 5 },
   currentPill: { backgroundColor: color('#dff4eb', 'canvas'), borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
-  currentText: { color: color('#0c765f', 'accent'), fontSize: 10, fontWeight: '800' },
-  chevron: { color: color('#91a198', 'muted'), fontSize: 24, lineHeight: 25 },
-  footerHint: { color: color('#7c8c83', 'muted'), fontSize: 11, lineHeight: 17, marginTop: 13, maxWidth: 400, alignSelf: 'center' },
+  currentText: { ...textMetrics(10, 16), color: color('#0c765f', 'accent'), fontWeight: '800' },
+  chevron: { ...textMetrics(24, 30), color: color('#91a198', 'muted') },
+  footerHint: { ...textMetrics(11, 17), color: color('#7c8c83', 'muted'), marginTop: 13, maxWidth: 400, alignSelf: 'center' },
 }));

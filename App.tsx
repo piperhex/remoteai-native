@@ -75,7 +75,6 @@ import { BottomSheet } from './src/components/BottomSheet';
 import { DeviceManagementList } from './src/devices/DeviceManagementList';
 import { useRevokeDesktopService } from './src/devices/useRevokeDesktopService';
 import { useDeviceScreenControl } from './src/devices/useDeviceScreenControl';
-import { RemoteModelSwitchSheet } from './src/components/RemoteModelSwitchSheet';
 import { QuotaConsumptionSheet } from './src/components/QuotaConsumptionSheet';
 import { TotpPage } from './src/totp/TotpPage';
 import { downloadOwner } from './src/downloads/manager';
@@ -534,7 +533,6 @@ function DeviceManagementPage({
   const revokeService = useRevokeDesktopService(session);
   const onScreenControl = useDeviceScreenControl(session);
   const [openAiAuthDeviceId, setOpenAiAuthDeviceId] = useState<string | null>(null);
-  const [modelDeviceId, setModelDeviceId] = useState<string | null>(null);
   const sortedDevices = useMemo(() => [...devices].sort((left, right) => {
     if (left.online !== right.online) return left.online ? -1 : 1;
     return new Date(right.lastSeenAt).getTime() - new Date(left.lastSeenAt).getTime();
@@ -542,7 +540,6 @@ function DeviceManagementPage({
   const openAiAuthDevice = devices.find(
     (device) => device.deviceId === openAiAuthDeviceId,
   ) ?? null;
-  const modelDevice = devices.find((device) => device.deviceId === modelDeviceId) ?? null;
 
   const confirmDelete = useCallback((device: RemoteDevice) => {
     if (device.online || deletingDeviceId) return;
@@ -568,13 +565,12 @@ function DeviceManagementPage({
       providers={providers}
       refreshing={refreshing}
       deletingDeviceId={deletingDeviceId}
-      switchingModelDeviceId={switchingProvider?.deviceId ?? (switchingAccountId ? modelDeviceId : null)}
+      modelSwitch={{ switchingAccountId, switchingProvider, onSwitchAccount, onSwitchProvider, onSwitchProviderGroup }}
       switchingAuthDeviceId={switchingOpenAiAuth?.deviceId ?? null}
       onRefresh={onRefresh}
       onDelete={confirmDelete}
       onRevokeService={revokeService}
       onScreenControl={onScreenControl}
-      onSwitchModel={setModelDeviceId}
       onSelectAuthAccount={setOpenAiAuthDeviceId}
     />
     <OpenAiAuthAccountDrawer
@@ -586,21 +582,6 @@ function DeviceManagementPage({
         : null}
       onClose={() => setOpenAiAuthDeviceId(null)}
       onSelect={onSetOpenAiAuthAccount}
-    />
-    <RemoteModelSwitchSheet
-      key={modelDeviceId ?? 'closed'}
-      device={modelDevice}
-      accounts={accounts}
-      providers={providers}
-      switchingAccountId={switchingAccountId}
-      switchingProviderId={switchingProvider
-        && switchingProvider.deviceId === modelDevice?.deviceId
-        ? switchingProvider.providerId
-        : null}
-      onClose={() => setModelDeviceId(null)}
-      onSwitchAccount={onSwitchAccount}
-      onSwitchProvider={onSwitchProvider}
-      onSwitchProviderGroup={onSwitchProviderGroup}
     />
   </>;
 }

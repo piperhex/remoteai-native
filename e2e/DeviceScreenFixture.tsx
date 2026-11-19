@@ -23,8 +23,10 @@ function DeviceScreenFixture() {
     <Text style={textMetrics(14, 22)}>{result}</Text>
     {fonts && <DeviceManagementList devices={devices} accounts={[]} providers={[]} refreshing={false}
       onBack={() => {}}
-      deletingDeviceId={null} switchingModelDeviceId={null} switchingAuthDeviceId={null}
-      onRefresh={async () => {}} onSwitchModel={() => {}} onSelectAuthAccount={() => {}}
+      deletingDeviceId={null} switchingAuthDeviceId={null}
+      modelSwitch={{ switchingAccountId: null, switchingProvider: null, onSwitchAccount: async () => false,
+        onSwitchProvider: async () => false, onSwitchProviderGroup: async () => false }}
+      onRefresh={async () => {}} onSelectAuthAccount={() => {}}
       onDelete={() => {}} onRevokeService={() => {}} onScreenControl={screen} />}
   </SafeAreaView></SafeAreaProvider>;
 }

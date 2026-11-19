@@ -1,16 +1,25 @@
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
 import { supportsScreenControl } from '../../vendor/shared/remote-desktop/screenControl';
-import type { RemoteDevice } from '../types';
+import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
 import { deviceColors, useStyles } from './styles';
+import { RemoteModelSwitchContent, type RemoteModelSwitchContentProps } from './RemoteModelSwitchContent';
+
+export type DeviceModelSwitch = Pick<RemoteModelSwitchContentProps,
+  'switchingAccountId' | 'onSwitchAccount' | 'onSwitchProvider' | 'onSwitchProviderGroup'> & {
+  switchingProvider: { deviceId: string; providerId: string } | null;
+};
 
 interface DeviceOptionsMenuProps {
-  device: RemoteDevice | null;
+  device: RemoteDevice;
+  accounts: AccountSummary[];
+  providers: RemoteProviderSummary[];
+  modelSwitch: DeviceModelSwitch;
   deletingDeviceId: string | null;
   switchingAuthDeviceId: string | null;
   onClose: () => void;
@@ -24,22 +33,40 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
-  const [confirmScreen, setConfirmScreen] = useState(false);
-  useEffect(() => setConfirmScreen(false), [props.device?.deviceId]);
-  const { device, deletingDeviceId, switchingAuthDeviceId, onClose, onDelete, onSelectAuthAccount } = props;
-  if (!device) return null;
+  const [page, setPage] = useState<'actions' | 'model' | 'confirmScreen'>('actions');
+  const { device, deletingDeviceId, switchingAuthDeviceId, onClose, onDelete, onSelectAuthAccount, modelSwitch } = props;
+  const switchingProviderId = modelSwitch.switchingProvider?.deviceId === device.deviceId
+    ? modelSwitch.switchingProvider.providerId : null;
+  const switchingModel = Boolean(modelSwitch.switchingAccountId || switchingProviderId);
+  const modelDisabled = !device.online || switchingModel || deletingDeviceId === device.deviceId;
   const deleteDisabled = device.online || Boolean(deletingDeviceId);
   const authDisabled = !device.online || Boolean(switchingAuthDeviceId);
-  return <BottomSheet visible title={confirmScreen ? t('client.deviceScreen.confirmTitle') : device.name}
-    subtitle={confirmScreen ? device.name : undefined} onClose={onClose}
-    fullWidthContent maxWidth={SHEET_READABLE_WIDTH}
+  const confirmScreen = page === 'confirmScreen';
+  const showModel = page === 'model';
+  const title = showModel ? t('client.app.switchModel')
+    : confirmScreen ? t('client.deviceScreen.confirmTitle') : device.name;
+  const subtitle = showModel ? t('client.app.chooseTheModelSourceForThisComputer', { value1: device.name })
+    : confirmScreen ? device.name : undefined;
+  return <BottomSheet visible title={title} subtitle={subtitle} onClose={onClose}
+    onBack={showModel && !switchingModel ? () => setPage('actions') : undefined}
+    dismissible={!showModel || !switchingModel}
+    fullWidthContent tall={showModel} maxWidth={showModel ? undefined : SHEET_READABLE_WIDTH}
     actions={confirmScreen ? [{ label: t('client.deviceScreen.turnOff'), tone: 'primary', disabled: !device.online,
       onPress: () => { onClose(); props.onScreenControl(device, true); } }] : []}>
-    <SheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.optionsContent}>
+    {showModel ? <RemoteModelSwitchContent {...modelSwitch} device={device}
+      accounts={props.accounts} providers={props.providers} switchingProviderId={switchingProviderId} onClose={onClose} />
+    : <SheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.optionsContent}>
       {confirmScreen ? <Text style={styles.screenExplanation}>{t('client.deviceScreen.confirmMessage')}</Text> : <>
+        <Pressable accessibilityRole="button" accessibilityState={{ disabled: modelDisabled }} disabled={modelDisabled}
+          onPress={() => setPage('model')}
+          style={({ pressed }) => [styles.option, pressed && styles.pressed, modelDisabled && styles.disabled]}>
+          <Ionicons name="swap-horizontal-outline" size={21} color={color(deviceColors.green, 'accent')} />
+          <Text style={styles.optionLabel}>{t('client.app.switchModel')}</Text>
+          <Ionicons name="chevron-forward" size={18} color={color(deviceColors.muted, 'muted')} />
+        </Pressable>
         {supportsScreenControl(device) && <>
           <Pressable accessibilityRole="button" disabled={!device.online}
-            accessibilityState={{ disabled: !device.online }} onPress={() => setConfirmScreen(true)}
+            accessibilityState={{ disabled: !device.online }} onPress={() => setPage('confirmScreen')}
             style={({ pressed }) => [styles.option, pressed && styles.pressed, !device.online && styles.disabled]}>
             <Ionicons name="desktop-outline" size={21} color={color(deviceColors.green, 'accent')} />
             <Text style={styles.optionLabel}>{t('client.deviceScreen.turnOff')}</Text>
@@ -74,6 +101,6 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
         </Pressable>
         {!device.online && <Text style={styles.hintText}>{t("client.mobile.connectTheDeviceToChangeItsProxySignInAccount")}</Text>}
         </>}
-    </SheetScrollView>
+    </SheetScrollView>}
   </BottomSheet>;
 }
