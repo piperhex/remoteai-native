@@ -73,16 +73,23 @@ async function enterConsoleNumber(value) {
   const result = await frontend.evaluate(`(await target.runtimeAgent().invoke_evaluate({
     expression:'$_',includeCommandLineAPI:true,returnByValue:true})).result.value`);
   assert.equal(result, value, 'Native keyboard input evaluates in the inspected website');
+  await dismissInspectorKeyboard();
+}
+
+async function dismissInspectorKeyboard() {
   if (!/mInputShown=true/.test(await adb('shell', 'dumpsys', 'input_method'))) return;
   await adb('shell', 'input', 'keyevent', '4');
   await delay(600);
   assert.match(await adb('shell', 'dumpsys', 'input_method'), /mInputShown=false/, 'Back hides the remote keyboard');
 }
 
-async function switchToChatWithInspector() {
+async function switchToChat() {
+  await dismissInspectorKeyboard();
   await tap('聊天');
   await find('页面预览.html');
-  await find('开发者工具');
+  const hiddenControls = ['开发者工具', '调整开发者工具大小', '停靠在右侧', '停靠在底部'];
+  assert.ok(!(await nodes()).some(node => hiddenControls.includes(node.text)
+    || hiddenControls.includes(node['content-desc'])), 'Chat has no DevTools controls');
 }
 
 async function returnToInspectedBrowser() {
@@ -102,10 +109,13 @@ async function landscapeBreakpoint() {
   assert.equal((await find('停靠在右侧')).selected, 'true', 'Landscape uses right docking');
   assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true);
   await screenshot('landscape-right-breakpoint');
-  await switchToChatWithInspector();
+  await switchToChat();
   assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true);
-  await screenshot('landscape-right-chat-breakpoint');
+  await screenshot('landscape-chat-inspector-hidden');
   await returnToInspectedBrowser();
+  assert.equal((await find('停靠在右侧')).selected, 'true', 'Returning restores right docking');
+  assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true);
+  await screenshot('landscape-right-restored-breakpoint');
   await adb('shell', 'settings', 'put', 'system', 'user_rotation', '0');
   await delay(1200); await tap('停靠在底部');
 }
@@ -284,12 +294,15 @@ try {
   await delay(400);
   await screenshot('console');
   await enterConsoleNumber(17);
-  await switchToChatWithInspector();
-  assert.equal(await pageValue('fixtureState'), 42, 'The inspector keeps debugging the same website from Chat');
-  await enterConsoleNumber(23);
-  await screenshot('chat-console');
+  const consoleHeight = await frontend.evaluate('innerHeight');
+  await switchToChat();
+  await screenshot('chat-inspector-hidden');
   await returnToInspectedBrowser();
+  assert.equal(await frontend.evaluate('innerHeight'), consoleHeight, 'Returning restores the resized dock');
+  assert.equal(await frontend.evaluate(`(await import('./ui/legacy/legacy.js')).InspectorView.InspectorView.instance()
+    .tabbedPane.selectedTabId`), 'console', 'Returning restores the selected DevTools panel');
   assert.equal(await pageValue('document.querySelector("input").value'), 'Edited draft');
+  await enterConsoleNumber(23);
   await screenshot('browser-restored-console');
   await frontend.evaluate(`await (await import('./ui/legacy/legacy.js')).InspectorView.InspectorView.instance().showPanel('sources')`);
   await frontend.evaluate('await target.debuggerAgent().invoke_enable()');
@@ -303,7 +316,12 @@ try {
     callFrameId:target.model(sdk.DebuggerModel.DebuggerModel).debuggerPausedDetails().callFrames[0].id,
     expression:'previous',returnByValue:true})).result.value`), 42, 'Paused scope is available');
   await delay(1500);
+  await dismissInspectorKeyboard();
   await screenshot('breakpoint');
+  await switchToChat();
+  await returnToInspectedBrowser();
+  assert.equal(await frontend.evaluate('target.model(sdk.DebuggerModel.DebuggerModel).isPaused()'), true,
+    'App tabs preserve the paused debugging session');
   if (process.env.INSPECTOR_LANDSCAPE === '1') await landscapeBreakpoint();
   await frontend.evaluate('await target.debuggerAgent().invoke_stepOver()');
   await waitForPause();

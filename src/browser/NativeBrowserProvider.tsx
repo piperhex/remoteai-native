@@ -11,7 +11,6 @@ import { useNativeBrowserTabs } from './useNativeBrowserTabs';
 import { BrowserTabManager } from './BrowserTabManager';
 import { BrowserInspectorDock } from './inspector/BrowserInspectorDock';
 import { useBrowserInspector } from './inspector/useBrowserInspector';
-import { useBrowserBack } from './useBrowserNavigationGestures';
 import { deriveNativeVaultKey } from './vaultCrypto';
 import { nativeVaultKeyStorage } from './vaultKeyStorage';
 import { Toast } from '../components/AppToast';
@@ -43,11 +42,11 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const [inspectorObscured, setInspectorObscured] = useState(false);
   const inspector = useBrowserInspector(browser.activeId, dataGeneration);
   const hideInspectorKeyboard = inspector.hideKeyboard;
+  useEffect(() => { if (!visible) hideInspectorKeyboard(); }, [visible, hideInspectorKeyboard]);
   const dismissKeyboard = useCallback(() => {
     Keyboard.dismiss();
     hideInspectorKeyboard();
   }, [hideInspectorKeyboard]);
-  useBrowserBack(!visible && inspector.open, inspector.close, dismissKeyboard);
   const close = useCallback(() => {
     dismissKeyboard(); setVisible(false); setManager(false); setFullscreen(false); onActiveChange?.(false);
   }, [dismissKeyboard, onActiveChange]);
@@ -86,38 +85,54 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     <BookmarkProvider scope={scope} channel={channel} storage={bookmarkStorage} random={getRandomBytes}
       derive={deriveNativeVaultKey} keyStorage={nativeVaultKeyStorage}>
       <View style={styles.root}>
-      {visible && fullscreen && <StatusBar hidden />}
-      <BrowserInspectorDock inspector={inspector} obscured={visible && inspectorObscured}
-        fullscreen={visible && fullscreen}>
-        <View style={styles.root} collapsable={false} accessibilityElementsHidden={visible}
-          pointerEvents={visible ? 'none' : 'auto'}
-          importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
-        {visited && browser.tabs.map(tab => {
-          const selected = browser.activeId === tab.id;
-          const active = visible && !manager && selected;
-          return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]} collapsable={false}
-            pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
-            importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-            <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
-              request={tab.request} visible={active} devices={devices}
-              onDownload={download} openDownloads={openDownloads}
-              inspector={selected ? inspector : undefined} onInspectorObscuredChange={setInspectorObscured}
-              desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
-              fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}
-              tabCount={browser.tabs.length} newTab={add} manageTabs={() => { inspector.close(); setManager(true); }}
-              onPreview={preview => browser.update(tab.id, { preview })}
-              onNavigate={(url, title) => browser.update(tab.id, { url, title,
-                visitedAt: url !== tab.url ? Date.now() : tab.visitedAt })} close={close} />
-          </View>;
-        })}
-        {visible && manager && <View style={StyleSheet.absoluteFill}>
-          <BrowserTabManager tabs={browser.tabs} activeId={browser.activeId} add={add} remove={remove} closeAll={closeAll}
-            select={id => { Keyboard.dismiss(); browser.select(id); setManager(false); }} close={() => setManager(false)} />
-        </View>}
-      </BrowserInspectorDock>
-      <View style={visible && fullscreen ? styles.footerHidden : undefined}>{footer}</View>
+        {visible && fullscreen && <StatusBar hidden />}
+        <View style={styles.root}>
+          <View style={styles.root} collapsable={false} accessibilityElementsHidden={visible}
+            pointerEvents={visible ? 'none' : 'auto'}
+            importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
+          {/* Moving the browser offscreen keeps Android's inspector surface attached and its session alive. */}
+          <View style={[styles.browserLayer, !visible && styles.offscreen]} collapsable={false}
+            pointerEvents={visible ? 'auto' : 'none'} accessibilityElementsHidden={!visible}
+            importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}>
+            <BrowserInspectorDock inspector={inspector} obscured={visible && inspectorObscured}
+              fullscreen={visible && fullscreen}>
+              {visited && browser.tabs.map(tab => {
+                const selected = browser.activeId === tab.id;
+                const active = visible && !manager && selected;
+                return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]}
+                  collapsable={false} pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
+                  importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
+                  <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
+                    request={tab.request} visible={active} devices={devices}
+                    onDownload={download} openDownloads={openDownloads}
+                    inspector={selected ? inspector : undefined} onInspectorObscuredChange={setInspectorObscured}
+                    desktop={tab.desktop}
+                    onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
+                    fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}
+                    tabCount={browser.tabs.length} newTab={add}
+                    manageTabs={() => { inspector.close(); setManager(true); }}
+                    onPreview={preview => browser.update(tab.id, { preview })}
+                    onNavigate={(url, title) => browser.update(tab.id, { url, title,
+                      visitedAt: url !== tab.url ? Date.now() : tab.visitedAt })} close={close} />
+                </View>;
+              })}
+              {visible && manager && <View style={StyleSheet.absoluteFill}>
+                <BrowserTabManager tabs={browser.tabs} activeId={browser.activeId} add={add} remove={remove}
+                  closeAll={closeAll} select={id => { Keyboard.dismiss(); browser.select(id); setManager(false); }}
+                  close={() => setManager(false)} />
+              </View>}
+            </BrowserInspectorDock>
+          </View>
+        </View>
+        <View style={visible && fullscreen ? styles.footerHidden : undefined}>{footer}</View>
       </View>
     </BookmarkProvider>
   </NativeBrowserContext.Provider>;
 }
-const styles = StyleSheet.create({ root: { flex: 1 }, hidden: { opacity: 0 }, footerHidden: { display: 'none' } });
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  browserLayer: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%' },
+  offscreen: { left: '100%' },
+  hidden: { opacity: 0 },
+  footerHidden: { display: 'none' },
+});

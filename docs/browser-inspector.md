@@ -8,8 +8,9 @@ with bottom docking; landscape screens start with right docking.
 
 Elements, Console, Network and Sources connect to the actual live WebView. Source breakpoints,
 paused variables, stepping and resume use Chrome DevTools Protocol. The original page, inputs
-and browser history remain mounted when the tools open, move, resize or close. Back closes
-DevTools first; leaving the tab or backgrounding the app ends the debugging session.
+and browser history remain mounted when the tools open, move, resize or close. Switching to another
+app tab hides DevTools and preserves the session for your return. Back in the browser closes DevTools
+first. Switching browser tabs or backgrounding the app ends the debugging session.
 
 ## Platform integration
 
