@@ -6,6 +6,7 @@ import type { DownloadConnection, DownloadNative, DownloadRequest, DownloadSourc
 import { forwardDownloadRequest } from './transport';
 import type { DeviceDownloads } from './deviceDownloads';
 import type { BrowserDownloadRequest } from './browserDownload';
+import type { BrowserExportMetadata } from './browserExport';
 
 export const downloadOwner = (session: AuthSession) => JSON.stringify([session.baseUrl, session.email]);
 const native: DownloadNative | undefined = NativeModules.FileDownloads;
@@ -148,6 +149,9 @@ export const downloadManager = {
   },
   async enqueueBrowser(owner: string, request: BrowserDownloadRequest) {
     return (await initializeDeviceDownloads()).enqueueBrowser(owner, request);
+  },
+  async beginBrowserExport(owner: string, metadata: BrowserExportMetadata) {
+    return (await initializeDeviceDownloads()).beginBrowserExport(owner, metadata);
   },
   pause: (id: string) => onDevice(id) ? device!.pause(id) : requireNative().pause(id),
   resume: (id: string) => onDevice(id) ? device!.resume(id) : requireNative().resume(id),

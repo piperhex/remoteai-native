@@ -5,6 +5,7 @@ import { transferFileChunks, validateFileInfo } from '../../vendor/shared/remote
 import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 import type { DownloadSource, DownloadTask } from './types';
 import { browserDownloadTask, transferBrowserDownload, type BrowserDownloadRequest } from './browserDownload';
+import { openBrowserExport, type BrowserExportMetadata } from './browserExport';
 
 const INDEX = 'lounge-downloads:v1';
 const MAX_TASKS = 500;
@@ -57,6 +58,15 @@ export class DeviceDownloads {
     await this.initialize();
     if (this.tasks.length >= MAX_TASKS) throw new Error('client.mobile.downloadFailedTryAgainLater');
     return this.add(browserDownloadTask(owner, randomUUID(), request));
+  }
+  async beginBrowserExport(owner: string, metadata: BrowserExportMetadata) {
+    await this.initialize();
+    const id = randomUUID();
+    const task = browserDownloadTask(owner, id, {
+      downloadUrl: metadata.pageUrl, downloadName: metadata.name, mimeType: metadata.mimeType,
+    });
+    return openBrowserExport({ task, size: metadata.size, directory: `${BROWSER_DIRECTORY}/${id}`,
+      publish: task => this.add(task) });
   }
   private async add(task: DownloadTask) {
     this.pending.add(task.id);

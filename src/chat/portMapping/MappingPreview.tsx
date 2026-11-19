@@ -26,13 +26,15 @@ import { useNativeBrowserRecords } from '../../browser/useBrowserRecords';
 import { NativePasswordSuggestions } from '../../browser/PasswordSuggestions';
 import { browserInspectorAvailable, type BrowserInspectorControls } from '../../browser/inspector/useBrowserInspector';
 import type { BrowserDownloadRequest } from '../../downloads/browserDownload';
+import { PageDownloads, type PageDownloadHandlers } from '../../browser/pageDownloads';
+import { isPageDownloadUrl, PAGE_DOWNLOAD_SCRIPT } from '../../browser/pageDownloadScript';
 
 const COMPACT_TOOLBAR_WIDTH = 272;
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
   fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange,
-  onDownload, openDownloads }: {
+  onDownload, pageDownloads, openDownloads }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource;
   onNavigate?: (url: string, title: string) => void; close: () => void;
@@ -42,6 +44,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void; dataGeneration?: number;
   inspector?: BrowserInspectorControls; onInspectorObscuredChange?: (obscured: boolean) => void;
   onDownload?: (request: BrowserDownloadRequest) => void;
+  pageDownloads?: PageDownloadHandlers;
   openDownloads?: () => void;
 }) {
   const styles = useStyles();
@@ -50,6 +53,10 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl, resource);
   const site = useBrowserSiteMode(desktop, browser.webview);
   const records = useNativeBrowserRecords(browser.webview, visible);
+  const downloads = useRef<PageDownloads | undefined>(undefined);
+  downloads.current ??= new PageDownloads();
+  const downloadScript = pageDownloads ? PAGE_DOWNLOAD_SCRIPT : '';
+  const injectedScript = site.script + PREVIEW_NETWORK_SCRIPT + records.script + downloadScript;
   const { activity } = browser;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fullscreenMenuOpen, setFullscreenMenuOpen] = useState(false);
@@ -85,6 +92,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
     Keyboard.dismiss(); inspector?.hideKeyboard();
   });
   useLanguage();
+  useEffect(() => () => downloads.current?.reset(), [dataGeneration]);
   useEffect(() => { if (request) browser.visit(request.url); }, [request]);
   useEffect(() => {
     if (visible) onInspectorObscuredChange?.(obscured);
@@ -128,12 +136,23 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
         // Ask before first capture; Android retains successful consent for this tab's current site.
         geolocationEnabled mediaCapturePermissionGrantType="prompt" allowsInlineMediaPlayback
-        injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
-        injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
-        onMessage={event => { if (!records.receive(event) && !site.receive(event)) activity.onMessage(event); }}
+        injectedJavaScriptBeforeContentLoaded={injectedScript}
+        injectedJavaScript={injectedScript}
+        onMessage={event => {
+          const { data, url } = event.nativeEvent;
+          const handled = pageDownloads && downloads.current?.receive(data, url, pageDownloads, (id, ok) => {
+            browser.webview.current?.injectJavaScript(`window.__remoteAiPageDownload?.acknowledge(${JSON.stringify(id)}, ${ok}); true;`);
+          });
+          if (!handled && !records.receive(event) && !site.receive(event)) activity.onMessage(event);
+        }}
         onFileDownload={onDownload && (event => {
           activity.reset();
-          onDownload(event.nativeEvent);
+          const request: BrowserDownloadRequest = event.nativeEvent;
+          if (pageDownloads && isPageDownloadUrl(request.downloadUrl)) {
+            // The native listener covers downloads that did not originate from an observable anchor.
+            const args = JSON.stringify([request.downloadUrl, request.downloadName ?? '']);
+            browser.webview.current?.injectJavaScript(`window.__remoteAiPageDownload?.start(...${args}); true;`);
+          } else onDownload(request);
         })}
         onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)

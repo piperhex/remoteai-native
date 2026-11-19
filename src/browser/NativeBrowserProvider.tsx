@@ -17,6 +17,7 @@ import { Toast } from '../components/AppToast';
 import { downloadManager } from '../downloads/manager';
 import type { BrowserDownloadRequest } from '../downloads/browserDownload';
 import { t } from '../i18n';
+import type { PageDownloadHandlers } from './pageDownloads';
 
 const bookmarkStorage = {
   getItem: (key: string) => Storage.getItemSync(key),
@@ -54,6 +55,11 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
     void downloadManager.enqueueBrowser(scope, request)
       .then(() => Toast.success(t('client.downloads.addedToDownloads')))
       .catch(() => Toast.fail(t('client.mobile.downloadFailedTryAgainLater')));
+  };
+  const pageDownloads: PageDownloadHandlers = {
+    begin: metadata => downloadManager.beginBrowserExport(scope, metadata),
+    finished: () => Toast.success(t('client.downloads.addedToDownloads')),
+    failed: () => Toast.fail(t('client.mobile.downloadFailedTryAgainLater')),
   };
   const hasBottomNavigation = Boolean(footer);
   const reveal = () => {
@@ -104,7 +110,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
                   importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
                   <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
                     request={tab.request} visible={active} devices={devices}
-                    onDownload={download} openDownloads={openDownloads}
+              onDownload={download} pageDownloads={pageDownloads} openDownloads={openDownloads}
                     inspector={selected ? inspector : undefined} onInspectorObscuredChange={setInspectorObscured}
                     desktop={tab.desktop}
                     onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
