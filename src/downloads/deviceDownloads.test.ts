@@ -1,14 +1,16 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { IosLoungeDownloads } from './iosLoungeDownloads';
+import { DeviceDownloads } from './deviceDownloads';
 import type { DownloadSource, DownloadTask } from './types';
 import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 
-const mock = vi.hoisted(() => ({ files: new Map<string, Buffer>(), index: '', count: 0 }));
+const mock = vi.hoisted(() => ({ files: new Map<string, Buffer>(), index: '', count: 0, fetch: vi.fn() }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => `10000000-0000-4000-8000-${String(++mock.count).padStart(12, '0')}` }));
 vi.mock('expo-sqlite/kv-store', () => ({ default: {
   getItem: async () => mock.index, setItem: async (_: string, value: string) => { mock.index = value; },
 } }));
-vi.mock('react-native-blob-util', () => ({ default: { fs: {
+vi.mock('react-native-blob-util', () => ({ default: { config: ({ path }: { path: string }) => ({
+  fetch: (method: string, url: string) => mock.fetch(path, method, url),
+}), fs: {
   dirs: { DocumentDir: '/app' }, exists: async (path: string) => mock.files.has(path),
   mkdir: async (path: string) => { mock.files.set(path, Buffer.alloc(0)); },
   writeFile: async (path: string, data: string) => { mock.files.set(path, Buffer.from(data, 'base64')); },
@@ -35,9 +37,44 @@ function client(): DownloadClient {
 }
 beforeEach(() => { mock.files.clear(); mock.index = ''; mock.count = 0; });
 
+it('tracks website downloads without a connection and restarts a paused transfer', async () => {
+  let tasks: DownloadTask[] = [];
+  const downloads = new DeviceDownloads(value => { tasks = value; });
+  mock.fetch.mockReset().mockImplementationOnce((path: string) => {
+    let reject!: (error: Error) => void;
+    const transfer = new Promise((_resolve, fail) => { reject = fail; });
+    return Object.assign(transfer, {
+      progress: (_options: unknown, onProgress: (received: number, size: number) => void) => {
+        mock.files.set(path, Buffer.from('a')); onProgress(1, 3); return transfer;
+      },
+      cancel: (done: () => void) => { reject(new Error('cancelled')); done(); },
+    });
+  }).mockImplementationOnce((path: string) => ({
+    progress: async () => {
+      mock.files.set(path, Buffer.from('abc'));
+      return { info: () => ({ status: 200, headers: { 'Content-Type': 'text/plain' } }) };
+    },
+  }));
+  const url = 'https://example.test/download?file=report';
+  const id = await downloads.enqueueBrowser('alice', { downloadUrl: url, downloadName: 'fallback.txt',
+    contentDisposition: "attachment; filename=fallback.txt; filename*=UTF-8''%E6%8A%A5%E5%91%8A%23.txt" });
+  await vi.waitFor(() => expect(tasks[0]).toMatchObject({ status: 'downloading', received: 1, size: 3 }));
+  await downloads.pause(id);
+  expect(tasks[0].status).toBe('paused');
+  expect([...mock.files.keys()].some(path => path.endsWith('/.partial'))).toBe(false);
+  await downloads.resume(id);
+  await vi.waitFor(() => expect(tasks[0]).toMatchObject({ status: 'completed', name: '报告#.txt', received: 3, size: 3 }));
+  expect(mock.fetch).toHaveBeenCalledTimes(2);
+  expect(mock.fetch).toHaveBeenLastCalledWith(expect.stringMatching(/\/\.partial$/), 'GET', url);
+  expect(mock.index).not.toContain(url);
+  expect(mock.files.get(decodeURIComponent(tasks[0].uri!.slice(7)))).toEqual(Buffer.from('abc'));
+  await downloads.remove(id);
+  expect(tasks).toHaveLength(0);
+});
+
 it('persists authenticated iOS downloads, restores completed files offline and removes stored bytes', async () => {
   let tasks: DownloadTask[] = [];
-  const downloads = new IosLoungeDownloads(value => { tasks = value; });
+  const downloads = new DeviceDownloads(value => { tasks = value; });
   const transport = client();
   downloads.bind('alice', { ready: true, client: transport });
   const id = await downloads.enqueue(source);
@@ -46,7 +83,7 @@ it('persists authenticated iOS downloads, restores completed files offline and r
   expect(mock.files.get(path)).toEqual(bytes);
   expect(transport.close).toHaveBeenCalledOnce();
   expect(transport.checkSize).toHaveBeenCalledWith(bytes.length, undefined);
-  const restored = new IosLoungeDownloads(value => { tasks = value; });
+  const restored = new DeviceDownloads(value => { tasks = value; });
   await restored.initialize();
   expect(tasks[0]).toMatchObject({ id, status: 'completed', received: bytes.length, source });
   await restored.remove(id);
@@ -56,7 +93,7 @@ it('persists authenticated iOS downloads, restores completed files offline and r
 
 it('checkpoints paused ranges, resumes after restart and isolates account connections', async () => {
   let tasks: DownloadTask[] = [];
-  const downloads = new IosLoungeDownloads(value => { tasks = value; });
+  const downloads = new DeviceDownloads(value => { tasks = value; });
   const transport = client();
   const release: (() => void)[] = [];
   vi.mocked(transport.read).mockImplementation(async ({ offset, length }) => {
@@ -69,7 +106,7 @@ it('checkpoints paused ranges, resumes after restart and isolates account connec
   const paused = downloads.pause(id);
   release.forEach(resolve => resolve()); await paused;
   expect(tasks[0].status).toBe('paused');
-  const restored = new IosLoungeDownloads(value => { tasks = value; });
+  const restored = new DeviceDownloads(value => { tasks = value; });
   await restored.initialize();
   const wrongAccount = client();
   restored.bind('bob', { ready: true, client: wrongAccount });

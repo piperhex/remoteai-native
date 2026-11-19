@@ -27,8 +27,22 @@ internal class DownloadSharing(private val context: Context) {
     }
     val name = task.data.getString("name")
     val uri = if (saved.scheme == "content") shareUri(saved, name) else readable
+    return send(uri, name, task.data.optString("mimeType"))
+  }
+
+  fun browserFile(path: String, mimeType: String): Intent {
+    val file = File(path).canonicalFile
+    val directory = checkNotNull(file.parentFile)
+    UUID.fromString(directory.name)
+    require(directory.parentFile == File(context.filesDir, "browser-downloads").canonicalFile)
+    require(file.name != ".partial" && file.isFile && file.canRead())
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+    return send(uri, file.name, mimeType)
+  }
+
+  private fun send(uri: Uri, name: String, mimeType: String): Intent {
     return Intent(Intent.ACTION_SEND).apply {
-      type = task.data.optString("mimeType").ifBlank { "application/octet-stream" }
+      type = mimeType.ifBlank { "application/octet-stream" }
       putExtra(Intent.EXTRA_STREAM, uri)
       clipData = ClipData.newRawUri(name, uri)
       addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

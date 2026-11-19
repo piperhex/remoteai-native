@@ -3,6 +3,7 @@ import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { MappingPreview } from './MappingPreview';
 import type { MappingBrowserToolbar } from './MappingBrowserToolbar';
+import type { BrowserDownloadRequest } from '../../downloads/browserDownload';
 import { mappingBrowserUrl, useMappingBrowser } from './useMappingBrowser';
 import { PREVIEW_NETWORK_BUSY, PREVIEW_NETWORK_IDLE } from './previewNetworkActivity';
 
@@ -64,10 +65,10 @@ function elements(node: React.ReactNode): React.ReactElement<Props>[] {
   return React.Children.toArray(node).flatMap(child => React.isValidElement<Props>(child)
     ? [child, ...elements(child.props.children)] : []);
 }
-function render() {
+function render(onDownload?: (request: BrowserDownloadRequest) => void) {
   runtime.cursor = 0;
   runtime.refCursor = 0;
-  return elements(MappingPreview({ port: 3002, close: vi.fn() }));
+  return elements(MappingPreview({ port: 3002, close: vi.fn(), onDownload }));
 }
 const webview = () => render().find(node => node.type === 'WebView')!.props;
 const browser = () => render().find(node => node.type === 'Toolbar')!.props.browser!;
@@ -79,6 +80,15 @@ beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.st
 it('enables website location and prompts before capture', () => {
   expect(webview()).toMatchObject({ mediaCapturePermissionGrantType: 'prompt', geolocationEnabled: true,
     allowsInlineMediaPlayback: true });
+});
+
+it('forwards files from the native browser listener and clears navigation progress', () => {
+  const download = vi.fn();
+  const page = render(download).find(node => node.type === 'WebView')!.props;
+  const request = { downloadUrl: 'https://example.test/export', downloadName: 'report.zip', mimeType: 'application/zip' };
+  page.onFileDownload!({ nativeEvent: request } as never);
+  expect(download).toHaveBeenCalledExactlyOnceWith(request);
+  expect(active()).toBe(false);
 });
 
 it('shows activity from initial navigation through outstanding page requests', () => {

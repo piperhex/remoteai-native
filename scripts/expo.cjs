@@ -8,6 +8,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 
 require('./patch-webview-permissions.cjs').applyWebViewPermissionsPatch();
+require('./patch-webview-downloads.cjs').applyWebViewDownloadPatch();
 require('./patch-document-picker.cjs').applyDocumentPickerPatch();
 
 const workspaceModules = path.resolve(__dirname, '..', 'node_modules');

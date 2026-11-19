@@ -15,7 +15,9 @@ import { useDownloadSelection } from '../../vendor/shared/downloads/useDownloadS
 import { DownloadTaskHeading } from './DownloadTaskHeading';
 import { downloadManager } from './manager';
 
-export function DownloadManagerPage({ session, onBack }: { session: AuthSession; onBack: () => void }) {
+export function DownloadManagerPage({ session, onBack, fromBrowser }: {
+  session: AuthSession; onBack: () => void; fromBrowser?: boolean;
+}) {
   const styles = useStyles();
   useLanguage();
   const state = useDownloadTasks(session);
@@ -34,7 +36,8 @@ export function DownloadManagerPage({ session, onBack }: { session: AuthSession;
     connection={connection} scope={view} back={() => setView('tasks')} />;
 
   return <View style={styles.page}>
-    <DownloadPageHeader title={t("client.downloads.downloads")} back={onBack} backLabel={t("client.discovery.back")} />
+    <DownloadPageHeader title={t('client.downloads.downloads')} back={onBack}
+      backLabel={t(fromBrowser ? 'client.mobile.back' : 'client.discovery.back')} />
     <FlatList data={tasks} keyExtractor={task => task.id} style={styles.list}
       contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}
       ListHeaderComponent={<>
@@ -46,7 +49,7 @@ export function DownloadManagerPage({ session, onBack }: { session: AuthSession;
       </>}
       renderItem={({ item }) => <DownloadCard task={item} busy={!!busy}
         selected={selected.has(item.id)} toggleSelection={() => toggle(item.id)}
-        connected={!!downloadManager.connectionForSource(item.source)?.ready}
+        connected={!!item.website || !!downloadManager.connectionForSource(item.source)?.ready}
         action={() => { void run(item, 'action'); }} share={() => { void run(item, 'share'); }}
         remove={() => setDeleting([item])} />}
       ListEmptyComponent={<DownloadEmptyState />} />

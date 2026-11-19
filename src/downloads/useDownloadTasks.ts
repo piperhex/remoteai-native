@@ -41,7 +41,8 @@ export function useDownloadTasks(session: AuthSession) {
       else await downloadManager.resume(task.id);
     } catch {
       setError(operation === 'share' ? t("client.downloads.couldNotShareTheFileCheckThatItIsStill")
-        : task.source.attachment ? t('client.lounge.downloadFailed')
+        : task.website ? t('client.mobile.downloadFailedTryAgainLater')
+          : task.source.attachment ? t('client.lounge.downloadFailed')
           : t("client.mobile.couldNotFinishCheckTheComputerConnectionPhoneStorageAnd"));
     } finally {
       pending.current = false;
@@ -50,7 +51,8 @@ export function useDownloadTasks(session: AuthSession) {
   };
 
   return {
-    tasks: tasks.filter(task => task.source.owner === owner && (!task.source.preview || task.exported)).slice().reverse(),
+    tasks: tasks.filter(task => task.source.owner === owner && (!task.source.preview || task.exported))
+      .sort((first, second) => second.createdAt - first.createdAt),
     connection: connection?.owner === owner ? connection : undefined,
     error: error || initializationError, busy, deleting, setDeleting, run, removeTasks, owner,
   };

@@ -690,6 +690,7 @@ function AppContent() {
   }, []);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activePage, setActivePage] = useState<AppPage>(DEFAULT_APP_PAGE);
+  const [downloadsBack, setDownloadsBack] = useState<'discover' | 'browser'>('discover');
   const openAccounts = useCallback(() => { Keyboard.dismiss(); setActivePage('accounts'); }, []);
   const openChat = useCallback(() => setActivePage('chat'), []);
   const chatNotification = useChatNotificationNavigation(session, openChat);
@@ -1215,6 +1216,7 @@ function AppContent() {
     <NativeBrowserProvider scope={JSON.stringify([session.baseUrl, session.email])}
       channel={lounge.controller.bookmarks} devices={devices}
       active={activePage === 'browser'} onActiveChange={handleBrowserActiveChange}
+      openDownloads={() => { setDownloadsBack('browser'); setActivePage('downloads'); }}
       footer={<BrowserBottomNavigation activePage={activePage} owner={downloadOwner(session)}
         loungeUnread={lounge.state.unread} onChange={setActivePage} />}>
     <SafeAreaView edges={showBottomNavigation ? ['left', 'right'] : ['left', 'right', 'bottom']}
@@ -1251,7 +1253,9 @@ function AppContent() {
       onOpenAbout={() => setActivePage('about')} onOpenAdmin={() => setActivePage('admin')}
       onLogout={handleLogout} totpManager={totpManager} />,
     }}>
-    {activePage === 'downloads' && <DownloadManagerPage session={session} onBack={() => setActivePage('discover')} />}
+    {activePage === 'downloads' && <DownloadManagerPage session={session} fromBrowser={downloadsBack === 'browser'} onBack={() => {
+      setActivePage(downloadsBack); setDownloadsBack('discover');
+    }} />}
     {activePage === 'ssh' && directSsh && <SshPage client={directSsh} onBack={() => setActivePage('discover')} />}
     {isDiscoveryPage(activePage)
       && !['downloads', 'token-summary', 'lounge', 'port-mappings', 'totp', 'devices', 'ssh', 'browser']

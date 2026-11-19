@@ -14,6 +14,10 @@ import { useBrowserInspector } from './inspector/useBrowserInspector';
 import { useBrowserBack } from './useBrowserNavigationGestures';
 import { deriveNativeVaultKey } from './vaultCrypto';
 import { nativeVaultKeyStorage } from './vaultKeyStorage';
+import { Toast } from '../components/AppToast';
+import { downloadManager } from '../downloads/manager';
+import type { BrowserDownloadRequest } from '../downloads/browserDownload';
+import { t } from '../i18n';
 
 const bookmarkStorage = {
   getItem: (key: string) => Storage.getItemSync(key),
@@ -21,9 +25,11 @@ const bookmarkStorage = {
 };
 
 /** Each tab owns a retained browsing context, including session storage and native navigation history. */
-export function NativeBrowserProvider({ scope, channel, children, devices = [], footer, active, onActiveChange }: {
+export function NativeBrowserProvider({ scope, channel, children, devices = [], footer, active, onActiveChange,
+  openDownloads }: {
   scope: string; channel?: BookmarkChannel; children: ReactNode; devices?: readonly BrowserDevice[];
   footer?: ReactNode; active?: boolean; onActiveChange?: (active: boolean) => void;
+  openDownloads?: () => void;
 }) {
   const browser = useNativeBrowserTabs(scope);
   const [visited, setVisited] = useState(false);
@@ -45,6 +51,11 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const close = useCallback(() => {
     dismissKeyboard(); setVisible(false); setManager(false); setFullscreen(false); onActiveChange?.(false);
   }, [dismissKeyboard, onActiveChange]);
+  const download = (request: BrowserDownloadRequest) => {
+    void downloadManager.enqueueBrowser(scope, request)
+      .then(() => Toast.success(t('client.downloads.addedToDownloads')))
+      .catch(() => Toast.fail(t('client.mobile.downloadFailedTryAgainLater')));
+  };
   const hasBottomNavigation = Boolean(footer);
   const reveal = () => {
     dismissKeyboard();
@@ -89,6 +100,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
             importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
             <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
               request={tab.request} visible={active} devices={devices}
+              onDownload={download} openDownloads={openDownloads}
               inspector={selected ? inspector : undefined} onInspectorObscuredChange={setInspectorObscured}
               desktop={tab.desktop} onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
               fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}

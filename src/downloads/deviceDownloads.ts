@@ -4,29 +4,33 @@ import { randomUUID } from 'expo-crypto';
 import { transferFileChunks, validateFileInfo } from '../../vendor/shared/remote-chat/fileDownload';
 import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 import type { DownloadSource, DownloadTask } from './types';
+import { browserDownloadTask, transferBrowserDownload, type BrowserDownloadRequest } from './browserDownload';
 
 const INDEX = 'lounge-downloads:v1';
 const MAX_TASKS = 500;
 const MAX_ACTIVE = 2;
 const DIRECTORY = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/lounge-downloads`;
+const BROWSER_DIRECTORY = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/browser-downloads`;
 const { fs } = ReactNativeBlobUtil;
 interface Connection { ready: boolean; client: DownloadClient }
 
-/** iOS keeps attachment tasks in app storage, using the same encrypted ranges and download-page actions. */
-export class IosLoungeDownloads {
+/** Website downloads and iOS attachments are stored on the device and use the same queue. */
+export class DeviceDownloads {
   private tasks: DownloadTask[] = [];
   private initialized?: Promise<void>;
   private writes = Promise.resolve();
   private connections = new Map<string, Connection>();
   private flights = new Map<string, { abort: AbortController; done: Promise<void> }>();
+  private pending = new Set<string>();
   constructor(private readonly changed: (tasks: DownloadTask[]) => void) {}
   initialize = () => this.initialized ??= (async () => {
     if (!await fs.exists(DIRECTORY)) await fs.mkdir(DIRECTORY);
+    if (!await fs.exists(BROWSER_DIRECTORY)) await fs.mkdir(BROWSER_DIRECTORY);
     const json = await Storage.getItem(INDEX);
     this.tasks = json ? (JSON.parse(json) as DownloadTask[]).map(task => ({ ...task,
       status: task.status === 'completed' ? 'completed' : 'paused', bytesPerSecond: undefined })) : [];
     this.changed(this.tasks);
-  })();
+  })().catch(error => { this.initialized = undefined; throw error; });
   private persist() {
     const json = JSON.stringify(this.tasks);
     const write = this.writes.then(() => Storage.setItem(INDEX, json));
@@ -35,7 +39,7 @@ export class IosLoungeDownloads {
   }
   bind(owner: string, connection?: Connection) {
     if (connection) this.connections.set(owner, connection); else this.connections.delete(owner);
-    if (!connection?.ready) this.tasks.filter(task => task.source.owner === owner)
+    if (!connection?.ready) this.tasks.filter(task => !task.website && task.source.owner === owner)
       .forEach(task => this.flights.get(task.id)?.abort.abort());
     this.schedule();
   }
@@ -47,7 +51,24 @@ export class IosLoungeDownloads {
     if (!source.attachment || this.tasks.length >= MAX_TASKS) throw new Error('client.lounge.downloadFailed');
     const task: DownloadTask = { id: randomUUID(), source, name: source.path, status: 'queued',
       received: 0, size: 0, createdAt: Date.now(), message: '' };
-    this.tasks.push(task); await this.persist(); this.schedule(); return task.id;
+    return this.add(task);
+  }
+  async enqueueBrowser(owner: string, request: BrowserDownloadRequest) {
+    await this.initialize();
+    if (this.tasks.length >= MAX_TASKS) throw new Error('client.mobile.downloadFailedTryAgainLater');
+    return this.add(browserDownloadTask(owner, randomUUID(), request));
+  }
+  private async add(task: DownloadTask) {
+    this.pending.add(task.id);
+    this.tasks.push(task);
+    try { await this.persist(); }
+    catch (error) {
+      this.tasks = this.tasks.filter(item => item !== task);
+      this.changed([...this.tasks]);
+      throw error;
+    } finally { this.pending.delete(task.id); }
+    this.schedule();
+    return task.id;
   }
   async pause(id: string) {
     const flight = this.flights.get(id);
@@ -64,7 +85,7 @@ export class IosLoungeDownloads {
     await this.pause(id);
     const task = this.tasks.find(item => item.id === id);
     if (!task || !/^[a-f\d-]{36}$/i.test(id)) return;
-    const directory = `${DIRECTORY}/${id}`;
+    const directory = `${task.website ? BROWSER_DIRECTORY : DIRECTORY}/${id}`;
     if (await fs.exists(directory)) await fs.unlink(directory);
     this.tasks = this.tasks.filter(item => item.id !== id); await this.persist();
   }
@@ -72,15 +93,27 @@ export class IosLoungeDownloads {
     for (const task of this.tasks) {
       if (this.flights.size >= MAX_ACTIVE) return;
       const connection = this.connections.get(task.source.owner);
-      if (!connection?.ready || task.status !== 'queued' || this.flights.has(task.id)) continue;
+      if ((!task.website && !connection?.ready) || task.status !== 'queued'
+        || this.flights.has(task.id) || this.pending.has(task.id)) continue;
       const abort = new AbortController();
-      const done = Promise.resolve().then(() => this.run(task, connection.client, abort.signal)).finally(() => {
+      const done = Promise.resolve().then(() => task.website ? this.runBrowser(task, abort.signal)
+        : this.runAttachment(task, connection!.client, abort.signal)).finally(() => {
         this.flights.delete(task.id); this.schedule();
       });
       this.flights.set(task.id, { abort, done });
     }
   }
-  private async run(task: DownloadTask, client: DownloadClient, signal: AbortSignal) {
+  private async runBrowser(task: DownloadTask, signal: AbortSignal) {
+    try {
+      await transferBrowserDownload({ task, directory: `${BROWSER_DIRECTORY}/${task.id}`, signal,
+        update: () => this.changed([...this.tasks]) });
+    } catch {
+      Object.assign(task, { status: signal.aborted ? 'paused' : 'failed', received: 0, bytesPerSecond: undefined,
+        message: signal.aborted ? '' : 'client.mobile.downloadFailedTryAgainLater' });
+    }
+    await this.persist().catch(() => console.warn('Could not checkpoint browser download.'));
+  }
+  private async runAttachment(task: DownloadTask, client: DownloadClient, signal: AbortSignal) {
     let remoteId: string | undefined;
     try {
       task.status = 'preparing'; await this.persist();

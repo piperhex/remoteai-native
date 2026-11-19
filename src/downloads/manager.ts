@@ -4,22 +4,35 @@ import ReactNativeBlobUtil from 'react-native-blob-util';
 import type { AuthSession } from '../types';
 import type { DownloadConnection, DownloadNative, DownloadRequest, DownloadSource, DownloadTask } from './types';
 import { forwardDownloadRequest } from './transport';
-import type { IosLoungeDownloads } from './iosLoungeDownloads';
+import type { DeviceDownloads } from './deviceDownloads';
+import type { BrowserDownloadRequest } from './browserDownload';
 
 export const downloadOwner = (session: AuthSession) => JSON.stringify([session.baseUrl, session.email]);
 const native: DownloadNative | undefined = NativeModules.FileDownloads;
 let tasks: DownloadTask[] = [];
+let deviceTasks: DownloadTask[] = [];
+let remoteTasks: DownloadTask[] = [];
 let connection: DownloadConnection | undefined;
 const loungeConnections = new Map<string, Pick<DownloadConnection, 'owner' | 'deviceId' | 'ready' | 'client'>>();
 const connectionForSource = (source: DownloadSource) => source.attachment ? loungeConnections.get(source.owner)
   : connection?.owner === source.owner && connection.deviceId === source.deviceId ? connection : undefined;
 let error = '';
-let initialized: Promise<void> | undefined;
+let deviceError = '';
+let initializedRemote: Promise<void> | undefined;
 let bulkTransport: ReturnType<NonNullable<DownloadConnection['client']['bulk']>['transport']>;
 let unlistenBulk: (() => void) | undefined;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(listener => listener());
-let ios: IosLoungeDownloads | undefined;
+let device: DeviceDownloads | undefined;
+const refreshTasks = () => { tasks = [...remoteTasks, ...deviceTasks]; emit(); };
+const onDevice = (id: string) => deviceTasks.some(task => task.id === id);
+async function initializeDeviceDownloads() {
+  const { DeviceDownloads } = await import('./deviceDownloads');
+  device ??= new DeviceDownloads(value => { deviceTasks = value; refreshTasks(); });
+  await device.initialize();
+  if (deviceError) { deviceError = ''; emit(); }
+  return device;
+}
 const requireNative = () => {
   if (!native) throw new Error(t("client.mobile.installTheLatestAndroidAppToManageDownloads"));
   return native;
@@ -49,7 +62,7 @@ export const downloadManager = {
     emit();
     void this.initialize().then(() => {
       if (loungeConnections.get(value.owner) !== value) return;
-      if (ios) { ios.bind(value.owner, value); return; }
+      if (Platform.OS === 'ios') { device?.bind(value.owner, value); return; }
       return native?.connection(value.owner, value.deviceId, value.ready ? 1 : 0);
     })
       .catch(() => { error = t('client.lounge.fileUnavailable'); emit(); });
@@ -57,23 +70,20 @@ export const downloadManager = {
   unbindLounge(owner: string) {
     const previous = loungeConnections.get(owner);
     loungeConnections.delete(owner); tasks = [...tasks]; emit();
-    ios?.bind(owner);
+    if (Platform.OS === 'ios') device?.bind(owner);
     if (previous) void native?.connection(owner, previous.deviceId, 0)
       .catch(() => console.warn('Could not pause lounge downloads.'));
   },
-  error: () => error,
+  error: () => error || deviceError,
   initialize() {
-    if (initialized) return initialized;
-    if (Platform.OS === 'ios') return initialized = import('./iosLoungeDownloads').then(async module => {
-      ios ??= new module.IosLoungeDownloads(value => { tasks = value; emit(); });
-      await ios.initialize();
-    }).catch(() => {
-      initialized = undefined; error = t('client.mobile.couldNotLoadDownloadHistory'); emit();
-    });
-    initialized = Promise.resolve().then(async () => {
+    const local = initializeDeviceDownloads().catch(() => {
+      deviceError = t('client.mobile.couldNotLoadDownloadHistory'); emit();
+    }).then(() => {});
+    if (Platform.OS === 'ios') return local;
+    initializedRemote ??= Promise.resolve().then(async () => {
       const bridge = requireNative();
       const changed = DeviceEventEmitter.addListener('downloadTasksChanged', (json: string) => {
-        tasks = JSON.parse(json) as DownloadTask[]; emit();
+        remoteTasks = JSON.parse(json) as DownloadTask[]; refreshTasks();
       });
       const requests = DeviceEventEmitter.addListener('downloadRequest', (json: string) => {
         const request = JSON.parse(json) as DownloadRequest;
@@ -83,13 +93,13 @@ export const downloadManager = {
         void forwardDownloadRequest({ request, client, native: bridge })
           .catch(() => { error = t("client.mobile.downloadInterruptedResumeItLater"); emit(); });
       });
-      try { tasks = JSON.parse(await bridge.list()) as DownloadTask[]; error = ''; emit(); }
+      try { remoteTasks = JSON.parse(await bridge.list()) as DownloadTask[]; error = ''; refreshTasks(); }
       catch (cause) { changed.remove(); requests.remove(); throw cause; }
     }).catch(cause => {
-      initialized = undefined;
+      initializedRemote = undefined;
       error = cause instanceof Error ? cause.message : t("client.mobile.couldNotLoadDownloadHistory"); emit();
     });
-    return initialized;
+    return Promise.all([initializedRemote, local]).then(() => {});
   },
   bind(value: DownloadConnection) {
     observeBulk(value);
@@ -129,16 +139,19 @@ export const downloadManager = {
       const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
       if (permission !== PermissionsAndroid.RESULTS.GRANTED) throw new Error(t("client.mobile.allowFileStorageToStartDownloading"));
     }
-    if (ios && source.attachment) return ios.enqueue(source);
+    if (Platform.OS === 'ios' && source.attachment) return (await initializeDeviceDownloads()).enqueue(source);
     const id = await requireNative().enqueue(JSON.stringify(source));
     if (source.attachment && tasks.some(task => task.id === id && ['paused', 'failed'].includes(task.status))) {
       await requireNative().resume(id);
     }
     return id;
   },
-  pause: (id: string) => ios ? ios.pause(id) : requireNative().pause(id),
-  resume: (id: string) => ios ? ios.resume(id) : requireNative().resume(id),
-  delete: (id: string) => ios ? ios.remove(id) : requireNative().delete(id),
+  async enqueueBrowser(owner: string, request: BrowserDownloadRequest) {
+    return (await initializeDeviceDownloads()).enqueueBrowser(owner, request);
+  },
+  pause: (id: string) => onDevice(id) ? device!.pause(id) : requireNative().pause(id),
+  resume: (id: string) => onDevice(id) ? device!.resume(id) : requireNative().resume(id),
+  delete: (id: string) => onDevice(id) ? device!.remove(id) : requireNative().delete(id),
   previewText: (id: string) => requireNative().previewText(id),
   previewUri: (id: string) => requireNative().previewUri(id),
   discardPreview: (id: string) => requireNative().discardPreview(id),
@@ -151,13 +164,19 @@ export const downloadManager = {
   },
   async open(task: DownloadTask) {
     if (!task.uri || task.status !== 'completed') return;
-    const uri = task.uri.startsWith('file://') ? decodeURI(task.uri.slice(7)) : task.uri;
-    if (ios) { ReactNativeBlobUtil.ios.previewDocument(uri); return; }
+    const uri = filePath(task);
+    if (Platform.OS === 'ios') { ReactNativeBlobUtil.ios.previewDocument(uri); return; }
     await ReactNativeBlobUtil.android.actionViewIntent(uri, task.mimeType || 'application/octet-stream');
   },
   async share(task: DownloadTask) {
     if (!task.uri || task.status !== 'completed') return;
-    if (ios) { ReactNativeBlobUtil.ios.openDocument(decodeURI(task.uri.replace(/^file:\/\//, ''))); return; }
+    if (Platform.OS === 'ios') { ReactNativeBlobUtil.ios.openDocument(filePath(task)); return; }
+    if (task.website) return requireNative().shareBrowserFile(filePath(task), task.mimeType || 'application/octet-stream');
     await requireNative().share(task.id);
   },
 };
+
+function filePath(task: DownloadTask) {
+  const uri = task.uri ?? '';
+  return uri.startsWith('file://') ? (task.website ? decodeURIComponent : decodeURI)(uri.slice(7)) : uri;
+}

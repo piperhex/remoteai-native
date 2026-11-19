@@ -29,6 +29,7 @@ export interface DownloadTask {
   revision?: string;
   readyToSave?: boolean;
   savedBytes?: number;
+  website?: { url: string; userAgent?: string };
   preparation?: import('../../vendor/shared/remote-chat/archiveDownload').ArchiveProgress;
 }
 export interface DownloadConnection {
@@ -66,6 +67,7 @@ export interface DownloadNative {
   discardPreview: (id: string) => Promise<void>;
   exportImage: (id: string) => Promise<void>;
   share: (id: string) => Promise<void>;
+  shareBrowserFile: (path: string, mimeType: string) => Promise<void>;
   pause: (id: string) => Promise<void>;
   resume: (id: string) => Promise<void>;
   delete: (id: string) => Promise<void>;

@@ -25,12 +25,14 @@ import { BrowserPasswords, NativePasswordCapture } from '../../browser/BrowserPa
 import { useNativeBrowserRecords } from '../../browser/useBrowserRecords';
 import { NativePasswordSuggestions } from '../../browser/PasswordSuggestions';
 import { browserInspectorAvailable, type BrowserInspectorControls } from '../../browser/inspector/useBrowserInspector';
+import type { BrowserDownloadRequest } from '../../downloads/browserDownload';
 
 const COMPACT_TOOLBAR_WIDTH = 272;
 
 export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
-  fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange }: {
+  fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange,
+  onDownload, openDownloads }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource;
   onNavigate?: (url: string, title: string) => void; close: () => void;
@@ -39,6 +41,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   desktop?: boolean; onDesktopChange?: (desktop: boolean) => void;
   fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void; dataGeneration?: number;
   inspector?: BrowserInspectorControls; onInspectorObscuredChange?: (obscured: boolean) => void;
+  onDownload?: (request: BrowserDownloadRequest) => void;
+  openDownloads?: () => void;
 }) {
   const styles = useStyles();
   const safeAreaEdges = useBrowserSafeAreaEdges();
@@ -127,6 +131,10 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         injectedJavaScriptBeforeContentLoaded={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         injectedJavaScript={site.script + PREVIEW_NETWORK_SCRIPT + records.script}
         onMessage={event => { if (!records.receive(event) && !site.receive(event)) activity.onMessage(event); }}
+        onFileDownload={onDownload && (event => {
+          activity.reset();
+          onDownload(event.nativeEvent);
+        })}
         onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
@@ -160,6 +168,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
       mappings={() => { setSettingsOpen(false); setDrawer('mappings'); }}
       search={() => { setSettingsOpen(false); setDrawer('search'); }}
       history={() => { setSettingsOpen(false); setDrawer('history'); }}
+      downloads={openDownloads && (() => { setSettingsOpen(false); openDownloads(); })}
       passwords={() => { setSettingsOpen(false); setDrawer('passwords'); }}
       dismiss={() => setSettingsOpen(false)} reload={() => browser.navigate('reload')} />}
     {fullscreen && <BrowserFullscreenExit open={fullscreenMenuOpen} setOpen={setFullscreenMenuOpen}

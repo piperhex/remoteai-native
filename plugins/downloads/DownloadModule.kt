@@ -39,11 +39,15 @@ class DownloadModule(private val context: ReactApplicationContext) : ReactContex
   @ReactMethod fun pause(id: String, promise: Promise) = run(promise) { engine.pause(id); null }
   @ReactMethod fun resume(id: String, promise: Promise) = run(promise) { engine.resume(id); null }
   @ReactMethod fun delete(id: String, promise: Promise) = run(promise) { engine.delete(id); null }
-  @ReactMethod fun share(id: String, promise: Promise) {
+  @ReactMethod fun share(id: String, promise: Promise) = shareFile(promise) { engine.shareIntent(id) }
+  @ReactMethod fun shareBrowserFile(path: String, mimeType: String, promise: Promise) =
+    shareFile(promise) { DownloadSharing(context).browserFile(path, mimeType) }
+
+  private fun shareFile(promise: Promise, source: () -> Intent) {
     val failure = { _: Exception ->
       promise.reject("SHARE_FAILED", "无法分享，请确认文件仍在手机上后重试。")
     }
-    engine.submit({ Intent.createChooser(engine.shareIntent(id), null) }, { intent ->
+    engine.submit({ Intent.createChooser(source(), null) }, { intent ->
       UiThreadUtil.runOnUiThread {
         try {
           val activity = checkNotNull(context.currentActivity)

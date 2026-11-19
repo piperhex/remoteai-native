@@ -18,6 +18,7 @@ vi.mock('react-native', () => ({ NativeModules: { FileDownloads: mocks.bridge },
   } },
 }));
 vi.mock('react-native-blob-util', () => ({ default: { android: { actionViewIntent: vi.fn() } } }));
+vi.mock('./deviceDownloads', () => ({ DeviceDownloads: class { initialize = async () => {}; } }));
 
 function connection(): DownloadConnection {
   const files = { open: vi.fn(), read: vi.fn(), close: vi.fn() };

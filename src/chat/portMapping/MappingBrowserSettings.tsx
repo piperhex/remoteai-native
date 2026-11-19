@@ -9,11 +9,12 @@ import { useCurrentBookmark } from '../../../vendor/shared/browser/bookmarks/use
 import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/status';
 
 export function MappingBrowserSettings({ top, width, height, dismiss, reload, bookmarks, mappings, search, history,
-  passwords, external, url, title,
+  passwords, downloads, external, url, title,
   desktop, onDesktopChange, fullscreen, inspector }: {
   top: number; width: number; height: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
   history: () => void; passwords: () => void;
+  downloads?: () => void;
   external?: () => void;
   url: string; title: string;
   desktop: boolean; onDesktopChange: (desktop: boolean) => void;
@@ -83,6 +84,10 @@ export function MappingBrowserSettings({ top, width, height, dismiss, reload, bo
         <Ionicons name="time-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.browserHistory')}</Text>
       </Pressable>
+      {downloads && <Pressable accessibilityRole="menuitem" onPress={downloads} style={styles.menuItem}>
+        <Ionicons name="download-outline" size={21} color={color('#17211b', 'ink')} />
+        <Text style={styles.menuText}>{t('client.downloads.downloads')}</Text>
+      </Pressable>}
       <Pressable accessibilityRole="menuitem" onPress={passwords} style={styles.menuItem}>
         <Ionicons name="key-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.browserPasswords')}</Text>
