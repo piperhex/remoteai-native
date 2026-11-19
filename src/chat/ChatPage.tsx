@@ -65,6 +65,7 @@ interface Props {
   notificationHandled: (id: string) => void;
   tokenSummary: boolean; closeTokenSummary: () => void;
   openAccounts?: () => void;
+  acceptDownload?: boolean;
 }
 
 export function ChatPage(props: Props) {
@@ -112,7 +113,7 @@ function ConnectedChat(props: ConnectedProps) {
   </CliGuiProvider>;
 }
 
-function ConnectedChatContent({ session, device, devices, selected, active: pageActive, chooseDevice, notification,
+function ConnectedChatContent({ session, device, devices, selected, active: pageActive, acceptDownload, chooseDevice, notification,
   notificationHandled, tokenSummary, closeTokenSummary, openAccounts, chat }: ConnectedProps & {
   chat: ReturnType<typeof useChat>;
 }) {
@@ -278,6 +279,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
     <ChatComposer suggestions={remotePromptSuggestion(state, controller.suggestNextPrompt, {
       scope: JSON.stringify([session.baseUrl, session.email, device?.deviceId]), storage: Storage,
     })}
+      downloadAttachmentMode={acceptDownload && selected && !state.selectedArchived ? state.mode : undefined}
       sshProfiles={controller.guiTools.terminal.ssh.profiles}
       dictation={controller.dictation} queue={queueProps(state, controller)}
       projectPicker={<ChatProjectSwitch state={state} controller={controller} active={active} />}

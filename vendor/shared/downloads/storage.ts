@@ -50,11 +50,12 @@ export async function storeDownload(task: DownloadTask) {
 }
 
 /** Commit bytes and their resume offset atomically, including when the tab is closed mid-write. */
-export async function storeChunk(task: DownloadTask, offset: number, data: string) {
-  const bytes = Uint8Array.from(atob(data), character => character.charCodeAt(0));
+export async function storeChunk(task: DownloadTask, offset: number, data: string | Blob) {
+  const blob = typeof data === 'string'
+    ? new Blob([Uint8Array.from(atob(data), character => character.charCodeAt(0))]) : data;
   const db = await openDownloadDatabase();
   const transaction = db.transaction([TASKS, CHUNKS], 'readwrite');
-  transaction.objectStore(CHUNKS).put({ id: task.id, offset, blob: new Blob([bytes]) });
+  transaction.objectStore(CHUNKS).put({ id: task.id, offset, blob });
   transaction.objectStore(TASKS).put(task);
   await complete(transaction);
 }

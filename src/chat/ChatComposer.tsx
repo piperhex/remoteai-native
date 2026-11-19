@@ -1,6 +1,8 @@
 import { displayError } from '../i18n/index';
 import { useComposerSuggestion } from '../../vendor/shared/chat/useComposerSuggestion';
 import { useComposerFileReferences } from '../../vendor/shared/chat/ChatFileReferences';
+import { useDownloadedFileReceiver } from '../../vendor/shared/chat/DownloadedFileContext';
+import type { ConnectionMode } from '../../vendor/shared/remote-chat/protocol';
 import { ComposerSuggestion } from './ComposerSuggestion';
 import type { PromptSuggestionSource } from '../../vendor/shared/chat/nextPromptSuggestion';
 import { ComposerInput } from './ComposerInput';
@@ -78,6 +80,7 @@ interface Props {
   threadId: string | null;
   draftScope?: string | null;
   active: boolean;
+  downloadAttachmentMode?: ConnectionMode;
   ready: boolean;
   sending: boolean;
   running: boolean;
@@ -98,7 +101,7 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
   settingsBusy, settingsError,
   updateSettings, refreshModels,
   readUsage, readConversationMetrics, usageActive, tokenUsage, contextSettings, connection, queue, goals, goal, goalBusy,
-  threadId, draftScope = threadId, active, ready, sending, running, upload,
+  threadId, draftScope = threadId, active, downloadAttachmentMode, ready, sending, running, upload,
   reconnecting = false, interrupted = false, send, interrupt,
   catalog, cwd, compactReason, compacting, compact, loadCatalog, loadFiles, loadConversations }: Props) {
   const styles = useStyles();
@@ -158,6 +161,8 @@ export function ChatComposer({ sshProfiles, dictation, projectPicker, suggestion
     enabled: active && !disabled && !attachmentBusy && !goalMode.enabled, add: attachments.add,
     addQuote: quote => quoteDraft?.add({ ...quote, role: 'tool' }) ?? false,
     focus: () => menu.input.current?.focus() });
+  useDownloadedFileReceiver({ scope: JSON.stringify([draftScope, cwd]), add: attachments.addDownloadedFile,
+    mode: !disabled && !attachmentBusy && !dictationBusy && !goalMode.enabled ? downloadAttachmentMode : undefined });
   const cannotSend = disabled || attachmentBusy || goalBusy || (goalMode.enabled && running)
     || (action === 'send' && !hasDraft);
   const actionDisabled = dictationBusy || (action === 'pause' ? !ready || pausing : cannotSend);

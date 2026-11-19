@@ -82,6 +82,31 @@ async function checkLegacyTiming(scale) {
   console.log(`PASS: missing timing is hidden at font scale ${scale}`);
 }
 
+async function checkFileActions(scale) {
+  await tap('下载管理');
+  await find('安装说明.txt');
+  await completionTiming();
+  await tap('打开');
+  const menu = (await nodes()).map(node => node.text || node['content-desc']);
+  const actions = menu.filter(label => ['默认应用', '在内置浏览器中打开', '引用文件'].includes(label));
+  assert.deepEqual(actions, ['默认应用', '在内置浏览器中打开', '引用文件']);
+  await screenshot(`file-menu-${scale}`);
+  await tap('在内置浏览器中打开');
+  await find('自动换行');
+  await screenshot(`file-preview-${scale}`);
+  await adb('shell', 'input', 'keyevent', '4');
+  await find('浏览器首页');
+  await adb('shell', 'input', 'keyevent', '4');
+  await find('下载管理');
+  await tap('打开');
+  await tap('引用文件');
+  await find('聊天草稿');
+  await find('安装说明.txt');
+  await find('附件内容验证通过');
+  await screenshot(`file-reference-${scale}`);
+  console.log(`PASS: download menu order, stored file preview, and original attachment bytes at font scale ${scale}`);
+}
+
 async function checkSelection(scale) {
   await tap('下载管理');
   await checkTimingPersistence(scale);
@@ -137,6 +162,7 @@ try {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', String(scale));
     await adb('shell', 'pm', 'clear', app);
     await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+    await checkFileActions(scale);
     await checkSelection(scale);
     await checkLegacyTiming(scale);
   }
@@ -144,5 +170,7 @@ try {
   if (originalScale === 'null') await adb('shell', 'settings', 'delete', 'system', 'font_scale');
   else await adb('shell', 'settings', 'put', 'system', 'font_scale', originalScale);
   await adb('shell', 'am', 'force-stop', app);
-  await adb('shell', 'am', 'start', '-W', '-n', 'com.codexswitch.mobile/com.codexswitch.mobile.MainActivity');
+  if (await adb('shell', 'pm', 'path', 'com.codexswitch.mobile').catch(() => '')) {
+    await adb('shell', 'am', 'start', '-W', '-n', 'com.codexswitch.mobile/com.codexswitch.mobile.MainActivity');
+  }
 }

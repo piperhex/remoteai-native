@@ -14,22 +14,29 @@ import { useStyles } from './styles';
 import { useDownloadSelection } from '../../vendor/shared/downloads/useDownloadSelection';
 import { DownloadTaskHeading } from './DownloadTaskHeading';
 import { downloadManager } from './manager';
+import { canPreviewCompletedDownload } from '../../vendor/shared/downloads/previewCompletedDownload';
+import { useDownloadedFileActions } from './DownloadedFileActions';
 
-export function DownloadManagerPage({ session, onBack, fromBrowser }: {
-  session: AuthSession; onBack: () => void; fromBrowser?: boolean;
+export function DownloadManagerPage({ session, onBack, fromBrowser, onReference }: {
+  session: AuthSession; onBack: () => void; fromBrowser?: boolean; onReference?: () => void;
 }) {
   const styles = useStyles();
   useLanguage();
   const state = useDownloadTasks(session);
+  const { preview, reference } = useDownloadedFileActions(onReference);
   const [view, setView] = useState<'tasks' | 'project' | 'computer'>('tasks');
+  const [openMenu, setOpenMenu] = useState<string>();
   const { tasks, connection, busy, deleting, error, run, setDeleting, removeTasks, owner } = state;
   const { selected, toggle, allSelected, toggleAll } = useDownloadSelection(tasks, owner);
   const browsing = view !== 'tasks' && !!connection;
   useEffect(() => {
     if (browsing) return;
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (openMenu) setOpenMenu(undefined); else onBack();
+      return true;
+    });
     return () => subscription.remove();
-  }, [browsing, onBack]);
+  }, [browsing, onBack, openMenu]);
 
   if (view !== 'tasks' && connection) return <DownloadBrowser
     key={`${connection.deviceId}:${view}:${connection.threadId ?? connection.cwd ?? ''}`}
@@ -41,7 +48,7 @@ export function DownloadManagerPage({ session, onBack, fromBrowser }: {
     <FlatList data={tasks} keyExtractor={task => task.id} style={styles.list}
       contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}
       ListHeaderComponent={<>
-        <DownloadSources connection={connection} browse={setView} />
+        <DownloadSources connection={connection} browse={next => { setOpenMenu(undefined); setView(next); }} />
         {!!error && <Text accessibilityRole="alert" style={styles.error}>{displayError(error)}</Text>}
         <DownloadTaskHeading count={tasks.length} selected={selected.size} busy={!!busy}
           allSelected={allSelected} toggleAll={toggleAll}
@@ -51,7 +58,10 @@ export function DownloadManagerPage({ session, onBack, fromBrowser }: {
         selected={selected.has(item.id)} toggleSelection={() => toggle(item.id)}
         connected={!!item.website || !!downloadManager.connectionForSource(item.source)?.ready}
         action={() => { void run(item, 'action'); }} share={() => { void run(item, 'share'); }}
-        remove={() => setDeleting([item])} />}
+        openMenu={openMenu === item.id} toggleOpenMenu={() => setOpenMenu(id => id === item.id ? undefined : item.id)}
+        preview={preview && item.uri && canPreviewCompletedDownload(item) ? () => preview(item) : undefined}
+        reference={reference && item.uri ? () => { void run(item, () => reference(item)); } : undefined}
+        remove={() => { setOpenMenu(undefined); setDeleting([item]); }} />}
       ListEmptyComponent={<DownloadEmptyState />} />
     <BottomSheet visible={!!deleting.length} maxWidth={400} dismissible={!busy}
       title={t('client.downloads.deleteSelectedTitle', { count: deleting.length })}

@@ -1,11 +1,13 @@
 import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { useScopedDraft } from '../../vendor/shared/chat/useScopedDraft';
+import { appendDownloadedFile } from '../../vendor/shared/chat/DownloadedFileContext';
 import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync, EncodingType } from 'expo-file-system';
 import type { AttachmentReference, ComposerPlugin } from '../../vendor/shared/conversation/attachmentTypes';
 import { remoteAttachments } from '../../vendor/shared/remote-chat/composerAttachments';
 import { checkFileUploadSize, UploadPolicyError } from '../../vendor/shared/remote-chat/policy';
+import type { ConnectionMode } from '../../vendor/shared/remote-chat/protocol';
 
 /** Validators may localize their copy when thrown, so trust it by type rather than by wording. */
 export function attachmentErrorMessage(cause: unknown) {
@@ -56,7 +58,11 @@ export function useComposerAttachments({ threadId, sending }: { threadId: string
       return true;
     } catch { setError(t("client.chat.eachMessageCanHaveUpTo8AttachmentsOrConversation")); return false; }
   };
-  return { items, busy, error, pick, add,
+  const addDownloadedFile = (file: AttachmentReference, mode: ConnectionMode) => {
+    setItems(existing => appendDownloadedFile(existing, file, mode));
+    setError('');
+  };
+  return { items, busy, error, pick, add, addDownloadedFile,
     addPlugin: (plugin: ComposerPlugin) => add({ kind: 'plugin', name: plugin.interface?.displayName || plugin.name,
       path: `plugin://${plugin.id}` }), restore: setItems,
     remove: (item: AttachmentReference) => setItems((current) => current.filter((entry) => entry !== item)),

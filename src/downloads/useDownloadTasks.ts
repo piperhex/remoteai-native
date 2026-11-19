@@ -1,9 +1,10 @@
-import { t } from '../i18n';
+import { displayError, t } from '../i18n';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { AuthSession } from '../types';
 import { downloadManager, downloadOwner } from './manager';
 import type { DownloadTask } from './types';
 import { removeDownloads } from '../../vendor/shared/downloads/removeDownloads';
+import { downloadedFileReferenceError } from '../../vendor/shared/chat/DownloadedFileContext';
 
 export function useDownloadTasks(session: AuthSession) {
   const tasks = useSyncExternalStore(downloadManager.subscribe, downloadManager.snapshot);
@@ -27,20 +28,23 @@ export function useDownloadTasks(session: AuthSession) {
     } finally { pending.current = false; setBusy(''); }
   };
 
-  const run = async (task: DownloadTask, operation: 'action' | 'share') => {
+  const run = async (task: DownloadTask, operation: 'action' | 'share' | (() => Promise<void>)) => {
     if (pending.current) return;
     pending.current = true;
     setBusy(task.id);
     setError('');
     try {
-      if (operation === 'share') await downloadManager.share(task);
+      if (typeof operation === 'function') await operation();
+      else if (operation === 'share') await downloadManager.share(task);
       else if (task.status === 'completed') await downloadManager.open(task);
       else if (['queued', 'preparing', 'downloading', 'verifying', 'saving'].includes(task.status)) {
         await downloadManager.pause(task.id);
       }
       else await downloadManager.resume(task.id);
-    } catch {
-      setError(operation === 'share' ? t("client.downloads.couldNotShareTheFileCheckThatItIsStill")
+    } catch (error) {
+      if (typeof operation === 'function') setError(displayError(downloadedFileReferenceError(error)));
+      else setError(operation === 'share' ? t("client.downloads.couldNotShareTheFileCheckThatItIsStill")
+        : task.status === 'completed' ? t('client.errorsCodexGui.couldNotOpenTheFileMakeSureAnAppThat')
         : task.website ? t('client.mobile.downloadFailedTryAgainLater')
           : task.source.attachment ? t('client.lounge.downloadFailed')
           : t("client.mobile.couldNotFinishCheckTheComputerConnectionPhoneStorageAnd"));

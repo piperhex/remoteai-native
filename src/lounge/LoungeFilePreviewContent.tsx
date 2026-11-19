@@ -16,7 +16,9 @@ import { t } from '../i18n';
 import { LoungeDocumentPreview } from './LoungeDocumentPreview';
 import { useThemeColor } from '../theme/store';
 
-export function LoungeFilePreviewContent({ file, bytes }: { file: LoungeAttachment; bytes: Uint8Array }) {
+export function LoungeFilePreviewContent({ file, bytes }: {
+  file: Pick<LoungeAttachment, 'name' | 'mime'>; bytes: Uint8Array;
+}) {
   const color = useThemeColor();
   const kind = loungePreviewKind(file, bytes);
   const text = useMemo(() => {

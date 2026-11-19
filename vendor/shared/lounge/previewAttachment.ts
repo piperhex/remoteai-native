@@ -29,7 +29,7 @@ export async function previewAttachment(options: {
   }, { signal, progress });
   return bytes;
 }
-export function attachmentMime(file: LoungeAttachment, bytes?: Uint8Array) {
+export function attachmentMime(file: Pick<LoungeAttachment, 'name' | 'mime'>, bytes?: Uint8Array) {
   if (/\.(m?ts)$/i.test(file.name) && loungePreviewKind(file, bytes) === 'video') return 'video/mp2t';
   return file.mime && file.mime !== 'application/octet-stream' ? file.mime : previewMimeType(file.name);
 }

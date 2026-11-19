@@ -108,7 +108,7 @@ export class WebDownloadManager {
   }
   private connected(task: DownloadTask) {
     if (task.browser) return browserDownloadConnected(task);
-    if (task.sync) return managedDownloadHandler(task)?.connected(task);
+    if (task.sync || task.website) return managedDownloadHandler(task)?.connected(task);
     return this.connectionForSource(task.source)?.ready;
   }
   taskConnected = (task: DownloadTask) => !!this.connected(task);
@@ -284,6 +284,7 @@ export class WebDownloadManager {
       if (task.sync && !signal.aborted) task.message = error instanceof Error
         && error.message === 'CONVERSATION_SYNC_CHANGED' ? 'client.conversationSync.changed'
         : 'client.conversationSync.failed';
+      if (task.website && !signal.aborted) task.message = 'client.downloads.browser.failed';
       this.update(task);
       await storeDownload(task).catch(() => {
         this.clearRetry(task.id); this.update({ ...task, status: 'failed' }); this.storageFailed();

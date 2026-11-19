@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "970c685fe6cf3a5b145b904826357109864b89fd",
+  "revision": "ad119a44f445deec060d369c41afd39bc26c2d6d",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "583ac510100f88f3643e2975080beb056dc2f1a6"
+    "revision": "6bbc6805f9a102bb2f3689cba1cc1eccb9d3f6ec"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -22,6 +22,7 @@
     "shared/realtime/deviceStatusConnection.ts": "a56e4ec79fc1441aa7d8c38c5af6a384e21bd5efa3a69d99bbcd26e57c92b549",
     "shared/remote-chat/modelTarget.ts": "20cf3494ce5eb209df308a46361b0a404b2ce25751249d3ae6270b10a4bee856",
     "shared/navigation/discovery.ts": "cbf3e50096ee169da0c708f5d414e1b50773204ac63ae72aa18b1f81c8ac8ad8",
+    "shared/chat/DownloadedFileContext.tsx": "a16cc68f65403eca9d0cbf417b92e470359240879e4f97ba9cf47ed2ec0ce941",
     "shared/legal/useAgreementConsent.ts": "27e80e0c8b705249e25bc04a3c0a9280b7ab44cbf01f566d46769f9fe65eefd1",
     "shared/project-browser/protocol.ts": "3c7fe272d827ceb130c2c9b10ef026fc5e983578fc6173fcf4b47bf968d11755",
     "apps/desktop/e2e/project-browser-fixture.ts": "94bef3f05bfa825f0d9577fc64eeb59d2791c85e157629c4031d623b2ac87cc4",
@@ -387,6 +388,7 @@
     "shared/remote-chat/bulkProtocol.ts": "16a0b0e980eebbd34acebe8c4f99aa0b86d375cd0858c5023351b942e9b54a16",
     "shared/downloads/completion.ts": "c03036cb7b980d50d699ab4187f27ac3646161cc2ad9d9d1a0550995c04354b3",
     "shared/downloads/useActiveDownloadCount.ts": "1d28fc93406931a2d7e6f255c052a81c90ee8a480d95177ea479adb2c8b7a05b",
+    "shared/downloads/previewCompletedDownload.ts": "730e94bfddb69b57b780a8c71f6b57a5c2e0e7cc7e5acbbbf9540494634e416b",
     "shared/downloads/useDownloadSelection.ts": "85a34983a2371d5442d4a90b70f7b4ee960e221a5b3a416cdb80d0f4acdb49e4",
     "shared/remote-chat/downloadConnection.ts": "45b0462d9e4e1de74e957b99de30954eaba8503a0f40f962773a0a1d083038d4",
     "shared/remote-chat/previewDownloads.ts": "0ba639e803a3def6ff04799cb424c5d1624663c419e1e418f8acb2819234f09f",
@@ -394,7 +396,7 @@
     "shared/remote-chat/link.ts": "786f94e1011501ced65a43129a59b18ff06164d4481896c6d358d04238427037",
     "shared/remote-chat/archiveDownload.ts": "914943659ffedf572fa92244a21c2e1e5158c6e0e6c60dd37b97e4035f4b7948",
     "shared/downloads/useDownloadConnection.ts": "cd7adfa0388199962d2330b49d1c334bcc236ae9ce3d5da378e28e37b9380bad",
-    "shared/downloads/manager.ts": "12bb41fa9da909f88ba8707126767397be1e84d92efce9003abc7f9d5888f1bc",
+    "shared/downloads/manager.ts": "f6a332e0f3ba80c5c057d2196e9568784a61b4b0721847cd7d9fe6177d515c8c",
     "shared/downloads/removeDownloads.ts": "e93bc8793a58c29c2d9a0e69562fb2d66866a2f03f02fcc04d50d5725439d2cd",
     "shared/remote-chat/useFileDownload.ts": "5ef1bec3afe004685e11495a9864886d1e3ecd2aab3667af581088bf34e40ab7",
     "shared/lounge/attachmentCache.ts": "3fdf9090fbcca6738d1389e4e605652b3da277266d2185c9ceb5571f30bc625d",
@@ -414,7 +416,7 @@
     "shared/lounge/emoji.ts": "1ae0508bfb7e9e034643ed944198136cc64287734d37b84d8b0ed81617cf8656",
     "shared/lounge/filePresentation.ts": "018630e696126ddf989916507f53460d45721ea9340fed36e137ffc5ee25c09c",
     "shared/lounge/useFileActions.ts": "41570a0a43e52b2cc87942fb4b752b40eafc8a0a6a608cb2abb303c4fc94f16f",
-    "shared/lounge/previewAttachment.ts": "dea5b34c863023c96f401be701a71cb1568d958621a044003f9da8b73674e1e6",
+    "shared/lounge/previewAttachment.ts": "e22e378adada334f7649d0058075f0d040b32e30b111d657e12acc68e066c953",
     "shared/file-preview/jsonHighlightLimit.ts": "e1efccf14b19a4726ee6d2090f02d3975fec08dbfa0ab642481db80663a66d0f",
     "shared/lounge/clientPresence.ts": "7357d40173fefb7041ceb13495db98ba1373373b87118ecb7f0668da763e8c69",
     "shared/lounge/useHistoryTimeline.ts": "dc377837733e1bb98a31c75e743c26c723a4fa7b01cbb73742a8ae0ed55cd05e",
@@ -643,10 +645,10 @@
     "shared/downloads/saveDownload.ts": "35acfbd131749374bac366d3b15431274104d7da922174d56074d44501e04855",
     "shared/downloads/openDownload.ts": "644ae86729513f161b373d6d39eca9552c1831092e4f89050bda39c1b0f72458",
     "shared/downloads/shareDownload.ts": "3936477611030eee22e7af35fa7dcbd05e0202d318f0c8d720252cd2c6cbd353",
-    "shared/downloads/storage.ts": "eff7ac33c11e2ecb0936ff532e80ae8facf96dc1a597d32197561aaf54e816c9",
+    "shared/downloads/storage.ts": "7b23988d013bcdf99679c589255f3156ee58f0e81d1bcef69252e9de85c17040",
     "shared/downloads/transfer.ts": "bca3b9a9d99041974973b104f8aa2c208379db092874719641bc41a584260c64",
     "shared/downloads/monitorDownloadSpeed.ts": "26c5436d791ff29c5f2510a980a3eba870c65f0446899a79adb99b8569e28b5d",
-    "shared/downloads/types.ts": "9c6787386aaf3036a20e0bce2a9d3da3f9019250d8826da5f6fc46c64e81defb",
+    "shared/downloads/types.ts": "35bf209e4f3ab87ee562bbadf66a2299e21becf3791e49b5660197b90285f8dd",
     "shared/terminal/sshDownloadClient.ts": "2dcd4c2306deacb254a5b4bd0a67b1ec55a722635f08b78cd4e66456fdd94408",
     "shared/downloads/managedTasks.ts": "329b9c41cd3f7b816c8c74cafc805a3fe75dc5f90349f1b1b6c87f32a28cf60c",
     "shared/downloads/browserTasks.ts": "95700795ac91505364cc553d4c30a27615c7022d3fa04940f4522612730c17fd",

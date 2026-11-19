@@ -159,6 +159,10 @@ export const downloadManager = {
   previewText: (id: string) => requireNative().previewText(id),
   previewUri: (id: string) => requireNative().previewUri(id),
   discardPreview: (id: string) => requireNative().discardPreview(id),
+  async readCompletedFile(task: DownloadTask) {
+    if (!task.uri || task.status !== 'completed') throw new Error('client.filePreview.unavailable');
+    return ReactNativeBlobUtil.fs.readFile(filePath(task), 'base64');
+  },
   async exportImage(id: string) {
     if (Platform.OS === 'android' && Number(Platform.Version) < 29) {
       const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);

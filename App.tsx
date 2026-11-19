@@ -97,6 +97,7 @@ import { palette as chatPalette } from './src/chat/styles';
 import { useChatNotificationNavigation } from './src/chat/useChatNotificationNavigation';
 import { SettingsPage } from './src/settings/SettingsPage';
 import { DownloadManagerPage } from './src/downloads/DownloadManagerPage';
+import { DownloadedFileProvider } from './vendor/shared/chat/DownloadedFileContext';
 import { useTotpVault } from './src/totp/useTotpVault';
 import {
   createDeviceStatusReceiver,
@@ -1213,6 +1214,7 @@ function AppContent() {
     <ThemeStatusBar /><LoginScreen initialBaseUrl={DEFAULT_CLOUD_BASE_URL} onLoggedIn={handleLogin} />
   </View>;
   return <MappingProvider key={JSON.stringify([session.baseUrl, session.email])} session={session} devices={devices}>
+    <DownloadedFileProvider owner={downloadOwner(session)}>
     <NativeBrowserProvider scope={JSON.stringify([session.baseUrl, session.email])}
       channel={lounge.controller.bookmarks} devices={devices}
       active={activePage === 'browser'} onActiveChange={handleBrowserActiveChange}
@@ -1231,6 +1233,7 @@ function AppContent() {
       accounts: accountStyles.page, discover: styles.discoveryCanvas, settings: styles.settingsCanvas,
     }} pages={{
     chat: <ChatPage session={session} devices={devices}
+      acceptDownload={activePage === 'downloads'}
       active={activePage === 'chat' || activePage === 'token-summary'}
       openAccounts={openAccounts}
       devicesLoaded={devicesLoaded}
@@ -1253,7 +1256,8 @@ function AppContent() {
       onOpenAbout={() => setActivePage('about')} onOpenAdmin={() => setActivePage('admin')}
       onLogout={handleLogout} totpManager={totpManager} />,
     }}>
-    {activePage === 'downloads' && <DownloadManagerPage session={session} fromBrowser={downloadsBack === 'browser'} onBack={() => {
+    {activePage === 'downloads' && <DownloadManagerPage session={session} fromBrowser={downloadsBack === 'browser'}
+      onReference={() => { setActivePage('chat'); setDownloadsBack('discover'); }} onBack={() => {
       setActivePage(downloadsBack); setDownloadsBack('discover');
     }} />}
     {activePage === 'ssh' && directSsh && <SshPage client={directSsh} onBack={() => setActivePage('discover')} />}
@@ -1282,7 +1286,7 @@ function AppContent() {
               ? <AboutPage onBack={() => setActivePage('settings')} />
               : null}
     </PrimaryPagePager>
-  </SafeAreaView></NativeBrowserProvider></MappingProvider>;
+  </SafeAreaView></NativeBrowserProvider></DownloadedFileProvider></MappingProvider>;
 }
 
 export default function App() {
