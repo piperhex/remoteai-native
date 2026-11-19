@@ -36,8 +36,14 @@ async function find(label) {
 }
 
 async function tap(label) {
-  const node = await find(label);
-  const [left, top, right, bottom] = [...node.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));
+  await tapNode(await find(label));
+}
+
+const coordinates = node => [...node.bounds.matchAll(/\d+/g)].map(value => Number(value[0]));
+const screenSize = async () => (await adb('shell', 'wm', 'size')).match(/\d+x\d+/g).at(-1).split('x').map(Number);
+
+async function tapNode(node) {
+  const [left, top, right, bottom] = coordinates(node);
   await adb('shell', 'input', 'tap', String(Math.round((left + right) / 2)), String(Math.round((top + bottom) / 2)));
   await delay(300);
 }
@@ -86,11 +92,18 @@ async function checkFileActions(scale) {
   await tap('下载管理');
   await find('安装说明.txt');
   await completionTiming();
-  await tap('打开');
-  const menu = (await nodes()).map(node => node.text || node['content-desc']);
-  const actions = menu.filter(label => ['默认应用', '在内置浏览器中打开', '引用文件'].includes(label));
-  assert.deepEqual(actions, ['默认应用', '在内置浏览器中打开', '引用文件']);
+  const initial = await find('打开');
+  const next = await find('项目资料.zip');
+  await screenshot(`file-menu-closed-${scale}`);
+  await tapNode(initial);
+  await find('引用文件');
+  const actions = await fileActions(['默认应用', '在内置浏览器中打开', '引用文件']);
+  assert.ok(coordinates(actions[0])[1] >= coordinates(initial)[3], 'Menu opens below when there is room');
   await screenshot(`file-menu-${scale}`);
+  await tap('关闭菜单');
+  assert.equal((await find('打开')).bounds, initial.bounds);
+  assert.equal((await find('项目资料.zip')).bounds, next.bounds);
+  await tap('打开');
   await tap('在内置浏览器中打开');
   await find('自动换行');
   await screenshot(`file-preview-${scale}`);
@@ -105,6 +118,39 @@ async function checkFileActions(scale) {
   await find('附件内容验证通过');
   await screenshot(`file-reference-${scale}`);
   console.log(`PASS: download menu order, stored file preview, and original attachment bytes at font scale ${scale}`);
+}
+
+async function fileActions(labels) {
+  const possible = ['默认应用', '在内置浏览器中打开', '引用文件'];
+  const actions = (await nodes()).filter(node => possible.includes(node['content-desc']));
+  assert.deepEqual(actions.map(node => node['content-desc']), labels);
+  const [width, height] = await screenSize();
+  for (const action of actions) {
+    const [left, top, right, bottom] = coordinates(action);
+    assert.ok(left > 0 && top > 0 && right < width && bottom < height, `${action['content-desc']} fits on screen`);
+  }
+  return actions;
+}
+
+async function checkBottomMenu(scale) {
+  await tap('下载管理');
+  const [width, height] = await screenSize();
+  const x = String(Math.round(width / 2));
+  await adb('shell', 'input', 'swipe', x, String(Math.round(height * 0.85)), x, String(Math.round(height * 0.38)), '600');
+  const apk = await find('RemoteAI-2.0.12-android.apk');
+  const trigger = (await nodes()).find(node => node['content-desc'] === '打开'
+    && coordinates(node)[1] > coordinates(apk)[3]);
+  assert.ok(trigger, 'Found the APK open button after scrolling');
+  await screenshot(`file-menu-bottom-closed-${scale}`);
+  await tapNode(trigger);
+  await find('引用文件');
+  const actions = await fileActions(['默认应用', '引用文件']);
+  assert.ok(coordinates(actions.at(-1))[3] <= coordinates(trigger)[1], 'Menu opens above close to the bottom');
+  await screenshot(`file-menu-bottom-${scale}`);
+  await adb('shell', 'input', 'keyevent', '4');
+  assert.equal((await find('RemoteAI-2.0.12-android.apk')).bounds, apk.bounds);
+  await tap('返回发现');
+  console.log(`PASS: APK options fit above the button at font scale ${scale}`);
 }
 
 async function checkSelection(scale) {
@@ -163,6 +209,7 @@ try {
     await adb('shell', 'pm', 'clear', app);
     await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
     await checkFileActions(scale);
+    await checkBottomMenu(scale);
     await checkSelection(scale);
     await checkLegacyTiming(scale);
   }

@@ -9,6 +9,7 @@ export const colors = {
 
 export const useStyles = createThemedStyles((color) => ({
   page: { flex: 1, backgroundColor: color(colors.canvas, 'canvas') },
+  pageContent: { flex: 1 },
   navigation: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, minHeight: 60,
     backgroundColor: color(colors.surface, 'surface'), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: color(colors.border, 'border') },
   back: { width: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 14 },
@@ -80,9 +81,12 @@ export const useStyles = createThemedStyles((color) => ({
   button: { minHeight: 44, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 14,
     borderRadius: 12, backgroundColor: color(colors.paleGreen, 'accentSoft'), flexDirection: 'row', gap: 6 },
   buttonText: { ...textMetrics(13, 20), flexShrink: 1, color: color(colors.green, 'accent'), fontWeight: '600' },
-  openMenu: { alignSelf: 'flex-end', width: 232, maxWidth: '100%', gap: 2, padding: 4, borderRadius: 12,
-    borderWidth: 1, borderColor: color(colors.border, 'border'), backgroundColor: color(colors.canvas, 'canvas') },
-  menuItem: { minHeight: 44, paddingHorizontal: 10, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  openMenu: { position: 'absolute', flexGrow: 0, borderRadius: 12, borderWidth: 1,
+    borderColor: color(colors.border, 'border'), backgroundColor: color(colors.surface, 'surface'),
+    elevation: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+  openMenuContent: { gap: 2, padding: 4 },
+  menuItem: { minHeight: 44, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 8 },
   menuText: { ...textMetrics(13, 20), flexShrink: 1, color: color(colors.ink, 'ink') },
   preview: { flex: 1, backgroundColor: color(colors.surface, 'surface') },
   shareButton: { minHeight: 44, paddingHorizontal: 8, flexDirection: 'row', gap: 6,

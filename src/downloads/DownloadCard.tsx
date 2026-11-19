@@ -2,6 +2,7 @@ import { displayError } from '../i18n/index';
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { useRef, type ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import type { DownloadTask } from './types';
 import { downloadDetail, downloadPercent, downloadStatusLabel, formatBytes } from './presentation';
@@ -9,11 +10,11 @@ import { colors, useStyles } from './styles';
 import { downloadCompletionDetails } from '../../vendor/shared/downloads/completion';
 
 export function DownloadCard({ task, connected, busy, action, share, remove, selected = false, toggleSelection,
-  openMenu, toggleOpenMenu, preview, reference }: {
+  menuOpen, openMenu }: {
   task: DownloadTask; connected: boolean; busy: boolean;
   action: () => void; share: () => void; remove: () => void;
   selected?: boolean; toggleSelection?: () => void;
-  openMenu?: boolean; toggleOpenMenu?: () => void; preview?: () => void; reference?: () => void;
+  menuOpen?: boolean; openMenu?: (anchor: View) => void;
 }) {
   const styles = useStyles();
   const color = useThemeColor();
@@ -26,7 +27,7 @@ export function DownloadCard({ task, connected, busy, action, share, remove, sel
   const disabled = busy || (!connected && !active && !complete && !task.readyToSave);
   const label = active ? t('client.downloads.pause') : complete ? t('client.portForwarding.open')
     : task.readyToSave ? t('client.downloads.saveAgain') : t('client.downloads.resumeDownload');
-  const icon = active ? 'pause-outline' : complete ? openMenu ? 'chevron-up' : 'chevron-down' : 'play-outline';
+  const icon = active ? 'pause-outline' : complete ? menuOpen ? 'chevron-up' : 'chevron-down' : 'play-outline';
   const percent = downloadPercent(task);
   const indeterminate = task.status === 'preparing' && task.preparation?.phase !== 'compressing';
   const progressCaption = indeterminate ? '' : `${percent}%`;
@@ -84,35 +85,29 @@ export function DownloadCard({ task, connected, busy, action, share, remove, sel
         <Ionicons name="share-social-outline" size={16} color={color(colors.green, 'accent')} />
         <Text style={styles.buttonText}>{t("client.downloads.share")}</Text>
       </Pressable>}
-      <Pressable accessibilityRole="button" accessibilityLabel={label}
-        accessibilityState={{ disabled, busy, expanded: complete ? !!openMenu : undefined }}
-        disabled={disabled} onPress={event => { event.stopPropagation(); (complete ? toggleOpenMenu : action)?.(); }}
-        style={({ pressed }) => [styles.button, disabled && styles.disabled, pressed && styles.pressed]}>
-        {busy ? <ActivityIndicator size="small" color={color(colors.green, 'accent')} />
-          : <Ionicons name={icon} size={16} color={color(colors.green, 'accent')} />}
-        <Text style={styles.buttonText}>{label}</Text>
-      </Pressable>
+      <DownloadAction label={label} icon={icon} disabled={disabled} busy={busy} action={action}
+        expanded={complete ? !!menuOpen : undefined} openMenu={complete ? openMenu : undefined} />
     </View>
-    {complete && openMenu && <View style={styles.openMenu}>
-      <DownloadMenuItem label={t('client.composer.defaultApp')} icon="open-outline" busy={busy}
-        action={() => { toggleOpenMenu?.(); action(); }} />
-      {preview && <DownloadMenuItem label={t('client.filePreview.openInBuiltInBrowser')} icon="globe-outline" busy={busy}
-        action={() => { toggleOpenMenu?.(); preview(); }} />}
-      {reference && <DownloadMenuItem label={t('client.projectBrowser.referenceFile')} icon="attach-outline" busy={busy}
-        action={() => { toggleOpenMenu?.(); reference(); }} />}
-    </View>}
   </Pressable>;
 }
 
-function DownloadMenuItem({ label, icon, busy, action }: {
-  label: string; icon: keyof typeof Ionicons.glyphMap; busy: boolean; action: () => void;
+function DownloadAction({ label, icon, disabled, busy, expanded, action, openMenu }: {
+  label: string; icon: ComponentProps<typeof Ionicons>['name']; disabled: boolean; busy: boolean;
+  expanded?: boolean; action: () => void; openMenu?: (anchor: View) => void;
 }) {
   const styles = useStyles();
   const color = useThemeColor();
-  return <Pressable accessibilityRole="button" disabled={busy}
-    onPress={event => { event.stopPropagation(); action(); }}
-    style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
-    <Ionicons name={icon} size={17} color={color(colors.green, 'accent')} />
-    <Text style={styles.menuText}>{label}</Text>
+  const anchor = useRef<View>(null);
+  return <Pressable ref={anchor} collapsable={false} accessibilityRole="button" accessibilityLabel={label}
+    accessibilityState={{ disabled, busy, expanded }} disabled={disabled}
+    onPress={event => {
+      event.stopPropagation();
+      if (openMenu && anchor.current) openMenu(anchor.current);
+      else if (expanded === undefined) action();
+    }}
+    style={({ pressed }) => [styles.button, disabled && styles.disabled, pressed && styles.pressed]}>
+    {busy ? <ActivityIndicator size="small" color={color(colors.green, 'accent')} />
+      : <Ionicons name={icon} size={16} color={color(colors.green, 'accent')} />}
+    <Text style={styles.buttonText}>{label}</Text>
   </Pressable>;
 }
