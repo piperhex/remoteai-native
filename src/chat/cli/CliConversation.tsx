@@ -6,6 +6,7 @@ import { cliErrorText } from '../../../vendor/shared/cli-gui/errors';
 import type { ChatController } from '../controller';
 import type { ChatConnectionProps } from '../ChatProfileMenu';
 import { ChatMessages } from '../ChatMessages';
+import { NativeDetailContext } from '../ChatDeferredDetails';
 import { ChatDrawerSurface } from '../ChatDrawerSurface';
 import { ChatFileProvider } from '../ChatFilePreview';
 import { ChatImageContext } from '../ChatImage';
@@ -22,7 +23,8 @@ export function CliConversation({ host, connection, active, ready, swipe }: {
 }) {
   const { state, controller } = useCliGui()!;
   const styles = useCliStyles();
-  const thread = useMemo(() => cliThread(state.history), [state.history]);
+  const history = state.olderView ?? state.history;
+  const thread = useMemo(() => cliThread(history), [history]);
   useLanguage();
   if (state.engine === 'codex') return null;
   const threadId = state.selected?.id ?? null;
@@ -38,9 +40,11 @@ export function CliConversation({ host, connection, active, ready, swipe }: {
         <ChatImagePreviewProvider key={threadId ?? 'new'} active={active} turns={thread?.turns}>
           <ChatFileProvider threadId={threadId} ready={ready} active={active}
             load={host.textPreview} videos={host.videos} files={host.files}>
+            <NativeDetailContext.Provider value={{ toolDetails: controller.loadToolDetails }}>
             <ChatMessages key={`${state.engine}:${threadId ?? 'new'}`} thread={thread} offline={!ready} active={active}
               loading={state.loading && !state.history} loadingMore={state.loading && Boolean(state.history)}
-              hasMore={state.history?.hasOlder} loadOlder={controller.loadOlder} />
+              hasMore={history?.hasOlder} loadOlder={controller.loadOlder} showLatest={state.olderView && controller.showLatest} />
+            </NativeDetailContext.Provider>
           </ChatFileProvider>
         </ChatImagePreviewProvider>
       </ChatImageContext.Provider>

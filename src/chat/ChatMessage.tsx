@@ -3,7 +3,7 @@ import { createThemedStyles } from '../theme/styles';
 import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { memo } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMarkdown } from './Markdown';
 import { ChatImage } from './ChatImage';
@@ -22,9 +22,11 @@ import {
 import { formatTurnDuration } from '../../vendor/shared/conversation/turnTiming';
 import type { Item } from './types';
 import { palette, useStyles } from './styles';
+import { textMetrics } from '../theme/text';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 const PREVIEW_LENGTH = 160;
+const BODY_PREVIEW_LENGTH = 320;
 const STATUS_LABELS: Record<string, string> = {
   get inProgress() { return t("client.chat.inProgress"); }, get completed() { return t("client.chat.completed"); }, get failed() { return t("client.taskReview.failed"); }, get declined() { return t("client.chat.declined"); }, get interrupted() { return t("client.chat.stopped"); },
 };
@@ -50,7 +52,7 @@ function commandSummary(item: Item) {
   const status: Record<string, string> = {
     inProgress: t("client.mobile.running"), completed: t("client.mobile.ran"), failed: t("client.mobile.runFailed"), declined: t("client.chat.declined"),
   };
-  return `${status[item.status ?? ''] || t("client.chat.runCommand")} ${commandPreview(item.command ?? '')}`;
+  return `${status[item.status ?? ''] || t("client.chat.runCommand")} ${item.commandPreview ?? commandPreview(item.command ?? '')}`;
 }
 
 function fileName(path: string): string {
@@ -118,6 +120,12 @@ function MessageBody({ item, onOpen, running = false, process = false }: Message
   useLanguage();
   const images = itemImageSources(item);
   const text = questionMessageText(item);
+  if (item.deferredBody) return <View>
+    <ChatMarkdown text={text.slice(0, BODY_PREVIEW_LENGTH) + '…'} />
+    <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)}>
+      <Text style={messageStyles.fullText}>{t('client.mobile.fullText')}</Text>
+    </Pressable>
+  </View>;
   if (item.type === 'userMessage') return <View style={messageStyles.user}>
     <View
       style={[styles.userMessage, messageStyles.bubble, images.length > 0 && messageStyles.imageBubble]}>
@@ -136,7 +144,8 @@ function MessageBody({ item, onOpen, running = false, process = false }: Message
   </View>;
 }
 
-const useMessageStyles = createThemedStyles(() => ({
+const useMessageStyles = createThemedStyles(color => ({
+  fullText: { ...textMetrics(13, 20), color: color(palette.muted, 'muted') },
   actions: { alignSelf: 'flex-start', marginLeft: -8 },
   activity: { flexDirection: 'row', alignItems: 'center', gap: 9, minHeight: 36, paddingVertical: 3 },
   user: { alignItems: 'flex-end' },

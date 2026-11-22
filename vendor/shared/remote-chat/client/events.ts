@@ -5,6 +5,8 @@ import { syncChatProcessing } from './processing';
 import { recordRequestError, restoreRequestErrors } from '../../conversation/turnRequestErrors';
 import { currentRunningTurn } from '../../chat/runningTurn';
 import { mergeItemLifecycle } from '../../conversation/itemStatus';
+import { TOOL_PREVIEW_CHARS } from '../../chat/historyBudget';
+import { summarizeTool } from '../../conversation/toolDetails';
 
 function mergeItems(previous: Item[], incoming: Item[]) {
   const items = [...previous];
@@ -20,6 +22,10 @@ function mergeItems(previous: Item[], incoming: Item[]) {
 }
 
 export function updateThread(thread: Thread, event: GuiEvent): Thread {
+  return reduceThread(thread, event, false);
+}
+
+function reduceThread(thread: Thread, event: GuiEvent, bounded: boolean): Thread {
   const { params, method } = event;
   if (method === 'thread/name/updated' && params.threadName !== undefined) {
     return { ...thread, name: params.threadName };
@@ -44,24 +50,35 @@ export function updateThread(thread: Thread, event: GuiEvent): Thread {
   if (method === 'error') turn = recordRequestError(turn, params.error ?? { message: '' }, Boolean(params.willRetry));
   if (method === 'turn/diff/updated') turn = { ...turn, diff: params.diff };
   if (method === 'turn/plan/updated') turn = { ...turn, plan: params.plan, planExplanation: params.explanation };
-  if (method.endsWith('Delta') || method.endsWith('/delta')) turn = applyDelta(turn, event);
+  if (method.endsWith('Delta') || method.endsWith('/delta')) {
+    turn = applyDelta(turn, event, bounded ? thread.id : undefined);
+  }
   turn = restoreRequestErrors(restoreTurnTiming(turn, turns[index]), turns[index]);
   if (index < 0) turns.push(turn);
   else turns[index] = turn;
   return { ...thread, turns };
 }
 
-function applyDelta(turn: Turn, event: GuiEvent): Turn {
+function applyDelta(turn: Turn, event: GuiEvent, threadId?: string): Turn {
   const { itemId, delta = '', summaryIndex = 0 } = event.params;
   if (!itemId) return turn;
   const old = turn.items.find((item) => item.id === itemId)
     ?? { id: itemId, type: event.method.includes('outputDelta') ? 'commandExecution' : 'agentMessage' };
-  let item: Item = { ...old, text: (old.text ?? '') + delta };
-  if (event.method.includes('outputDelta')) item = { ...old, aggregatedOutput: (old.aggregatedOutput ?? '') + delta };
-  if (event.method.includes('/reasoning/')) {
+  if (old.deferredBody) return turn;
+  let item: Item;
+  if (event.method.includes('outputDelta')) {
+    if (old.detailsRef) return turn;
+    const size = (old.aggregatedOutput?.length ?? 0) + delta.length;
+    item = threadId && old.type === 'commandExecution' && size > TOOL_PREVIEW_CHARS
+      ? summarizeTool(old, threadId, turn.id) : { ...old, aggregatedOutput: (old.aggregatedOutput ?? '') + delta };
+  } else if (event.method.includes('/reasoning/')) {
     const summary = [...(old.summary ?? [])];
     summary[summaryIndex] = (summary[summaryIndex] ?? '') + delta;
     item = { ...old, type: 'reasoning', summary };
+  } else item = { ...old, text: (old.text ?? '') + delta };
+  // Replacing a full item with a reference must also release fields omitted by its summary.
+  if (item.detailsRef && turn.items.includes(old)) {
+    return { ...turn, items: turn.items.map(entry => entry === old ? item : entry) };
   }
   return { ...turn, items: mergeItems(turn.items, [item]) };
 }
@@ -97,7 +114,7 @@ function reduceChatEvent(state: ChatState, event: GuiEvent): ChatState {
       ? { ...thread, status: { type: method === 'turn/started' ? 'active' : 'idle' } } : thread);
   }
   let selected = state.selected;
-  if (selected && selected.id === threadId) selected = updateThread(selected, event);
+  if (selected && selected.id === threadId) selected = reduceThread(selected, event, true);
   const approvals = method === 'turn/completed'
     ? state.approvals.filter((entry) => entry.params.turnId !== params.turn?.id) : state.approvals;
   const compactFinished = method === 'turn/completed' || method === 'thread/compacted'

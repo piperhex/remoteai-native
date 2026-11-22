@@ -31,6 +31,8 @@ export class HistoryCache {
 
   has(id: string) { return this.entries.has(id); }
 
+  clear() { this.entries.clear(); this.chars = 0; }
+
   remember(thread: Thread, page?: HistoryPage) {
     const recent = sliceHistory(thread);
     const chars = retainedChars(recent.thread, this.limits.chars);

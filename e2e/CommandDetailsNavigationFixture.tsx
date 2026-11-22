@@ -8,6 +8,9 @@ import { useFonts } from 'expo-font';
 import { ChatDrawer, type ChatDrawerMethods } from '../src/chat/ChatDrawer';
 import { ChatDrawerSurface } from '../src/chat/ChatDrawerSurface';
 import { ChatMessages } from '../src/chat/ChatMessages';
+import { NativeDetailContext } from '../src/chat/ChatDeferredDetails';
+import { summarizeTools } from '../vendor/shared/conversation/toolDetails';
+import { summarizeProcesses } from '../vendor/shared/conversation/processDetails';
 import { ChatQuotesProvider } from '../src/chat/ChatQuotes';
 import { useChatDrawerSwipe } from '../src/chat/useChatDrawerSwipe';
 import { PrimaryPagePager } from '../src/navigation/PrimaryPagePager';
@@ -17,9 +20,14 @@ import { textMetrics } from '../src/theme/text';
 import { updateThemeMode, useThemeColor } from '../src/theme/store';
 import { ThemeStatusBar } from '../src/theme/ThemeStatusBar';
 import type { Thread } from '../src/chat/types';
+import { ResidentHistoryFixture } from './ResidentHistoryFixture';
 
 setInterfaceLanguage('zh');
 const thread: Thread = { id: 'navigation', cwd: '', preview: '', updatedAt: 0, turns: [
+  { id: 'finished-turn', status: 'completed', items: [
+    { id: 'archived', type: 'commandExecution', status: 'completed', command: 'echo archived',
+      aggregatedOutput: 'ARCHIVED_OUTPUT' },
+  ] },
   { id: 'single-turn', status: 'inProgress', items: [
     { id: 'single', type: 'commandExecution', status: 'completed', command: 'echo single',
       aggregatedOutput: 'SINGLE_OUTPUT' },
@@ -31,6 +39,16 @@ const thread: Thread = { id: 'navigation', cwd: '', preview: '', updatedAt: 0, t
       aggregatedOutput: 'SECOND_OUTPUT' },
   ] },
 ] };
+const tools = summarizeTools(thread);
+const history = summarizeProcesses(tools);
+const details = {
+  toolDetails: async ({ turnId, itemId }: { turnId: string; itemId: string }) => ({
+    item: thread.turns!.find(turn => turn.id === turnId)!.items.find(item => item.id === itemId)!,
+  }),
+  processDetails: async ({ turnId }: { turnId: string }) => ({
+    items: tools.turns!.find(turn => turn.id === turnId)!.items,
+  }),
+};
 
 function Conversation({ active }: { active: boolean }) {
   const drawer = useRef<ChatDrawerMethods>(null);
@@ -45,7 +63,9 @@ function Conversation({ active }: { active: boolean }) {
       onMoving={() => undefined} navigation={<Text style={textMetrics(14, 22)}>Conversations</Text>}>
       <Text style={textMetrics(14, 22)} testID="heartbeat">{tick}</Text>
       <ChatDrawerSurface enabled={active} {...swipe}>
-        <ChatMessages thread={thread} active={active} />
+        <NativeDetailContext.Provider value={details}>
+          <ChatMessages thread={history} active={active} />
+        </NativeDetailContext.Provider>
       </ChatDrawerSurface>
     </ChatDrawer>
   </ChatQuotesProvider>;
@@ -54,9 +74,11 @@ function Conversation({ active }: { active: boolean }) {
 function Fixture() {
   const [fonts] = useFonts(Ionicons.font);
   const [page, setPage] = useState('chat');
+  const [historyFixture, setHistoryFixture] = useState(false);
   const color = useThemeColor();
   const canvas = { flex: 1, backgroundColor: color('#ffffff', 'canvas') };
-  const pages = { chat: <Conversation active={page === 'chat'} />, accounts: <Text>Accounts</Text>,
+  const pages = { chat: historyFixture ? <ResidentHistoryFixture /> : <Conversation active={page === 'chat'} />,
+    accounts: <Text>Accounts</Text>,
     discover: <Text>Discover</Text>, settings: <Text>Settings</Text> };
   const pageStyles = { chat: canvas, accounts: canvas, discover: canvas, settings: canvas };
   if (!fonts) return null;
@@ -65,6 +87,7 @@ function Fixture() {
       <Button title="Light" onPress={() => updateThemeMode('light')} />
       <Button title="Dark" onPress={() => updateThemeMode('dark')} />
       <Button title="Switch later" onPress={() => setTimeout(() => setPage('accounts'), 3000)} />
+      <Button title="History" onPress={() => setHistoryFixture(value => !value)} />
     </View>
     <PrimaryPagePager page={page} onChange={setPage} pages={pages} pageStyles={pageStyles} />
     <View style={{ flexDirection: 'row', paddingBottom: 32 }}>

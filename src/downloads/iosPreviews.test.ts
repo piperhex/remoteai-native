@@ -2,12 +2,13 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import type { ChatController } from '../../vendor/shared/remote-chat/client/controller';
 import { createIosPreviewDownloads } from './iosPreviews';
 import { saveImage } from '../chat/saveImage';
+import Storage from 'expo-sqlite/kv-store';
 import type { DownloadOpen } from '../../vendor/shared/remote-chat/downloads';
 
 const data = vi.hoisted(() => ({ files: new Map<string, Buffer>(), index: new Map<string, string>() }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => crypto.randomUUID() }));
 vi.mock('expo-sqlite/kv-store', () => ({ default: {
-  getItem: async (key: string) => data.index.get(key),
+  getItem: vi.fn(async (key: string) => data.index.get(key)),
   setItem: async (key: string, value: string) => { data.index.set(key, value); },
 } }));
 vi.mock('../chat/saveImage', () => ({ saveImage: vi.fn(async () => {}) }));
@@ -57,4 +58,26 @@ it('continues the normal range-download fallback from its saved offset and expor
   expect(client.open.mock.calls[0][0]).toMatchObject({ preview: 'image' });
   expect(progress).toHaveBeenCalledWith(expect.objectContaining({ received: 262_144, total: bytes.length }));
   expect(progress.mock.calls.some(([value]) => value.bytesPerSecond > 0)).toBe(true);
+  previews.dispose();
+});
+
+it('pauses a disposed transfer and reloads its checkpoint when the same chat starts again', async () => {
+  const { previews, client, reconnect } = fixture();
+  let release!: () => void;
+  const reading = new Promise<void>(resolve => { release = resolve; });
+  client.read.mockImplementationOnce(async () => {
+    await reading;
+    return { offset: 0, data: Buffer.alloc(262_144).toString('base64') };
+  });
+  const result = previews.image('thread', './image.png', true);
+  await vi.waitFor(() => expect(client.read).toHaveBeenCalled());
+  previews.dispose();
+  await expect(result).rejects.toThrow();
+  release();
+  await vi.waitFor(() => expect(client.close).toHaveBeenCalledTimes(1));
+  expect(JSON.parse([...data.index.values()][0])[0]).toMatchObject({ status: 'paused', received: 0 });
+  reconnect();
+  await expect(previews.image('thread', './image.png', true)).resolves.toMatch(/^file:/);
+  expect(Storage.getItem).toHaveBeenCalledTimes(2);
+  previews.dispose();
 });

@@ -2,12 +2,12 @@ import { AttachmentConnection } from './attachmentConnection';
 import { authorize } from './authorize';
 import { ATTACHMENT_CHUNK_BYTES, MAX_ATTACHMENTS, checkAttachmentSize, parseAttachments, type AttachmentSource,
   type AttachmentSink, type LoungeAttachment } from './attachments';
-import type { LoungeDraft, LoungeSession } from './types';
+import type { LoungeDraft, LoungeMessage, LoungeSession } from './types';
 import { imageAttachmentSource } from './imageAttachmentSource';
 
 export class LoungeAttachmentManager {
-  private readonly images = new Map<string, Promise<string>>();
-  private readonly sources = new Map<string, AttachmentSource>();
+  private readonly pendingImages = new Map<string, Promise<string>>();
+  private readonly sources = new Map<string, { source: AttachmentSource; peer?: string; sentAt?: number }>();
   private readonly connection?: AttachmentConnection;
   private available = false;
   constructor(private readonly options: { session?: LoungeSession; randomId: () => string }) {
@@ -20,7 +20,7 @@ export class LoungeAttachmentManager {
   readonly device: string;
   retryNow() { this.connection?.retryNow(); }
   private async source(id: string) {
-    return this.sources.get(id) ?? await this.options.session?.attachmentImages?.source?.(id);
+    return this.sources.get(id)?.source ?? await this.options.session?.attachmentImages?.source?.(id);
   }
   /** The app binds its persistent download manager for the lifetime of the signed-in lounge. */
   enqueue?: (file: LoungeAttachment) => Promise<string>;
@@ -37,18 +37,23 @@ export class LoungeAttachmentManager {
     return { read: (offset: number, length: number) => peer.exchange.read(offset, length), close };
   }
   image(file: LoungeAttachment): Promise<string> {
-    const previous = this.images.get(file.id);
+    const previous = this.pendingImages.get(file.id);
     if (previous) return previous;
     const store = this.options.session?.attachmentImages;
     if (!store) return Promise.reject(new Error('client.lounge.fileUnavailable'));
     const pending = (async () => {
       const cached = await store.get(file.id);
       if (cached) return cached;
-      const uri = await this.download(file, await store.sink(file));
-      await store.put(file.id, uri);
+      const sink = await store.sink(file);
+      const uri = await this.download(file, sink);
+      try { await store.put(file.id, uri); }
+      catch (error) { await sink.abort(); throw error; }
       return uri;
-    })().catch(error => { this.images.delete(file.id); throw error; });
-    this.images.set(file.id, pending);
+    })().finally(() => {
+      // The durable store owns completed images. Browser stores can return a full data URL here.
+      if (this.pendingImages.get(file.id) === pending) this.pendingImages.delete(file.id);
+    });
+    this.pendingImages.set(file.id, pending);
     return pending;
   }
   prefetch(files?: LoungeAttachment[]) {
@@ -73,7 +78,7 @@ export class LoungeAttachmentManager {
     if (images.length + files.length + (rest.attachments?.length ?? 0) > MAX_ATTACHMENTS) {
       throw new Error('client.lounge.attachmentLimit');
     }
-    const attachments = [...(rest.attachments ?? [])];
+    const prepared: { file: LoungeAttachment; source: AttachmentSource }[] = [];
     for (const [source, kind] of [...images.map(source => [source, 'image'] as const),
       ...files.map(source => [source, 'file'] as const)]) {
       checkAttachmentSize(source, kind, draft.to);
@@ -81,14 +86,39 @@ export class LoungeAttachmentManager {
       const file: LoungeAttachment = { id, device: this.device, name: source.name,
         mime: source.mime, size: source.size, kind };
       if (!parseAttachments([file])) throw new Error('client.lounge.fileUnavailable');
-      attachments.push(file); this.sources.set(id, source);
+      prepared.push({ file, source });
     }
-    return { ...rest, attachments, images: [] };
+    for (const { file, source } of prepared) this.sources.set(file.id, { source });
+    return { ...rest, attachments: [...(rest.attachments ?? []), ...prepared.map(({ file }) => file)], images: [] };
   }
-  async persistImages(files: LoungeAttachment[]) {
+  async persistImages(files: LoungeAttachment[], created: LoungeAttachment[] = []) {
     // Persist outgoing images before publication, including when the sender leaves the conversation immediately.
-    if (this.options.session?.attachmentImages) {
-      await Promise.all(files.filter(file => file.kind === 'image').map(file => this.image(file)));
+    const store = this.options.session?.attachmentImages;
+    if (!store) return;
+    const results = await Promise.allSettled(files.filter(file => file.kind === 'image').map(async file => {
+      await this.image(file);
+      if (store.source) this.sources.delete(file.id);
+    }));
+    const failure = results.find(result => result.status === 'rejected');
+    if (failure?.status === 'rejected') {
+      await Promise.all(created.filter(file => file.kind === 'image').map(file => store.remove?.(file.id)));
+      throw failure.reason;
+    }
+  }
+  discardUnpublished(files: LoungeAttachment[]) {
+    for (const file of files) if (this.sources.get(file.id)?.sentAt === undefined) this.sources.delete(file.id);
+  }
+  published(message: Pick<LoungeMessage, 'attachments' | 'conversation' | 'sentAt'>) {
+    for (const file of message.attachments ?? []) {
+      const entry = this.sources.get(file.id);
+      if (entry && entry.sentAt === undefined && file.device === this.device) {
+        entry.peer = message.conversation; entry.sentAt = Date.parse(message.sentAt);
+      }
+    }
+  }
+  removeBefore(peer: string, deletedAt: number) {
+    for (const [id, entry] of this.sources) {
+      if (entry.peer === peer && entry.sentAt !== undefined && entry.sentAt <= deletedAt) this.sources.delete(id);
     }
   }
   async download(file: LoungeAttachment, sink: AttachmentSink, options: {
@@ -112,5 +142,5 @@ export class LoungeAttachmentManager {
     try { return await peer.exchange.download(file, sink, options); }
     finally { this.connection.release(peer); }
   }
-  stop() { this.connection?.stop(); this.available = false; this.sources.clear(); this.images.clear(); }
+  stop() { this.connection?.stop(); this.available = false; this.sources.clear(); this.pendingImages.clear(); }
 }

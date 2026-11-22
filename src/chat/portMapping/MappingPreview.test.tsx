@@ -77,6 +77,16 @@ const message = (data: string) => webview().onMessage!({ nativeEvent: { data } }
 
 beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.states = []; runtime.refs = []; });
 
+it('keeps the browser home free of a WebView until an address is requested', () => {
+  const home = () => {
+    runtime.cursor = 0; runtime.refCursor = 0;
+    return elements(MappingPreview({ close: vi.fn() }));
+  };
+  expect(home().some(node => node.type === 'WebView')).toBe(false);
+  home().find(node => node.type === 'Toolbar')!.props.browser!.visit('https://example.test/');
+  expect(home().find(node => node.type === 'WebView')!.props.source).toMatchObject({ uri: 'https://example.test/' });
+});
+
 it('enables website location and prompts before capture', () => {
   expect(webview()).toMatchObject({ mediaCapturePermissionGrantType: 'prompt', geolocationEnabled: true,
     allowsInlineMediaPlayback: true });

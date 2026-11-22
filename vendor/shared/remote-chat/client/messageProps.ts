@@ -8,4 +8,5 @@ export interface ChatMessagesProps {
   hasMore?: boolean;
   historyLoad?: import('./historyLoad').HistoryLoadResult;
   loadOlder?: () => Promise<void>;
+  showLatest?: () => void;
 }

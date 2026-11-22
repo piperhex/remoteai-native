@@ -14,6 +14,7 @@ export function useChat(session: AuthSession, deviceId: string, active: boolean)
   useActiveChatPolicy(active, state.mode);
   const catalog = useChatCatalog({ session, deviceId, controller, state });
   const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  useEffect(() => { controller.setHistoryActive(active && foreground); }, [controller, active, foreground]);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next) => setForeground(next === 'active'));
     return () => subscription.remove();

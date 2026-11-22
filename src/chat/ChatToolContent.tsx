@@ -19,6 +19,8 @@ import { ChatToolResult } from './ChatToolResult';
 import { ChatImage } from './ChatImage';
 import { generatedImageSource, itemImageSources } from '../../vendor/shared/chat/imageSources';
 import { ChatCommandDetails } from './ChatCommandDetails';
+import { NativeToolDetails } from './ChatDeferredDetails';
+import { VirtualCommandText } from './VirtualCommandText';
 import { toolText } from './toolText';
 import { useStyles, palette } from './styles';
 import type { Item } from './types';
@@ -76,6 +78,14 @@ function UserMessageDetails({ item }: { item: Item }) {
 }
 
 export function ChatToolContent({ item }: { item: Item }) {
+  useLanguage();
+  return item.detailsRef ? <NativeToolDetails key={JSON.stringify(item.detailsRef)} item={item}>
+    {loaded => item.deferredBody && ['userMessage', 'agentMessage', 'reasoning'].includes(loaded.type) && toolText(loaded)
+      ? <VirtualCommandText text={toolText(loaded)} label={t('client.chat.copyMessage')} /> : <ToolBody item={loaded} />}
+  </NativeToolDetails> : <ToolBody item={item} />;
+}
+
+function ToolBody({ item }: { item: Item }) {
   const styles = useStyles();
   useLanguage();
   const text = toolText(item);

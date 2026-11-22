@@ -31,12 +31,13 @@ import { isPageDownloadUrl, PAGE_DOWNLOAD_SCRIPT } from '../../browser/pageDownl
 
 const COMPACT_TOOLBAR_WIDTH = 272;
 
-export function MappingPreview({ port, initialUrl = '', resource, request, visible = true, onNavigate, close, devices = [],
+export function MappingPreview({ port, initialUrl = '', resource, request, onRequestHandled,
+  visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
   fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange,
   onDownload, pageDownloads, openDownloads }: {
   port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
-  resource?: NativeBrowserResource;
+  resource?: NativeBrowserResource; onRequestHandled?: (request: { url: string }) => void;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
@@ -93,7 +94,12 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
   });
   useLanguage();
   useEffect(() => () => downloads.current?.reset(), [dataGeneration]);
-  useEffect(() => { if (request) browser.visit(request.url); }, [request]);
+  useEffect(() => {
+    if (request) { browser.visit(request.url); onRequestHandled?.(request); }
+  }, [request]);
+  useEffect(() => {
+    if (!request) onNavigate?.(browser.currentUrl, browser.title);
+  }, [browser.currentUrl, browser.title]);
   useEffect(() => {
     if (visible) onInspectorObscuredChange?.(obscured);
   }, [visible, obscured, onInspectorObscuredChange]);
@@ -125,8 +131,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         {browser.error}</Text>}
       <View ref={page} collapsable={false} style={styles.fill}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
-      <WebView key={dataGeneration} ref={browser.webview}
-        source={browser.source.uri ? browser.source : undefined} style={styles.fill}
+      {!!browser.source.uri && <WebView key={dataGeneration} ref={browser.webview}
+        source={browser.source} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
         incognito={false} domStorageEnabled
@@ -160,12 +166,11 @@ export function MappingPreview({ port, initialUrl = '', resource, request, visib
         onNavigationStateChange={state => {
           browser.onNavigationStateChange(state);
           records.navigate(state);
-          if (/^https?:\/\//i.test(state.url)) onNavigate?.(state.url, state.title);
         }}
         renderError={() => <View style={styles.empty}>
           <Text style={browserStyles.message}>
             {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
-        onError={browser.onError} />
+        onError={browser.onError} />}
       </View>
       {resource && <View key={browser.resourceGeneration}
         style={[styles.fill, (!browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>

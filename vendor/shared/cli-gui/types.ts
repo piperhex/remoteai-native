@@ -5,6 +5,8 @@ export type GuiEngine = 'codex' | 'claude' | 'gemini';
 export type ExternalEngine = Exclude<GuiEngine, 'codex'>;
 export const CLI_GUI_OPERATION = 'cliGui';
 export const CLI_GUI_EVENT = 'cliGui/changed';
+export const CLI_DETAIL_CHUNK_CHARS = 256 * 1024;
+export const CLI_DETAIL_MAX_CHARS = 64 * 1024 * 1024;
 
 export interface CliModel { id: string; label: string; isDefault?: boolean;
   defaultEffort?: string; efforts?: { id: string; label: string }[] }
@@ -36,6 +38,7 @@ export interface CliSession {
   permissions: CliPermission[];
 }
 export interface CliEntry {
+  detailCursor?: CliCursor;
   id: string; first: number; last: number;
   role: 'user' | 'assistant' | 'reasoning' | 'tool' | 'error' | 'notice';
   text: string; title?: string; status?: string;
@@ -43,6 +46,9 @@ export interface CliEntry {
   images?: string[];
 }
 export interface CliCursor { epoch: string; seq: number }
+export interface CliDetailChunk { token: string; offset?: number }
+export interface CliDetailPart { token: string; offset: number; total: number; text: string; epoch?: string }
+export type CliDetailResponse = CliHistory | { detailPart: CliDetailPart };
 export interface CliHistory {
   session: CliSession; entries: CliEntry[]; cursor?: CliCursor; hasOlder: boolean;
 }
@@ -53,7 +59,8 @@ export type CliRequest = { engine: ExternalEngine } & (
   | { action: 'syncList'; archived: boolean; search?: string; more?: boolean;
       checkpoint?: import('../chat/directory/protocol').DirectoryCheckpoint }
   | { action: 'create'; cwd: string; model: string; mode?: string; effort?: string }
-  | { action: 'read'; id: string; cursor?: CliCursor }
+  | { action: 'read'; id: string; cursor?: CliCursor; previews?: boolean; detailId?: string;
+      detailChunk?: CliDetailChunk }
   | { action: 'send'; id: string; text: string; messageId: string; images?: string[]; model?: string; effort?: string }
   | { action: 'image'; id: string; source: string }
   | { action: 'stop' | 'archive'; id: string }

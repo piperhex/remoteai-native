@@ -19,6 +19,7 @@ const visualOnly = process.argv.includes('--visual-only');
 const siteOnly = process.argv.includes('--site-only');
 const swipeOnly = process.argv.includes('--swipe-only');
 const closeOnly = process.argv.includes('--close-only');
+const budgetOnly = process.argv.includes('--renderer-budget');
 const adb = async (...args) => (await run('adb', ['-s', serial, ...args], {
   timeout: 60_000, windowsHide: true, maxBuffer: 8 * 1024 * 1024,
 })).stdout.trim();
@@ -80,6 +81,40 @@ async function visit(name) {
   await tap('访问地址'); await input(`http://127.0.0.1:${port}/${name}`);
   await adb('shell', 'input', 'keyevent', '66'); await find(`Page ${name}`);
 }
+async function checkRendererBudget() {
+  const initial = (await nodes()).find(node => /^管理标签页（\d+）$/.test(node['content-desc']));
+  const count = Number(initial?.['content-desc'].match(/\d+/)?.[0]);
+  assert.ok(count > 0);
+  const address = (await find('访问地址')).text;
+  const reuseBlank = count === 1 && (!address || address === '搜索或输入网址');
+  const suffix = Date.now().toString(36).slice(-4);
+  const names = ['one', 'two', 'three', 'four'].map(name => count === 1 && reuseBlank ? name : name + '-' + suffix);
+  for (const name of names) {
+    if (!reuseBlank || name !== names[0]) await tap('新标签页');
+    await visit(name);
+  }
+  const manage = `管理标签页（${count + names.length - Number(reuseBlank)}）`;
+  await tap(manage); await find('搜索标签页');
+  await screenshot('android-budget-four-tabs');
+  const select = async name => {
+    await tap('搜索标签页'); await input(name); await back();
+    await tap(`Page ${name}`); await find(`Page ${name}`);
+  };
+  await select(names[2]);
+  assert.equal(reports.filter(entry => entry.page === names[2]).length, 1);
+  await tap(manage); await select(names[0]);
+  await delay(900);
+  assert.equal(reports.filter(entry => entry.page === names[0]).length, 2);
+  assert.ok((await find('访问地址')).text.endsWith('/' + names[0]));
+  await screenshot('android-budget-restored-tab');
+  const before = reports.length;
+  await adb('shell', 'am', 'start', '-W', '-S', '-n', activity);
+  await find('发现'); await openInitialBrowser(); await find(`Page ${names[0]}`);
+  await delay(900);
+  assert.deepEqual(reports.slice(before).map(entry => entry.page), [names[0]]);
+  await find(manage);
+  console.log('Four tab records survived eviction and restart; only the selected page reloaded on restore.');
+}
 async function checkSwipeDismissal() {
   await tap('管理标签页（2）'); await find('搜索标签页');
   await tap('Page one'); await delay(200);
@@ -123,14 +158,16 @@ await new Promise(resolve => server.listen(port, '127.0.0.1', resolve));
 const originalScale = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 try {
   await adb('reverse', `tcp:${port}`, `tcp:${port}`);
-  if (!visualOnly) await adb('shell', 'pm', 'clear', app);
+  if (!visualOnly && !budgetOnly) await adb('shell', 'pm', 'clear', app);
   await adb('shell', 'settings', 'put', 'system', 'font_scale', swipeOnly ? '1.3' : '1.0');
   await delay(1000);
   await adb('shell', 'am', 'start', '-W', '-S', '-n', activity); await delay(2500);
   await find('发现'); await delay(500); // Fixture controls move below the page once its icon font has loaded.
   if (swipeOnly) await tap('Dark');
   await openInitialBrowser(); await find('访问地址');
-  if (closeOnly) {
+  if (budgetOnly) {
+    await checkRendererBudget();
+  } else if (closeOnly) {
     await verifyBrowserTabClosing({ adb, find, tap, nodes, screenshot, visit, back, activity });
   } else if (swipeOnly) {
     await visit('one'); await tap('新标签页'); await visit('two');

@@ -19,10 +19,15 @@ export class ImageCache {
     if (pending) return pending;
     const request = (original ? this.original(threadId, source)
       : this.request<{ url: string }>({ operation: 'imagePreview', threadId, source }).then(({ url }) => url))
-      .then((url) => { this.remember(key, url); return url; }).finally(() => this.pending.delete(key));
+      .then((url) => {
+        if (this.pending.get(key) === request) this.remember(key, url);
+        return url;
+      }).finally(() => { if (this.pending.get(key) === request) this.pending.delete(key); });
     this.pending.set(key, request);
     return request;
   };
+
+  clear() { this.cached.clear(); this.pending.clear(); }
 
   private remember(key: string, url: string) {
     this.cached.set(key, url);

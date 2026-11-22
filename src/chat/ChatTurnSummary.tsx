@@ -9,6 +9,7 @@ import { generatedImageSource } from '../../vendor/shared/chat/imageSources';
 import { formatTurnDuration, turnElapsedMs } from '../../vendor/shared/conversation/turnTiming';
 import { ChatImage } from './ChatImage';
 import { completedTurnFiles } from './turnPresentation';
+import { processOutputs } from '../../vendor/shared/conversation/processDetails';
 import type { Turn } from './types';
 import { palette, useStyles } from './styles';
 import { useTaskReviewAvailable } from '../../vendor/shared/remote-chat/TaskReviewContext';
@@ -105,7 +106,7 @@ export function ChatTurnSummary({ turn, onOpen }: Props) {
   const reviewAvailable = useTaskReviewAvailable(turn.status);
   const files = useMemo(() => completedTurnFiles(turn), [turn.diff, turn.items]);
   const completed = turn.plan?.filter((step) => step.status === 'completed').length ?? 0;
-  const generated = [...new Set(turn.items.filter((item) => item.type === 'imageGeneration'
+  const generated = [...new Set(processOutputs(turn.items).filter((item) => item.type === 'imageGeneration'
     && item.status === 'completed' && !item.failure).map(generatedImageSource).filter((src) => !!src))];
   return <View style={summaryStyles.summary}>
     {generated.map((source) => <ChatImage key={source} source={source} description={t("client.chat.generatedImage")} />)}

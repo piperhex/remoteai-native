@@ -3,6 +3,7 @@ import { imageAttachmentSource } from './imageAttachmentSource';
 export interface AttachmentImageStore {
   get: (id: string) => Promise<string | undefined>;
   put: (id: string, uri: string) => Promise<void>;
+  remove?: (id: string) => Promise<void>;
   sink: (file: LoungeAttachment) => Promise<AttachmentSink>;
   source?: (id: string) => Promise<AttachmentSource | undefined>;
 }
@@ -25,16 +26,18 @@ export function browserAttachmentImages(scope: string, sink: AttachmentImageStor
         request.onerror = () => reject(request.error);
       });
     },
-    put: async (id, uri) => {
-      const database = await open();
-      await new Promise<void>((resolve, reject) => {
-        const transaction = database.transaction('images', 'readwrite');
-        transaction.objectStore('images').put(uri, [scope, id]);
-        transaction.oncomplete = () => resolve();
-        transaction.onabort = transaction.onerror = () => reject(transaction.error);
-      });
-    },
+    put: (id, uri) => change(images => images.put(uri, [scope, id])),
+    remove: id => change(images => images.delete([scope, id])),
   };
+  async function change(write: (images: IDBObjectStore) => void) {
+    const database = await open();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('images', 'readwrite');
+      write(transaction.objectStore('images'));
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = transaction.onerror = () => reject(transaction.error);
+    });
+  }
   store.source = async id => {
     const data = await store.get(id);
     return data ? imageAttachmentSource(data) : undefined;

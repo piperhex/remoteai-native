@@ -6,6 +6,9 @@ import { BottomSheet } from '../components/BottomSheet';
 import { SheetFlatList } from '../components/SheetScrollView';
 import { ChatActivityRow, ChatMessage } from './ChatMessage';
 import { ChatToolContent } from './ChatToolContent';
+import { NativeProcessDetails } from './ChatDeferredDetails';
+import { processActivityCount } from '../../vendor/shared/conversation/processDetails';
+import type { Item } from './types';
 import { QuoteSourceContext } from './ChatQuotes';
 import type { WorkEntry } from './turnPresentation';
 import { useStyles } from './styles';
@@ -25,10 +28,8 @@ export function ChatWorkDrawer({ entry, onClose }: {
   });
   useLanguage();
   const running = entry.turn.status === 'inProgress';
-  return <BottomSheet fullWidthContent visible fullscreen
-    title={running ? t("client.chat.working") : t("client.chat.activity")}
-    subtitle={t("client.chat.actions", { value1: entry.items.length })} onClose={onClose}>
-    <SheetFlatList data={entry.items} extraData={expanded} keyExtractor={(item) => item.id} style={workStyles.list}
+  const list = (items: Item[]) =>
+    <SheetFlatList data={items} extraData={expanded} keyExtractor={(item) => item.id} style={workStyles.list}
       contentContainerStyle={workStyles.content} keyboardShouldPersistTaps="handled"
       ItemSeparatorComponent={() => <View style={styles.processSeparator} />}
       renderItem={({ item }) => ['userMessage', 'agentMessage'].includes(item.type)
@@ -41,7 +42,12 @@ export function ChatWorkDrawer({ entry, onClose }: {
               <ChatToolContent item={item} />
             </QuoteSourceContext.Provider>
           </View>}
-        </View>} />
+        </View>} />;
+  return <BottomSheet fullWidthContent visible fullscreen
+    title={running ? t("client.chat.working") : t("client.chat.activity")}
+    subtitle={t("client.chat.actions", { value1: processActivityCount(entry.items) })} onClose={onClose}>
+    {entry.items.some(item => item.processRef)
+      ? <NativeProcessDetails items={entry.items}>{list}</NativeProcessDetails> : list(entry.items)}
   </BottomSheet>;
 }
 

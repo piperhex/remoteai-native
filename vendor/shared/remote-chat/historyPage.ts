@@ -6,8 +6,8 @@ import { summarizeProcesses } from '../conversation/processDetails';
 
 export const HISTORY_PAGE_SIZE = 10;
 export interface HistoryCursor { turnId: string; itemId: string }
-export interface HistoryWindow { start?: HistoryCursor; older?: boolean; deferProcesses?: boolean }
-export interface HistoryPage { start?: HistoryCursor; hasMore: boolean }
+export interface HistoryWindow { start?: HistoryCursor; older?: boolean; deferProcesses?: boolean; bounded?: boolean }
+export interface HistoryPage { start?: HistoryCursor; hasMore: boolean; hasNewer?: boolean; trimmedOlder?: boolean }
 export type PagedHistoryDelta = HistoryDelta & { page?: HistoryPage };
 
 function validCursor(value: unknown): value is HistoryCursor {
@@ -21,6 +21,7 @@ export function parseHistoryWindow(value: unknown): HistoryWindow {
   if (!value || typeof value !== 'object') throw new Error('聊天记录已更新，请重新打开聊天。');
   const window = value as HistoryWindow;
   if ((window.start !== undefined && !validCursor(window.start))
+    || (window.bounded !== undefined && typeof window.bounded !== 'boolean')
     || (window.deferProcesses !== undefined && typeof window.deferProcesses !== 'boolean')
     || (window.older !== undefined && typeof window.older !== 'boolean')) {
     throw new Error('聊天记录已更新，请重新打开聊天。');

@@ -24,6 +24,7 @@ export interface SendInput {
 export interface ChatProject { cwd: string; label: string }
 
 export interface ChatState {
+  olderView?: { thread: Thread; page: import('../historyPage').HistoryPage };
   directorySync?: boolean;
   groupCursors?: Record<string, string | null>;
   groupLoading?: Record<string, boolean>;

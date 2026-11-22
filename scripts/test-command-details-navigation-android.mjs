@@ -127,6 +127,28 @@ async function verifyDetails(label) {
   await screenshot(`${label}-command-reopened`); await tap('关闭执行命令');
 }
 
+async function verifyResidentHistory(label) {
+  await tap('HISTORY');
+  await find('完整文本');
+  await screenshot(`${label}-large-preview`);
+  await tap('完整文本');
+  await find('复制消息');
+  const rows = (await nodes()).filter(node => node['resource-id']?.includes('virtual-text-'));
+  assert.ok(rows.some(node => [node.text, node['content-desc']].some(value => value?.includes('Inspection results'))));
+  assert.ok(rows.length < 50, 'Opening the full response should only mount the visible text chunks.');
+  await screenshot(`${label}-large-detail`);
+  await adb('shell', 'input', 'keyevent', '4');
+  await tap('加载更早的消息');
+  await find('Earlier inspection report');
+  await screenshot(`${label}-older`);
+  await tap('回到底部');
+  await find('完整文本');
+  assert.ok(!(await nodes()).some(node => matches(node, 'Earlier inspection report')));
+  await screenshot(`${label}-latest`);
+  await tap('HISTORY');
+  await find('已运行 echo single');
+}
+
 await mkdir(output, { recursive: true });
 await writeFile(path.join(output, 'result.json'), JSON.stringify({ serial, passed: false, status: 'running' }));
 await prepareHierarchy({ adb, output });
@@ -140,6 +162,7 @@ try {
       await tap(mode);
       await verifyGestureReopen(`android-${mode.toLowerCase()}-font-${font}`);
       await verifyDetails(`android-${mode.toLowerCase()}-font-${font}`);
+      await verifyResidentHistory(`android-${mode.toLowerCase()}-font-${font}`);
     }
   }
   await writeFile(path.join(output, 'result.json'), JSON.stringify({ serial, passed: true,
@@ -149,6 +172,7 @@ try {
       'same command reopens after right and left system back gestures',
       'command/process alternate and process reopens after system back gestures',
       'tab press', 'page swipe', 'navigation during modal', 'no delayed dialogs', 'group reopens',
+      'large reply preview opens full virtualized text', 'older history and return to latest',
     ] }, null, 2));
 } catch (error) {
   await screenshot('failure');

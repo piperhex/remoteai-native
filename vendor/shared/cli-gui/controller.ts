@@ -1,15 +1,20 @@
-import type { CliCatalog, CliChange, CliEntry, CliHistory, CliRequest, CliRuntimeStatus, CliSession,
+import type { CliCatalog, CliChange, CliHistory, CliRequest, CliRuntimeStatus, CliSession,
   CliTransport, ExternalEngine, GuiEngine } from './types';
 import { modelSelectionError, resolveModelSelection } from '../conversation/modelSelection';
 import { cliPickerModels, cliRequestEffort } from './modelSelection';
 import type { DraftImage } from '../chat/draftImages';
 import { CliListDirectory } from './directory';
+import { boundedCliHistory, mergeEntries, refreshCliHistory, sameHistory } from './historyWindow';
+import { readCliDetail } from './readDetail';
+import type { Item } from '../conversation/types';
+export { mergeEntries } from './historyWindow';
 
 const LIVE_REFRESH_DELAY_MS = 80;
 const FALLBACK_REFRESH_DELAY_MS = 1000;
 const METADATA_REFRESH_INTERVAL_MS = 60_000;
 
 export interface CliState {
+  olderView?: CliHistory;
   search?: string;
   listMore?: Partial<Record<ExternalEngine, boolean>>;
   listLoading?: boolean;
@@ -30,6 +35,7 @@ export class CliController {
   private catalogRevision = 0;
   private refreshPromise?: Promise<void>;
   private active = false;
+  private expandedHistory = false;
   private generation = 0;
   private refreshAgain?: 'history' | 'full';
   private timer?: ReturnType<typeof setTimeout>;
@@ -56,6 +62,11 @@ export class CliController {
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
   patch = (patch: Partial<CliState>) => {
+    if (patch.history === null || (patch.history && this.state.history
+      && !sameHistory(patch.history, this.state.history))) {
+      this.expandedHistory = false;
+      patch = { ...patch, olderView: undefined };
+    }
     if (!this.state.selected && patch.selected === undefined && patch.cwd !== undefined
       && patch.cwd !== this.state.cwd) {
       this.saveDraft();
@@ -103,7 +114,9 @@ export class CliController {
     return () => { if (generation !== this.generation) return;
       ++this.generation; this.active = false; this.unsubscribe?.(); this.unsubscribeAccount?.();
       this.directory.disconnect();
-      if (this.older) { this.older = undefined; this.patch({ loading: false }); }
+      this.older = undefined;
+      this.refreshAgain = undefined;
+      this.patch({ history: null, loading: false });
       clearTimeout(this.timer); this.timer = undefined; };
   }
   setListVisible = (visible: boolean) => {
@@ -167,7 +180,9 @@ export class CliController {
     }
     const generation = this.generation;
     this.refreshPromise = this.synchronize(historyOnly).catch(error => {
-      if (this.state.engine !== 'codex') { this.report(error); this.patch({ loading: false }); }
+      if (generation === this.generation && this.state.engine !== 'codex') {
+        this.report(error); this.patch({ loading: false });
+      }
     }).finally(() => {
       this.refreshPromise = undefined;
       const again = this.refreshAgain;
@@ -226,8 +241,15 @@ export class CliController {
   private async synchronizeHistory(revision: number) {
     const { selected } = this.state;
     if (!selected || revision !== this.revision) return;
-    const history = await this.read<CliHistory>({ engine: selected.engine, action: 'read', id: selected.id });
-    if (revision === this.revision) this.patch({ history: preserveOlder(this.state.history, history),
+    const generation = this.generation;
+    const history = await this.read<CliHistory>({ engine: selected.engine, action: 'read',
+      id: selected.id, previews: true });
+    if (revision !== this.revision || generation !== this.generation) return;
+    const previous = this.state.history;
+    const refreshed = refreshCliHistory(previous, history, this.expandedHistory || Boolean(this.older));
+    const evicted = previous && this.expandedHistory && sameHistory(previous, refreshed)
+      && previous.entries[0]?.first < refreshed.entries[0]?.first;
+    this.patch({ history: refreshed, ...(evicted && !this.state.olderView && { olderView: previous }),
       selected: history.session, loading: false,
       sessions: this.state.sessions.map(session => session.engine === selected.engine && session.id === selected.id
         ? history.session : session) });
@@ -304,49 +326,51 @@ export class CliController {
     finally { this.patch({ busy: false }); }
   };
   loadOlder = async () => {
-    const { selected, history } = this.state;
+    const { selected } = this.state;
+    const history = this.state.olderView ?? this.state.history;
     if (!selected || !history?.cursor || this.state.loading) return;
     const request = { revision: this.revision, generation: this.generation, history };
     this.older = request;
     this.patch({ loading: true, error: '' });
     try {
       const page = await this.read<CliHistory>({ engine: selected.engine, action: 'read', id: selected.id,
-        cursor: history.cursor });
-      const latest = this.state.history;
+        cursor: history.cursor, previews: true });
+      const latest = this.state.olderView ?? this.state.history;
       const pageEpoch = page.cursor?.epoch ?? (!page.hasOlder && !page.entries.length ? history.cursor.epoch : undefined);
       if (this.older !== request || !this.isOlderCurrent(request) || !latest
         || page.session.id !== selected.id || page.session.engine !== selected.engine
         || pageEpoch !== history.cursor.epoch) return;
       // Only the older boundary belongs to this response; live replies and session state remain authoritative.
       this.older = undefined;
-      this.patch({ history: { ...latest, cursor: page.cursor ?? latest.cursor, hasOlder: page.hasOlder,
-        entries: mergeEntries(page.entries, latest.entries) }, loading: false });
+      const bounded = boundedCliHistory({ ...latest, cursor: page.cursor ?? latest.cursor, hasOlder: page.hasOlder,
+        entries: mergeEntries(page.entries, latest.entries) }, true);
+      if (bounded.cut || this.state.olderView) this.patch({ olderView: bounded.history, loading: false });
+      else { this.expandedHistory = true; this.patch({ history: bounded.history, loading: false }); }
     } catch (error) { if (this.older === request) this.report(error); }
     finally {
       if (this.older === request) { this.older = undefined; this.patch({ loading: false }); }
     }
   };
   private isOlderCurrent(request: NonNullable<CliController['older']>) {
-    const { selected, history } = this.state;
+    const { selected } = this.state;
+    const history = this.state.olderView ?? this.state.history;
     return request.revision === this.revision && request.generation === this.generation
       && selected?.id === request.history.session.id && selected.engine === request.history.session.engine
       && !!history && sameHistory(request.history, history)
       && request.history.cursor?.seq === history.cursor?.seq;
   }
-}
-
-function sameHistory(previous: CliHistory, next: CliHistory) {
-  return previous.session.id === next.session.id && previous.session.engine === next.session.engine
-    && previous.cursor?.epoch === next.cursor?.epoch;
-}
-
-export function mergeEntries(older: CliEntry[], newer: CliEntry[]) {
-  const boundary = newer[0]?.first ?? Infinity;
-  return [...older.filter(entry => entry.last < boundary), ...newer];
-}
-function preserveOlder(previous: CliHistory | null, next: CliHistory): CliHistory {
-  if (!previous || !sameHistory(previous, next)) return next;
-  const entries = mergeEntries(previous.entries, next.entries);
-  return entries.length > next.entries.length
-    ? { ...next, entries, cursor: previous.cursor, hasOlder: previous.hasOlder } : next;
+  showLatest = () => {
+    this.older = undefined;
+    this.expandedHistory = false;
+    this.patch({ olderView: undefined, loading: false });
+  };
+  loadToolDetails = (target: NonNullable<Item['detailsRef']>) => {
+    const history = this.state.olderView ?? this.state.history;
+    const cursor = history?.entries.find(entry => entry.id === target.itemId)?.detailCursor;
+    if (!history || history.session.id !== target.threadId || !cursor) {
+      return Promise.reject(new Error('client.cliGui.historyFailed'));
+    }
+    return readCliDetail(this.transport, { action: 'read', engine: history.session.engine,
+      id: target.threadId, detailId: target.itemId, ...(cursor.epoch && { cursor }) }, history);
+  };
 }

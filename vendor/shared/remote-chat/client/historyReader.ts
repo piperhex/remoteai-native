@@ -5,7 +5,7 @@ import type { HistoryVersionSource } from './historyPreparation';
 
 type HistoryRequest = { operation: 'read'; threadId: string }
   | { operation: 'syncHistory'; threadId: string; known: HistoryVersion; window: HistoryWindow };
-const UNSUPPORTED_OPERATION = '当前手机端暂不支持此操作。';
+export const UNSUPPORTED_OPERATION = '当前手机端暂不支持此操作。';
 
 /** Older PCs expose read but do not recognize incremental history or its paging window. */
 export class HistoryReader {

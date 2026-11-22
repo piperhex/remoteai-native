@@ -41,6 +41,43 @@ async function connectedController() {
 }
 
 describe('mobile chat actions', () => {
+  it('drops a hidden device history, keeps completion notifications and restores its latest page', async () => {
+    const complete = { ...thread, turns: [{ id: 'turn', status: 'completed',
+      items: [{ id: 'answer', type: 'agentMessage', text: 'done' }] }] };
+    mocks.request.mockImplementation(async (method, body) => {
+      if (method === 'connect') return { protocolVersion: 1, approvals: [], conversationViewsV1: true };
+      if (body?.operation === 'syncHistory') return { thread: complete };
+      return { data: [], nextCursor: null };
+    });
+    const controller = new ChatController(session, 'computer');
+    controller.start();
+    await vi.waitFor(() => expect(controller.snapshot().ready).toBe(true));
+    await controller.select(thread);
+    expect(controller.snapshot().selected?.turns).toEqual(complete.turns);
+    mocks.request.mockClear();
+    controller.setHistoryActive(false);
+    await vi.waitFor(() => expect(mocks.request).toHaveBeenCalledWith('request', {
+      operation: 'viewThread', threadId: null, deferToolDetails: true,
+    }));
+    mocks.request.mockClear();
+    const listener = vi.fn();
+    controller.subscribeEvents(listener);
+    const event = { method: 'turn/completed', params: { threadId: thread.id, turn: complete.turns[0] } };
+    mocks.events!.event(event);
+    expect(listener).toHaveBeenCalledWith(event);
+    mocks.events!.event({ method: 'item/agentMessage/delta',
+      params: { threadId: thread.id, turnId: 'turn', itemId: 'answer', delta: 'hidden' } });
+    await controller.refreshSelected();
+    expect(controller.snapshot().selected?.turns).toBeUndefined();
+    expect(mocks.request).not.toHaveBeenCalled();
+    controller.setHistoryActive(true);
+    await controller.refreshSelected();
+    expect(controller.snapshot().selected?.turns).toEqual(complete.turns);
+    expect(mocks.request).toHaveBeenCalledWith('request', {
+      operation: 'viewThread', threadId: thread.id, deferToolDetails: true,
+    });
+    controller.stop();
+  });
   it.each([true, false])('clears upload progress after sending finishes (success=%s)', async (success) => {
     const controller = await connectedController();
     mocks.request.mockResolvedValue({ thread });
@@ -70,7 +107,7 @@ describe('mobile chat actions', () => {
     const controller = await connectedController();
     const history: Thread = { ...thread, turns: [{ id: 'long-turn', status: 'completed',
       items: Array.from({ length: 60 }, (_, index) => ({
-        id: `message-${index}`, type: 'agentMessage', text: 'Reply',
+        id: `message-${index}`, type: 'userMessage', text: 'Question',
       })) }] };
     const other = { ...thread, id: 'other' };
     mocks.request.mockImplementation(async (_method, body: {

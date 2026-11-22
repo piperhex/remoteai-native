@@ -108,6 +108,7 @@ export class AttachmentConnection {
     const peer = {} as TransferPeer;
     peer.exchange = new AttachmentExchange({ fileId, source: () => this.options.source(fileId),
       send: message => peer.link.send(message) });
+    if (frame.desktop) peer.exchange.claimSource();
     peer.link = new ChatLink({ ...this.options.transport, sessionId: id, secret: this.keys.secret,
       publicKey: frame.publicKey, desktop: frame.desktop, transportVersion: 2, startOnRelay: true,
       iceServers: frame.iceServers as IceServer[], signal: message => this.send(message),

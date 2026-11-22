@@ -11,11 +11,20 @@ export class AttachmentExchange {
   private serving = false;
   private readonly requests: RpcRequest[] = [];
   private closed = false;
+  private reader?: Promise<AttachmentSource | undefined>;
   constructor(private readonly options: {
     fileId: string; source: () => AttachmentSource | undefined | Promise<AttachmentSource | undefined>;
     send: (message: RpcMessage) => Promise<void>;
   }) {
     this.rpc = new ChatRpc({ send: options.send, prefix: 'attachment', event: () => {} });
+  }
+  /** Once a sender accepts a peer, that peer can finish even if the conversation is deleted. */
+  claimSource() {
+    if (!this.closed) this.reader ??= this.resolveSource();
+  }
+  private async resolveSource() {
+    try { return await this.options.source(); }
+    catch { return undefined; } // The peer receives the same unavailable response as a missing file.
   }
   receive(message: RpcMessage) {
     if (this.closed) return;
@@ -34,14 +43,17 @@ export class AttachmentExchange {
   private async answer(message: RpcRequest) {
     try {
       const body = message.body as { protocol?: string; offset?: number; length?: number } | undefined;
-      const file = await this.options.source();
+      this.claimSource();
+      const file = await this.reader;
+      if (this.closed) return;
+      if (!file) this.reader = undefined;
       if (message.method !== 'request' || !file || body?.protocol !== PROTOCOL || !Number.isSafeInteger(body.offset)
         || !Number.isSafeInteger(body.length) || body.offset! < 0 || body.length! < 1
         || body.length! > ATTACHMENT_CHUNK_BYTES || body.offset! + body.length! > file.size) {
         throw new Error('client.lounge.fileUnavailable');
       }
       const data = await file.read(body.offset!, body.length!);
-      await this.options.send({ kind: 'response', id: message.id, data });
+      if (!this.closed) await this.options.send({ kind: 'response', id: message.id, data });
     } catch {
       if (!this.closed) await this.options.send({ kind: 'response', id: message.id,
         error: 'client.lounge.fileUnavailable' }).catch(() => this.close());
@@ -75,5 +87,5 @@ export class AttachmentExchange {
     }
     return data;
   }
-  close() { this.closed = true; this.requests.length = 0; this.rpc.close(); }
+  close() { this.closed = true; this.reader = undefined; this.requests.length = 0; this.rpc.close(); }
 }

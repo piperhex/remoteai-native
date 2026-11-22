@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Keyboard, StatusBar, StyleSheet, View } from 'react-native';
+import { AppState, Keyboard, StatusBar, StyleSheet, View } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 import { getRandomBytes } from 'expo-crypto';
 import { BookmarkProvider } from '../../vendor/shared/browser/bookmarks/context';
 import type { BookmarkChannel } from '../../vendor/shared/browser/bookmarks/channel';
+import { useMobileBrowserRenderers } from '../../vendor/shared/browser/useMobileBrowserRenderers';
 import { MappingPreview } from '../chat/portMapping/MappingPreview';
 import { NativeBrowserContext } from './context';
 import type { BrowserDevice } from './browserMappings';
@@ -24,7 +25,7 @@ const bookmarkStorage = {
   setItem: (key: string, value: string) => Storage.setItemSync(key, value),
 };
 
-/** Each tab owns a retained browsing context, including session storage and native navigation history. */
+/** Tab metadata outlives evicted WebViews so older pages can reopen at their last address. */
 export function NativeBrowserProvider({ scope, channel, children, devices = [], footer, active, onActiveChange,
   openDownloads }: {
   scope: string; channel?: BookmarkChannel; children: ReactNode; devices?: readonly BrowserDevice[];
@@ -32,11 +33,15 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   openDownloads?: () => void;
 }) {
   const browser = useNativeBrowserTabs(scope);
-  const [visited, setVisited] = useState(false);
   const [requestedVisible, setVisible] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const visible = active ?? requestedVisible;
-  useEffect(() => { if (visible) setVisited(true); }, [visible]);
+  const { resident, releaseBackground } = useMobileBrowserRenderers(browser.activeId, visible);
+  useEffect(() => {
+    const pressure = AppState.addEventListener('memoryWarning', releaseBackground);
+    const background = AppState.addEventListener('change', state => { if (state === 'background') releaseBackground(); });
+    return () => { pressure.remove(); background.remove(); };
+  }, [releaseBackground]);
   useEffect(() => { if (!visible) setFullscreen(false); }, [visible]);
   const [manager, setManager] = useState(false);
   const [dataGeneration, setDataGeneration] = useState(0);
@@ -64,7 +69,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const hasBottomNavigation = Boolean(footer);
   const reveal = () => {
     dismissKeyboard();
-    setManager(false); setVisited(true); setVisible(true);
+    setManager(false); setVisible(true);
     onActiveChange?.(true);
   };
   const context = useMemo(() => ({ visible, hasBottomNavigation, close,
@@ -102,23 +107,25 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
             importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}>
             <BrowserInspectorDock inspector={inspector} obscured={visible && inspectorObscured}
               fullscreen={visible && fullscreen}>
-              {visited && browser.tabs.map(tab => {
+              {browser.tabs.filter(tab => resident.includes(tab.id)).map(tab => {
                 const selected = browser.activeId === tab.id;
                 const active = visible && !manager && selected;
                 return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]}
                   collapsable={false} pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
                   importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
                   <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
-                    request={tab.request} visible={active} devices={devices}
-              onDownload={download} pageDownloads={pageDownloads} openDownloads={openDownloads}
+                    request={tab.request} onRequestHandled={request => browser.consumeRequest(tab.id, request)}
+                    visible={active} devices={devices}
+                    onDownload={download} pageDownloads={pageDownloads} openDownloads={openDownloads}
                     inspector={selected ? inspector : undefined} onInspectorObscuredChange={setInspectorObscured}
                     desktop={tab.desktop}
                     onDesktopChange={desktop => browser.update(tab.id, { desktop, preview: undefined })}
                     fullscreen={fullscreen && active} onFullscreenChange={setFullscreen}
                     tabCount={browser.tabs.length} newTab={add}
                     manageTabs={() => { inspector.close(); setManager(true); }}
-                    onPreview={preview => browser.update(tab.id, { preview })}
-                    onNavigate={(url, title) => browser.update(tab.id, { url, title,
+                    onPreview={preview => browser.setPreview(tab.id, preview)}
+                    onNavigate={(url, title) => browser.update(tab.id, {
+                      url, title: title || (url === tab.url ? tab.title : ''),
                       visitedAt: url !== tab.url ? Date.now() : tab.visitedAt })} close={close} />
                 </View>;
               })}

@@ -388,6 +388,7 @@ export class LoungeController {
     const conversation = messageConversation(message, this.state.user?.id ?? '');
     message = { ...message, conversation: conversation || undefined };
     if (!this.isCurrentMessage(message)) return;
+    if (own) this.attachments.published(message);
     if (own) this.submissions.finish(message.id);
     if (this.recent.some(item => item.id === message.id && item.sender.id === message.sender.id)) return;
     this.recent = recentMessages([...this.recent, message]);
@@ -524,15 +525,23 @@ export class LoungeController {
       return Promise.reject(new Error('client.lounge.muted'));
     }
     const lifecycle = this.lifecycle;
+    const existing = draft.attachments?.length ?? 0;
     draft = this.attachments.prepare(draft);
-    if (draft.attachments?.some(file => file.kind === 'image')) await this.attachments.persistImages(draft.attachments);
-    if (lifecycle !== this.lifecycle) throw new Error('client.lounge.sendFailed');
-    if (draft.to) {
-      const recipient = this.state.contacts.find(contact => contact.user.id === draft.to)?.user;
-      if (!recipient) return Promise.reject(new Error('client.lounge.directUnavailable'));
-      return this.delivery.send(draft, this.runtime.randomId(), recipient);
+    const created = draft.attachments?.slice(existing) ?? [];
+    try {
+      if (draft.attachments?.some(file => file.kind === 'image')) {
+        await this.attachments.persistImages(draft.attachments, created);
+      }
+      if (lifecycle !== this.lifecycle) throw new Error('client.lounge.sendFailed');
+      if (draft.to) {
+        const recipient = this.state.contacts.find(contact => contact.user.id === draft.to)?.user;
+        if (!recipient) throw new Error('client.lounge.directUnavailable');
+        await this.delivery.send(draft, this.runtime.randomId(), recipient);
+      } else await this.submit({ type: 'message', ...draft }, draft);
+    } catch (error) {
+      this.attachments.discardUnpublished(created);
+      throw error;
     }
-    return this.submit({ type: 'message', ...draft }, draft);
   }
   async setAvatar(avatar: string): Promise<void> {
     if (!this.state.user || !this.profiles.available) throw new Error('client.lounge.avatarSaveFailed');
@@ -607,6 +616,7 @@ export class LoungeController {
       await this.session?.history?.deleteBefore?.(userId, deletedAt);
       if (lifecycle !== this.lifecycle) return;
       this.deletions.remember(userId, deletedAt);
+      this.attachments.removeBefore(userId, deletedAt);
       this.historyEpoch++;
       const removed = removedConversation({ state: this.state, peer: userId, deletedAt, recent: this.recent });
       this.recent = removed.recent;

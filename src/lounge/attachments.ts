@@ -15,6 +15,11 @@ export function nativeAttachmentImages(scope: string): AttachmentImageStore {
       return uri && (await Files.getInfoAsync(uri)).exists ? uri : undefined;
     },
     put: async (id, uri) => { Storage.setItemSync(key(id), uri); },
+    remove: async id => {
+      const uri = Storage.getItemSync(key(id));
+      if (uri) await Files.deleteAsync(uri, { idempotent: true });
+      Storage.removeItemSync(key(id));
+    },
   };
   store.source = async id => {
     const uri = await store.get(id);

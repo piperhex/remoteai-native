@@ -42,6 +42,8 @@ export class OfflineWriter {
     void this.store.remove(id).catch(this.failed);
   }
 
+  releaseSnapshot() { this.last = undefined; }
+
   flush = (): Promise<void> => {
     clearTimeout(this.timer);
     this.timer = undefined;

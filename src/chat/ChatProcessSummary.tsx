@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatTurnDuration, turnElapsedMs } from '../../vendor/shared/conversation/turnTiming';
 import type { WorkEntry } from './turnPresentation';
+import { processActivityCount } from '../../vendor/shared/conversation/processDetails';
 import { palette, useStyles } from './styles';
 
 export function ChatProcessSummary({ entry, onOpen, onInline }: {
@@ -19,7 +20,8 @@ export function ChatProcessSummary({ entry, onOpen, onInline }: {
   const label = elapsed == null ? (running ? t("client.chat.working") : t("client.chat.activity")) : t("client.chat.duration", { value1: formatTurnDuration(elapsed) });
   const toggle = entry.inline || ['inProgress', 'interrupted', 'failed'].includes(entry.turn.status);
   return <View style={processStyles.row}>
-    <Pressable accessibilityRole="button" accessibilityLabel={t("client.chat.viewActivityActions", { value1: entry.items.length })}
+    <Pressable accessibilityRole="button"
+      accessibilityLabel={t("client.chat.viewActivityActions", { value1: processActivityCount(entry.items) })}
       style={processStyles.open} onPress={onOpen}>
       <Text style={[styles.subtitle, processStyles.label]}>
         {label}{'  '}<Ionicons name="chevron-forward" size={14} color={color(palette.muted, 'muted')} />

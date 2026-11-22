@@ -100,7 +100,7 @@ export class PreviewDownloads<T extends PreviewTask> implements PreviewAdapter {
 
   private async obtain(source: PreviewSource, generation: number, progress: PreviewProgressEmitter) {
     await this.backend.initialize();
-    if (this.disposed || generation !== this.generation) throw new Error('预览已关闭，请重新打开。');
+    this.checkGeneration(generation);
     const candidates = this.backend.snapshot().filter(task => sourceKey(task.source) === sourceKey(source));
     const cached = candidates.filter(complete).sort((a, b) => b.createdAt - a.createdAt)[0];
     // Reopening text online reads a fresh snapshot. Images have a short, explicit cache lifetime.
@@ -109,11 +109,16 @@ export class PreviewDownloads<T extends PreviewTask> implements PreviewAdapter {
       return cached;
     }
     await this.wait(() => this.connected() || undefined, 5000);
-    if (generation !== this.generation) throw new Error('预览已关闭，请重新打开。');
+    this.checkGeneration(generation);
     const unfinished = candidates.find(task => !complete(task));
     let id: string;
     if (unfinished) { id = unfinished.id; await this.backend.resume(id); }
-    else { await this.prune(); id = await this.backend.enqueue(source); }
+    else {
+      await this.prune();
+      this.checkGeneration(generation);
+      id = await this.backend.enqueue(source);
+    }
+    this.checkGeneration(generation);
     return this.wait(() => {
       const task = this.backend.snapshot().find(value => value.id === id);
       if (!task) throw new Error('预览缓存已清理，请重试。');
@@ -122,6 +127,10 @@ export class PreviewDownloads<T extends PreviewTask> implements PreviewAdapter {
       if (!active(task)) throw new Error(task.message || '加载中断，重新打开即可继续。');
       return undefined;
     });
+  }
+
+  private checkGeneration(generation: number) {
+    if (this.disposed || generation !== this.generation) throw new Error('预览已关闭，请重新打开。');
   }
 
   private async prune() {
@@ -140,9 +149,10 @@ export class PreviewDownloads<T extends PreviewTask> implements PreviewAdapter {
   }
 
   image = async (threadId: string, path: string, original: boolean, options?: PreviewLoadOptions) => {
+    const generation = this.generation;
     const task = await this.load(threadId, path, original ? 'image' : 'thumbnail', options);
     const url = await this.read(task, () => this.backend.image(task));
-    if (original) this.images.set(url, task);
+    if (original && generation === this.generation) this.images.set(url, task);
     return url;
   };
   text = async (threadId: string, path: string, options?: PreviewLoadOptions): Promise<TextPreview> => {

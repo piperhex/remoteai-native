@@ -8,6 +8,7 @@ import { ChatActivityRow, ChatMessage } from './ChatMessage';
 import { ChatToolDetails } from './ChatToolDetails';
 import { ChatWorkDrawer } from './ChatWorkDrawer';
 import { ChatProcessSummary } from './ChatProcessSummary';
+import { ChatProcessItems } from './ChatProcessItems';
 import { ChatTurnDuration, ChatTurnSummary } from './ChatTurnSummary';
 import { ChatTurnDetails } from './ChatTurnDetails';
 import { ChatRequestError } from './ChatRequestError';
@@ -76,12 +77,13 @@ const TimelineEntry = memo(function TimelineEntry({ entry, open, onInline, proce
         open({ type: 'activities', id: entry.id });
       }} /> : null;
   }
+  if (entry.item.processRef) return <ChatProcessItems item={entry.item} turn={entry.turn} />;
   return <ChatMessage item={entry.item} process={entry.kind === 'process'}
     onOpen={openItem}
     running={entry.turn.status === 'inProgress' && entry.item.status !== 'completed'} />;
 });
 
-export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder, historyLoad, offline, processing,
+export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder, showLatest, historyLoad, offline, processing,
   active = true }: ChatMessagesProps & { processing?: ReactNode; active?: boolean }) {
   const styles = useStyles();
   const color = useThemeColor();
@@ -145,8 +147,9 @@ export function ChatMessages({ thread, loading, loadingMore, hasMore, loadOlder,
     </View>}
     ListFooterComponent={<View style={[styles.messageFooter, { paddingBottom: historyBottomSpace }]}
       onLayout={onFooterLayout}>{runningSummary ? null : processing}</View>} />
-    {showScrollToBottom && !showInitialLoading && entries.length > 0 && <Pressable
-      accessibilityRole="button" accessibilityLabel={t("client.chat.scrollToBottom")} onPress={scrollToBottom}
+    {(showScrollToBottom || showLatest) && !showInitialLoading && entries.length > 0 && <Pressable
+      accessibilityRole="button" accessibilityLabel={t("client.chat.scrollToBottom")}
+      onPress={() => { showLatest?.(); scrollToBottom(); }}
       style={({ pressed }) => [styles.scrollToBottom, pressed && styles.scrollToBottomPressed]}>
       <Ionicons name="arrow-down" size={18} color={color(palette.ink, 'ink')} />
       <Text style={styles.scrollToBottomText}>{t("client.chat.scrollToBottom")}</Text>

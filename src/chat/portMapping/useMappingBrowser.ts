@@ -23,12 +23,13 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
   const opening = useRef(false);
   const editing = useRef(false);
   const [homeReturn, setHomeReturn] = useState<'goBack' | 'goForward' | undefined>();
-  const [homeVisible, setHomeVisible] = useState(!initialUrl && !resource);
-  const [resourceVisible, setResourceVisible] = useState(Boolean(resource));
+  const [homeVisible, setHomeVisible] = useState(!initialUrl);
+  const startsAtResource = Boolean(resource && resource.url === initialUrl);
+  const [resourceVisible, setResourceVisible] = useState(startsAtResource);
   const [resourceGeneration, setResourceGeneration] = useState(0);
-  const [source, setSource] = useState({ uri: resource ? '' : initialUrl });
+  const [source, setSource] = useState({ uri: startsAtResource ? '' : initialUrl });
   const [address, setAddress] = useState(initialUrl);
-  const [currentUrl, setCurrentUrl] = useState(resource ? '' : initialUrl);
+  const [currentUrl, setCurrentUrl] = useState(startsAtResource ? '' : initialUrl);
   const [title, setTitle] = useState('');
   const [history, setHistory] = useState({ back: false, forward: false });
   const [error, setError] = useState('');

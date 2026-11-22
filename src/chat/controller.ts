@@ -18,6 +18,8 @@ export class ChatController extends SharedController {
       new SqliteHistoryStore(session, deviceId, prepare), prepare ? new AsyncHistoryVersionCache(prepare) : undefined,
       createNativeSshProfiles(session));
     this.directoryStorage = nativeDirectoryStorage(session, deviceId);
+    this.deferToolDetails = true;
+    this.deferProcessDetails = true;
     if (Platform.OS === 'android') {
       this.previewDownloads = createPreviewDownloads({ owner: downloadOwner(session), deviceId });
     } else this.previewDownloads = createIosPreviewDownloads(this, { owner: downloadOwner(session), deviceId });

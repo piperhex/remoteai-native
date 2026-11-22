@@ -28,6 +28,7 @@ export interface FileChange { path: string; diff: string; kind: { type: string; 
 export interface PlanStep { step: string; status: string }
 export interface SearchResult { title?: string; url?: string; snippet?: string }
 export interface Item {
+  deferredBody?: boolean;
   id: string;
   type: string;
   /** Frontend-only echo of an acknowledged message awaiting its server item. */

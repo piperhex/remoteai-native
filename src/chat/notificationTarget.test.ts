@@ -44,6 +44,13 @@ it('uses the desktop event identity for both live and cloud approval alerts', ()
   expect(notificationId(notice!)).toBe(notificationId({ ...target, turnId }));
 });
 
+it('recognizes a content-free question notification for a hidden conversation', () => {
+  const notice = attentionChatTarget({ method: 'item/completed', params: {
+    threadId: 'chat', notificationEventId: 'question-q', item: { id: 'q', type: 'agentMessage' },
+  } }, { account, deviceId: 'pc' });
+  expect(notice).toEqual({ ...target, turnId: 'question-q' });
+});
+
 it('rejects malformed targets and distinguishes turns and computers', () => {
   for (const value of [null, {}, { ...target, account: '' }, { ...target, deviceId: '' },
     { ...target, threadId: 42 }, { ...target, turnId: 'x'.repeat(201) }]) {

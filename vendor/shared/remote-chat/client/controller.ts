@@ -8,6 +8,7 @@ import { mergeTaskDelivery } from '../taskDelivery';
 import type { RemoteComposerCatalog } from '../composerCatalog';
 import type { ProjectFilesRequest, ProjectFilesResponse } from '../projectFiles';
 import { applyChatEvent } from './events';
+import { visibleConversationEvent } from '../../conversation/eventVisibility';
 import { isTextDelta, StreamFrame } from '../../chat/streamFrame';
 import { syncChatProcessing } from './processing';
 import { mergeHistory } from './history';
@@ -15,7 +16,8 @@ import { historyLoadResult } from './historyLoad';
 import { HISTORY_CHANGED } from '../historySync';
 import { contentStringHash } from '../stringHash';
 import type { HistoryPage } from '../historyPage';
-import { HistoryReader } from './historyReader';
+import { HistoryReader, UNSUPPORTED_OPERATION } from './historyReader';
+import { residentHistory, residentPage } from './residentHistory';
 import type { HistoryVersionSource } from './historyPreparation';
 import { HistoryCache } from './historyCache';
 import { ImageCache } from './imageCache';
@@ -171,6 +173,8 @@ export class ChatController {
   private readonly histories = new HistoryCache();
   private readonly historyReader: HistoryReader;
   private readonly historyPages = new Map<string, HistoryPage>();
+  private expandedHistory = false;
+  private readonly resident = new WeakSet<Thread>();
   private historyTimer?: ReturnType<typeof setTimeout>;
   private historyDirty = false;
   private olderQueued = false;
@@ -179,6 +183,7 @@ export class ChatController {
     update: (patch) => this.update(patch), ready: () => this.active && this.state.ready,
     request: (body) => this.connection.request('request', body) });
   private viewing = true;
+  private historyActive = true;
   private conversationViewsSupported = false;
   private viewSync: Promise<unknown> = Promise.resolve();
   private viewGeneration = 0;
@@ -259,6 +264,21 @@ export class ChatController {
     request: request => this.connection.request('request', { operation: 'claudeAccounts', request }),
   };
   private emit() {
+    const current = this.state.selected;
+    if (current && !this.resident.has(current)) {
+      const bounded = residentHistory(current);
+      if (bounded.cut) {
+        if (this.expandedHistory && !this.state.olderView) {
+          const reading = residentHistory(current, true).thread;
+          this.state = { ...this.state, olderView: { thread: reading,
+            page: residentPage(reading, this.state.historyHasMore) } };
+        }
+        this.historyPages.set(current.id, residentPage(bounded.thread, true));
+      }
+      if (bounded.thread !== current) this.state = { ...this.state, selected: bounded.thread,
+        historyHasMore: bounded.cut || this.state.historyHasMore };
+      this.resident.add(bounded.thread);
+    }
     const { selected, ready, historyOffline, selectedArchived } = this.state;
     if (ready && selected && !historyOffline && this.loadedThreadId === selected.id) {
       this.offlineWriter?.remember({ thread: selected, archived: selectedArchived,
@@ -267,8 +287,13 @@ export class ChatController {
     for (const listener of this.listeners) listener();
   }
   private update(patch: Partial<ChatState>, readErrorSource?: ReadErrorSource) {
+    if (!this.historyActive && patch.selected?.turns) patch = { ...patch, selected: { ...patch.selected, turns: undefined } };
     if ('error' in patch) this.readErrorSource = readErrorSource;
     const previous = this.state;
+    if (patch.selected !== undefined && (previous.selected?.id !== patch.selected?.id || !patch.selected?.turns)) {
+      this.expandedHistory = false;
+      patch = { ...patch, olderView: undefined };
+    }
     // Project pickers and worktree creation also switch the unsent conversation's owner.
     if (!previous.selected && patch.selected === undefined && patch.draftScope === undefined
       && patch.draftProject !== undefined && patch.draftProject?.cwd !== previous.draftProject?.cwd) {
@@ -288,13 +313,29 @@ export class ChatController {
     return this.connection.request<T>('request', { ...body,
       ...(body.operation === 'read' && this.deferToolDetails ? { deferToolDetails: true } : {}) });
   }
-  toolDetails = (target: NonNullable<import('./types').Item['detailsRef']>) =>
-    this.request<{ item: import('./types').Item }>({ operation: 'toolDetails', ...target });
+  toolDetails = async (target: NonNullable<import('./types').Item['detailsRef']>) => {
+    const thread = this.state.olderView?.thread ?? this.state.selected;
+    const turn = thread?.turns?.find(turn => turn.id === target.turnId);
+    const preview = turn?.items.find(item => item.id === target.itemId);
+    try {
+      return await this.connection.request<{ item: import('./types').Item }>('request',
+        { operation: preview?.deferredBody ? 'historyItem' : 'toolDetails', ...target });
+    } catch (error) {
+      if ((error instanceof Error ? error.message : error) !== UNSUPPORTED_OPERATION) throw error;
+      const result = await this.connection.request<{ thread: Thread }>('request', { operation: 'read',
+        threadId: target.threadId, includeToolDetails: true,
+        window: { start: { turnId: target.turnId, itemId: target.itemId } } });
+      const item = result.thread?.id === target.threadId && result.thread.turns?.find(turn => turn.id === target.turnId)
+        ?.items.find(entry => entry.id === target.itemId);
+      if (!item || item.detailsRef) throw error;
+      return { item };
+    }
+  };
   processDetails = (target: NonNullable<import('./types').Item['processRef']>) =>
     this.request<{ items: import('./types').Item[] }>({ operation: 'processDetails', ...target });
   private syncConversationView() {
     if (!this.conversationViewsSupported || !this.transportConnected) return Promise.resolve();
-    const threadId = this.state.selected?.id ?? null;
+    const threadId = this.historyActive ? this.state.selected?.id ?? null : null;
     const generation = this.viewGeneration;
     // Serialize changes so a slow request for A cannot replace the newer view of B.
     this.viewSync = this.viewSync.catch(() => undefined).then(() => {
@@ -355,8 +396,16 @@ export class ChatController {
 
   private receive(event: GuiEvent) {
     if (this.stopped || !event?.params || typeof event.method !== 'string') return;
+    if (!this.historyActive && isTextDelta(event)) return;
     if (!isTextDelta(event)) this.stream.flush();
     for (const listener of this.eventListeners) listener(event);
+    if (!this.historyActive && event.id == null && (event.method.startsWith('item/')
+      || event.method === 'turn/diff/updated' || event.method === 'turn/plan/updated')) return;
+    if (!this.historyActive) {
+      const summary = visibleConversationEvent(event, null);
+      if (!summary) return;
+      event = summary;
+    }
     if (event.method === DIRECTORY_EVENT) {
       this.directory.receive(event.params as unknown as DirectoryEvent<ChatDirectoryEntry>); return;
     }
@@ -389,7 +438,12 @@ export class ChatController {
     const missingSummary = !this.directory.enabled && this.threadList.receive(event);
     const cached = this.threadList.peek(this.state);
     const directoryThreads = this.state.threads;
-    this.state = applyChatEvent(this.state, event);
+    if (this.historyActive) this.state = applyChatEvent(this.state, event);
+    else {
+      // Legacy hosts can deliver full turn payloads after a device has gone into the background.
+      const selected = this.state.selected;
+      this.state = { ...applyChatEvent({ ...this.state, selected: null }, event), selected };
+    }
     if (this.directory.enabled) this.state = { ...this.state, threads: directoryThreads };
     else if (cached) this.state = { ...this.state, threads: cached.data };
     this.emit();
@@ -421,6 +475,7 @@ export class ChatController {
   }
 
   private scheduleHistory() {
+    if (!this.historyActive) return;
     this.historyDirty = true;
     if (this.historyTimer || this.refreshThreadId || !this.active) return;
     this.historyTimer = setTimeout(() => {
@@ -640,9 +695,38 @@ export class ChatController {
 
   setViewing(viewing: boolean) { this.viewing = viewing; this.markViewed(); }
 
+  /** Keep the notification connection and unsent draft while releasing a hidden chat's history. */
+  setHistoryActive(active: boolean) {
+    if (this.historyActive === active) return;
+    this.stream.flush();
+    this.historyActive = active;
+    void this.syncConversationView().catch(error => this.failure(error));
+    if (active) {
+      if (this.offline && !this.transportConnected) void this.readOffline(false);
+      return;
+    }
+    this.readGeneration++;
+    this.refreshThreadId = null;
+    this.loadedThreadId = null;
+    this.olderQueued = false;
+    this.olderStartedAt = undefined;
+    this.historyDirty = false;
+    clearTimeout(this.historyTimer);
+    this.historyTimer = undefined;
+    this.histories.clear();
+    this.historyPages.clear();
+    this.images.clear();
+    this.previewDownloads?.dispose();
+    this.offlineWriter?.releaseSnapshot();
+    void this.flushCache();
+    const selected = this.state.selected;
+    this.update({ selected: selected && { ...selected, turns: undefined }, historyLoad: undefined,
+      historyLoading: false, historyLoadingMore: false, historyHasMore: false });
+  }
+
   private markViewed() {
     const thread = this.state.selected;
-    if (!this.active || !this.viewing || !this.transportConnected || this.state.historyOffline
+    if (!this.active || !this.viewing || !this.transportConnected || this.state.historyOffline || this.state.olderView
       || !thread || this.loadedThreadId !== thread.id) return;
     const receipt = this.state.sidebar.readState[thread.id];
     if (!receipt?.unread) return;
@@ -736,6 +820,7 @@ export class ChatController {
 
   async select(thread: Thread) {
     this.stream.flush();
+    this.expandedHistory = false;
     this.selectionGeneration += 1;
     this.rememberHistory();
     void this.flushCache();
@@ -747,7 +832,8 @@ export class ChatController {
     const cached = this.histories.get(thread.id);
     if (cached) this.historyPages.set(thread.id, cached.page);
     else this.historyPages.delete(thread.id);
-    this.update({ selected: cached?.thread ?? thread, draftProject: null, draftScope: this.draftScopes.thread(thread.id),
+    this.update({ selected: cached?.thread ?? thread, olderView: undefined,
+      draftProject: null, draftScope: this.draftScopes.thread(thread.id),
       selectedArchived: this.state.archived, error: '', historyOffline: Boolean(this.offline),
       historyHasMore: this.historyPages.get(thread.id)?.hasMore ?? false, historyLoad: undefined });
     if (this.offline && !this.state.ready) await this.readOffline(false);
@@ -769,7 +855,29 @@ export class ChatController {
     await this.refreshSelected(true);
   }
 
+  showLatest = () => {
+    if (!this.state.olderView) return;
+    this.readGeneration++;
+    this.refreshThreadId = null;
+    this.olderQueued = false;
+    this.expandedHistory = false;
+    this.update({ olderView: undefined, historyLoad: undefined, historyLoading: false, historyLoadingMore: false });
+    this.markViewed();
+  };
+
+  private applyOlderView(result: { thread: Thread; page: HistoryPage }, before: Thread, startedAt: number) {
+    const historyLoad = historyLoadResult(before, result.thread, startedAt);
+    const bounded = residentHistory(result.thread, true);
+    if (bounded.cut || this.state.olderView || result.page.hasNewer) {
+      this.update({ olderView: { thread: bounded.thread, page: result.page }, historyLoad });
+      return true;
+    }
+    this.expandedHistory = true;
+    return false;
+  }
+
   async refreshSelected(older = false) {
+    if (!this.historyActive) return;
     this.stream.flush();
     if (this.messageEditor.busy) { this.historyDirty = true; return; }
     if (this.offline && !this.transportConnected) return;
@@ -783,12 +891,19 @@ export class ChatController {
     this.update({ historyLoading: true, historyLoadingMore: older, ...(older && { historyLoad: undefined }) });
     try {
       await this.viewSync;
-      const result = await this.historyReader.read(selected,
-        { start: this.historyPages.get(selected.id)?.start, older }, () => generation === this.readGeneration);
+      const browsing = older ? this.state.olderView : undefined;
+      const start = browsing?.page.start ?? (older || this.expandedHistory
+        ? this.historyPages.get(selected.id)?.start : undefined);
+      const result = await this.historyReader.read(browsing?.thread ?? selected,
+        { start, older, bounded: true }, () => generation === this.readGeneration);
       // The response may already contain buffered deltas; reconcile them before installing the snapshot.
       this.stream.flush();
       if (generation === this.readGeneration && this.state.selected?.id === selected.id) {
         this.loadedThreadId = selected.id;
+        if (older && this.applyOlderView(result, browsing?.thread ?? selected, startedAt)) return;
+        if (result.page.trimmedOlder && this.expandedHistory && !this.state.olderView) {
+          this.update({ olderView: { thread: selected, page: residentPage(selected, this.state.historyHasMore) } });
+        }
         if (result.page) this.historyPages.set(selected.id, result.page);
         const live = this.state.selected;
         this.update({ selected: result.thread === live && !this.state.historyOffline
@@ -813,6 +928,7 @@ export class ChatController {
   }
 
   private async readOffline(older: boolean) {
+    if (!this.historyActive) return;
     const selected = this.state.selected;
     if (!this.offline || !selected || this.refreshThreadId === selected.id) return;
     const generation = ++this.readGeneration;
@@ -822,10 +938,12 @@ export class ChatController {
     this.update({ historyLoading: true, historyLoadingMore: older, ...(older && { historyLoad: undefined }) });
     try {
       await this.flushCache();
+      const browsing = older ? this.state.olderView : undefined;
       const result = await this.offline.read(selected.id,
-        { start: older ? this.historyPages.get(selected.id)?.start : undefined, older });
+        { start: older ? browsing?.page.start ?? this.historyPages.get(selected.id)?.start : undefined, older });
       if (generation !== this.readGeneration || this.state.selected?.id !== selected.id) return;
       if (result) {
+        if (older && this.applyOlderView(result, browsing?.thread ?? selected, startedAt)) return;
         this.historyPages.set(selected.id, result.page);
         this.update({ selected: result.thread, selectedArchived: result.archived,
           historyOffline: true, historyHasMore: result.page.hasMore,

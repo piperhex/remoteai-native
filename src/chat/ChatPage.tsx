@@ -18,6 +18,7 @@ import { ChatProjectSwitch } from './ChatProjectSwitch';
 import { ChatOverlay } from './ChatOverlay';
 import { queueProps } from '../../vendor/shared/remote-chat/client/queueProps';
 import { ChatMessages } from './ChatMessages';
+import { NativeDetailContext } from './ChatDeferredDetails';
 import { ChatQuotesProvider } from './ChatQuotes';
 import { ChatFileReferencesProvider } from '../../vendor/shared/chat/ChatFileReferences';
 import { ChatProcessing } from './ChatProcessing';
@@ -235,7 +236,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
             : state.selected?.cwd ?? state.draftProject?.cwd ?? ''} />
       </View>
     </View>
-    {external ? <CliConversation host={controller} active={active && foreground} ready={ready}
+    {external ? selected && <CliConversation host={controller} active={active && foreground} ready={ready}
       swipe={{ enabled: active && !pickingDevice && !searching, ...drawerSwipe }}
       connection={{ client: controller.guiAccounts, deviceName: device?.name,
         chooseDevice: () => setPickingDevice(true) }} /> : <>
@@ -243,7 +244,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
     {!!error && <Text accessibilityRole="alert" style={styles.error}>{displayError(error)}</Text>}
     {state.desktopOnly && <Text style={[styles.subtitle, { maxWidth: 400, paddingHorizontal: 16 }]}>
       {t("client.remoteDesktop.theDesktopIsReadyOpenRemoteDesktopAndSignIn")}</Text>}
-    <ChatDrawerSurface enabled={active && !pickingDevice && !searching} {...drawerSwipe}>
+    {selected && <ChatDrawerSurface enabled={active && !pickingDevice && !searching} {...drawerSwipe}>
     <ChatImageContext.Provider value={{ threadId: state.selected?.id ?? null, ready, offline: true,
       load: controller.imagePreview, save: controller.managedPreviews ? controller.savePreviewImage : undefined }}>
       <ImageAiContext.Provider value={{ enabled: active && ready && !state.selectedArchived
@@ -255,18 +256,21 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
       <ChatAttachmentMetadata controller={controller} ready={ready} threadId={state.selected?.id ?? null}>
       <TaskReviewProvider controller={controller} state={state} active={active && foreground}>
       <ChatRetryProvider controller={controller} state={state}>
-      <ChatMessages key={state.selected?.id ?? 'new'} thread={state.selected} offline={!ready}
+      <NativeDetailContext.Provider value={controller}>
+      <ChatMessages key={state.selected?.id ?? 'new'} thread={state.olderView?.thread ?? state.selected} offline={!ready}
+        showLatest={state.olderView && controller.showLatest}
         active={active && foreground}
-        loading={state.historyLoading} loadingMore={state.historyLoadingMore} hasMore={state.historyHasMore}
+        loading={state.historyLoading} loadingMore={state.historyLoadingMore}
+        hasMore={state.olderView?.page.hasMore ?? state.historyHasMore}
         loadOlder={() => controller.loadOlder()} historyLoad={state.historyLoad}
         processing={runningTurn && <ChatProcessing key={runningTurn.id} turn={runningTurn}
           processing={state.processing} active={active && ready && foreground} />} />
-      </ChatRetryProvider></TaskReviewProvider>
+      </NativeDetailContext.Provider></ChatRetryProvider></TaskReviewProvider>
       </ChatAttachmentMetadata>
       </ChatFileProvider>
       </ChatImagePreviewProvider></ImageAiContext.Provider>
     </ChatImageContext.Provider>
-    </ChatDrawerSurface>
+    </ChatDrawerSurface>}
     {ready && state.approvals.some((event) => event.params.threadId === state.selected?.id) &&
       <ScrollView style={{ maxHeight: 280 }} contentContainerStyle={styles.padded} keyboardShouldPersistTaps="handled">
         {state.approvals.filter((event) => event.params.threadId === state.selected?.id).map((event) =>
