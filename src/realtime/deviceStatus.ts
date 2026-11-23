@@ -1,3 +1,4 @@
+import { remoteControlCapabilities } from '../../vendor/shared/realtime/remoteControlCapabilities';
 import { t } from '../i18n';
 import type { AuthSession, RemoteDevice } from '../types';
 
@@ -130,16 +131,4 @@ function remoteDevice(value: unknown): RemoteDevice | null {
     lastSeenAt: device.lastSeenAt,
     online: device.online,
   };
-}
-
-function remoteControlCapabilities(value: unknown): RemoteDevice['capabilities'] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((capability): capability is RemoteDevice['capabilities'][number] => (
-    capability === 'provider-switch'
-    || capability === 'provider-group-switch'
-    || capability === 'restart-codex'
-    || capability === 'gui-model-switch'
-    || capability === 'aggregate-switch'
-    || capability === 'gui-aggregate-switch'
-  ));
 }

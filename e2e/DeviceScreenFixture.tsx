@@ -9,11 +9,15 @@ import { DeviceManagementList } from '../src/devices/DeviceManagementList';
 import { useDeviceScreenControl } from '../vendor/shared/remote-desktop/useDeviceScreenControl';
 import { textMetrics } from '../src/theme/text';
 import { t } from '../src/i18n';
+import { parseDeviceStatusSocketMessage } from '../src/realtime/deviceStatus';
 import type { RemoteDevice } from '../src/types';
 import type { ScreenPowerState } from '../vendor/shared/remote-desktop/screenControl';
 
-const devices: RemoteDevice[] = [{ deviceId: 'computer', name: '工作电脑', platform: 'Windows', online: true,
+const reportedDevices: RemoteDevice[] = [{ deviceId: 'computer', name: '工作电脑', platform: 'Windows', online: true,
   capabilities: ['screen-power', 'screen-power-status'], localProxyRunning: false, lastSeenAt: '2026-10-23T00:00:00Z' }];
+const snapshot = parseDeviceStatusSocketMessage(JSON.stringify({ type: 'devices-snapshot', devices: reportedDevices }));
+if (snapshot?.type !== 'devices-snapshot') throw new Error('Invalid device screen fixture');
+const devices = snapshot.devices;
 
 function DeviceScreenFixture() {
   const [fonts] = useFonts(Ionicons.font);

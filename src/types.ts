@@ -1,3 +1,6 @@
+import type { RemoteControlCapability } from '../vendor/shared/realtime/remoteControlCapabilities';
+export type { RemoteControlCapability } from '../vendor/shared/realtime/remoteControlCapabilities';
+
 export interface UsageWindow {
   usedPercent: number;
   remainingPercent: number;
@@ -76,10 +79,6 @@ export interface ResetCredit {
 export interface ResetCreditsSummary {
   credits: ResetCredit[];
 }
-
-export type RemoteControlCapability =
-  | 'provider-switch' | 'provider-group-switch' | 'restart-codex' | 'gui-model-switch'
-  | 'aggregate-switch' | 'gui-aggregate-switch' | 'screen-power' | 'screen-power-status';
 
 export interface RemoteDevice {
   guiAccountId?: string | null;

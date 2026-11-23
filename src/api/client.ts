@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { remoteControlCapabilities } from '../../vendor/shared/realtime/remoteControlCapabilities';
 import { authorizedRequest } from './adminSession';
 import { persistSession } from './sessionStore';
 import { ApiError, parseError } from './responseError';
@@ -338,7 +339,7 @@ export async function fetchRemoteDevices(session: AuthSession): Promise<RemoteDe
     activeProviderId: device.activeProviderId ?? null,
     activeProviderGroup: device.activeProviderGroup ?? null,
     localProxyRunning: device.localProxyRunning === true,
-    capabilities: Array.isArray(device.capabilities) ? device.capabilities : [],
+    capabilities: remoteControlCapabilities(device.capabilities),
   }));
 }
 
