@@ -79,7 +79,7 @@ export function LoungeComposer({ connected, send, onHistory, reply, cancelReply,
   return <View style={styles.composer}>
     {reply && <LoungeReplyPreview reply={reply} cancel={() => cancelReply()} />}
     <LoungeImageAttachments maxBytes={imageLimit} images={images} setImages={setImages}
-      disabled={busy || processing} onEditingChange={setEditingImage} />
+      disabled={busy || processing} onEditingChange={setEditingImage} onAdd={addImages} />
     <View style={styles.toolbar}>
       <Pressable accessibilityRole="button" accessibilityLabel={t('client.lounge.emoji')}
         accessibilityState={{ expanded: emoji.open }} disabled={busy} style={styles.iconButton} onPress={emoji.toggle}>

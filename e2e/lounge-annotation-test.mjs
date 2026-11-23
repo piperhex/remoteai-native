@@ -16,8 +16,14 @@ const adb = async (...args) => (await exec('adb', ['-s', serial, ...args], {
   encoding: 'utf8', timeout: 60_000, windowsHide: true, maxBuffer: 4 * 1024 * 1024,
 })).stdout.trim();
 async function nodes() {
-  await adb('shell', 'uiautomator', 'dump', '/sdcard/lounge-annotation.xml');
-  const xml = await adb('shell', 'cat', '/sdcard/lounge-annotation.xml');
+  const filename = '/sdcard/lounge-annotation.xml';
+  try {
+    await adb('shell', 'uiautomator', 'dump', filename);
+  } catch (failure) {
+    // Some devices terminate the dump process after it has confirmed writing the hierarchy.
+    if (failure.code !== 137 || !failure.stdout?.includes(`dumped to: ${filename}`)) throw failure;
+  }
+  const xml = await adb('shell', 'cat', filename);
   return [...xml.matchAll(/<node\b([^>]*)>/g)].map(match => Object.fromEntries(
     [...match[1].matchAll(/([\w-]+)="([^"]*)"/g)].map(attribute => [attribute[1], attribute[2]
       .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))])));
@@ -54,14 +60,22 @@ const previousScale = await adb('shell', 'settings', 'get', 'system', 'font_scal
 await mkdir(output, { recursive: true });
 try {
   await adb('install', '-r', path.join(root,
-    '.codex-tmp/lounge-annotation-build/outputs/apk/release/lounge-annotation-fixture.apk'));
+    'android/app/build/lounge-annotation/outputs/apk/release/lounge-annotation-fixture.apk'));
   for (const scale of [1, 1.3]) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', String(scale));
     await adb('shell', 'am', 'force-stop', app);
     await adb('shell', 'am', 'start', '-W', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
     await tap(scale === 1 ? 'Dark fixture' : 'Light fixture');
-    await tap('在线交流'); await find('标注图片 1');
+    await tap('在线交流'); await find('继续添加图片');
+    await tap('移除图片 2');
+    assert.ok(!(await nodes()).some(node => node['content-desc'] === '标注图片 2'));
     await screenshot(`draft-${scale}`);
+    await tap('继续添加图片');
+    const focus = (await adb('shell', 'dumpsys', 'window')).split('\n').find(line => line.includes('mCurrentFocus='));
+    assert.match(focus ?? '', /photopicker|documentsui/i);
+    await adb('shell', 'input', 'keyevent', 'KEYCODE_BACK');
+    await find('标注图片 1');
+    await tap('返回'); await tap('在线交流');
     await tap('标注图片 1'); await find('图片标注'); await draw();
     await tap('取消'); await find('标注图片 1');
     await tap('标注图片 1'); await find('图片标注'); await draw();
