@@ -21,12 +21,18 @@ export type SshFileReply = { type: 'list'; path: string; entries: SshEntry[]; tr
   | { type: 'file'; data: string } | { type: 'done' }
   | { type: 'upload'; token: string } | { type: 'uploaded'; path: string };
 export interface SshApi {
+  monitor?: (id: string) => Promise<ServerSample>;
   previewMode?: import('../remote-chat/protocol').ConnectionMode;
   profiles: import('./sshProfiles').SshProfileStore;
   probe: (endpoint: SshEndpoint) => Promise<string>;
   ensureX11?: (options: SshX11) => Promise<void>;
   open: (request: SshConnect, projectCwd: string) => Promise<TerminalInfo>;
   files: (id: string, request: SshFileAction) => Promise<SshFileReply>;
+}
+export interface ServerSample {
+  cpu: [number, number] | null; cpuPercent: number | null;
+  memory: [number, number] | null; disk: [number, number] | null; diskPath?: string | null;
+  network: [number, number] | null; uptimeSeconds: number | null;
 }
 export const SSH_FILE_LIMIT = 5 * 1024 * 1024;
 

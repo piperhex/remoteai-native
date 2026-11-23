@@ -42,9 +42,9 @@ export class RelayQuota {
   }
 }
 
-export function formatRelayBytes(bytes: number): string {
+export function formatRelayBytes(bytes: number, locale = 'zh-CN'): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
   const index = Math.min(Math.floor(Math.log(Math.max(1, bytes)) / Math.log(1024)), units.length - 1);
-  return `${new Intl.NumberFormat('zh-CN', { maximumFractionDigits: index ? 2 : 0 })
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: index ? 2 : 0 })
     .format(bytes / 1024 ** index)} ${units[index]}`;
 }

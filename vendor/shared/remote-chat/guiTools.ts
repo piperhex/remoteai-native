@@ -39,7 +39,7 @@ export const GUI_TOOL_OPERATIONS = new Set([
   'guiTerminalList', 'guiTerminalOpen', 'guiTerminalRead', 'guiTerminalWrite', 'guiTerminalResize', 'guiTerminalClose',
   'guiTerminalLink', 'guiTerminalWriteBinary', 'guiTerminalBinaryMode',
   'guiTerminalSshProbe', 'guiTerminalSshOpen', 'guiTerminalSshFiles',
-  'guiTerminalSshEnsureX11',
+  'guiTerminalSshEnsureX11', 'guiTerminalSshMonitor',
   'guiTerminalSshProfiles', 'guiTerminalSshProfileSave', 'guiTerminalSshProfileRemove',
   'guiGitChanges', 'guiGitDiff', 'guiGitHistory', 'guiGitCommit', 'guiGitCommitFiles',
   'guiGitRepository', 'guiGitAction', 'guiGitFileAction', 'guiGitWorkspace', 'guiGitRevision',
@@ -56,6 +56,7 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
   stream?: import('../port-mapping/socket').MappingSocketFactory) {
   const ssh: SshApi = {
     profiles: unavailableProfiles,
+    monitor: id => request({ operation: 'guiTerminalSshMonitor', id }),
     probe: (endpoint: SshEndpoint) => request<string>({ operation: 'guiTerminalSshProbe', endpoint }),
     ensureX11: (options: SshX11) => request<void>({ operation: 'guiTerminalSshEnsureX11', options }),
     open: (input: SshConnect, cwd: string) =>
