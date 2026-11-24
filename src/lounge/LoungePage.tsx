@@ -15,7 +15,6 @@ import { LoungeBlockDialog } from './LoungeBlockDialog';
 import { LoungeChats, LoungeMembers } from './LoungeChats';
 import { LoungeAbout } from './LoungeSheet';
 import { LoungeHeading } from './LoungeHeading';
-import { LoungeSyncNotice } from './LoungeSyncNotice';
 import { useLoungeStyles } from './styles';
 import { useLoungeColor } from './theme';
 import { LoungeProfile } from './LoungeProfile';
@@ -114,7 +113,6 @@ export function LoungePage({ controller, onBack }: { controller: LoungeControlle
             onPress={() => { close(); model.setBlocking(contact.user); }} />}
         </>} />
     </>}
-    <LoungeSyncNotice failed={state.deviceSyncError} controller={controller} />
     {model.sheet === 'members' && <LoungeMembers model={model} />}
     {model.sheet === 'new-chat' && <LoungeNewChat controller={controller} state={state}
       select={model.select} close={() => model.setSheet(undefined)} />}

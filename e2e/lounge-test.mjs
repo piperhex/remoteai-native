@@ -274,7 +274,7 @@ try {
   await mkdir(output, { recursive: true });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   if (syncSource) {
-    syncSource.add('来自另一台设备的群聊记录 SyncGroup', [image]);
+    syncSource.add('来自另一台设备的群聊记录 2468', [image]);
     syncSource.add('来自另一台设备的私聊记录', [image], true);
     syncSource.start(`http://127.0.0.1:${server.address().port}`);
   }
@@ -347,7 +347,8 @@ try {
       continue;
     }
     if (syncSource) {
-      await verifyNativeSync({ adb, tap, find, screenshot, scale, source: syncSource, assertEventually, hideKeyboard });
+      await verifyNativeSync({ adb, tap, find, nodes, screenshot, scale, source: syncSource, assertEventually,
+        hideKeyboard });
       continue;
     }
     if (process.env.LOUNGE_NOTIFICATIONS_ONLY === '1') {
