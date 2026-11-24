@@ -14,7 +14,7 @@ import { CODEX_STATUS_OPERATION, type CodexServiceStatus } from '../codex-status
 import { createGuiSettingsClient, GUI_SETTINGS_OPERATIONS } from './guiSettings';
 import type { GitActionRequest, GitChanges, GitCommitFile, GitCommitRequest, GitDiff, GitHistory,
   GitFileActionRequest, GitRepository, GitRevisionRequest, GitMessageRequest, GitSettings,
-  GitConflict, GitResolution } from './gitTypes';
+  GitConflict, GitResolution, GitReviewScope } from './gitTypes';
 
 export interface CliRelease { version: string; size: number; ready?: boolean }
 const unavailableProfiles: SshProfileStore = {
@@ -41,7 +41,7 @@ export const GUI_TOOL_OPERATIONS = new Set([
   'guiTerminalSshProbe', 'guiTerminalSshOpen', 'guiTerminalSshFiles',
   'guiTerminalSshEnsureX11', 'guiTerminalSshMonitor',
   'guiTerminalSshProfiles', 'guiTerminalSshProfileSave', 'guiTerminalSshProfileRemove',
-  'guiGitChanges', 'guiGitDiff', 'guiGitHistory', 'guiGitCommit', 'guiGitCommitFiles',
+  'guiGitChanges', 'guiGitDiff', 'guiGitWorkspaceDiff', 'guiGitHistory', 'guiGitCommit', 'guiGitCommitFiles',
   'guiGitRepository', 'guiGitAction', 'guiGitFileAction', 'guiGitWorkspace', 'guiGitRevision',
   'guiGitGenerateMessage',
   'guiGitSettings',
@@ -87,6 +87,8 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
     reconnect: () => request<void>({ operation: 'guiReconnect' }),
     workspace: (input: GitRequest) => request<GitStatus>({ operation: 'guiGitWorkspace', request: input }),
     git: {
+      savedReview: (target: import('../conversation/savedReview').SavedReviewTarget) =>
+        request<import('../conversation/savedReview').SavedReviewPage>({ ...target, operation: 'savedTurnReview' }),
       conflict: (cwd: string, path: string) => request<GitConflict>({ operation: 'guiGitConflict', cwd, path }),
       resolveConflict: (input: GitResolution) => request<void>({ ...input, operation: 'guiGitResolveConflict' }),
       continueIntegration: (cwd: string, version: string) =>
@@ -99,8 +101,8 @@ export function createGuiToolsClient(request: <T>(body: object) => Promise<T>,
         request<GitRepository>({ operation: 'guiGitRepository', cwd, includeChildren }),
       action: (input: GitActionRequest) => request<void>({ ...input, operation: 'guiGitAction' }),
       changes: (cwd: string) => request<GitChanges>({ operation: 'guiGitChanges', cwd }),
-      diff: (cwd: string, path: string, commit?: string) =>
-        request<GitDiff>({ operation: 'guiGitDiff', cwd, path, commit }),
+      diff: (cwd: string, path: string, commit?: string, scope?: GitReviewScope) =>
+        request<GitDiff>({ operation: scope ? 'guiGitWorkspaceDiff' : 'guiGitDiff', cwd, path, commit, scope }),
       history: (cwd: string, skip: number) => request<GitHistory>({ operation: 'guiGitHistory', cwd, skip }),
       commitFiles: (cwd: string, commit: string) =>
         request<GitCommitFile[]>({ operation: 'guiGitCommitFiles', cwd, commit }),

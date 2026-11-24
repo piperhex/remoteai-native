@@ -13,7 +13,7 @@ export function conversation(thread: Thread, previous?: Conversation): Conversat
   const cached = cachedTurnDetails(thread.id);
   const turns = (thread.turns ?? []).map((turn) => {
     const previousTurn = previousTurns.get(turn.id);
-    return restoreRequestErrors({ diff: previousTurn?.diff ?? cached.get(turn.id)?.diff,
+    return restoreRequestErrors({ diff: turn.reviewEdits === undefined ? previousTurn?.diff ?? cached.get(turn.id)?.diff : undefined,
       plan: previousTurn?.plan ?? cached.get(turn.id)?.plan,
       planExplanation: previousTurn?.planExplanation ?? cached.get(turn.id)?.planExplanation,
       retryError: previousTurn?.retryError,
@@ -85,7 +85,7 @@ function updateTurnDetails(value: Conversation, event: GuiEvent): Conversation {
   const id = event.params.turnId ?? value.activeTurn;
   if (!id) return value;
   return updateTurn(value, id, (turn) => event.method === "turn/diff/updated"
-    ? { ...turn, diff: event.params.diff ?? "" }
+    ? { ...turn, diff: event.params.diff }
     : { ...turn, plan: event.params.plan ?? [], planExplanation: event.params.explanation });
 }
 

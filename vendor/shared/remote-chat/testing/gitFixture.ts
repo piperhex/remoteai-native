@@ -7,7 +7,7 @@ const commit = (id: number, parents: number[], subject: string, refs: string[] =
 });
 
 /** Local UI fixtures never read or mutate a real repository. */
-type SyncGitClient = { [Key in keyof Omit<GitClient, 'commitAndPush'>]:
+type SyncGitClient = { [Key in keyof Omit<GitClient, 'commitAndPush' | 'savedReview'>]:
   (...args: Parameters<GitClient[Key]>) => Awaited<ReturnType<GitClient[Key]>> };
 
 export function createGitFixture(): SyncGitClient {
@@ -82,9 +82,10 @@ export function createGitFixture(): SyncGitClient {
   };
 }
 
-export function createAsyncGitFixture(): GitClient {
+export function createAsyncGitFixture(): GitClient & Required<Pick<GitClient, 'savedReview'>> {
   const git = createGitFixture();
   return { repository: async cwd => git.repository(cwd), action: async input => git.action(input),
+    savedReview: async ({ file }) => file === undefined ? { files: [], next: null } : { text: '', next: null },
     conflict: async (cwd, path) => git.conflict(cwd, path),
     resolveConflict: async input => git.resolveConflict(input),
     continueIntegration: async (cwd, version) => git.continueIntegration(cwd, version),

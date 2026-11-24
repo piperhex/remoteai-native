@@ -31,7 +31,7 @@ export function useTaskReview(turn: Turn) {
   const active = useRef(false);
   const latestRefresh = useRef<(() => Promise<void>) | undefined>(undefined);
   const client = context?.client;
-  const cwd = context?.cwd ?? '';
+  const cwd = turn.reviewCwd ?? context?.cwd ?? '';
   const enabled = Boolean(context?.active && context.ready && cwd);
 
   const refresh = useCallback(async () => {

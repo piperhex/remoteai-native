@@ -19,7 +19,10 @@ function previewItem(item: Item, threadId: string, turnId: string): Item {
 
 function previewTurn(turn: Turn): Turn {
   if (historyChars({ ...turn, items: undefined }) <= HISTORY_CONTENT_CHARS / 4) return turn;
-  return { ...turn, diff: turn.diff && historyPreview(turn.diff),
+  const trimDiff = historyChars(turn.diff) > TOOL_PREVIEW_CHARS;
+  const trimEdits = historyChars(turn.reviewEdits) > TOOL_PREVIEW_CHARS;
+  return { ...turn, diff: trimDiff ? undefined : turn.diff, reviewEdits: trimEdits ? [] : turn.reviewEdits,
+    reviewIncomplete: turn.reviewIncomplete || (!turn.reviewDeferred && (trimDiff || trimEdits)),
     planExplanation: turn.planExplanation && historyPreview(turn.planExplanation),
     plan: historyChars(turn.plan) <= TOOL_PREVIEW_CHARS ? turn.plan : undefined,
     error: historyChars(turn.error) <= TOOL_PREVIEW_CHARS ? turn.error : undefined,

@@ -30,7 +30,7 @@ function readRecords(): { raw?: string; records: TurnDetails[] } {
   } catch { return { records: [] }; } // Browser privacy settings can disable optional session storage.
 }
 
-/** app-server history has file items, but does not replay turn plan/net-diff notifications. */
+/** Legacy hosts omit turn diffs. Host-owned review records take precedence over this optional cache. */
 export function cachedTurnDetails(threadId: string): Map<string, TurnDetails> {
   return new Map(readRecords().records.filter((record) => record.threadId === threadId).map((record) =>
     [record.turnId, record]));

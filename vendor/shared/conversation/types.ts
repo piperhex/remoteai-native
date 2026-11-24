@@ -83,6 +83,12 @@ export interface Item {
 }
 export interface AsyncQuestion { title: string; options?: string[] | null }
 export interface Turn {
+  reviewDeferred?: import('./savedReview').ReviewResult;
+  reviewHasEdits?: boolean;
+  reviewCwd?: string;
+  reviewIncomplete?: boolean;
+  reviewEdits?: Item[];
+  workspaceObservation?: { paths: string[]; complete: boolean };
   id: string; status: string; items: Item[]; startedAt?: number | null;
   error?: import("./requestError").RequestError | null;
   retryError?: import("./requestError").RequestError;
@@ -219,6 +225,7 @@ export type ApprovalReply = {
 export type Request =
   | import('./recovery/types').RecoveryRequest
   | ({ operation: 'toolDetails' } & NonNullable<Item['detailsRef']>)
+  | ({ operation: 'savedTurnReview' } & import('./savedReview').SavedReviewTarget)
   | ({ operation: 'processDetails' } & NonNullable<Item['processRef']>)
   | Exclude<import('../project-browser/protocol').ProjectBrowserRequest, { operation: 'projectFiles' }>
   | { operation: 'suggestNextPrompt'; threadId: string; sourceTurnId: string; model: string;

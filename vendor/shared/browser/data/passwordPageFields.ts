@@ -17,8 +17,12 @@ export const usernameInput = (fields: HTMLInputElement[]) => fields.find(input =
   ?? fields.find(input => input.type === 'email') ?? fields.find(input => ['text', 'tel'].includes(input.type));
 export const passwordInput = (fields: HTMLInputElement[]) => fields.find(input => input.type === 'password'
   && input.autocomplete !== 'new-password');
-export function safeLoginForm(form: HTMLFormElement) {
-  try { return new URL(form.action || location.href, location.href).origin === location.origin; }
+export function safeLoginForm(form: HTMLFormElement, submitter?: HTMLElement | null) {
+  try {
+    const override = submitter?.getAttribute('formaction');
+    return new URL(form.action || location.href, location.href).origin === location.origin
+      && (!override || new URL(override, document.baseURI).origin === location.origin);
+  }
   catch { return false; }
 }
 export function postLoginMessage(options: PasswordPageOptions, message: { type: string } & Record<string, unknown>) {

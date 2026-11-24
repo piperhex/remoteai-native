@@ -37,7 +37,9 @@ export function cliThread(history: CliHistory | null): Thread | null {
   const turns: Turn[] = [];
   for (const entry of history.entries) {
     if (!entry.text && !entry.title && !entry.changes?.length && !entry.images?.length) continue;
-    if (!turns.length || entry.role === 'user') turns.push({ id: entry.id, status: 'completed', items: [] });
+    if (!turns.length || entry.role === 'user') {
+      turns.push({ id: entry.id, reviewCwd: history.session.cwd, status: 'completed', items: [] });
+    }
     const turn = turns[turns.length - 1];
     turn.items.push(renderedEntry(entry, history.session.id, turn.id));
   }
