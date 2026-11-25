@@ -11,6 +11,7 @@ export interface HistoryQuery {
 }
 export interface HistoryPage { messages: LoungeMessage[]; next?: HistoryCursor }
 export interface LoungeHistoryStore {
+  groupAttempts?: import('./groupAttempts').GroupAttemptStore;
   save(message: LoungeMessage): Promise<void>;
   page(query: HistoryQuery): Promise<HistoryPage>;
   contacts?(): Promise<LoungeContact[]>;

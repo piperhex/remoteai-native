@@ -27,6 +27,16 @@ let SQL: Awaited<ReturnType<typeof initSqlJs>>;
 beforeAll(async () => { SQL = await initSqlJs(); state.db = new SQL.Database(); });
 afterAll(() => state.db?.close());
 const store = () => nativeLoungeHistory('https://cloud.test/', 'Alice@example.test');
+it('restores an unconfirmed group attempt with the same image IDs and clears only its own confirmation', async () => {
+  const journal = store().groupAttempts!;
+  const first = { id: 'first', device: 'phone', imageIds: ['photo'] };
+  const second = { id: 'second', device: 'restarted-phone', imageIds: ['new-photo'] };
+  expect(await journal.claim('draft', first)).toEqual(first);
+  await journal.finish('draft', second.id);
+  expect(await store().groupAttempts!.claim('draft', second)).toEqual(first);
+  await journal.finish('draft', first.id);
+  expect(await journal.claim('draft', second)).toEqual(second);
+});
 const message = (id: string): LoungeMessage => ({ type: 'message', id, text: `hello ${id}`, images: [],
   sender: { id: 'bob', account: 'Bob@example.test' }, sentAt: '2026-10-28T00:00:00Z' });
 

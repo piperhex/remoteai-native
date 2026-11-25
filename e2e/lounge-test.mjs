@@ -32,6 +32,7 @@ import { verifyNativeHistory } from './lounge-history-check.mjs';
 import { verifyNativeClientVersions } from './lounge-client-version-check.mjs';
 import { verifyNativeModeratorOpening } from './lounge-moderator-opening-check.mjs';
 import { verifyNativeGroupReads } from './lounge-group-reads-check.mjs';
+import { verifyImageDelivery } from '../scripts/verify-lounge-image-delivery.mjs';
 
 const exec = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -57,6 +58,8 @@ const image = 'data:image/png;base64,' + (await readFile(path.join(root,
   'vendor/apps/desktop/src-tauri/icons', process.env.LOUNGE_SETTINGS_AVATAR_ONLY === '1'
     ? '128x128.png' : '32x32.png'))).toString('base64');
 const sent = [];
+const imageReceiptsMode = process.env.LOUNGE_IMAGE_RECEIPTS_ONLY === '1';
+const deliveryFrames = [];
 const moderated = [];
 const groupReadFrames = [];
 const groupReadsMode = process.env.LOUNGE_GROUP_READS_ONLY === '1';
@@ -111,6 +114,7 @@ const notifications = { muted: new Set(), fail: false, update(conversation, mute
 const names = createNamesFixture(broadcast);
 sockets.on('connection', socket => socket.on('message', raw => {
   const frame = JSON.parse(String(raw));
+  if (imageReceiptsMode && ['image-pending', 'receipt'].includes(frame.type)) deliveryFrames.push(frame);
   if (namesEnabled) names.handle(socket, frame);
   if (frame.type === 'authenticate') {
     if (typeof frame.clientVersion === 'string') reportedVersions.push(frame.clientVersion);
@@ -121,7 +125,7 @@ sockets.on('connection', socket => socket.on('message', raw => {
       user: { id: 'alice', account: 'alice@example.test', avatar, nickname: names.nicknames.get('alice') ?? '',
         moderator },
       policy: { moderator, mutedUntil: null }, onlineCount: 2, direct: true, receipts: true, groupReads: true,
-      directReset: resetAvailable,
+      directReset: resetAvailable, imageReceipts: imageReceiptsMode,
       blocked: blocked ? [{ id: 'bob', account: 'bob@example.test' }] : [] }));
     socket.send(JSON.stringify(incoming('真机中文测试：忙里偷闲，聊点轻松的 ☕', [image])));
   }
@@ -309,6 +313,10 @@ try {
       continue;
     }
     await tap('在线交流'); await find('搜索聊天');
+    if (imageReceiptsMode) {
+      await verifyImageDelivery({ broadcast, incoming, deliveryFrames, scale, tap, find, screenshot, assertEventually });
+      continue;
+    }
     if (groupReadsMode) {
       await verifyNativeGroupReads({ adb, tap, find, nodes, screenshot, hideKeyboard, scale,
         broadcast, incoming, sent, groupReadFrames, assertEventually,

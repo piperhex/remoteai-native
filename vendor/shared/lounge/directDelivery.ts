@@ -8,12 +8,14 @@ interface DeliveryHost {
   self(): LoungeAccount | undefined;
   enabled(): boolean;
   groupEnabled?(): boolean;
+  imageReceipts?(): boolean;
   online(id: string): boolean;
   readable(message: LoungeMessage): boolean;
   allowed(message: LoungeMessage): boolean;
   find(key: string): Promise<LoungeMessage | undefined>;
   page(query: HistoryQuery): Promise<HistoryPage>;
   publish(message: LoungeMessage, fresh: boolean): Promise<void>;
+  fetchImages?(message: LoungeMessage): Promise<void>;
   transmit(frame: Record<string, unknown>): boolean;
   error(): void;
   permission?(peer: string): DirectPermission | undefined;
@@ -22,10 +24,13 @@ interface DeliveryHost {
   createdAt?(peer: string): number;
 }
 interface DeliveryJob { peer: string; due: number; group: boolean }
+const needsImages = (message: LoungeMessage) => !message.delivery?.imagesStored
+  && message.attachments?.some(file => file.kind === 'image');
 
 /** Endpoint-owned delivery state. Jobs retain keys only; image payloads stay in the local archive. */
 export class LoungeDirectDelivery {
   private jobs = new Map<string, DeliveryJob>();
+  private imageTransfers = new Set<string>();
   private tasks: Promise<unknown> = Promise.resolve();
   private timer?: ReturnType<typeof setInterval>;
   private generation = 0;
@@ -53,7 +58,7 @@ export class LoungeDirectDelivery {
   }
   stop() {
     this.active = false; this.generation++;
-    clearInterval(this.timer); this.jobs.clear(); this.ticking = false;
+    clearInterval(this.timer); this.jobs.clear(); this.imageTransfers.clear(); this.ticking = false;
   }
   peers() { return [...new Set([...this.jobs.values()].filter(job => !job.group).map(job => job.peer))]; }
   restoreGroups(messages: LoungeMessage[]) {
@@ -144,6 +149,18 @@ export class LoungeDirectDelivery {
         delivery: initialGroupDelivery(message, this.host.self()?.id ?? '')
           ?? { direction: 'incoming' as const, status: 'delivered' as const } };
       if (!received.delivery || !this.host.allowed(received)) return;
+      if (needsImages(received)) {
+        const waiting = { ...received, attachments: message.attachments,
+          delivery: { ...received.delivery, status: previous?.delivery?.status ?? 'pending' as const } };
+        await this.host.publish(waiting, !previous);
+        if (current()) {
+          if (waiting.recipient && this.host.imageReceipts?.()) {
+            this.host.transmit({ type: 'image-pending', id: waiting.id, to: waiting.sender.id });
+          }
+          this.resumeImages(waiting);
+        }
+        return;
+      }
       const status = received.delivery.status === 'read' || !!message.recipient && this.host.readable(received)
         ? 'read' : 'delivered';
       const updated: LoungeMessage = { ...received, delivery: { ...received.delivery, status, attemptedAt: Date.now() } };
@@ -151,6 +168,25 @@ export class LoungeDirectDelivery {
       if (!current()) return;
       this.track(updated); this.transmitReceipt(updated);
     });
+  }
+
+  resumeImages(message: LoungeMessage) {
+    const key = historyKey(message);
+    if (!this.active || message.delivery?.direction !== 'incoming' || !needsImages(message)
+      || this.imageTransfers.has(key) || !this.host.fetchImages) return;
+    const generation = this.generation;
+    this.imageTransfers.add(key);
+    // Image I/O must never hold up text delivery or receipts in a different conversation.
+    void this.host.fetchImages(message).then(() => this.run(async current => {
+      const saved = await this.host.find(key);
+      if (generation !== this.generation || !current() || !saved?.delivery || !this.host.allowed(saved)) return;
+      const status = saved.delivery.status === 'read' || this.host.readable(saved) ? 'read' : 'delivered';
+      const ready: LoungeMessage = { ...saved, delivery: { ...saved.delivery, imagesStored: true,
+        status, attemptedAt: Date.now() } };
+      await this.host.publish(ready, false);
+      if (current()) { this.track(ready); this.transmitReceipt(ready); }
+    }).catch(() => this.host.error()), () => { /* The card and sender can retry the transfer. */ })
+      .finally(() => { if (this.generation === generation) this.imageTransfers.delete(key); });
   }
 
   read(messages: LoungeMessage[]) {
@@ -161,6 +197,7 @@ export class LoungeDirectDelivery {
         if (!current()) return;
         if (!saved?.delivery || saved.delivery.status === 'read'
           || !this.host.readable(saved) || !this.host.allowed(saved)) continue;
+        if (needsImages(saved)) { this.resumeImages(saved); continue; }
         const message: LoungeMessage = { ...saved,
           delivery: { ...saved.delivery, status: 'read', attemptedAt: Date.now() } };
         await this.host.publish(message, false);
@@ -184,6 +221,12 @@ export class LoungeDirectDelivery {
       if (!current() || !saved?.delivery || !saved.receipts) return;
       const peer = confirmation ? saved.sender.id : saved.recipient?.id;
       if (peer !== from || saved.delivery.direction !== (confirmation ? 'incoming' : 'outgoing')) return;
+      if (frame.type === 'image-pending') {
+        if (saved.delivery.status === 'pending' && !saved.delivery.messageStored && needsImages(saved)) {
+          await this.host.publish({ ...saved, delivery: { ...saved.delivery, messageStored: true } }, false);
+        }
+        return;
+      }
       if (confirmation && receiptRank(status) > receiptRank(saved.delivery.status)) return;
       const delivery = confirmation
         ? { ...saved.delivery, confirmed: higherReceipt(saved.delivery.confirmed, status) }
@@ -224,6 +267,10 @@ export class LoungeDirectDelivery {
       if (!current()) return;
       if (!saved?.delivery || !needsDeliveryWork(saved.delivery)) { this.jobs.delete(key); continue; }
       if (!this.host.allowed(saved)) continue;
+      if (saved.delivery.direction === 'incoming' && needsImages(saved)) {
+        job.due = Date.now() + DIRECT_RETRY_MS;
+        this.resumeImages(saved); continue;
+      }
       const message = { ...saved, delivery: { ...saved.delivery, attemptedAt: Date.now() } };
       await this.host.publish(message, false);
       if (!current()) return;
@@ -239,7 +286,7 @@ export class LoungeDirectDelivery {
       generation: message.generation ?? 0 });
   }
   private transmitReceipt(message: LoungeMessage) {
-    if (message.delivery?.status === 'pending' || message.delivery?.groupReceiptError) return;
+    if (message.delivery?.status === 'pending' || message.delivery?.groupReceiptError || needsImages(message)) return;
     if (!message.recipient && message.groupReceipt) {
       if (this.host.groupEnabled?.() === false) return;
       if (message.delivery?.status === 'read') this.host.transmit({ type: 'group-read', id: message.id,

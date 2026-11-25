@@ -8,6 +8,9 @@ export interface LoungeDelivery {
   retry?: boolean;
   confirmed?: ReceiptStatus;
   attemptedAt?: number;
+  /** This device has committed every image in the incoming message. */
+  imagesStored?: true;
+  messageStored?: true;
   readers?: LoungeAccount[];
   /** A permanent capability failure, separate from actual read/confirmation status. */
   groupReceiptError?: typeof INVALID_GROUP_RECEIPT;
@@ -22,6 +25,8 @@ export function parseDelivery(value: unknown): LoungeDelivery | undefined {
   if (!['incoming', 'outgoing'].includes(item.direction ?? '')
     || item.status !== 'pending' && item.status !== 'rejected' && !isReceiptStatus(item.status)) return;
   return { direction: item.direction!, status: item.status, retry: item.retry === true,
+    ...(item.imagesStored === true ? { imagesStored: true } : {}),
+    ...(item.messageStored === true ? { messageStored: true } : {}),
     groupReceiptError: item.groupReceiptError === INVALID_GROUP_RECEIPT ? INVALID_GROUP_RECEIPT : undefined,
     readers: parseGroupReaders(item.readers),
     confirmed: isReceiptStatus(item.confirmed) ? item.confirmed : undefined,
@@ -39,6 +44,8 @@ export function mergeDelivery(previous: LoungeDelivery | undefined, incoming: Lo
   if (!previous || !incoming || previous.direction !== incoming.direction) return incoming ?? previous;
   const rejected = previous.status === 'rejected' && incoming.status === 'pending';
   return { ...incoming,
+    ...(previous.imagesStored || incoming.imagesStored ? { imagesStored: true as const } : {}),
+    ...(previous.messageStored || incoming.messageStored ? { messageStored: true as const } : {}),
     groupReceiptError: previous.groupReceiptError ?? incoming.groupReceiptError,
     readers: mergeGroupReaders(previous.readers, incoming.readers),
     status: rejected || receiptRank(previous.status) > receiptRank(incoming.status) ? previous.status : incoming.status,

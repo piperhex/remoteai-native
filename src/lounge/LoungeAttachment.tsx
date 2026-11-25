@@ -1,3 +1,4 @@
+import type { LoungeMessage } from '../../vendor/shared/lounge/types';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { LoungeAttachment as Attachment } from '../../vendor/shared/lounge/attachments';
@@ -10,13 +11,13 @@ import { textMetrics } from '../theme/text';
 import { LoungeFileCard } from './LoungeFileCard';
 
 export function LoungeAttachment(props: {
-  file: Attachment; controller: LoungeController; preview: (uri: string) => void; onLoad?: () => void;
+  file: Attachment; message?: LoungeMessage; controller: LoungeController; preview: (uri: string) => void; onLoad?: () => void;
   onLongPress?: () => void;
 }) {
   return props.file.kind === 'file' ? <LoungeFileCard {...props} /> : <ImageAttachment {...props} />;
 }
-function ImageAttachment({ file, controller, preview, onLoad, onLongPress }: {
-  file: Attachment; controller: LoungeController; preview: (uri: string) => void; onLoad?: () => void;
+function ImageAttachment({ file, message, controller, preview, onLoad, onLongPress }: {
+  file: Attachment; message?: LoungeMessage; controller: LoungeController; preview: (uri: string) => void; onLoad?: () => void;
   onLongPress?: () => void;
 }) {
   const styles = useLoungeStyles();
@@ -28,9 +29,10 @@ function ImageAttachment({ file, controller, preview, onLoad, onLongPress }: {
     const abort = new AbortController(); active.current = abort;
     setBusy(true); setFailed(false); setProgress(0);
     try {
-      const result = file.kind === 'image' ? await controller.attachments.image(file)
+      const result = file.kind === 'image' ? await controller.attachments.image(file, message)
         : await controller.attachments.download(file, await nativeAttachmentSink(file),
           { signal: abort.signal, progress: setProgress });
+      if (message && !abort.signal.aborted) controller.imageLoaded(message);
       if (!abort.signal.aborted) setUri(result);
     } catch { if (!abort.signal.aborted) setFailed(true); }
     finally { if (active.current === abort) active.current = undefined; if (!abort.signal.aborted) setBusy(false); }
@@ -38,7 +40,7 @@ function ImageAttachment({ file, controller, preview, onLoad, onLongPress }: {
   useEffect(() => {
     if (file.kind === 'image') void download();
     return () => { active.current?.abort(); active.current = undefined; };
-  }, [file.id, controller]);
+  }, [file.id, controller, message?.delivery?.imagesStored]);
   if (uri) return <LoungeImage uri={uri} preview={preview} onLoad={onLoad} onLongPress={onLongPress} />;
   return <View style={{ maxWidth: 300, flexShrink: 1 }}>
     <Pressable accessibilityRole="button" disabled={busy} onPress={() => void download()} onLongPress={onLongPress}>

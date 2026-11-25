@@ -12,6 +12,14 @@ export function LoungeDeliveryStatus({ delivery, inline = false, message, contro
   if (message?.groupReceipt && !message.recipient) return controller
     ? <LoungeGroupReadStatus message={message} controller={controller} /> : null;
   if (delivery?.direction !== 'outgoing') return null;
+  if (delivery.status === 'pending' && delivery.messageStored) return <View style={{
+    flexDirection: 'row', alignItems: 'center', alignSelf: inline ? 'center' : 'flex-end', gap: 2 }}>
+    <Ionicons accessible accessibilityLabel={t('client.lounge.delivered')} name="checkmark" size={15} color="#8c939d" />
+    <View accessible accessibilityLabel={t('client.lounge.awaitingReceipt')} style={{ flexDirection: 'row' }}>
+      <Ionicons name="image-outline" size={15} color="#8c939d" />
+      <Ionicons name="time-outline" size={12} color="#8c939d" />
+    </View>
+  </View>;
   const name = ({ read: 'checkmark-done', delivered: 'checkmark', pending: 'time-outline',
     rejected: 'alert-circle-outline' } as const)[delivery.status];
   return <View accessible accessibilityRole="image" accessibilityLabel={t(deliveryLabel(delivery.status))}

@@ -94,7 +94,7 @@ export function LoungeMessage({ message, own, manage, preview, onImageLoad, repl
           locate={locate} onLongPress={openMenu} />}
         {!!message.text && <Text selectable={!reply} onLongPress={openMenu}
           style={[styles.messageText, history && historyStyles.messageText]}>{message.text}</Text>}
-        {message.attachments?.map(file => <LoungeAttachment key={file.id} file={file}
+        {message.attachments?.map(file => <LoungeAttachment key={file.id} file={file} message={message}
           controller={controller} preview={preview} onLoad={onImageLoad} onLongPress={openMenu} />)}
         {message.images.map((uri, index) => <LoungeImage key={index} uri={uri} preview={preview}
           onLongPress={openMenu} onLoad={onImageLoad} />)}

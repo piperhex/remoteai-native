@@ -5,6 +5,7 @@ import { chatSocketUrl, type IceServer, type Signal } from '../remote-chat/proto
 import { RelayQuota } from '../remote-chat/relayUsage';
 import { setChatPolicy } from '../remote-chat/policy';
 import { AttachmentExchange } from './attachmentExchange';
+import { InvalidImageGrant } from './imageGrantRenewal';
 import type { AttachmentSource, LoungeAttachment } from './attachments';
 import type { LoungeSyncTransport } from './syncConnection';
 import { ReconnectBackoff } from '../realtime/reconnectBackoff';
@@ -82,7 +83,10 @@ export class AttachmentConnection {
       this.renewal = setTimeout(() => void this.renew(), RENEW_MS); return;
     }
     if (frame.type === 'attachment-peer') { this.pair(frame); return; }
-    if (frame.type === 'attachment-unavailable') { this.reject(String(frame.id)); return; }
+    if (frame.type === 'attachment-unavailable') {
+      this.reject(String(frame.id), frame.reason === 'grant' ? new InvalidImageGrant('client.lounge.fileUnavailable') : undefined);
+      return;
+    }
     const id = String(frame.sessionId), peer = this.peers.get(id);
     if (!peer) return;
     if (frame.type === 'relay' && typeof frame.payload === 'string') peer.link.receive(frame.payload);
@@ -146,11 +150,11 @@ export class AttachmentConnection {
     }
     peer.exchange.close(); peer.link.close();
   }
-  private reject(id: string) {
+  private reject(id: string, error = new Error('client.lounge.fileUnavailable')) {
     const pending = this.pending.get(id);
     if (!pending) return;
     clearTimeout(pending.timer); pending.cleanup(); this.pending.delete(id);
-    pending.reject(new Error('client.lounge.fileUnavailable'));
+    pending.reject(error);
   }
   private async renew() {
     const epoch = this.epoch;

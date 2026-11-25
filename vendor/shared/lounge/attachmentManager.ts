@@ -4,13 +4,15 @@ import { ATTACHMENT_CHUNK_BYTES, MAX_ATTACHMENTS, checkAttachmentSize, parseAtta
   type AttachmentSink, type LoungeAttachment } from './attachments';
 import type { LoungeDraft, LoungeMessage, LoungeSession } from './types';
 import { imageAttachmentSource } from './imageAttachmentSource';
+import { InvalidImageGrant, type ImageGrantRenewal } from './imageGrantRenewal';
+import type { GroupAttempt } from './groupAttempts';
 
 export class LoungeAttachmentManager {
   private readonly pendingImages = new Map<string, Promise<string>>();
   private readonly sources = new Map<string, { source: AttachmentSource; peer?: string; sentAt?: number }>();
   private readonly connection?: AttachmentConnection;
   private available = false;
-  constructor(private readonly options: { session?: LoungeSession; randomId: () => string }) {
+  constructor(private readonly options: { session?: LoungeSession; randomId: () => string; renewal?: ImageGrantRenewal }) {
     const { session, randomId } = options;
     this.device = randomId();
     if (session?.sync) this.connection = new AttachmentConnection({ baseUrl: session.baseUrl,
@@ -36,7 +38,7 @@ export class LoungeAttachmentManager {
     if (signal?.aborted) { close(); throw new Error('client.lounge.fileUnavailable'); }
     return { read: (offset: number, length: number) => peer.exchange.read(offset, length), close };
   }
-  image(file: LoungeAttachment): Promise<string> {
+  image(file: LoungeAttachment, message?: LoungeMessage): Promise<string> {
     const previous = this.pendingImages.get(file.id);
     if (previous) return previous;
     const store = this.options.session?.attachmentImages;
@@ -44,8 +46,15 @@ export class LoungeAttachmentManager {
     const pending = (async () => {
       const cached = await store.get(file.id);
       if (cached) return cached;
-      const sink = await store.sink(file);
-      const uri = await this.download(file, sink);
+      let sink = await store.sink(file);
+      let uri: string;
+      try { uri = await this.download(file, sink); }
+      catch (error) {
+        if (!(error instanceof InvalidImageGrant) || !message || !this.options.renewal) throw error;
+        const grant = await this.options.renewal.request(message, file);
+        sink = await store.sink(file);
+        uri = await this.download({ ...file, grant }, sink);
+      }
       try { await store.put(file.id, uri); }
       catch (error) { await sink.abort(); throw error; }
       return uri;
@@ -56,10 +65,10 @@ export class LoungeAttachmentManager {
     this.pendingImages.set(file.id, pending);
     return pending;
   }
-  prefetch(files?: LoungeAttachment[]) {
+  prefetch(files?: LoungeAttachment[], message?: LoungeMessage) {
     for (const file of files ?? []) if (file.kind === 'image') {
       // The image card exposes retry when a sender goes offline or local storage is unavailable.
-      void this.image(file).catch(() => {});
+      void this.image(file, message).catch(() => {});
     }
   }
   ready(available: boolean) {
@@ -67,10 +76,14 @@ export class LoungeAttachmentManager {
     if (this.available) this.connection?.start();
     else this.connection?.stop();
   }
-  prepare(draft: LoungeDraft): LoungeDraft {
+  groupImageIds(count: number) {
+    return this.available ? Array.from({ length: count }, () => this.options.randomId()) : [];
+  }
+  prepare(draft: LoungeDraft, attempt?: GroupAttempt): LoungeDraft {
     const { files = [], ...rest } = draft;
     if (!files.length && !draft.images.length) return rest;
-    if (!this.available) {
+    if (attempt?.imageIds.length && !this.available) throw new Error('client.lounge.fileUnavailable');
+    if (!this.available || attempt && !attempt.imageIds.length) {
       if (files.length) throw new Error('client.lounge.fileUnavailable');
       return rest;
     }
@@ -82,8 +95,8 @@ export class LoungeAttachmentManager {
     for (const [source, kind] of [...images.map(source => [source, 'image'] as const),
       ...files.map(source => [source, 'file'] as const)]) {
       checkAttachmentSize(source, kind, draft.to);
-      const id = this.options.randomId();
-      const file: LoungeAttachment = { id, device: this.device, name: source.name,
+      const id = attempt?.imageIds[prepared.length] ?? this.options.randomId();
+      const file: LoungeAttachment = { id, device: attempt?.device ?? this.device, name: source.name,
         mime: source.mime, size: source.size, kind };
       if (!parseAttachments([file])) throw new Error('client.lounge.fileUnavailable');
       prepared.push({ file, source });

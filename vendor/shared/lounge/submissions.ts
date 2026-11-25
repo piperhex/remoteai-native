@@ -1,6 +1,7 @@
 import { MAX_FRAME_BYTES, type LoungeAccount, type LoungeDraft, type LoungeMessage } from './types';
 import { parseAttachments } from './attachments';
 import { initialGroupDelivery, parseGroupReceipt } from './groupReceipts';
+import { UnconfirmedGroupSend } from './groupAttempts';
 
 const SEND_TIMEOUT_MS = 20_000;
 interface Pending {
@@ -28,7 +29,7 @@ export class LoungeSubmissions {
     const saved = group && { sender: { ...group.sender }, draft: { ...group.draft,
       images: [...group.draft.images], reply: group.draft.reply && { ...group.draft.reply } } };
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => this.finish(id, new Error('client.lounge.sendFailed')), SEND_TIMEOUT_MS);
+      const timer = setTimeout(() => this.interrupted(id), SEND_TIMEOUT_MS);
       this.pending.set(id, { resolve, reject, timer, group: saved });
       try { socket.send(JSON.stringify({ id, ...frame })); }
       catch { this.finish(id, new Error('client.lounge.sendFailed')); }
@@ -61,6 +62,9 @@ export class LoungeSubmissions {
   }
 
   disconnect() {
-    for (const id of this.pending.keys()) this.finish(id, new Error('client.lounge.sendFailed'));
+    for (const id of this.pending.keys()) this.interrupted(id);
+  }
+  private interrupted(id: string) {
+    this.finish(id, this.pending.get(id)?.group ? new UnconfirmedGroupSend() : new Error('client.lounge.sendFailed'));
   }
 }

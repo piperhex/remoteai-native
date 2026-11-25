@@ -21,6 +21,8 @@ import { LoungeDeviceSync } from './deviceSync';
 import { synchronizedSnapshot } from './syncSnapshot';
 import { notificationSettingsUpdate, notificationUnread } from './notificationSettings';
 import { LoungeAttachmentManager } from './attachmentManager';
+import { ImageGrantRenewal } from './imageGrantRenewal';
+import { LoungeGroupSender } from './groupAttempts';
 import { ReconnectBackoff } from '../realtime/reconnectBackoff';
 import { parseClientVersion } from './clientVersion';
 import { LoungeGroupReadViewport, type GroupReadViewing, type GroupReadVisibility } from './groupReadViewport';
@@ -52,6 +54,7 @@ export class LoungeController {
   private lifecycle = 0;
   private writes: Promise<void> = Promise.resolve();
   private historyFailures = 0;
+  private imageReceipts = false;
   private recent: LoungeMessage[] = [];
   private watched = '';
   private readonly directState = new LoungeDirectState();
@@ -59,6 +62,9 @@ export class LoungeController {
   private readonly profiles: LoungeProfiles;
   private readonly delivery: LoungeDirectDelivery;
   private readonly transport = new LoungeDeliveryTransport();
+  private readonly imageGrants = new ImageGrantRenewal({ self: () => this.state.user?.id,
+    randomId: () => this.runtime.randomId(), find: key => this.findMessage(key),
+    send: frame => this.state.status === 'connected' && this.transport.send(this.socket, frame) });
   private readonly groupViewport = new LoungeGroupReadViewport({
     enabled: () => this.running && this.runtime.isVisible() && this.state.status === 'connected'
       && this.state.groupReadsAvailable === true && !this.state.conversation,
@@ -72,6 +78,7 @@ export class LoungeController {
   private localReady = false;
   private restoringLocal = false;
   readonly attachments: LoungeAttachmentManager;
+  private readonly groupSender: LoungeGroupSender;
   readonly bookmarks = new BookmarkChannel(frame => this.state.status === 'connected'
     && this.transport.send(this.socket, frame), () => this.runtime.randomId());
 
@@ -79,7 +86,10 @@ export class LoungeController {
     this.backoff = new ReconnectBackoff({ maximumMs: 15_000, random: runtime.retryRandom });
     this.profiles = new LoungeProfiles(session?.avatars);
     this.deletions = new LoungeDeletions(session?.history);
-    this.attachments = new LoungeAttachmentManager({ session, randomId: runtime.randomId });
+    this.attachments = new LoungeAttachmentManager({ session, randomId: runtime.randomId, renewal: this.imageGrants });
+    this.groupSender = new LoungeGroupSender({ store: session?.history?.groupAttempts,
+      attachments: this.attachments, randomId: runtime.randomId,
+      submit: (draft, id, retry) => this.submit({ type: 'message', ...draft, ...(retry && { groupRetry: true }) }, draft, id) });
     this.state = { status: session ? 'connecting' : 'signed-out', messages: [], unread: 0,
       policy: { moderator: false, mutedUntil: null }, historyRevision: 0, historyError: false,
       contacts: [], blocked: [], directAvailable: false, conversation: '', unreadByConversation: {} };
@@ -100,6 +110,7 @@ export class LoungeController {
       self: () => this.state.user,
       enabled: () => this.running && this.state.status === 'connected' && this.state.directAvailable,
       groupEnabled: () => this.state.groupReadsAvailable === true,
+      imageReceipts: () => this.imageReceipts,
       online: id => this.state.contacts.some(contact => contact.user.id === id && contact.online === true),
       readable: message => message.groupReceipt && !message.recipient ? this.groupViewport.readable(message)
         : this.canRead() && message.conversation === this.state.conversation,
@@ -110,6 +121,10 @@ export class LoungeController {
       generation: peer => this.directState.generation(peer), ready: peer => this.directState.ready(peer),
       createdAt: peer => Math.max(Date.now(), this.deletions.time(peer) + 1),
       publish: (message, fresh) => this.publishDirect(message, fresh),
+      fetchImages: async message => {
+        await Promise.all(message.attachments?.filter(file => file.kind === 'image')
+          .map(file => this.attachments.image(file, message)) ?? []);
+      },
       transmit: frame => this.state.status === 'connected' && this.transport.send(this.socket, frame),
       error: () => this.update({ historyError: true }),
     });
@@ -282,6 +297,7 @@ export class LoungeController {
     finally { this.renewing = false; }
   }
   private disconnect() {
+    this.imageGrants.disconnect();
     this.contactSync.disconnect();
     this.accountLookup.disconnect();
     const socket = this.socket;
@@ -306,6 +322,7 @@ export class LoungeController {
     if (!frame || typeof frame !== 'object') return;
     this.received = Date.now();
     if (this.bookmarks.receive(frame)) return;
+    if (this.imageGrants.receive(frame)) return;
     const notifications = notificationSettingsUpdate(this.state, frame);
     if (notifications) this.update(notifications);
     if (frame.type === 'accepted') {
@@ -330,7 +347,7 @@ export class LoungeController {
     }
     if (frame.type === 'privacy' || frame.type === 'ready') this.contactSync.privacy(frame.blocked);
     if (frame.type === 'contacts') this.contactSync.presence(frame.contacts);
-    if (frame.type === 'receipt' || frame.type === 'receipt-confirm'
+    if (frame.type === 'receipt' || frame.type === 'receipt-confirm' || frame.type === 'image-pending'
       || frame.type === 'group-read' || frame.type === 'group-read-confirm' || frame.type === 'group-receipt-rejected') {
       this.delivery.receipt(frame); return;
     }
@@ -348,6 +365,7 @@ export class LoungeController {
     if (frame.type === 'ready') {
       const user = frame.user as LoungeSnapshot['user'];
       if (!user || typeof user.id !== 'string' || typeof user.account !== 'string') return;
+      this.imageReceipts = frame.imageReceipts === true;
       this.authorized = Date.now(); this.backoff.reset(); this.renewalStarted = 0;
       this.attachments.ready(frame.attachments === true);
       this.profiles.ready(user, frame.profiles === true, frame.names === true, frame.avatarCache === true);
@@ -373,18 +391,22 @@ export class LoungeController {
       const own = message.sender.id === this.state.user?.id;
       if (this.state.blocked.includes(message.sender.id)
         || !own && message.recipient && message.recipient.id !== this.state.user?.id) return;
-      this.attachments.prefetch(message.attachments);
       this.delivery.receive({ ...message, delivery: undefined,
         conversation: messageConversation(message, this.state.user?.id ?? '') });
       return;
     }
-    this.append(message);
+    if (frame.groupRetry === true && !message.recipient && message.sender.id !== this.state.user?.id) {
+      const lifecycle = this.lifecycle;
+      void this.findMessage(historyKey(message)).then(saved => {
+        if (!saved && this.lifecycle === lifecycle) this.append(message);
+      }).catch(() => this.update({ historyError: true }));
+    } else this.append(message);
   }
-  private append(message: LoungeMessage) {
+  private append(message: LoungeMessage, archived = false) {
     const own = message.sender.id === this.state.user?.id;
     if (this.state.blocked.includes(message.sender.id)) return;
     if (message.recipient && !own && message.recipient.id !== this.state.user?.id) return;
-    this.attachments.prefetch(message.attachments);
+    if (!archived || own) this.attachments.prefetch(message.attachments, message);
     const conversation = messageConversation(message, this.state.user?.id ?? '');
     message = { ...message, conversation: conversation || undefined };
     if (!this.isCurrentMessage(message)) return;
@@ -404,21 +426,23 @@ export class LoungeController {
     const user = own ? message.recipient : message.sender;
     if (user) this.contactSync.remember({ user, direct: !!message.recipient,
       ...(message.recipient ? { lastMessageAt: Date.parse(message.sentAt) } : {}) });
-    this.archive(message);
+    if (!archived) this.archive(message);
   }
   private archive(message: LoungeMessage) {
     const store = this.session?.history;
     if (!store) return;
     const lifecycle = this.lifecycle;
-    this.writes = this.writes.then(() => store.save(message)).then(() => {
+    const write = this.writes.then(() => store.save(message)).then(() => {
       if (this.running && lifecycle === this.lifecycle) {
         this.deviceSync.changed(message);
         this.update({ historyRevision: this.state.historyRevision + 1 });
       }
-    }).catch(() => {
+    });
+    this.writes = write.catch(() => {
       this.historyFailures++;
       if (this.running && lifecycle === this.lifecycle) this.update({ historyError: true });
     });
+    return write;
   }
   private async findMessage(key: string) {
     await this.writes;
@@ -441,15 +465,18 @@ export class LoungeController {
     this.markRead();
   }
   private async publishDirect(message: LoungeMessage, fresh: boolean) {
-    if (!this.isCurrentMessage(message)) return;
-    if (fresh) this.append(message);
+    const lifecycle = this.lifecycle;
+    if (!this.isCurrentMessage(message)) throw new Error('client.lounge.conversationReset');
+    await this.archive(message);
+    if (this.lifecycle !== lifecycle || !this.isCurrentMessage(message)) throw new Error('client.lounge.sendFailed');
+    if (fresh) this.append(message, true);
     else {
       const replace = (previous: LoungeMessage) => historyKey(previous) === historyKey(message) ? message : previous;
       this.recent = this.recent.map(replace);
-      this.update({ messages: this.state.messages.map(replace) }); this.archive(message);
+      this.update({ messages: this.state.messages.map(replace) });
     }
-    await this.writes;
   }
+  imageLoaded(message: LoungeMessage) { this.delivery.resumeImages(message); }
   private async restoreHistory() {
     const store = this.session?.history;
     if (!store) return;
@@ -525,6 +552,7 @@ export class LoungeController {
       return Promise.reject(new Error('client.lounge.muted'));
     }
     const lifecycle = this.lifecycle;
+    if (!draft.to) return this.groupSender.send(draft, () => this.lifecycle === lifecycle);
     const existing = draft.attachments?.length ?? 0;
     draft = this.attachments.prepare(draft);
     const created = draft.attachments?.slice(existing) ?? [];
@@ -533,11 +561,9 @@ export class LoungeController {
         await this.attachments.persistImages(draft.attachments, created);
       }
       if (lifecycle !== this.lifecycle) throw new Error('client.lounge.sendFailed');
-      if (draft.to) {
-        const recipient = this.state.contacts.find(contact => contact.user.id === draft.to)?.user;
-        if (!recipient) throw new Error('client.lounge.directUnavailable');
-        await this.delivery.send(draft, this.runtime.randomId(), recipient);
-      } else await this.submit({ type: 'message', ...draft }, draft);
+      const recipient = this.state.contacts.find(contact => contact.user.id === draft.to)?.user;
+      if (!recipient) throw new Error('client.lounge.directUnavailable');
+      await this.delivery.send(draft, this.runtime.randomId(), recipient);
     } catch (error) {
       this.attachments.discardUnpublished(created);
       throw error;
@@ -668,10 +694,9 @@ export class LoungeController {
       user: this.state.user ? { ...this.state.user, moderator: value.moderator } : undefined,
       onlineCount: value.moderator ? this.state.onlineCount : undefined });
   }
-  private submit(frame: Record<string, unknown>, draft?: LoungeDraft): Promise<void> {
+  private submit(frame: Record<string, unknown>, draft?: LoungeDraft, id = this.runtime.randomId()): Promise<void> {
     const socket = this.socket;
     if (this.state.status !== 'connected' || !socket) return Promise.reject(new Error('client.lounge.sendFailed'));
-    const id = this.runtime.randomId();
     return this.submissions.send({ socket, id, frame,
       group: draft && this.state.user ? { draft, sender: this.state.user } : undefined });
   }

@@ -6,6 +6,7 @@ import { parseMessage, type LoungeMessage } from '../../vendor/shared/lounge/typ
 import { mergeContact, parseContact, type LoungeContact } from '../../vendor/shared/lounge/contacts';
 import { mergeDelivery } from '../../vendor/shared/lounge/delivery';
 import { deleteBefore, deletionTimes } from './historyDeletions';
+import type { GroupAttempt } from '../../vendor/shared/lounge/groupAttempts';
 
 let database: Promise<SQLiteDatabase> | undefined;
 let pending: Promise<unknown> = Promise.resolve();
@@ -18,6 +19,8 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS timeline ON messages(scope, time, key);
 CREATE TABLE IF NOT EXISTS contacts(scope TEXT NOT NULL, id TEXT NOT NULL, content TEXT NOT NULL,
   PRIMARY KEY(scope, id));
+CREATE TABLE IF NOT EXISTS group_attempts(scope TEXT NOT NULL, draft TEXT NOT NULL, id TEXT NOT NULL,
+  content TEXT NOT NULL, PRIMARY KEY(scope, draft));
 CREATE TABLE IF NOT EXISTS deletions(scope TEXT NOT NULL, peer TEXT NOT NULL, deleted_at INTEGER NOT NULL,
   PRIMARY KEY(scope, peer));`;
 
@@ -83,6 +86,19 @@ async function search(db: SQLiteDatabase, scope: string, query: HistoryQuery) {
 export function nativeLoungeHistory(baseUrl: string, account: string): LoungeHistoryStore {
   const scope = historyScope(baseUrl, account);
   return {
+    groupAttempts: {
+      claim: (key, candidate) => withDatabase(async db => {
+        await db.runAsync('INSERT OR IGNORE INTO group_attempts(scope,draft,id,content) VALUES (?,?,?,?)',
+          scope, key, candidate.id, JSON.stringify(candidate));
+        const row = await db.getFirstAsync<{ content: string }>(
+          'SELECT content FROM group_attempts WHERE scope = ? AND draft = ?', scope, key);
+        if (!row) throw new Error('client.lounge.sendFailed');
+        return JSON.parse(row.content) as GroupAttempt;
+      }),
+      finish: (key, id) => withDatabase(async db => {
+        await db.runAsync('DELETE FROM group_attempts WHERE scope = ? AND draft = ? AND id = ?', scope, key, id);
+      }),
+    },
     save: message => withDatabase(async db => {
       const deletion = await db.getFirstAsync<{ deleted_at: number }>(
         'SELECT deleted_at FROM deletions WHERE scope = ? AND peer = ?', scope, message.conversation ?? '');
