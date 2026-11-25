@@ -22,7 +22,7 @@ export function textDrag(start: MouseHit) {
   if (!from || from.offsetNode.nodeType !== Node.TEXT_NODE || !start.element.contains(from.offsetNode)) return;
   const range = doc.createRange();
   range.selectNodeContents(from.offsetNode);
-  if (![...range.getClientRects()].some(rect => start.x >= rect.left && start.x <= rect.right
+  if (!Array.from(range.getClientRects()).some(rect => start.x >= rect.left && start.x <= rect.right
     && start.y >= rect.top && start.y <= rect.bottom)) return;
   return (hit: MouseHit) => {
     if (hit.element.ownerDocument !== doc || !from.offsetNode.isConnected
