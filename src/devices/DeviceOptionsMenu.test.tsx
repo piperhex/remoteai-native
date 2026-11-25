@@ -1,12 +1,12 @@
 import React, { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { Pressable } from 'react-native';
+import { Platform, Pressable } from 'react-native';
 import { DeviceOptionsMenu } from './DeviceOptionsMenu';
 import { RemoteModelSwitchContent } from './RemoteModelSwitchContent';
 import type { RemoteDevice } from '../types';
 import type { ScreenPowerReading } from '../../vendor/shared/remote-desktop/screenControl';
 
-type MenuPage = 'actions' | 'model' | 'confirmScreen';
+type MenuPage = 'actions' | 'model' | 'confirmScreen' | 'openingDesktop';
 const runtime = vi.hoisted(() => ({ page: 'actions' as MenuPage, reading: 'on' as ScreenPowerReading }));
 vi.mock('../../vendor/shared/remote-desktop/useScreenPowerStatus', async () => {
   const { screenPowerAction } = await import('../../vendor/shared/remote-desktop/screenControl');
@@ -37,10 +37,33 @@ const device: RemoteDevice = { deviceId: 'pc', name: '工作电脑', platform: '
 const props = { device, deletingDeviceId: null, switchingAuthDeviceId: null, accounts: [], providers: [],
   modelSwitch: { switchingAccountId: null, switchingProvider: null, onSwitchAccount: vi.fn(),
     onSwitchProvider: vi.fn(), onSwitchProviderGroup: vi.fn() },
-  onClose: vi.fn(), onDelete: vi.fn(), onRevokeService: vi.fn(), onSelectAuthAccount: vi.fn(),
+  onClose: vi.fn(), onOpenDesktop: vi.fn(), onDelete: vi.fn(), onRevokeService: vi.fn(), onSelectAuthAccount: vi.fn(),
   screenControl: { change: vi.fn(), read: vi.fn() } };
 beforeEach(() => {
   vi.clearAllMocks(); runtime.page = 'actions'; runtime.reading = 'on'; vi.stubGlobal('React', React);
+});
+
+it('opens the selected online desktop and disables the shortcut offline', () => {
+  button(DeviceOptionsMenu(props), '远程桌面')!.props.onPress!();
+  expect(props.onClose).toHaveBeenCalledOnce();
+  expect(props.onOpenDesktop).toHaveBeenCalledExactlyOnceWith(device.deviceId);
+  const offline = DeviceOptionsMenu({ ...props, device: { ...device, online: false } });
+  expect(button(offline, '远程桌面')!.props.disabled).toBe(true);
+});
+
+it('waits for the iOS menu to dismiss before presenting the desktop', () => {
+  const platform = Platform.OS;
+  try {
+    Platform.OS = 'ios';
+    button(DeviceOptionsMenu(props), '远程桌面')!.props.onPress!();
+    const sheet = DeviceOptionsMenu(props);
+    expect(sheet.props.visible).toBe(false);
+    expect(props.onOpenDesktop).not.toHaveBeenCalled();
+    sheet.props.onDismiss();
+    expect(props.onOpenDesktop).toHaveBeenCalledExactlyOnceWith(device.deviceId);
+  } finally {
+    Platform.OS = platform;
+  }
 });
 
 it('opens model selection for the same device and returns to the actions', () => {

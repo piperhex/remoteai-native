@@ -41,6 +41,7 @@ interface BottomSheetProps {
   truncateTitle?: boolean;
   subtitle?: string;
   onClose: () => void;
+  onDismiss?: () => void;
   /** Back, backdrop and drag can hide a retained tool without closing it. */
   onHide?: () => void;
   onBack?: () => void;
@@ -69,6 +70,7 @@ export function BottomSheet({
   truncateTitle = false,
   subtitle,
   onClose,
+  onDismiss,
   onHide,
   onBack,
   children,
@@ -108,6 +110,7 @@ export function BottomSheet({
 
   return <Modal
     visible={visible}
+    onDismiss={onDismiss}
     transparent
     animationType="slide"
     statusBarTranslucent

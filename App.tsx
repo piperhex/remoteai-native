@@ -73,6 +73,7 @@ import { AddAccountSheet } from './src/components/AddAccountSheet';
 import { AppToastHost, Toast } from './src/components/AppToast';
 import { BottomSheet } from './src/components/BottomSheet';
 import { DeviceManagementList } from './src/devices/DeviceManagementList';
+import { RemoteDesktopWindowHost } from './src/chat/desktop/RemoteDesktopWindow';
 import { useRevokeDesktopService } from './src/devices/useRevokeDesktopService';
 import { useDeviceScreenControl } from './src/devices/useDeviceScreenControl';
 import { QuotaConsumptionSheet } from './src/components/QuotaConsumptionSheet';
@@ -496,6 +497,7 @@ function OpenAiAuthAccountDrawer({
 
 function DeviceManagementPage({
   onBack,
+  onOpenDesktop,
   session,
   accounts,
   providers,
@@ -513,6 +515,7 @@ function DeviceManagementPage({
   onSetOpenAiAuthAccount,
 }: {
   onBack: () => void;
+  onOpenDesktop: (deviceId: string) => void;
   session: AuthSession;
   accounts: AccountSummary[];
   providers: RemoteProviderSummary[];
@@ -560,6 +563,7 @@ function DeviceManagementPage({
   return <>
     <DeviceManagementList
       onBack={onBack}
+      onOpenDesktop={onOpenDesktop}
       devices={sortedDevices}
       accounts={accounts}
       providers={providers}
@@ -672,6 +676,8 @@ function AppContent() {
   }, []);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activePage, setActivePage] = useState<AppPage>(DEFAULT_APP_PAGE);
+  const [desktopDeviceId, setDesktopDeviceId] = useState<string>();
+  useEffect(() => { setDesktopDeviceId(undefined); }, [activePage, session?.baseUrl, session?.email]);
   const [downloadsBack, setDownloadsBack] = useState<'discover' | 'browser'>('discover');
   const openAccounts = useCallback(() => { Keyboard.dismiss(); setActivePage('accounts'); }, []);
   const openChat = useCallback(() => setActivePage('chat'), []);
@@ -1214,6 +1220,8 @@ function AppContent() {
       accounts: accountStyles.page, discover: styles.discoveryCanvas, settings: styles.settingsCanvas,
     }} pages={{
     chat: <ChatPage session={session} devices={devices}
+      deviceDesktop={activePage === 'devices' && desktopDeviceId
+        ? { deviceId: desktopDeviceId, close: () => setDesktopDeviceId(undefined) } : undefined}
       acceptDownload={activePage === 'downloads'}
       active={activePage === 'chat' || activePage === 'token-summary'}
       openAccounts={openAccounts}
@@ -1251,6 +1259,7 @@ function AppContent() {
     {activePage === 'lounge' && <LoungePage controller={lounge.controller} onBack={() => setActivePage('discover')} />}
     {activePage === 'devices'
         ? <DeviceManagementPage session={session} accounts={accounts} providers={providers} devices={devices}
+          onOpenDesktop={setDesktopDeviceId}
           onBack={() => setActivePage('discover')}
           refreshing={syncingServer} deletingDeviceId={deletingDeviceId}
           switchingAccountId={switchingAccountId} switchingProvider={switchingProvider}
@@ -1281,7 +1290,7 @@ export default function App() {
     <StartupErrorBoundary>
       <AndroidUpdateInstallPrompt />
       <StartupUpdatePrompt />
-      <ProjectBrowserWindowHost><AppContent /></ProjectBrowserWindowHost>
+      <ProjectBrowserWindowHost><RemoteDesktopWindowHost><AppContent /></RemoteDesktopWindowHost></ProjectBrowserWindowHost>
     </StartupErrorBoundary>
     <AppToastHost />
     </View>

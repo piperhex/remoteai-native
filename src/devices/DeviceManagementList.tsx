@@ -20,6 +20,7 @@ interface DeviceManagementListProps {
   switchingAuthDeviceId: string | null;
   onRefresh: () => Promise<void>;
   onBack: () => void;
+  onOpenDesktop: (deviceId: string) => void;
   onDelete: (device: RemoteDevice) => void;
   onRevokeService: (device: RemoteDevice) => void;
   screenControl: ScreenPowerControl;
@@ -80,6 +81,7 @@ export function DeviceManagementList(props: DeviceManagementListProps) {
     {menuDevice && <DeviceOptionsMenu key={menuDevice.deviceId} device={menuDevice}
       accounts={props.accounts} providers={props.providers} modelSwitch={props.modelSwitch}
       deletingDeviceId={props.deletingDeviceId}
+      onOpenDesktop={props.onOpenDesktop}
       screenControl={props.screenControl}
       switchingAuthDeviceId={props.switchingAuthDeviceId}
       onClose={() => setMenuDeviceId(current => current === menuDevice.deviceId ? null : current)}

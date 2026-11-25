@@ -57,6 +57,12 @@ try {
     await tap('工作电脑 的更多操作');
     await find('关闭电脑屏幕');
     await screenshot(`menu-${scale}`);
+    await tap('远程桌面');
+    await find('正在连接桌面…');
+    await screenshot(`desktop-${scale}`);
+    await adb('shell', 'input', 'keyevent', '4');
+    await find('设备管理');
+    await tap('工作电脑 的更多操作');
     await tap('关闭电脑屏幕');
     await find('暂时关闭电脑屏幕？');
     await screenshot(`confirm-${scale}`);

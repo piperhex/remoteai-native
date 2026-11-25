@@ -2,7 +2,7 @@ import { useThemeColor } from '../theme/store';
 import { t, useLanguage } from '../i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView, SHEET_READABLE_WIDTH } from '../components/SheetScrollView';
 import { supportsScreenControl, type ScreenPowerControl } from '../../vendor/shared/remote-desktop/screenControl';
@@ -24,6 +24,7 @@ interface DeviceOptionsMenuProps {
   deletingDeviceId: string | null;
   switchingAuthDeviceId: string | null;
   onClose: () => void;
+  onOpenDesktop: (deviceId: string) => void;
   onDelete: (device: RemoteDevice) => void;
   onRevokeService: (device: RemoteDevice) => void;
   screenControl: ScreenPowerControl;
@@ -34,7 +35,7 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
-  const [page, setPage] = useState<'actions' | 'model' | 'confirmScreen'>('actions');
+  const [page, setPage] = useState<'actions' | 'model' | 'confirmScreen' | 'openingDesktop'>('actions');
   const { device, deletingDeviceId, switchingAuthDeviceId, onClose, onDelete, onSelectAuthAccount, modelSwitch } = props;
   const switchingProviderId = modelSwitch.switchingProvider?.deviceId === device.deviceId
     ? modelSwitch.switchingProvider.providerId : null;
@@ -44,6 +45,8 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
   const authDisabled = !device.online || Boolean(switchingAuthDeviceId);
   const confirmScreen = page === 'confirmScreen';
   const showModel = page === 'model';
+  const openingDesktop = page === 'openingDesktop';
+  const openDesktop = () => { onClose(); if (device.online) props.onOpenDesktop(device.deviceId); };
   const screen = useScreenPowerStatus(device, !showModel, props.screenControl.read);
   const runScreenAction = () => {
     if (screen.action === 'off') setPage('confirmScreen');
@@ -53,7 +56,8 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
     : confirmScreen ? t('client.deviceScreen.confirmTitle') : device.name;
   const subtitle = showModel ? t('client.app.chooseTheModelSourceForThisComputer', { value1: device.name })
     : confirmScreen ? device.name : undefined;
-  return <BottomSheet visible title={title} subtitle={subtitle} onClose={onClose}
+  return <BottomSheet visible={!openingDesktop} title={title} subtitle={subtitle} onClose={onClose}
+    onDismiss={openingDesktop ? openDesktop : undefined}
     onBack={showModel && !switchingModel ? () => setPage('actions') : undefined}
     dismissible={!showModel || !switchingModel}
     fullWidthContent tall={showModel} maxWidth={showModel ? undefined : SHEET_READABLE_WIDTH}
@@ -66,6 +70,13 @@ export function DeviceOptionsMenu(props: DeviceOptionsMenuProps) {
       accounts={props.accounts} providers={props.providers} switchingProviderId={switchingProviderId} onClose={onClose} />
     : <SheetScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.optionsContent}>
       {confirmScreen ? <Text style={styles.screenExplanation}>{t('client.deviceScreen.confirmMessage')}</Text> : <>
+        <Pressable accessibilityRole="button" accessibilityState={{ disabled: !device.online }} disabled={!device.online}
+          onPress={Platform.OS === 'ios' ? () => setPage('openingDesktop') : openDesktop}
+          style={({ pressed }) => [styles.option, pressed && styles.pressed, !device.online && styles.disabled]}>
+          <Ionicons name="desktop-outline" size={21} color={color(deviceColors.green, 'accent')} />
+          <Text style={styles.optionLabel}>{t('client.remoteDesktop.remoteDesktop')}</Text>
+          <Ionicons name="chevron-forward" size={18} color={color(deviceColors.muted, 'muted')} />
+        </Pressable>
         <Pressable accessibilityRole="button" accessibilityState={{ disabled: modelDisabled }} disabled={modelDisabled}
           onPress={() => setPage('model')}
           style={({ pressed }) => [styles.option, pressed && styles.pressed, modelDisabled && styles.disabled]}>

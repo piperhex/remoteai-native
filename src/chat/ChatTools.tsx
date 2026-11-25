@@ -6,7 +6,7 @@ import { useRetainedProjects } from '../../vendor/shared/remote-chat/useRetained
 import { useRemoteTerminalLauncher } from '../../vendor/shared/remote-chat/useRemoteTerminalLauncher';
 import { ChatTerminal } from './ChatTerminal';
 import { ChatGit } from './git/ChatGit';
-import { RemoteDesktop } from './desktop/RemoteDesktop';
+import { RemoteDesktopWindow } from './desktop/RemoteDesktopWindow';
 import { ChatToolsMenu } from './ChatToolsMenu';
 import { PortMappings } from './portMapping/PortMappings';
 import type { AuthSession } from '../types';
@@ -17,6 +17,7 @@ import type { DownloadClient } from '../../vendor/shared/remote-chat/downloads';
 interface Props {
   client: GuiToolsClient; cwd: string; active: boolean; connected: boolean; deviceName?: string;
   foreground?: boolean;
+  closeDeviceDesktop?: () => void;
   scope: string; session?: AuthSession;
   downloads?: DownloadClient;
 }
@@ -69,7 +70,9 @@ export function ChatTools(props: Props) {
       active={visible && git.visible === cwd} onHide={git.hide} onClose={() => git.close(cwd)} />)}
     <PortMappings client={props.client.files} scope={props.scope} connected={props.connected} session={props.session}
       active={visible} deviceName={props.deviceName} open={mapping} close={() => setMapping(false)} />
-    {desktop.opened && <RemoteDesktop client={props.client.desktop} active={live && !desktop.minimized}
-      connected={props.connected} keepAlive close={desktop.close} hide={desktop.hide} />}
+    {(desktop.opened || props.closeDeviceDesktop) && <RemoteDesktopWindow client={props.client.desktop}
+      active={props.closeDeviceDesktop ? props.foreground !== false : live && !desktop.minimized}
+      connected={props.connected} keepAlive close={() => { desktop.close(); props.closeDeviceDesktop?.(); }}
+      hide={props.closeDeviceDesktop ? undefined : desktop.hide} />}
   </>;
 }

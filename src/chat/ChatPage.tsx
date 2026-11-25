@@ -66,6 +66,7 @@ interface Props {
   notificationHandled: (id: string) => void;
   tokenSummary: boolean; closeTokenSummary: () => void;
   openAccounts?: () => void;
+  deviceDesktop?: { deviceId: string; close: () => void };
   acceptDownload?: boolean;
 }
 
@@ -78,7 +79,8 @@ export function ChatPage(props: Props) {
   const { device, chooseDevice: selectDevice } = useChatDevice({ session, devices,
     devicesLoaded: props.devicesLoaded, requestedDeviceId: notification?.deviceId });
   const scope = JSON.stringify([session.baseUrl, session.email]);
-  const retained = useRetainedChatDevices({ scope, devices, selectedId: device?.deviceId });
+  const retained = useRetainedChatDevices({ scope, devices, selectedId: device?.deviceId,
+    requestedId: props.deviceDesktop?.deviceId });
   const chats = device ? retained : [...retained, undefined];
   const backgroundError = useChatBackground(retained.length > 0);
   const chooseDevice = (id: string) => {
@@ -115,7 +117,7 @@ function ConnectedChat(props: ConnectedProps) {
 }
 
 function ConnectedChatContent({ session, device, devices, selected, active: pageActive, acceptDownload, chooseDevice, notification,
-  notificationHandled, tokenSummary, closeTokenSummary, openAccounts, chat }: ConnectedProps & {
+  notificationHandled, tokenSummary, closeTokenSummary, openAccounts, deviceDesktop, chat }: ConnectedProps & {
   chat: ReturnType<typeof useChat>;
 }) {
   const styles = useStyles();
@@ -229,6 +231,7 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
         <Text style={styles.buttonText}>{t("client.chat.restore")}</Text></Pressable>}
       <View style={styles.headerTools}>
         <ChatTools client={controller.guiTools} downloads={controller.downloads}
+          closeDeviceDesktop={deviceDesktop && deviceDesktop.deviceId === device?.deviceId ? deviceDesktop.close : undefined}
           active={active} foreground={foreground} connected={ready}
           scope={JSON.stringify([session.baseUrl, session.email, device?.deviceId ?? ''])}
           session={session}
