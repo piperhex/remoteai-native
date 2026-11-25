@@ -7,6 +7,6 @@ import com.facebook.react.uimanager.ViewManager
 
 class BrowserGesturesPackage : ReactPackage {
   override fun createNativeModules(context: ReactApplicationContext): List<NativeModule> =
-    listOf(BrowserGesturesModule(context))
+    listOf(BrowserGesturesModule(context), BrowserMouseModule(context))
   override fun createViewManagers(context: ReactApplicationContext): List<ViewManager<*, *>> = emptyList()
 }

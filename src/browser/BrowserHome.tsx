@@ -27,14 +27,14 @@ export function BrowserHome({ devices, visit, bookmarks }: {
       <Text style={styles.hint}>{text('market.browserHomeHint')}</Text>
     </View>
     <View style={styles.card}>
-      <Pressable accessibilityRole="button" style={styles.heading} onPress={bookmarks}>
+      <Pressable accessibilityRole="button" style={styles.heading} onPress={bookmarks} onAccessibilityTap={bookmarks}>
         <Ionicons name="star-outline" size={20} color={color('#0b8065', 'accent')} />
         <Text style={styles.section}>{text('market.bookmarkAll')}</Text>
         <Ionicons name="chevron-forward" size={18} color={color('#718078', 'muted')} />
       </Pressable>
       {!links.length && <Text style={styles.hint}>{text('market.browserHomeBookmarksHint')}</Text>}
       {links.map(entry => <Pressable key={entry.id} accessibilityRole="button" style={list.row}
-        onPress={() => visit(entry.url)}>
+        onPress={() => visit(entry.url)} onAccessibilityTap={() => visit(entry.url)}>
         <Ionicons name="globe-outline" size={21} color={color('#0b8065', 'accent')} />
         <View style={list.details}><Text style={list.title} numberOfLines={2}>{entry.title}</Text>
           <Text style={list.secondary} numberOfLines={1}>{entry.url}</Text></View>

@@ -34,7 +34,8 @@ export function MappingAddress({ mapping, deviceName, visit }: {
   const styles = useBrowserListStyles();
   const color = useThemeColor();
   const address = `http://127.0.0.1:${entry.localPort}`;
-  return <Pressable accessibilityRole="button" style={styles.row} onPress={() => visit(address)}>
+  return <Pressable accessibilityRole="button" style={styles.row} onPress={() => visit(address)}
+    onAccessibilityTap={() => visit(address)}>
     <Ionicons name="swap-horizontal-outline" size={22} color={color('#0b8065', 'accent')} />
     <View style={styles.details}>
       <Text style={styles.title}>{alias || deviceName || t('client.mappingHub.device')}</Text>

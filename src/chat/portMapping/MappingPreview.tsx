@@ -12,6 +12,7 @@ import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
 import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
 import { BrowserHome } from '../../browser/BrowserHome';
+import { BrowserMousePanel, useBrowserMousePreference } from '../../browser/BrowserMousePanel';
 import { BrowserPortMappings } from '../../browser/BrowserPortMappings';
 import type { BrowserDevice } from '../../browser/browserMappings';
 import { BrowserSearchEngines } from '../../browser/BrowserSearchEngines';
@@ -65,6 +66,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
   const [toolbar, setToolbar] = useState({ height: 0, width: 0 });
   const [previewHeight, setPreviewHeight] = useState(0);
   const page = useRef<View>(null);
+  const [mouseEnabled, setMouseEnabled] = useBrowserMousePreference();
   const canInspect = !browser.homeVisible && !browser.resourceVisible;
   const obscured = settingsOpen || !!drawer || fullscreenMenuOpen || !!records.candidate || !!records.focus;
   const capturing = useRef(false);
@@ -129,6 +131,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
         }} />}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
+      <View style={styles.fill}>
       <View ref={page} collapsable={false} style={styles.fill}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
       {!!browser.source.uri && <WebView key={dataGeneration} ref={browser.webview}
@@ -179,10 +182,14 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
       {browser.homeVisible && <BrowserHome devices={devices} visit={browser.visit}
         bookmarks={() => setDrawer('bookmarks')} />}
       </View>
+      {visible && mouseEnabled && !obscured && <BrowserMousePanel
+        key={JSON.stringify([browser.currentUrl, dataGeneration])} page={page} />}
+      </View>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbar.height} width={toolbar.width} height={previewHeight}
       url={browser.currentUrl} title={browser.title}
       desktop={desktop} onDesktopChange={onDesktopChange}
+      mouseEnabled={mouseEnabled} toggleMouse={() => { setMouseEnabled(!mouseEnabled); setSettingsOpen(false); }}
       inspector={browserInspectorAvailable && inspector ? { available: visible && Boolean(browser.currentUrl)
         && canInspect && !inspector.opening, open: () => inspector.show(page) } : undefined}
       fullscreen={() => { setSettingsOpen(false); onFullscreenChange(true); }}

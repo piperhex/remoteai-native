@@ -48,8 +48,12 @@ export function desktopPoint(point: Point, { content }: DesktopViewport, clampOu
 }
 
 /** Keep the cursor at the panel's upper-left, including outside the video or viewer. */
-export function mousePanelPosition(cursor: Point): Point {
-  return { x: cursor.x + PANEL_GAP, y: cursor.y };
+export function mousePanelPosition(cursor: Point, bounds?: { stage: Size; panel: Size }): Point {
+  const x = cursor.x + PANEL_GAP;
+  if (!bounds) return { x, y: cursor.y };
+  // A live browser page stays stationary. Keep its controls reachable at the viewport edges.
+  return { x: clamp(x, 0, bounds.stage.width - bounds.panel.width),
+    y: clamp(cursor.y, 0, bounds.stage.height - bounds.panel.height) };
 }
 
 function panAxis(cursor: number, edge: number, previous?: { cursor: number; offset: number }) {

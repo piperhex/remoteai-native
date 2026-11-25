@@ -1,4 +1,5 @@
 import { useThemeColor } from '../../theme/store';
+import { textMetrics } from '../../theme/text';
 import { t, useLanguage } from '../../i18n';
 import { useEffect, useSyncExternalStore } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
@@ -18,7 +19,7 @@ import { useDesktopStyles as useS } from './styles';
 
 interface Props {
   pointer: DesktopPointer; viewport: DesktopViewport; panel: MousePanelActivity;
-  wheel: DesktopWheel; horizontal: boolean;
+  wheel: DesktopWheel; horizontal: boolean; contained?: boolean;
 }
 type MousePadProps = Omit<Props, 'wheel' | 'horizontal'> & { scroll: ScrollPadGesture };
 export function DesktopMouse({ visible, ...props }: Props & { visible: boolean }) {
@@ -28,7 +29,7 @@ export function DesktopMouse({ visible, ...props }: Props & { visible: boolean }
   const scroll = useScrollPad({ ...props, enabled: visible && props.panel.expanded });
   const cursor = cursorPosition(position, props.viewport);
   const panelSize = props.panel.expanded ? MOUSE_PANEL_SIZE : MOUSE_ICON_SIZE;
-  const panel = mousePanelPosition(cursor);
+  const panel = mousePanelPosition(cursor, props.contained ? { stage: props.viewport.stage, panel: panelSize } : undefined);
   return <>
     {props.panel.expanded && <View pointerEvents="none" accessible={false}
       style={[s.cursor, { left: cursor.x, top: cursor.y }]}>
@@ -55,11 +56,16 @@ function MouseIcon({ pointer, viewport, panel }: Props) {
     <MaterialCommunityIcons name="mouse" size={23} color="#fff" />
   </View>;
 }
-function MousePad({ pointer, viewport, panel, scroll }: MousePadProps) {
+const pageLabelMetrics = textMetrics(11, 15);
+
+function MousePad({ pointer, viewport, panel, scroll, contained }: MousePadProps) {
   const s = useS();
   const color = useThemeColor();
   useLanguage();
   const buttons = useMouseButtons(pointer);
+  const leftLabel = buttons.dragging && !contained ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.left';
+  const padLabel = buttons.dragging && contained ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.swipeToMove';
+  const labelStyle = contained ? [s.mouseText, pageLabelMetrics] : s.mouseText;
   const left = useLeftMouseButton({ buttons, viewport, panel });
   const wheel = useScrollButton(scroll);
   const pad = useTrackpad({ pointer, viewport, panel, id: 'pad', cancel: buttons.cancel });
@@ -74,16 +80,16 @@ function MousePad({ pointer, viewport, panel, scroll }: MousePadProps) {
         onAccessibilityTap={clickLeft} accessibilityActions={[{ name: 'activate' }]}
         onAccessibilityAction={event => { if (event.nativeEvent.actionName === 'activate') clickLeft(); }}
         style={[s.mouseButton, (left.pressed || buttons.dragging) && s.pressed]}>
-        <Text style={s.mouseText}>{buttons.dragging ? t("client.remoteDesktop.dragging") : t("client.remoteDesktop.left")}</Text>
+        <Text style={labelStyle}>{t(leftLabel)}</Text>
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel={t("client.remoteDesktop.rightMouseButton")}
         onPressIn={() => { panel.hold('right', true); buttons.down('right'); }}
         onPressOut={() => { buttons.up('right'); panel.hold('right', false); }}
         style={({ pressed }) => [s.mouseButton, s.mouseRight, pressed && s.pressed]}>
-        <Text style={s.mouseText}>{t("client.remoteDesktop.right")}</Text>
+        <Text style={labelStyle}>{t("client.remoteDesktop.right")}</Text>
       </Pressable></View>
     <View {...pad.panHandlers} style={[s.pad, pad.pressed && s.pressed]} accessibilityLabel={t("client.mobile.swipeToMoveThePointerTapToClick")}>
-      <Text style={s.mouseText}>{t("client.remoteDesktop.swipeToMove")}</Text></View>
+      <Text style={labelStyle}>{t(padLabel)}</Text></View>
     <View accessible accessibilityRole="button" accessibilityLabel={t("client.remoteDesktop.holdAndDragToScroll")}
       {...wheel.panHandlers} style={s.wheel}>
       <Ionicons name="chevron-up" size={18} color={color("#526684", 'info')} />

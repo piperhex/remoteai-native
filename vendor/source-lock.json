@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "244b57b36728e8d03c87c3bfd81058a6d2a38725",
+  "revision": "3f7049cbcd85caf11f1ebdbfb4e8a63f0c12c89a",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "385be5b117c61108dcbc0fed1a9fc1ab78cb8d75"
+    "revision": "9ec14805de4dc399048784be88e60216b1bd72c0"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -100,6 +100,7 @@
     "shared/remote-chat/tcp/types.ts": "8eb35d3c7b0a1ce2beedf09f24c7c5288c50af084f7d623c2a827e8b03885540",
     "shared/testing/threadActivityFixture.ts": "ff5b7a65a00bfcf1779527d80f71ada0e0108c275ee0295a2f35a40781ca5e8a",
     "shared/chat/toolDetailsFixture.json": "bf33f450e0b9240846e3d8d0211a7eba34a7d78c566e96377afbd01c79cdd1a7",
+    "shared/browser/mouse/documentMouse.ts": "d0b432a98cd4a39e0f1a7f45050875e7b8340a705e095ddb231d0430f97bf952",
     "shared/cli-gui/modelSelection.ts": "78e78bf039e9d15be9bf34adf880acaeb5d9070459333c78d4e39f311e0e0b97",
     "shared/cli-gui/useCliSidebar.ts": "6fddc152fa22f51a4e985a459c21564eb3951730bcdd1e48aef4e0234fc7bfae",
     "shared/cli-gui/types.ts": "48d2adc87197772e60b6e65faf094c7836487cc8aafa6b01a34f9cff6fea0538",
@@ -122,6 +123,8 @@
     "shared/browser/data/presentation.ts": "d6ace98a340b40e96077d83fc9eebc5838f1e64acca99cf49af47eae86e20e28",
     "shared/browser/data/clear.ts": "a188d3d8c8dc8db9cad30a2a73b8c61087cb0ffcd6351a1f18aaabbd2b2e3fde",
     "shared/port-mapping/service.ts": "8b483dd0244fce2acdba2f5040ee8b9266cb1baaf4cef971a83767243dfe98fb",
+    "shared/browser/mouse/mousePreference.ts": "f7fb5cd8457935513e64f72ee724fa2490eba70afe5a2ce7f18e1812e8028cb5",
+    "shared/browser/mouse/useBrowserMouse.ts": "4c6bffe06c61120dc0be9faeef7a0a83be714286247eca24f618b41c51274368",
     "shared/browser/data/vault.ts": "2304274200f081f95d549f854b11273a8e9b5348e6d54a75080accd8b8658a61",
     "shared/browser/searchEngine.ts": "6f3d67eabc3cb333ca29447b9e96c10f8740c58dd00ce9f357ac2194e6291bd4",
     "shared/browser/siteMode.ts": "f3a8bde3b6066ec266fa8191ab3a4976c164696eabc915b7001d49cc7072be62",
@@ -269,7 +272,7 @@
     "shared/remote-desktop/displaySettings.ts": "c448a906ed98afb2e3262f26006532ea8859c5bb5a4ef41ecd6476f0c72bca5d",
     "shared/remote-desktop/useFrameRateInput.ts": "605fcd3384e5aee0fa9bbe1286ee5dbe5b69f9ecb6c90cf9816d1bcb7a66f67a",
     "shared/remote-desktop/displays.ts": "52a299bb7c0ff7cf175ac71443a2eb22f086cb01cb97611f44e53bec5f189337",
-    "shared/remote-desktop/geometry.ts": "723a5eff0af5138172e783bcddf6347f82fb23cf2a45baac6ca0a3830302d547",
+    "shared/remote-desktop/geometry.ts": "2dfb7a4d25f64ad11826a51b6e29911b44e5c794f09ea5aea9563c7ed03670e7",
     "shared/remote-desktop/cursor.png": "549ef3e94d83c29099da09fc963a8d7d38b64c8032238efa79d1c03b937718ca",
     "shared/remote-desktop/useMousePanel.ts": "2037c627c2658fcb8660c2a75c664f361c496afbb94f6ec2015d3244096e1fa8",
     "shared/remote-desktop/useMouseButtons.ts": "f5c5714331a7bb4f01aeca16f32de1790b013b0861d612ea07737733c6f79e68",
@@ -555,6 +558,8 @@
     "shared/remote-chat/tcp/channel.ts": "7a503b50f8313c2423e0474a9c4d566d42417a405aefbdae9c332f91ccb8a0df",
     "shared/remote-chat/tcp/binding.ts": "f3877e1fce08c41a29851f67e72e9bca104cbd21af2d73f921fad547630d6a1f",
     "shared/remote-chat/tcp/candidates.ts": "74dd4df8fb568cf1dd141876fce6d6fbc6b0afa0b8d50a9f30a56650b86f857c",
+    "shared/browser/mouse/pageDrag.ts": "cebb97383c938b7a49f963fa7bbb3cd2ead52b6f91c56b51d7ace33b538038e4",
+    "shared/browser/mouse/textDrag.ts": "e78d0df9ebad60a34fd96eee820160b2d38386d1d2d9addf78235717792b8a77",
     "shared/chat/threadOrder.ts": "37e19e39f47273d524c517365f69278c023057c654efcda7f7a788198eb44f07",
     "shared/cli/installProgressTypes.ts": "2facbf8ae73c08852431906fcd2a852768b4ecd288ee0d95235db22cef8359fa",
     "shared/conversation/processing.ts": "bb590e481b75286fdcf1950a51815db38d186e2a54809bc80ca56547afa42791",

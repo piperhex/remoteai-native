@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { t, useLanguage } from '../../i18n';
 import { marketText } from '../../../vendor/shared/provider-market/i18n';
@@ -10,7 +10,7 @@ import { bookmarkStatusKeys } from '../../../vendor/shared/browser/bookmarks/sta
 
 export function MappingBrowserSettings({ top, width, height, dismiss, reload, bookmarks, mappings, search, history,
   passwords, downloads, external, url, title,
-  desktop, onDesktopChange, fullscreen, inspector }: {
+  desktop, onDesktopChange, mouseEnabled, toggleMouse, fullscreen, inspector }: {
   top: number; width: number; height: number; dismiss: () => void; reload: () => void; bookmarks: () => void;
   mappings: () => void; search: () => void;
   history: () => void; passwords: () => void;
@@ -18,6 +18,7 @@ export function MappingBrowserSettings({ top, width, height, dismiss, reload, bo
   external?: () => void;
   url: string; title: string;
   desktop: boolean; onDesktopChange: (desktop: boolean) => void;
+  mouseEnabled: boolean; toggleMouse: () => void;
   fullscreen: () => void;
   inspector?: { available: boolean; open: () => void };
 }) {
@@ -58,6 +59,14 @@ export function MappingBrowserSettings({ top, width, height, dismiss, reload, bo
         onPress={fullscreen} style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
         <Ionicons name="expand-outline" size={21} color={color('#17211b', 'ink')} />
         <Text style={styles.menuText}>{text('market.browserFullscreen')}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="checkbox" accessibilityLabel={t('client.remoteDesktop.mouseControls')}
+        accessibilityState={{ checked: mouseEnabled }} onPress={toggleMouse}
+        style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}>
+        <MaterialCommunityIcons name="mouse" size={21} color={color('#17211b', 'ink')} />
+        <Text style={[styles.menuText, { flex: 1 }]}>{t('client.remoteDesktop.mouseControls')}</Text>
+        <Ionicons name={mouseEnabled ? 'checkbox-outline' : 'square-outline'} size={23}
+          color={color('#0b8065', 'accent')} />
       </Pressable>
       {inspector && <Pressable accessibilityRole="menuitem" accessibilityLabel={text('market.inspectorTitle')}
         disabled={!inspector.available} accessibilityState={{ disabled: !inspector.available }}

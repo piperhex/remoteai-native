@@ -3,6 +3,7 @@ import type { WebViewMessageEvent, WebViewProps } from 'react-native-webview';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { MappingPreview } from './MappingPreview';
 import type { MappingBrowserToolbar } from './MappingBrowserToolbar';
+import type { MappingBrowserSettings } from './MappingBrowserSettings';
 import type { BrowserDownloadRequest } from '../../downloads/browserDownload';
 import { mappingBrowserUrl, useMappingBrowser } from './useMappingBrowser';
 import { PREVIEW_NETWORK_BUSY, PREVIEW_NETWORK_IDLE } from './previewNetworkActivity';
@@ -45,6 +46,9 @@ vi.mock('./MappingBrowserToolbar', () => ({ MappingBrowserToolbar: 'Toolbar' }))
 vi.mock('./MappingBrowserSettings', () => ({ MappingBrowserSettings: 'Settings' }));
 vi.mock('../../browser/BrowserBookmarks', () => ({ BrowserBookmarks: 'Bookmarks' }));
 vi.mock('../../browser/BrowserHome', () => ({ BrowserHome: 'Home' }));
+vi.mock('../../browser/BrowserMousePanel', () => ({
+  BrowserMousePanel: 'MousePanel', useBrowserMousePreference: () => React.useState(false),
+}));
 vi.mock('../../browser/BrowserPortMappings', () => ({ BrowserPortMappings: 'Mappings' }));
 vi.mock('../../browser/BrowserSearchEngines', () => ({ BrowserSearchEngines: 'SearchEngines' }));
 vi.mock('../../browser/BrowserHistory', () => ({ BrowserHistory: 'History' }));
@@ -76,6 +80,19 @@ const active = () => browser().activity.active;
 const message = (data: string) => webview().onMessage!({ nativeEvent: { data } } as WebViewMessageEvent);
 
 beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.states = []; runtime.refs = []; });
+
+it('opens the mouse from settings and removes it when switched off', () => {
+  const panel = () => render().some(node => node.type === 'MousePanel');
+  const settings = () => {
+    render().find(node => node.type === 'Toolbar')!.props.openSettings!();
+    return render().find(node => node.type === 'Settings')!.props as React.ComponentProps<typeof MappingBrowserSettings>;
+  };
+  expect(panel()).toBe(false);
+  const off = settings(); expect(off.mouseEnabled).toBe(false); off.toggleMouse();
+  expect(panel()).toBe(true);
+  const on = settings(); expect(on.mouseEnabled).toBe(true); expect(panel()).toBe(false);
+  on.toggleMouse(); expect(panel()).toBe(false);
+});
 
 it('keeps the browser home free of a WebView until an address is requested', () => {
   const home = () => {

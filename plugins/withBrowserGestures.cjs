@@ -1,9 +1,15 @@
-const { withAndroidManifest, withDangerousMod, withMainActivity, withMainApplication } = require('expo/config-plugins');
+const { withAndroidManifest, withDangerousMod, withMainActivity, withMainApplication,
+  withXcodeProject, IOSConfig } = require('expo/config-plugins');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const PACKAGE_LINE = 'packages.add(com.codexswitch.browser.BrowserGesturesPackage())';
 const BACK_HANDLER_LINE = 'com.codexswitch.browser.ActivityBackHandler.install(this)';
+
+function bundlePageMouse(directory) {
+  return require('esbuild').build({ entryPoints: [path.join(__dirname, 'browserGestures/pageMouse.ts')], bundle: true,
+    outfile: path.join(directory, 'BrowserPageMouse.js'), globalName: 'BrowserPageMouse', target: 'es2020' });
+}
 
 module.exports = function withBrowserGestures(config) {
   config = withAndroidManifest(config, result => {
@@ -28,12 +34,26 @@ module.exports = function withBrowserGestures(config) {
     }
     return result;
   });
-  return withDangerousMod(config, ['android', async result => {
+  config = withDangerousMod(config, ['android', async result => {
     const target = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java/com/codexswitch/browser');
     await fs.mkdir(target, { recursive: true });
-    for (const name of ['BrowserGesturesModule.kt', 'BrowserGesturesPackage.kt', 'ActivityBackHandler.kt']) {
+    const files = ['BrowserGesturesModule.kt', 'BrowserGesturesPackage.kt', 'ActivityBackHandler.kt',
+      'BrowserMouseModule.kt', 'BrowserWheel.kt'];
+    for (const name of files) {
       await fs.copyFile(path.join(__dirname, 'browserGestures', name), path.join(target, name));
     }
+    await bundlePageMouse(path.join(result.modRequest.platformProjectRoot, 'app/src/main/assets'));
     return result;
   }]);
+  return withXcodeProject(config, async result => {
+    const name = result.modRequest.projectName;
+    const directory = path.join(result.modRequest.platformProjectRoot, name);
+    const source = path.join(__dirname, 'browserGestures');
+    await fs.copyFile(path.join(source, 'BrowserMouse.m'), path.join(directory, 'BrowserMouse.m'));
+    await bundlePageMouse(directory);
+    const group = { groupName: name, project: result.modResults };
+    IOSConfig.XcodeUtils.addBuildSourceFileToGroup({ ...group, filepath: name + '/BrowserMouse.m' });
+    IOSConfig.XcodeUtils.addResourceFileToGroup({ ...group, filepath: name + '/BrowserPageMouse.js', isBuildFile: true });
+    return result;
+  });
 };
