@@ -3,22 +3,22 @@ import type { ChatController } from '../remote-chat/views/types';
 import { downloadManager, downloadOwner } from './manager';
 
 export function useDownloadConnection(options: {
-  session: { baseUrl: string; email: string }; deviceId: string; deviceName: string; enabled?: boolean;
+  session: { baseUrl: string; email: string }; deviceId: string; deviceName: string; enabled?: boolean; selected?: boolean;
   controller: Pick<ChatController, 'snapshot' | 'subscribe' | 'downloads' | 'files' | 'guiTools'>;
 }) {
-  const { session, deviceId, deviceName, controller, enabled = true } = options;
+  const { session, deviceId, deviceName, controller, enabled = true, selected = true } = options;
   useEffect(() => {
     if (!deviceId || !enabled) return;
     void downloadManager.initialize();
     const update = () => {
       const state = controller.snapshot();
-      downloadManager.bind({ owner: downloadOwner(session), deviceId, deviceName, ready: state.ready, mode: state.mode,
+      downloadManager.register({ owner: downloadOwner(session), deviceId, deviceName, ready: state.ready, mode: state.mode,
         threadId: state.selected?.id, cwd: state.selected?.cwd ?? state.draftProject?.cwd,
         client: controller.downloads, files: controller.files, git: controller.guiTools.git,
-        projectBrowser: controller.guiTools.projectBrowser, ssh: controller.guiTools.terminal.ssh });
+        projectBrowser: controller.guiTools.projectBrowser, ssh: controller.guiTools.terminal.ssh }, selected);
     };
     update();
     const unsubscribe = controller.subscribe(update);
     return () => { unsubscribe(); downloadManager.unbind(controller.files); };
-  }, [session.baseUrl, session.email, deviceId, deviceName, controller, enabled]);
+  }, [session.baseUrl, session.email, deviceId, deviceName, controller, enabled, selected]);
 }

@@ -84,6 +84,7 @@ export interface Item {
 export interface AsyncQuestion { title: string; options?: string[] | null }
 export interface Turn {
   reviewDeferred?: import('./savedReview').ReviewResult;
+  savedReviewResult?: import('./savedReview').ReviewResult;
   reviewHasEdits?: boolean;
   reviewCwd?: string;
   reviewIncomplete?: boolean;
@@ -124,6 +125,7 @@ export interface ThreadTokenUsage {
   modelContextWindow?: number | null;
 }
 export interface EventParams {
+  review?: { turnId: string; fields: import('./savedReview').ReviewFields };
   notificationEventId?: string;
   threadName?: string | null;
   serverName?: string;
@@ -261,11 +263,11 @@ export type Request =
       projectOverrides: Record<string, string> } & import('../chat/groups/model').GroupMembersQuery)
   | { operation: "start"; cwd?: string; model?: string; access: AccessMode }
   | { operation: "fork"; threadId: string; turnId: string; access: AccessMode; cwd?: string }
-  | { operation: "resume"; threadId: string; access: AccessMode; cwd?: string; summaryOnly?: boolean }
+  | { operation: "resume"; threadId: string; access: AccessMode; cwd?: string; summaryOnly?: boolean; pagedTurnReviews?: boolean }
   | { operation: "send"; threadId: string; text: string; images: string[]; access: AccessMode;
       transferMode?: 'direct' | 'relay';
       model?: string; effort?: string; cwd?: string; skills?: SkillReference[]; attachments?: AttachmentReference[] }
-  | { operation: "read"; threadId: string; includeToolDetails?: boolean;
+  | { operation: "read"; threadId: string; includeToolDetails?: boolean; pagedTurnReviews?: boolean;
       window?: import('../remote-chat/historyPage').HistoryWindow & { pageSize?: number } }
   | { operation: "archive" | "unarchive" | "compact"; threadId: string }
   | { operation: "rename"; threadId: string; name: string }

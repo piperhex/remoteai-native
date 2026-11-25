@@ -1,4 +1,5 @@
 export const MAX_BOOKMARKS = 500;
+const MAX_PARENT_DEPTH = 8;
 export interface Bookmark {
   id: string; kind: 'link' | 'folder'; title: string; url: string; parentId: string; position: number;
 }
@@ -14,6 +15,14 @@ export function bookmarkUrl(value: string): string | undefined {
       || url.href.length > 4096) return;
     return url.href;
   } catch { return; }
+}
+
+export function pageBookmark(page: { title: string; url: string }, newId: () => string): Bookmark | undefined {
+  const url = bookmarkUrl(page.url);
+  if (!url) return;
+  const host = new URL(url).hostname;
+  const title = [...(page.title || host).replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')].slice(0, 200).join('').trim();
+  return { id: newId(), kind: 'link', title: title || host, url, parentId: '', position: 0 };
 }
 
 export function isBookmark(value: unknown): value is Bookmark {
@@ -37,20 +46,37 @@ export function readBookmarkDocument(value: unknown): BookmarkDocument | undefin
   return { revision: doc.revision, entries: doc.entries };
 }
 
+export function hasValidBookmarkParents(entry: Bookmark, entries: ReadonlyMap<string, Bookmark>) {
+  const seen = new Set([entry.id]);
+  let parent = entry.parentId;
+  while (parent) {
+    const folder = entries.get(parent);
+    if (folder?.kind !== 'folder' || seen.has(parent) || seen.size > MAX_PARENT_DEPTH) return false;
+    seen.add(parent); parent = folder.parentId;
+  }
+  return true;
+}
+
 /** Keep independent edits; children of concurrently deleted folders return to the bar. */
 export function mergeBookmarks(remote: Bookmark[], edits: BookmarkEdits): Bookmark[] {
   const entries = new Map(remote.map(entry => [entry.id, entry]));
   Object.entries(edits).forEach(([id, entry]) => { if (entry) entries.set(id, entry); else entries.delete(id); });
-  return [...entries.values()].map(entry => {
-    const seen = new Set([entry.id]);
-    let parent = entry.parentId;
-    while (parent) {
-      const folder = entries.get(parent);
-      if (!folder || folder.kind !== 'folder' || seen.has(parent) || seen.size > 8) return { ...entry, parentId: '' };
-      seen.add(parent); parent = folder.parentId;
-    }
-    return entry;
-  }).sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  return [...entries.values()].map(entry => hasValidBookmarkParents(entry, entries) ? entry : { ...entry, parentId: '' })
+    .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+}
+
+export type BookmarkDragSource = { bookmarkId: string } | { page: Bookmark };
+
+/** Resolve against the latest snapshot so a concurrent deletion cannot resurrect a dragged bookmark. */
+export function bookmarkInFolder(entries: Bookmark[], source: BookmarkDragSource, folder: Bookmark): Bookmark | undefined {
+  if (folder.kind !== 'folder') return;
+  const byId = new Map(entries.map(entry => [entry.id, entry]));
+  const link = 'page' in source ? source.page : byId.get(source.bookmarkId);
+  if (link?.kind !== 'link' || link.parentId === folder.id) return;
+  const children = entries.filter(entry => entry.parentId === folder.id);
+  if ('page' in source && (entries.length >= MAX_BOOKMARKS || children.some(entry => entry.url === link.url))) return;
+  const next = { ...link, parentId: folder.id, position: Math.max(-1, ...children.map(entry => entry.position)) + 1 };
+  return hasValidBookmarkParents(next, byId) ? next : undefined;
 }
 
 export function bookmarkDescendants(entries: Bookmark[], id: string): Set<string> {

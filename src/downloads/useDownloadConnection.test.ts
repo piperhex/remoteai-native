@@ -5,7 +5,7 @@ import { useDownloadConnection as useWebDownloadConnection } from '../../vendor/
 
 const runtime = vi.hoisted(() => ({
   effect: undefined as { dependencies: unknown[]; cleanup?: () => void } | undefined,
-  manager: { bind: vi.fn(), unbind: vi.fn(), initialize: vi.fn(async () => undefined) },
+  manager: { bind: vi.fn(), register: vi.fn(), unbind: vi.fn(), initialize: vi.fn(async () => undefined) },
 }));
 vi.mock('./manager', () => ({ downloadManager: runtime.manager, downloadOwner: () => 'owner' }));
 vi.mock('../../vendor/shared/downloads/manager', () => ({
@@ -26,8 +26,9 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-for (const [platform, useConnection] of [
-  ['native', useNativeDownloadConnection], ['web', useWebDownloadConnection],
+for (const [platform, useConnection, connect] of [
+  ['native', useNativeDownloadConnection, runtime.manager.bind],
+  ['web', useWebDownloadConnection, runtime.manager.register],
 ] as const) {
   it(`${platform}: background devices cannot replace the selected download source`, () => {
     const controller = new ChatController(() => ({ start() {}, stop() {}, request: async <T>() => ({}) as T }));
@@ -35,14 +36,17 @@ for (const [platform, useConnection] of [
       accessToken: 'access', refreshToken: 'refresh' },
     deviceId: 'computer', deviceName: 'Computer', controller };
     useConnection({ ...options, enabled: false });
-    expect(runtime.manager.bind).not.toHaveBeenCalled();
+    expect(connect).not.toHaveBeenCalled();
     useConnection({ ...options, enabled: true });
-    expect(runtime.manager.bind).toHaveBeenCalledOnce();
+    expect(connect).toHaveBeenCalledOnce();
+    if (platform === 'web') {
+      expect(connect).toHaveBeenCalledWith(expect.objectContaining({ deviceId: 'computer' }), true);
+    }
     useConnection({ ...options, enabled: false });
     expect(runtime.manager.unbind).toHaveBeenCalledWith(controller.files);
     controller.back({ cwd: '/project', label: 'Background project' });
-    expect(runtime.manager.bind).toHaveBeenCalledOnce();
+    expect(connect).toHaveBeenCalledOnce();
     useConnection({ ...options, enabled: true });
-    expect(runtime.manager.bind).toHaveBeenCalledTimes(2);
+    expect(connect).toHaveBeenCalledTimes(2);
   });
 }

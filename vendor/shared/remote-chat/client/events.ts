@@ -7,6 +7,7 @@ import { currentRunningTurn } from '../../chat/runningTurn';
 import { mergeItemLifecycle } from '../../conversation/itemStatus';
 import { TOOL_PREVIEW_CHARS } from '../../chat/historyBudget';
 import { summarizeTool } from '../../conversation/toolDetails';
+import { applySavedReview } from '../../conversation/savedReview';
 
 function mergeItems(previous: Item[], incoming: Item[]) {
   const items = [...previous];
@@ -27,6 +28,9 @@ export function updateThread(thread: Thread, event: GuiEvent): Thread {
 
 function reduceThread(thread: Thread, event: GuiEvent, bounded: boolean): Thread {
   const { params, method } = event;
+  if (method === 'turn/review/updated' && params.review) {
+    return thread.turns ? { ...thread, turns: applySavedReview(thread.turns, params.review) } : thread;
+  }
   if (method === 'thread/name/updated' && params.threadName !== undefined) {
     return { ...thread, name: params.threadName };
   }

@@ -4,11 +4,19 @@ import { reconcileAcknowledgedItems } from '../../chat/acknowledgedMessages';
 import { mergeItemOrder } from '../../chat/itemOrder';
 import { reconcileProcessHistory } from './processHistory';
 import { mergeItemLifecycle } from '../../conversation/itemStatus';
+import { preserveRetryRecovery } from '../../conversation/turnRequestErrors';
 
 interface HistoryMergeOptions {
   authoritative?: boolean;
   /** The host keeps notified items that app-server has not persisted to its snapshot yet. */
   retainCached?: boolean;
+}
+
+function extendsStreamedParts(read: Item['content'], live: Item['content']) {
+  return Boolean(read?.length && (!live || live.every((part, index) => {
+    const next = read[index];
+    return typeof part === 'string' && typeof next === 'string' && next.startsWith(part);
+  })));
 }
 
 function mergeItem(snapshot: Item, live: Item, before?: Item): Item {
@@ -19,10 +27,31 @@ function mergeItem(snapshot: Item, live: Item, before?: Item): Item {
     const includesUnloadedTail = !before && liveValue && readValue?.includes(liveValue);
     if (readValue && (!liveValue || readValue.startsWith(liveValue) || includesUnloadedTail)) merged[field] = readValue;
   }
+  if (snapshot.type === 'reasoning') {
+    if (extendsStreamedParts(snapshot.summary, live.summary)) merged.summary = snapshot.summary;
+    if (extendsStreamedParts(snapshot.content, live.content)) merged.content = snapshot.content;
+  }
+  if (snapshot.type === 'fileChange' && snapshot.detailsRef) {
+    merged.detailsRef = snapshot.detailsRef;
+    merged.changes = snapshot.changes;
+  }
   return merged;
 }
 
+function historyRequestErrors(snapshot: Turn, live: Turn, receivedError: boolean) {
+  const host = snapshot.requestErrors?.at(-1);
+  if (!host || receivedError) return live.requestErrors ?? snapshot.requestErrors;
+  const current = live.requestErrors?.at(-1);
+  // An earlier read of the same retry cannot undo observed output or supersede a new error event.
+  if (host.willRetry && current?.recovered && current.id === host.id && current.afterItemId === host.afterItemId
+    && current.anchorOutputLength === host.anchorOutputLength) return live.requestErrors;
+  return snapshot.requestErrors;
+}
+
 function mergeTurn(snapshot: Turn, live: Turn, before: Turn | undefined, options: HistoryMergeOptions): Turn {
+  const receivedError = live.requestErrors !== before?.requestErrors;
+  live = preserveRetryRecovery(live);
+  snapshot = preserveRetryRecovery(snapshot);
   ({ snapshot, live } = reconcileProcessHistory(snapshot, live, before));
   const original = new Map(before?.items.map((item) => [item.id, item]));
   const hasAcknowledgements = snapshot.items.some((item) => item.localEcho) || live.items.some((item) => item.localEcho);
@@ -39,6 +68,9 @@ function mergeTurn(snapshot: Turn, live: Turn, before: Turn | undefined, options
   const order = mergeItemOrder(snapshotItems, liveItems.filter(item => items.has(item.id)));
   // Live events can carry an estimated start; the PC snapshot corrects it once timing is available.
   return { ...snapshot, ...live, startedAt: snapshot.startedAt ?? live.startedAt,
+    requestErrors: historyRequestErrors(snapshot, live, receivedError),
+    ...(snapshot.reviewDeferred && { reviewDeferred: snapshot.reviewDeferred, diff: snapshot.diff,
+      reviewEdits: snapshot.reviewEdits }),
     status: terminal, items: order.map(id => items.get(id)!) };
 }
 

@@ -22,12 +22,17 @@ export function formatConversationCost(metrics?: ConversationMetrics | null): st
 }
 
 /** Match the account-page average: output tokens divided by time after the first response. */
-export function formatConversationTps(metrics?: ConversationMetrics | null): string {
-  if (!metrics || !(metrics.outputRequestCount > 0) || !(metrics.totalOutputTimeMs > 0)
+export function conversationTps(metrics?: ConversationMetrics | null): number | null {
+  if (!metrics || !Number.isSafeInteger(metrics.outputRequestCount) || !(metrics.outputRequestCount > 0)
+    || !(metrics.totalOutputTimeMs > 0)
     || !Number.isFinite(metrics.totalOutputTimeMs) || !Number.isFinite(metrics.totalOutputTokens)
-    || metrics.totalOutputTokens < 0) return '—';
+    || metrics.totalOutputTokens < 0) return null;
   const tps = metrics.totalOutputTokens / metrics.totalOutputTimeMs * 1_000;
-  return Number.isFinite(tps) ? tps.toFixed(1) : '—';
+  return Number.isFinite(tps) ? tps : null;
+}
+
+export function formatConversationTps(metrics?: ConversationMetrics | null): string {
+  return conversationTps(metrics)?.toFixed(1) ?? '—';
 }
 
 export const CONVERSATION_TPS_DESCRIPTION =

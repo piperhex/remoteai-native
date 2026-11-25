@@ -5,11 +5,15 @@ import type { ApprovalReply, GuiEvent, Request } from "./types";
 import { validateUploadedFiles } from "../remote-chat/composerAttachments";
 import { chatMessageCharLimit } from "../remote-chat/framing";
 import { hasDirectChatInput } from "../remote-chat/uploadMode";
+import { pagedReviewEvent } from './savedReview';
 
 export const guiApi = {
   connect: (options?: { reuseExisting: boolean }) => options
     ? invoke<GuiEvent[]>("codex_gui_connect", options) : invoke<GuiEvent[]>("codex_gui_connect"),
   async request<T>(request: Request) {
+    if ((request.operation === 'read' || request.operation === 'resume') && request.pagedTurnReviews === undefined) {
+      request = { ...request, pagedTurnReviews: true };
+    }
     if (request.operation === 'resume' && !viewedThreadIds().includes(request.threadId)) {
       request = { ...request, summaryOnly: true };
     }
@@ -28,5 +32,6 @@ export const guiApi = {
   },
   respond: (reply: ApprovalReply) => invoke<void>("codex_gui_respond", { reply }),
   subscribe: (callback: (event: GuiEvent) => void, transport = false) =>
-    subscribeGuiEvent<GuiEvent>(transport ? "codex-gui-transport-event" : "codex-gui-event", callback),
+    subscribeGuiEvent<GuiEvent>(transport ? "codex-gui-transport-event" : "codex-gui-event",
+      transport ? callback : event => callback(pagedReviewEvent(event))),
 };

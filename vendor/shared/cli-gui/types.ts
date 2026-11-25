@@ -31,6 +31,7 @@ export interface CliPermission {
   questions?: { question: string; options: string[]; multiple?: boolean }[];
 }
 export interface CliSession {
+  metricsSessionId?: string;
   permissionCount?: number;
   id: string; engine: ExternalEngine; title: string; cwd: string; model: string;
   status: string; updatedAt: string; archived: boolean;

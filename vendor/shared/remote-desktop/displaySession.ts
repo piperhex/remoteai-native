@@ -24,6 +24,8 @@ export class DesktopDisplaySession {
   private stopped = false;
   private muted = false;
   private switching = false;
+  private background = false;
+  private pending = Promise.resolve();
   private closing?: Promise<void>;
   constructor(private readonly options: ReceiverOptions, private readonly privacyRestore = { failed: false }) {}
 
@@ -48,11 +50,38 @@ export class DesktopDisplaySession {
   frameRendered(stream: MediaStream | undefined) { this.selected?.receiver.frameRendered(stream); }
   mute(value: boolean) { this.muted = value; this.selected?.receiver.mute(value); }
 
-  async start(settings: DesktopSettings) {
+  // Visibility changes share the capture settings channel with opening and switching displays.
+  private enqueue(change: () => Promise<void>) {
+    const result = this.pending.then(() => { if (!this.stopped) return change(); });
+    this.pending = result.catch(() => {}); // The caller handles failure; later changes must still run.
+    return result;
+  }
+
+  private captureSettings(settings: DesktopSettings, background = this.background): DesktopSettings {
+    return background ? { ...settings, fps: BACKGROUND_DISPLAY_FPS } : settings;
+  }
+
+  setBackground(background: boolean) {
+    return this.enqueue(async () => {
+      if (this.background === background) return;
+      const entry = this.selected;
+      // All other visited displays are already at the background rate.
+      if (entry && !entry.receiver.closed && entry.settings.fps !== BACKGROUND_DISPLAY_FPS) {
+        await entry.receiver.settings(this.captureSettings(entry.settings, background));
+      }
+      this.background = background;
+    });
+  }
+
+  start(settings: DesktopSettings) {
+    return this.enqueue(() => this.open(settings));
+  }
+
+  private async open(settings: DesktopSettings) {
     if (this.stopped) return;
     const entry = this.create(settings);
     this.select(entry);
-    await entry.receiver.start(settings);
+    await entry.receiver.start(this.captureSettings(settings));
     if (this.stopped || entry.receiver.closed || this.privacyRestore.failed || !entry.displays.security?.privacyScreen
       || entry.displays.privacyScreen || entry.capabilities.control !== true || !entry.capabilities.privacyScreen) return;
     try { await entry.receiver.privacy(true); }
@@ -104,11 +133,15 @@ export class DesktopDisplaySession {
     if (entry.connected && !entry.failure && !entry.receiver.closed) this.options.connected?.();
   }
 
-  async settings(next: DesktopSettings) {
+  settings(next: DesktopSettings) {
+    return this.enqueue(() => this.updateSettings(next));
+  }
+
+  private async updateSettings(next: DesktopSettings) {
     const previous = this.selected;
     if (this.stopped || !previous) return;
     if (next.displayId === previous.displays.displayId) {
-      await previous.receiver.settings(next); previous.settings = next; return;
+      await previous.receiver.settings(this.captureSettings(next)); previous.settings = next; return;
     }
     this.switching = true;
     try { await this.switchDisplay(previous, next); }
@@ -122,20 +155,20 @@ export class DesktopDisplaySession {
     this.options.status('正在切换显示器…');
     if (!previous.capabilities.displaySessions) {
       await previous.receiver.stop(); this.sessions.delete(previous);
-      if (!this.stopped) await this.start(next);
+      if (!this.stopped) await this.open(next);
       return;
     }
     let target: DisplaySession | undefined;
     try {
-      await previous.receiver.settings({ ...previous.settings, fps: BACKGROUND_DISPLAY_FPS });
+      await previous.receiver.settings(this.captureSettings(previous.settings, true));
       if (this.stopped) return;
       target = [...this.sessions].find(entry =>
         entry.displays.displayId === next.displayId && !entry.failure && !entry.receiver.closed);
       if (target) {
-        await target.receiver.settings(next); target.settings = next;
+        await target.receiver.settings(this.captureSettings(next)); target.settings = next;
       } else {
         target = this.create(next);
-        await target.receiver.start({ ...next, retainedSession: previous.receiver.sessionId });
+        await target.receiver.start({ ...this.captureSettings(next), retainedSession: previous.receiver.sessionId });
       }
       if (this.stopped) return;
       if (target.failure || target.receiver.closed) throw new Error(target.failure ?? target.status);
@@ -143,7 +176,7 @@ export class DesktopDisplaySession {
     } catch (error) {
       if (target) { this.sessions.delete(target); await target.receiver.stop(); }
       if (!this.stopped) {
-        await previous.receiver.settings(previous.settings);
+        await previous.receiver.settings(this.captureSettings(previous.settings));
         this.select(previous);
       }
       throw error;

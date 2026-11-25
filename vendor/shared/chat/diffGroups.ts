@@ -1,14 +1,12 @@
-import type { DiffFile } from './diff';
-
-interface DiffFolderGroup {
+interface DiffFolderGroup<T> {
   directory: string;
   name: string;
-  entries: { file: DiffFile; index: number }[];
+  entries: { file: T; index: number }[];
 }
 
 /** Preserve source indices so regrouping does not change which diff a file row opens. */
-export function groupDiffFiles(files: readonly DiffFile[]): DiffFolderGroup[] {
-  const groups = new Map<string, DiffFolderGroup>();
+export function groupDiffFiles<T extends { readonly path: string }>(files: readonly T[]): DiffFolderGroup<T>[] {
+  const groups = new Map<string, DiffFolderGroup<T>>();
   files.forEach((file, index) => {
     const path = file.path.replace(/\\/g, '/').replace(/^\.\//, '');
     const separator = path.lastIndexOf('/');

@@ -7,6 +7,7 @@ import { trackProcessingApproval } from "./processingApprovals";
 import { mergeMessageItems } from "./sentMessages";
 import { recordRequestError, restoreRequestErrors } from "./turnRequestErrors";
 import { currentRunningTurn } from "../chat/runningTurn";
+import { applySavedReview } from "./savedReview";
 
 export function conversation(thread: Thread, previous?: Conversation): Conversation {
   const previousTurns = new Map(previous?.turns.map((turn) => [turn.id, turn]));
@@ -91,6 +92,9 @@ function updateTurnDetails(value: Conversation, event: GuiEvent): Conversation {
 
 function reduceConversationContent(value: Conversation, event: GuiEvent): Conversation {
   const { method, params } = event;
+  if (method === "turn/review/updated" && params.review) {
+    return { ...value, turns: applySavedReview(value.turns, params.review) };
+  }
   if (method === "turn/started" && params.turn) {
     return { ...updateTurn(value, params.turn.id, (old) => mergeTurn(old, params.turn!)),
       activeTurn: params.turn.id, error: "" };

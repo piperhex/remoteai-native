@@ -6,7 +6,7 @@ export function visibleConversationEvent(event: GuiEvent, selected: string | nul
   if (event.id != null || !id || id === selected) return event;
   const { method, params } = event;
   if ((method.startsWith('item/') && !['item/started', 'item/completed'].includes(method))
-    || ['turn/diff/updated', 'turn/plan/updated'].includes(method)) return;
+    || ['turn/diff/updated', 'turn/plan/updated', 'turn/review/updated'].includes(method)) return;
   return { ...event, params: { ...params,
     ...(params.item ? { item: { id: params.item.id, type: params.item.type, status: params.item.status,
       exitCode: params.item.exitCode } } : {}),

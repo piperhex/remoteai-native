@@ -85,9 +85,9 @@ export class WebDownloadManager {
     this.register(connection);
   }
   /** Desktop workspaces retain independent connections while navigating between computers. */
-  register(connection: DownloadConnection) {
+  register(connection: DownloadConnection, selected = true) {
     this.connections.set(connection.files, connection);
-    this.current = connection;
+    if (selected) this.current = connection;
     this.pauseDisconnected();
     this.emit();
     this.schedule();

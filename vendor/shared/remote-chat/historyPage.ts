@@ -3,6 +3,7 @@ import type { Thread } from './client/types';
 import type { HistoryDelta } from './historySync';
 import { groupTurnItems } from '../chat/turnGroups';
 import { summarizeProcesses } from '../conversation/processDetails';
+import { preserveRetryRecovery } from '../conversation/turnRequestErrors';
 
 export const HISTORY_PAGE_SIZE = 10;
 export interface HistoryCursor { turnId: string; itemId: string }
@@ -52,7 +53,7 @@ export function sliceHistory(thread: Thread, window: HistoryWindow = {}): { thre
     offset += pages[index].length;
     // Trailing empty turns still carry processing, completion and read-receipt state.
     return offset > start || (offset === count && turn.items.length === 0)
-      ? [{ ...turn, items: pages[index].slice(from).flat() }] : [];
+      ? [{ ...(from ? preserveRetryRecovery(turn) : turn), items: pages[index].slice(from).flat() }] : [];
   });
   const first = selected.find((turn) => turn.items.length > 0);
   return { thread: { ...thread, turns: selected }, page: { hasMore: start > 0,

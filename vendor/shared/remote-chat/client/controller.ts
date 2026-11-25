@@ -9,6 +9,7 @@ import type { RemoteComposerCatalog } from '../composerCatalog';
 import type { ProjectFilesRequest, ProjectFilesResponse } from '../projectFiles';
 import { applyChatEvent } from './events';
 import { visibleConversationEvent } from '../../conversation/eventVisibility';
+import { pagedReviewEvent } from '../../conversation/savedReview';
 import { isTextDelta, StreamFrame } from '../../chat/streamFrame';
 import { syncChatProcessing } from './processing';
 import { mergeHistory } from './history';
@@ -80,6 +81,7 @@ export class ChatController {
   };
   /** Enable before start only when the host UI supports loading individual tool details. */
   deferToolDetails = false;
+  pagedTurnReviews = false;
   deferProcessDetails = false;
   readonly groups = createRemoteGroups({ ready: () => this.state.ready, generation: () => this.synchronization,
     request: body => this.connection.request('request', body), apply: sidebar => this.applySidebar(sidebar) });
@@ -203,6 +205,7 @@ export class ChatController {
     if (sshProfiles) this.guiTools.terminal.ssh.profiles = sshProfiles;
     this.historyReader = new HistoryReader((body) => this.connection.request('request', {
       ...body, ...(this.deferToolDetails ? { deferToolDetails: true } : {}),
+      ...(this.pagedTurnReviews ? { pagedTurnReviews: true } : {}),
       ...(this.deferProcessDetails ? { window: {
         ...('window' in body ? body.window : {}), deferProcesses: true,
       } } : {}),
@@ -311,6 +314,8 @@ export class ChatController {
   }
   private request<T>(body: Request) {
     return this.connection.request<T>('request', { ...body,
+      ...((body.operation === 'read' || body.operation === 'resume') && this.pagedTurnReviews
+        ? { pagedTurnReviews: true } : {}),
       ...(body.operation === 'read' && this.deferToolDetails ? { deferToolDetails: true } : {}) });
   }
   toolDetails = async (target: NonNullable<import('./types').Item['detailsRef']>) => {
@@ -396,6 +401,7 @@ export class ChatController {
 
   private receive(event: GuiEvent) {
     if (this.stopped || !event?.params || typeof event.method !== 'string') return;
+    if (this.pagedTurnReviews) event = pagedReviewEvent(event);
     if (!this.historyActive && isTextDelta(event)) return;
     if (!isTextDelta(event)) this.stream.flush();
     for (const listener of this.eventListeners) listener(event);

@@ -15,10 +15,11 @@ import { DEFAULT_SETTINGS, validateSettings, type DesktopCapabilities, type Desk
 interface Options {
   client: DesktopClient;
   active: boolean;
+  background?: boolean;
   connected?: boolean;
   createPeer: (configuration: RTCConfiguration) => RTCPeerConnection;
 }
-export function useDesktopSession({ client, active, connected = true, createPeer }: Options) {
+export function useDesktopSession({ client, active, background = false, connected = true, createPeer }: Options) {
   const available = useRef(connected); available.current = connected;
   const takeover = useDesktopTakeover(client, active);
   const receiver = useRef<DesktopDisplaySession>();
@@ -86,6 +87,15 @@ export function useDesktopSession({ client, active, connected = true, createPeer
       pointer.release(); receiver.current = undefined; pointer.dispose(); closing.current = session.stop();
     };
   }, [client, active, createPeer, pointer, attempt, directRetry]);
+
+  useEffect(() => {
+    const session = receiver.current;
+    if (!connected) return;
+    void session?.setBackground(background).catch(error => {
+      if (receiver.current === session) setStatus(typeof error === 'string' ? error
+        : error instanceof Error ? error.message : 'client.remoteDesktop.unableToSaveDisplaySettingsPleaseTryAgain');
+    });
+  }, [background, connected, client, active, createPeer, attempt]);
 
   const update = async (next: DesktopSettings) => {
     if (updating.current) return;

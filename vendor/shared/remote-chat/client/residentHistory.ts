@@ -1,6 +1,7 @@
 import { HISTORY_CONTENT_CHARS, HISTORY_ENTRY_LIMIT, historyChars, historyPreview, TOOL_PREVIEW_CHARS }
   from '../../chat/historyBudget';
 import { summarizeTool } from '../../conversation/toolDetails';
+import { preserveRetryRecovery } from '../../conversation/turnRequestErrors';
 import type { Item, Thread, Turn } from './types';
 import type { HistoryPage } from '../historyPage';
 
@@ -21,13 +22,18 @@ function previewTurn(turn: Turn): Turn {
   if (historyChars({ ...turn, items: undefined }) <= HISTORY_CONTENT_CHARS / 4) return turn;
   const trimDiff = historyChars(turn.diff) > TOOL_PREVIEW_CHARS;
   const trimEdits = historyChars(turn.reviewEdits) > TOOL_PREVIEW_CHARS;
+  const lastError = preserveRetryRecovery(turn).requestErrors?.at(-1);
+  const compactError = lastError && { ...lastError,
+    error: historyChars(lastError.error) <= TOOL_PREVIEW_CHARS ? lastError.error : undefined };
+  const requestErrors = historyChars(turn.requestErrors) <= TOOL_PREVIEW_CHARS ? turn.requestErrors
+    : compactError && [compactError];
   return { ...turn, diff: trimDiff ? undefined : turn.diff, reviewEdits: trimEdits ? [] : turn.reviewEdits,
     reviewIncomplete: turn.reviewIncomplete || (!turn.reviewDeferred && (trimDiff || trimEdits)),
     planExplanation: turn.planExplanation && historyPreview(turn.planExplanation),
     plan: historyChars(turn.plan) <= TOOL_PREVIEW_CHARS ? turn.plan : undefined,
     error: historyChars(turn.error) <= TOOL_PREVIEW_CHARS ? turn.error : undefined,
     retryError: historyChars(turn.retryError) <= TOOL_PREVIEW_CHARS ? turn.retryError : undefined,
-    requestErrors: historyChars(turn.requestErrors) <= TOOL_PREVIEW_CHARS ? turn.requestErrors : undefined };
+    requestErrors };
 }
 
 // Keep the newest records for live state and the oldest records for an explicitly requested reading window.
@@ -69,7 +75,7 @@ export function residentHistory(thread: Thread, older = false) {
     if (!items.length && turn.items.length) break;
     if (!older) items.reverse();
     changed ||= projected || cut;
-    turns.push(projected || cut ? { ...turn, items } : turn);
+    turns.push(projected || cut ? { ...preserveRetryRecovery(turn), items } : turn);
   }
   if (!older) turns.reverse();
   return { thread: changed || cut ? { ...thread, turns } : thread, cut };
