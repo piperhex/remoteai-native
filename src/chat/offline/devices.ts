@@ -21,7 +21,7 @@ export function saveDevices(account: string, devices: RemoteDevice[]) {
       for (const device of devices) {
         // Cache display metadata only; never copy account credentials or online state.
         const cached: RemoteDevice = { deviceId: device.deviceId, name: device.name, platform: device.platform,
-          lastSeenAt: device.lastSeenAt, online: false, localProxyRunning: false, capabilities: [] };
+          ipAddress: device.ipAddress, lastSeenAt: device.lastSeenAt, online: false, localProxyRunning: false, capabilities: [] };
         await tx.runAsync('INSERT OR REPLACE INTO devices (account, id, data, touched) VALUES (?, ?, ?, ?)',
           [account, device.deviceId, JSON.stringify(cached), Date.now()]);
       }

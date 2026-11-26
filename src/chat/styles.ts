@@ -17,6 +17,7 @@ export const useStyles = createThemedStyles((color) => ({
   title: { color: color(palette.ink, 'ink'), fontSize: 16, lineHeight: 24, fontWeight: '700' },
   subtitle: { color: color(palette.muted, 'muted'), fontSize: 13, lineHeight: 20 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  deviceMeta: { ...textMetrics(13, 20), color: color(palette.muted, 'muted') },
   card: { backgroundColor: color('#fff', 'surface'), borderColor: color(palette.border, 'border'), borderWidth: 1,
     borderRadius: 16, padding: 16, gap: 8 },
   button: { minHeight: 42, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,

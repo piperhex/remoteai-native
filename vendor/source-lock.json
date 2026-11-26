@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "41230a97b4a234e2e79aad5f1ca8a0f12cb16b2d",
+  "revision": "642d0ab9e925aa7ba0f7306bb58c0922a67c0651",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "b7f3b2030d474472e23ebfa99916aa02a35ae8cc"
+    "revision": "e93b00d173a3f1ef2fee7f340e16d35a7382dce4"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -175,6 +175,7 @@
     "shared/remote-chat/settingsPresentation.ts": "70ad170f8be944a14a0b85e6d62d8029705869b6d3f2aaabf5e18b9838d0c362",
     "shared/remote-chat/client/useContextSettings.ts": "dfbd2fa9cc3bbd2b9d32136035ca8e0b020d1ef9b197898a058a3aa61d6e51eb",
     "shared/chat/useDeferredDetails.ts": "2b9e440e190dcfa0ea847d849c96f177641152923c0b09899e46817796b189e5",
+    "shared/remote-chat/devices.ts": "8a2c33f58d6877817de029891984b182079d2c361188636df6690b260d78a146",
     "shared/chat/diff.ts": "6b3da6561ea170a591d78c3151162f2d3a3a2e5114e210b397a9a3c73081c611",
     "shared/navigation/drawerMotion.ts": "6c420dce576fcc68a56ced5f4590ee17b8f6f5926809d5b109df9424891f2eda",
     "shared/chat/fileReference.ts": "12c41ad7ff3879dfca073d8226eac47a0124e6ec6c60b7d8c28717e953924448",
@@ -526,7 +527,7 @@
     "shared/remote-chat/gitWorkspace.ts": "833a95b0eb2b2b83dd4f87c001784e1a2d876320178ba59815dd9cb1bafdd254",
     "shared/codex-status/status.ts": "8f9eece1c83839cd4d4fa649339c865a84b05b04a1df86d65b7241d9a234ac4e",
     "shared/remote-chat/guiSettings.ts": "4b419a5826ca9931565554f99d7f19a6b1028f94ad70d8f5c49dd4f54719212e",
-    "shared/browser/automation.ts": "26690a71a02d4089f5009fdf0805b743f601dad26d44c176477d8c90b30bf13b",
+    "shared/browser/automation.ts": "c9300832a8edcd17c76168593d9c1472dd4af77d2d8279ef27cc89b0391de1af",
     "shared/lounge/groupReceipts.ts": "c9f8f9d826b50b8442b2f1d01a833961bb0275a113c2bbd252bc527060292af6",
     "shared/lounge/deletions.ts": "b1d67b1a4938bac349be5ed63256017089b6f42063cd0f9de936780fca748b4d",
     "shared/remote-chat/linkOptions.ts": "7581c937d2daaf694d48b4af737c29caa5c69430bd3899f4d0451707cd81be06",

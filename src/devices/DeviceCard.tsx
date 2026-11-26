@@ -4,17 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import type { AccountSummary, RemoteDevice, RemoteProviderSummary } from '../types';
 import { remoteModelOptions, type RemoteModelTarget } from '../../vendor/shared/remote-chat/modelTarget';
+import { computerDetails } from '../../vendor/shared/remote-chat/devices';
 import { deviceColors, useStyles } from './styles';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-function platformInfo(platform: string): { label: string; icon: IconName } {
+function platformIcon(platform: string): IconName {
   switch (platform.trim().toLowerCase()) {
-    case 'windows': return { label: 'Windows', icon: 'logo-windows' };
+    case 'win32':
+    case 'windows': return 'logo-windows';
     case 'darwin':
-    case 'macos': return { label: 'macOS', icon: 'logo-apple' };
-    case 'linux': return { label: 'Linux', icon: 'logo-tux' };
-    default: return { label: platform || t("client.app.unknownPlatform"), icon: 'desktop-outline' };
+    case 'macos': return 'logo-apple';
+    case 'linux': return 'logo-tux';
+    default: return 'desktop-outline';
   }
 }
 
@@ -53,12 +55,12 @@ function DeviceIdentity({ device, busy }: { device: RemoteDevice; busy: boolean 
   const styles = useStyles();
   const color = useThemeColor();
   useLanguage();
-  const platform = platformInfo(device.platform);
+  const details = computerDetails(device, t('client.app.unknownPlatform'));
   return <View style={styles.cardTop}>
-    <View style={styles.platform}><Ionicons name={platform.icon} size={25} color={color(deviceColors.green, 'accent')} /></View>
+    <View style={styles.platform}><Ionicons name={platformIcon(device.platform)} size={25} color={color(deviceColors.green, 'accent')} /></View>
     <View style={styles.identity}>
       <Text style={styles.name} numberOfLines={2}>{device.name}</Text>
-      <Text style={styles.meta}>{platform.label}{device.appVersion ? ` · v${device.appVersion}` : ''}</Text>
+      <Text style={styles.meta}>{details}{device.appVersion ? ` · v${device.appVersion}` : ''}</Text>
     </View>
     <View style={[styles.badge, !device.online && styles.badgeOffline]}>
       {busy ? <ActivityIndicator size="small" color={color(deviceColors.green, 'accent')} />
@@ -81,7 +83,7 @@ export function DeviceCard({ device, accounts, providers, busy, onOpenMenu }: {
   const authAccount = accounts.find((item) => item.id === device.openaiAuthAccountId);
   return <Pressable accessibilityRole="button"
       accessibilityLabel={t("client.app.moreActionsFor", { value1: device.name })}
-      accessibilityState={{ busy }} onPress={onOpenMenu}
+      accessibilityHint={computerDetails(device)} accessibilityState={{ busy }} onPress={onOpenMenu}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <DeviceIdentity device={device} busy={busy} />
       <View style={styles.divider} />

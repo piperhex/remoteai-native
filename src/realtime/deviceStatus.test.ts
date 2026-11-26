@@ -12,6 +12,7 @@ const device: RemoteDevice = {
   deviceId: 'device-1',
   name: 'Work PC',
   platform: 'windows',
+  ipAddress: '192.168.1.21',
   appVersion: '1.2.3',
   activeAccountId: 'account-1',
   openaiAuthAccountId: 'account-2',

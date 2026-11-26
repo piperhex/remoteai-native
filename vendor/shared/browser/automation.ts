@@ -33,9 +33,18 @@ export interface BrowserClient {
   subscribe: (callback: (event: BrowserEvent) => void) => Promise<() => void>;
 }
 export type BrowserEvent = { type: 'opened'; tab: ManagedBrowserTab }
+  | { type: 'title'; threadId: string; tabId: string; url: string; title: string }
   | { type: 'loading'; threadId: string; tabId: string; loading: boolean }
   | { type: 'closed'; threadId: string; tabId: string };
 export function browserEvent(event: { method: string; params: object }): BrowserEvent | undefined {
+  if (event.method === 'browser/title') {
+    const p = event.params as { threadId?: unknown; tabId?: unknown; url?: unknown; title?: unknown };
+    if (typeof p.threadId === 'string' && typeof p.tabId === 'string'
+      && typeof p.url === 'string' && typeof p.title === 'string') {
+      return { type: 'title', threadId: p.threadId, tabId: p.tabId, url: p.url, title: p.title };
+    }
+    return;
+  }
   if (event.method === 'browser/loading') {
     const params = event.params as { threadId?: unknown; tabId?: unknown; loading?: unknown };
     if (typeof params.threadId === 'string' && typeof params.tabId === 'string' && typeof params.loading === 'boolean') {
