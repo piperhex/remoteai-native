@@ -12,7 +12,9 @@ import android.os.Messenger
 import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.SurfaceControlViewHost
+import android.view.MotionEvent
 import android.webkit.WebView
+import org.json.JSONObject
 
 /** Render remotely but embed in the original activity, so a paused website cannot freeze DevTools. */
 class BrowserInspectorService : Service() {
@@ -26,6 +28,10 @@ class BrowserInspectorService : Service() {
       InspectorProtocol.RESIZE -> host?.relayout(message.arg1.coerceAtLeast(1), message.arg2.coerceAtLeast(1))
       InspectorProtocol.CLOSE -> close()
       InspectorProtocol.HIDE_KEYBOARD -> surface?.hideKeyboard()
+      InspectorProtocol.MOUSE -> message.data.getString("mouse")?.let { surface?.sendMouse(JSONObject(it)) }
+      InspectorProtocol.TOUCH -> message.data.getParcelable<MotionEvent>("touch")?.let { event ->
+        try { surface?.root?.dispatchTouchEvent(event) } finally { event.recycle() }
+      }
     }
     true
   })

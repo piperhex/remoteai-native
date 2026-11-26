@@ -4,11 +4,11 @@ import android.os.SystemClock
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.webkit.WebView
-import com.facebook.react.bridge.ReadableMap
+import org.json.JSONObject
 
 /** Let Chromium scroll the visual viewport or the nested frame under the cursor, just like a hardware wheel. */
-internal fun scrollWebView(view: WebView, x: Double, y: Double, input: ReadableMap) {
-  val horizontal = input.hasKey("horizontal") && input.getBoolean("horizontal")
+internal fun scrollWebView(view: WebView, x: Double, y: Double, input: JSONObject) {
+  val horizontal = input.optBoolean("horizontal")
   val axis = if (horizontal) MotionEvent.AXIS_HSCROLL else MotionEvent.AXIS_VSCROLL
   // Chromium negates both wheel axes. The panel reports right and up as positive.
   val notches = input.getDouble("delta").toFloat() / WHEEL_UNITS_PER_NOTCH

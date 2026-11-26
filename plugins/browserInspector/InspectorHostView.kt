@@ -9,10 +9,13 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import android.view.MotionEvent
 import android.view.SurfaceControlViewHost
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.widget.FrameLayout
+import org.json.JSONObject
+import com.codexswitch.browser.EmbeddedMouseSurface
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerHelper
@@ -24,7 +27,7 @@ private const val INSPECTOR_READY = "topInspectorReady"
 private const val INSPECTOR_FAILED = "topInspectorFailure"
 
 internal class InspectorHostView(private val reactContext: ThemedReactContext) :
-  FrameLayout(reactContext), SurfaceHolder.Callback {
+  FrameLayout(reactContext), SurfaceHolder.Callback, EmbeddedMouseSurface {
   private val surface = SurfaceView(context)
   private var remote: Messenger? = null
   private var options: Bundle? = null
@@ -32,6 +35,8 @@ internal class InspectorHostView(private val reactContext: ThemedReactContext) :
   private var bound = false
   private var created = false
   private var requested = false
+  private var interactive = true
+  private var mouseOverlay = false
   private val replies = Messenger(Handler(Looper.getMainLooper()) { message ->
     when (message.what) {
       InspectorProtocol.READY -> {
@@ -53,14 +58,41 @@ internal class InspectorHostView(private val reactContext: ThemedReactContext) :
   }
 
   init {
-    // Android only routes input into an embedded hierarchy when it is above its host window surface.
     surface.setZOrderOnTop(true)
+    // Below the overlay, this window receives the finger events formerly delivered by Android to the child surface.
+    surface.setOnTouchListener { _, event ->
+      if (!interactive || !mouseOverlay) return@setOnTouchListener false
+      if (event.actionMasked == MotionEvent.ACTION_DOWN) focusRenderer()
+      forward(InspectorProtocol.TOUCH, Bundle().apply { putParcelable("touch", event) })
+    }
     surface.importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES
     addView(surface, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     surface.holder.addCallback(this)
   }
 
-  fun setInteractive(interactive: Boolean) { surface.setZOrderOnTop(interactive) }
+  fun setInteractive(value: Boolean) { interactive = value; surface.setZOrderOnTop(interactive && !mouseOverlay) }
+  fun setMouseOverlay(value: Boolean) { mouseOverlay = value; surface.setZOrderOnTop(interactive && !mouseOverlay) }
+
+  override fun sendMouse(event: JSONObject) {
+    if ((!interactive || !mouseOverlay) && event.optString("kind") != "cancel") return
+    if (event.optString("kind") == "button" && event.optBoolean("down")) focusRenderer()
+    forward(InspectorProtocol.MOUSE, Bundle().apply { putString("mouse", event.toString()) })
+  }
+
+  private fun focusRenderer() {
+    // Touching the overlay returns window focus to the activity even if SurfaceView still has view focus.
+    surface.isFocusableInTouchMode = true
+    if (surface.isFocused) surface.clearFocus()
+    surface.requestFocus()
+  }
+
+  private fun forward(type: Int, payload: Bundle): Boolean {
+    val endpoint = remote ?: return false
+    return try {
+      endpoint.send(Message.obtain(null, type).apply { data = payload })
+      true
+    } catch (_: android.os.RemoteException) { fail(); false }
+  }
 
   fun hideKeyboard() {
     try { remote?.send(Message.obtain(null, InspectorProtocol.HIDE_KEYBOARD)) }
@@ -137,6 +169,8 @@ internal class InspectorHostManager : SimpleViewManager<InspectorHostView>() {
       INSPECTOR_FAILED to mapOf("registrationName" to "onFailure"))
   @ReactProp(name = "interactive", defaultBoolean = true)
   fun setInteractive(view: InspectorHostView, interactive: Boolean) { view.setInteractive(interactive) }
+  @ReactProp(name = "mouseOverlay")
+  fun setMouseOverlay(view: InspectorHostView, enabled: Boolean) { view.setMouseOverlay(enabled) }
 }
 
 private class InspectorEvent(surfaceId: Int, viewTag: Int, private val name: String) :

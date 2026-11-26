@@ -20,7 +20,7 @@ import java.util.WeakHashMap
 class BrowserMouseModule(private val context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
   private data class Press(val view: WeakReference<View>, val buttons: MutableSet<String> = mutableSetOf())
   private val held = WeakHashMap<View, Press>()
-  private val pageScript = context.assets.open("BrowserPageMouse.js").bufferedReader().use { it.readText() }
+  private val pageMouse = BrowserWebMouse(context)
   override fun getName() = "BrowserMouse"
 
   @ReactMethod fun send(tag: Int, input: ReadableMap) {
@@ -47,17 +47,12 @@ class BrowserMouseModule(private val context: ReactApplicationContext) : ReactCo
         else if (press?.buttons?.remove(button) != true) return@runOnUiThread
       }
       if (kind == "cancel" || press?.buttons?.isEmpty() == true) held.remove(root)
-      if (target is WebView) {
+      if (target is WebView || target is EmbeddedMouseSurface) {
         val local = IntArray(2).also(target::getLocationOnScreen)
-        if (kind == "wheel") {
-          scrollWebView(target, x - local[0], y - local[1], input)
-          return@runOnUiThread
-        }
         val event = JSONObject(input.toHashMap())
           .put("x", (x - local[0]) / maxOf(1, target.width - 1))
           .put("y", (y - local[1]) / maxOf(1, target.height - 1))
-        val init = "if(!window.__remoteAiPageMouse){$pageScript;window.__remoteAiPageMouse=BrowserPageMouse.send;}"
-        target.evaluateJavascript("(()=>{$init;window.__remoteAiPageMouse($event)})();", null)
+        if (target is EmbeddedMouseSurface) target.sendMouse(event) else pageMouse.send(target as WebView, event)
       } else if (kind == "wheel") {
         scroll(target, root, input)
       } else if (kind == "button" && !down && hit === target) {
@@ -82,7 +77,7 @@ class BrowserMouseModule(private val context: ReactApplicationContext) : ReactCo
 
   private fun hitView(view: View, x: Int, y: Int): View? {
     if (!view.isShown || view.alpha == 0f || !Rect().also { view.getGlobalVisibleRect(it) }.contains(x, y)) return null
-    if (view !is ViewGroup || view is WebView) return view
+    if (view !is ViewGroup || view is WebView || view is EmbeddedMouseSurface) return view
     for (index in view.childCount - 1 downTo 0) hitView(view.getChildAt(index), x, y)?.let { return it }
     return view
   }

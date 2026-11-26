@@ -8,4 +8,6 @@ internal object InspectorProtocol {
   const val READY = 4
   const val FAILED = 5
   const val HIDE_KEYBOARD = 6
+  const val MOUSE = 7
+  const val TOUCH = 8
 }

@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import WebSocket from 'ws';
+import { frontendPoint, verifyInspectorMouse } from './verify-inspector-mouse-android.mjs';
 
 const run = promisify(execFile);
 const serial = process.env.ANDROID_SERIAL;
@@ -48,24 +49,19 @@ async function screenshot(name) {
 }
 
 async function tapFrontend(selector) {
-  const point = await frontend.evaluate(`(() => {
-    const roots=[document];
-    for (const root of roots) for (const node of root.querySelectorAll('*')) {
-      if (node.shadowRoot) roots.push(node.shadowRoot);
-      if (!node.matches(${JSON.stringify(selector)})) continue;
-      const rect=node.getBoundingClientRect();
-      if (rect.width) return { x:rect.x+rect.width/2, y:rect.y+rect.height/2, scale:devicePixelRatio };
-    }
-  })()`);
+  const point = await frontendPoint(frontend, selector);
   assert.ok(point, `DevTools control is present: ${selector}`);
   const bounds = (await find('关闭')).bounds.match(/\d+/g).map(Number);
-  await adb('shell', 'input', 'tap', String(Math.round(point.x * point.scale)),
-    String(Math.round(bounds[3] + point.y * point.scale)));
+  await adb('shell', 'input', 'tap', String(Math.round(point.x)), String(Math.round(bounds[3] + point.y)));
   await delay(600);
 }
 
 async function enterConsoleNumber(value) {
   await tapFrontend('#console-prompt');
+  await typeConsoleNumber(value);
+}
+
+async function typeConsoleNumber(value) {
   // Numeric input keeps the check independent of the device's keyboard language.
   await adb('shell', 'input', 'text', String(value));
   await adb('shell', 'input', 'keyevent', '66');
@@ -266,6 +262,7 @@ try {
   await tap('开发者工具'); await delay(2500);
   await screenshot('opening');
   await checkServerAccess(await attachFrontend());
+  await verifyInspectorMouse({ adb, nodes, find, tap, screenshot, tapFrontend, pageValue, typeConsoleNumber }, frontend);
   assert.equal(await frontend.evaluate(`(await import('./ui/legacy/theme_support/theme_support.js'))
     .ThemeSupport.instance().themeName()`), dark ? 'dark' : 'default', 'Frontend follows the app theme');
   assert.equal(await pageValue('fixtureState'), 42, 'Console evaluation must reach the live website');

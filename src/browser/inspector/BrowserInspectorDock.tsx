@@ -8,8 +8,12 @@ import { t, useLanguage } from '../../i18n';
 import { textMetrics } from '../../theme/text';
 import { useThemeColor } from '../../theme/store';
 import { browserInspectorAvailable, type useBrowserInspector } from './useBrowserInspector';
+import { DockedBrowserMouse } from './DockedBrowserMouse';
+import { useBrowserMousePreference } from '../BrowserMousePanel';
 
-type InspectorSurfaceProps = ViewProps & { onReady: () => void; onFailure: () => void; interactive: boolean };
+type InspectorSurfaceProps = ViewProps & {
+  onReady: () => void; onFailure: () => void; interactive: boolean; mouseOverlay: boolean;
+};
 const Surface = browserInspectorAvailable
   ? requireNativeComponent<InspectorSurfaceProps>('BrowserInspectorSurface') : View;
 const MIN_SHARE = 0.2;
@@ -24,6 +28,7 @@ export function BrowserInspectorDock({ inspector, children, obscured, fullscreen
   inspector: ReturnType<typeof useBrowserInspector>; children: ReactNode; obscured: boolean; fullscreen: boolean;
 }) {
   const { width, height } = useWindowDimensions();
+  const [mouseEnabled] = useBrowserMousePreference();
   const [dock, setDock] = useState<Dock>(() => width > height ? 'right' : 'bottom');
   const [share, setShare] = useState(INITIAL_SHARE);
   const layout = useRef({ width: 1, height: 1 });
@@ -52,7 +57,7 @@ export function BrowserInspectorDock({ inspector, children, obscured, fullscreen
     { dock: 'right', icon: 'dock-right', label: text('market.inspectorRight') },
     { dock: 'bottom', icon: 'dock-bottom', label: text('market.inspectorBottom') },
   ];
-  return <View style={{ flex: 1, flexDirection: horizontal ? 'row' : 'column' }}
+  return <DockedBrowserMouse open={inspector.open}><View style={{ flex: 1, flexDirection: horizontal ? 'row' : 'column' }}
     onLayout={event => { layout.current = event.nativeEvent.layout; }}>
     <View style={{ flex: inspector.open ? 1 - dockShare : 1, minWidth: 0, minHeight: 0 }}>{children}</View>
     {inspector.open && <>
@@ -93,8 +98,8 @@ export function BrowserInspectorDock({ inspector, children, obscured, fullscreen
           style={{ ...textMetrics(14, 22), padding: 12, color: color('#c64343', 'danger') }}>
           {t('client.runtimeErrors.theConnectionIsTemporarilyUnavailableTryAgain')}</Text>}
         {!inspector.failed && <Surface ref={inspector.host} style={{ flex: 1 }}
-          onReady={inspector.attach} onFailure={inspector.fail} interactive={!obscured} />}
+          onReady={inspector.attach} onFailure={inspector.fail} interactive={!obscured} mouseOverlay={mouseEnabled} />}
       </SafeAreaView>
     </>}
-  </View>;
+  </View></DockedBrowserMouse>;
 }

@@ -14,6 +14,8 @@ import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.codexswitch.browser.BrowserWebMouse
+import org.json.JSONObject
 import java.io.Closeable
 
 /** The app owns the dock toolbar. This remote surface contains only the full upstream frontend. */
@@ -21,6 +23,7 @@ internal class InspectorSurface(context: Context, private val options: Bundle) :
   private val surfaceColor = Color.parseColor(options.getString("surfaceColor"))
   val root = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(surfaceColor) }
   private val webview = WebView(context)
+  private val mouse = BrowserWebMouse(context)
   private val loading = ProgressBar(context)
   private val error = TextView(context).apply {
     text = options.getString("error"); textSize = 14f; includeFontPadding = true
@@ -29,8 +32,10 @@ internal class InspectorSurface(context: Context, private val options: Bundle) :
     setTextColor(Color.parseColor(options.getString("contentColor"))); visibility = View.GONE
   }
   private var url = ""
+  private var keyboardRequested = false
 
   init {
+    webview.viewTreeObserver.addOnWindowFocusChangeListener { focused -> if (focused) showRequestedKeyboard() }
     root.addView(error)
     root.addView(loading, LinearLayout.LayoutParams(-2, -2).apply { gravity = Gravity.CENTER })
     root.addView(webview, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -58,7 +63,26 @@ internal class InspectorSurface(context: Context, private val options: Bundle) :
   }
 
   fun fail() { loading.visibility = View.GONE; error.visibility = View.VISIBLE }
+  fun sendMouse(event: JSONObject) {
+    if (!webview.isShown || loading.visibility != View.GONE || error.visibility != View.GONE) return
+    if (event.optBoolean("down") || event.optString("kind") == "cancel") keyboardRequested = false
+    mouse.send(webview, event) {
+      keyboardRequested = true
+      showRequestedKeyboard()
+    }
+  }
+  private fun showRequestedKeyboard() {
+    // The mouse click can arrive before Android transfers window focus from the overlay to this renderer.
+    if (!keyboardRequested) return
+    webview.post {
+      if (keyboardRequested && webview.hasWindowFocus()) {
+        keyboardRequested = false
+        webview.context.getSystemService(InputMethodManager::class.java).showSoftInput(webview, 0)
+      }
+    }
+  }
   fun hideKeyboard() {
+    keyboardRequested = false
     webview.windowInsetsController?.hide(WindowInsets.Type.ime())
     webview.context.getSystemService(InputMethodManager::class.java)
       .hideSoftInputFromWindow(webview.windowToken, 0)

@@ -38,7 +38,7 @@ module.exports = function withBrowserGestures(config) {
     const target = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java/com/codexswitch/browser');
     await fs.mkdir(target, { recursive: true });
     const files = ['BrowserGesturesModule.kt', 'BrowserGesturesPackage.kt', 'ActivityBackHandler.kt',
-      'BrowserMouseModule.kt', 'BrowserWheel.kt'];
+      'BrowserMouseModule.kt', 'BrowserWebMouse.kt', 'BrowserWheel.kt'];
     for (const name of files) {
       await fs.copyFile(path.join(__dirname, 'browserGestures', name), path.join(target, name));
     }
