@@ -145,6 +145,22 @@ it('does not stop page loading when an individual request finishes', () => {
   expect(active()).toBe(false);
 });
 
+it('uses document progress for the line and keeps it hidden during later background requests', () => {
+  const progress = () => browser().activity.progress;
+  const report = (value: number) => webview().onLoadProgress!({ nativeEvent: { progress: value } } as never);
+  report(0.6); report(0.3);
+  expect(progress()).toBe(0.6);
+  webview().onLoadEnd!({} as never);
+  report(1); message(PREVIEW_NETWORK_BUSY);
+  expect(progress()).toBeNull();
+  browser().navigate('reload');
+  expect(progress()).toBe(0);
+  report(0.2);
+  expect(progress()).toBe(0.2);
+  webview().onError!({} as never);
+  expect(progress()).toBeNull();
+});
+
 it('clears activity on failure and starts it immediately for refresh and back navigation', () => {
   message(PREVIEW_NETWORK_BUSY);
   webview().onError!({} as never);

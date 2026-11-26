@@ -5,6 +5,7 @@ import { t, useLanguage } from '../../i18n';
 import { marketText } from '../../../vendor/shared/provider-market/i18n';
 import { useThemeColor } from '../../theme/store';
 import { useMappingBrowserStyles } from './mappingBrowserStyles';
+import { MappingPreviewActivity } from './MappingPreviewActivity';
 import type { useMappingBrowser } from './useMappingBrowser';
 
 type Browser = ReturnType<typeof useMappingBrowser>;
@@ -59,5 +60,6 @@ export function MappingBrowserToolbar({ browser, compact, settingsOpen, openSett
       <View style={styles.addressFrame}>{address}</View>
       {actions}
     </>}
+    <MappingPreviewActivity progress={browser.homeVisible || browser.resourceVisible ? null : browser.activity.progress} />
   </View>;
 }

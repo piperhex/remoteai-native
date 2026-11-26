@@ -165,6 +165,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
           } else onDownload(request);
         })}
         onLoadStart={() => { cancelPageMouse.current?.(); activity.onLoadStart(); }} onLoadEnd={activity.onLoadEnd}
+        onLoadProgress={activity.onLoadProgress}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
         onNavigationStateChange={state => {

@@ -3,7 +3,7 @@ import { textMetrics } from '../../theme/text';
 
 export const useMappingBrowserStyles = createThemedStyles(color => ({
   toolbar: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 6, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: color('#dfe5df', 'border') },
+    borderBottomWidth: 1, borderBottomColor: 'transparent' },
   compactToolbar: { flexDirection: 'column', alignItems: 'stretch' },
   compactToolbarActions: { flexDirection: 'row', justifyContent: 'space-between' },
   icon: { width: 36, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
