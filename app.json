@@ -52,7 +52,8 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#f7faf7"
+        "backgroundColor": "#0B0B0D",
+        "monochromeImage": "./assets/adaptive-monochrome.png"
       }
     },
     "plugins": [
@@ -80,7 +81,13 @@
           "microphonePermission": false
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0B0B0D"
+        }
+      ],
       "./plugins/withChatBackground.cjs",
       "./plugins/withComposerShortcut.cjs",
       "./plugins/withChatTextSelection.cjs",

@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.text.format.Formatter
 import androidx.core.app.NotificationCompat
+import com.codexswitch.mobile.R
 import org.json.JSONObject
 
 /** The app owns one quiet notification across both peer and official downloads. */
@@ -35,7 +36,7 @@ internal class UpdateDownloadNotification(private val context: Context, input: J
   fun finish(success: Boolean) {
     val detail = if (success) label("ready", "更新已下载，点击打开应用安装。")
       else label("failed", "下载未完成，点击打开应用重试。")
-    show(builder().setSmallIcon(android.R.drawable.stat_sys_download_done)
+    show(builder()
       .setContentText(detail).setStyle(NotificationCompat.BigTextStyle().bigText(detail))
       .setProgress(0, 0, false).setOngoing(false).setAutoCancel(true))
   }
@@ -47,7 +48,7 @@ internal class UpdateDownloadNotification(private val context: Context, input: J
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
     return NotificationCompat.Builder(context, CHANNEL_ID)
-      .setSmallIcon(android.R.drawable.stat_sys_download).setContentTitle("Remote AI v$version")
+      .setSmallIcon(R.drawable.notification_icon).setContentTitle("Remote AI v$version")
       .setContentIntent(pending).setCategory(NotificationCompat.CATEGORY_PROGRESS)
       .setOnlyAlertOnce(true).setShowWhen(false).setSilent(true)
   }

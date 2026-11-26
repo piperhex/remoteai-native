@@ -1,15 +1,15 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "b6639c10148fec86ea2c20969be1771d10a114eb",
+  "revision": "01c9c26843a00722b0b596773cba673120614b3f",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "230ca9db5db5293e79b5c2c400aad17f3ecf2fb6"
+    "revision": "bbb287592f1a4cbcb459bb6218fafb559129308b"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.46/remoteai-i18n-0.1.46.tgz",
   "files": {
     "shared/dependencies.json": "c9637842b16cec6473043597368291a427281e9c05d41f1691c2cded3e9444d4",
-    "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",
-    "apps/desktop/src-tauri/icons/128x128.png": "c6e11f099d213c5e3b81dc9264403858841e130f07e6f832069cac8eae47db02",
+    "apps/desktop/src-tauri/icons/32x32.png": "f1ef425afd70853a3f0b4abd58163ef5614d707d7e5e210f27e7077b352c02b0",
+    "apps/desktop/src-tauri/icons/128x128.png": "7bddfd1a2388c61fc938654c7693453b737b609fe3646e6af34ee9c3cef1e132",
     "shared/localization/testLocale.ts": "6ca4daa3a6a5d9442013a8b5861803edfafebf20d2bd875d6a2608158dc53e35",
     "shared/project-browser/nativeEntry.tsx": "36ebeb83aeb39261b89da2cd91d45e43105b10648c954c5b1b47d504b99e2be4",
     "shared/lounge/nativeDocumentEntry.tsx": "e73ae55430a55b9bf17afc4b185f625e9484b5204c9eef6829c8ce08802c61a9",
@@ -101,6 +101,7 @@
     "shared/testing/threadActivityFixture.ts": "ff5b7a65a00bfcf1779527d80f71ada0e0108c275ee0295a2f35a40781ca5e8a",
     "shared/chat/toolDetailsFixture.json": "bf33f450e0b9240846e3d8d0211a7eba34a7d78c566e96377afbd01c79cdd1a7",
     "shared/browser/mouse/documentMouse.ts": "d0b432a98cd4a39e0f1a7f45050875e7b8340a705e095ddb231d0430f97bf952",
+    "shared/browser/mouse/useBrowserMouse.ts": "985fce5c44fabfd7ca6176136bb55649c0af2e0730d47c7e3f5cec5ed5c5c5dd",
     "shared/cli-gui/modelSelection.ts": "78e78bf039e9d15be9bf34adf880acaeb5d9070459333c78d4e39f311e0e0b97",
     "shared/cli-gui/useCliSidebar.ts": "6fddc152fa22f51a4e985a459c21564eb3951730bcdd1e48aef4e0234fc7bfae",
     "shared/cli-gui/types.ts": "48d2adc87197772e60b6e65faf094c7836487cc8aafa6b01a34f9cff6fea0538",
@@ -124,7 +125,6 @@
     "shared/browser/data/clear.ts": "a188d3d8c8dc8db9cad30a2a73b8c61087cb0ffcd6351a1f18aaabbd2b2e3fde",
     "shared/port-mapping/service.ts": "8b483dd0244fce2acdba2f5040ee8b9266cb1baaf4cef971a83767243dfe98fb",
     "shared/browser/mouse/mousePreference.ts": "f7fb5cd8457935513e64f72ee724fa2490eba70afe5a2ce7f18e1812e8028cb5",
-    "shared/browser/mouse/useBrowserMouse.ts": "985fce5c44fabfd7ca6176136bb55649c0af2e0730d47c7e3f5cec5ed5c5c5dd",
     "shared/browser/data/vault.ts": "2304274200f081f95d549f854b11273a8e9b5348e6d54a75080accd8b8658a61",
     "shared/browser/searchEngine.ts": "6f3d67eabc3cb333ca29447b9e96c10f8740c58dd00ce9f357ac2194e6291bd4",
     "shared/browser/siteMode.ts": "f3a8bde3b6066ec266fa8191ab3a4976c164696eabc915b7001d49cc7072be62",

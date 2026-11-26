@@ -9,6 +9,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import com.codexswitch.mobile.R
 import com.facebook.react.HeadlessJsTaskService
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.jstasks.HeadlessJsTaskConfig
@@ -53,7 +54,7 @@ class ChatConnectionService : HeadlessJsTaskService() {
       PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     }
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-      .setSmallIcon(android.R.drawable.stat_notify_chat)
+      .setSmallIcon(R.drawable.notification_icon)
       .setContentTitle(if (mappingEnabled) labels.mappingTitle else labels.chatTitle)
       .setContentText(if (mappingEnabled) labels.mappingText else labels.chatText)
       .setContentIntent(pending)
