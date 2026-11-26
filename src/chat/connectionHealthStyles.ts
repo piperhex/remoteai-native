@@ -1,4 +1,5 @@
 import { createThemedStyles } from '../theme/styles';
+import { textMetrics } from '../theme/text';
 import { palette } from './styles';
 import type { ThemeColor } from '../../vendor/shared/theme/mode';
 
@@ -28,7 +29,7 @@ export const useHealthStyles = createThemedStyles((color) => ({
     borderWidth: 1, borderColor: color('#eeeeef', 'border'), borderRadius: 14, backgroundColor: color('#fff', 'surface') },
   stepIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   label: { color: color(palette.ink, 'ink'), fontSize: 14, lineHeight: 22, fontWeight: '600' },
-  detail: { color: color('#777f84', 'muted'), fontSize: 12, lineHeight: 19, flexShrink: 1 },
+  detail: { color: color('#777f84', 'muted'), ...textMetrics(12, 19), flexShrink: 1 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6,
     borderRadius: 12, flexShrink: 1, maxWidth: '32%' },
   badgeIcon: { width: 13, height: 13, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },

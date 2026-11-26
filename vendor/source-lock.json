@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "642d0ab9e925aa7ba0f7306bb58c0922a67c0651",
+  "revision": "b6639c10148fec86ea2c20969be1771d10a114eb",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "77b6f8f5f202eafa0597b2b241d342048266d7ec"
+    "revision": "230ca9db5db5293e79b5c2c400aad17f3ecf2fb6"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.46/remoteai-i18n-0.1.46.tgz",
   "files": {
     "shared/dependencies.json": "c9637842b16cec6473043597368291a427281e9c05d41f1691c2cded3e9444d4",
     "apps/desktop/src-tauri/icons/32x32.png": "7f5310d2f4b466d841479766ddf28a8b1003e167bfbc2e723d6de7ee967f4466",
@@ -88,7 +88,7 @@
     "shared/remote-chat/policy.ts": "165e938c60cb2cffcfd28f36739f62ed03fdcbaa26be630aa7aa60a356a5c6bd",
     "shared/remote-chat/protocol.ts": "7c36edeef30d7433715c15f6f96a6ad3eb8de9a112ea79c4b7c1961b64dffd17",
     "shared/remote-chat/connectionEndpoints.ts": "e61757566f283882899ff6f63e373457d5007fadddc327c8f027639a086c0803",
-    "shared/remote-chat/connectionErrors.ts": "750409aee7061398f49e483b7ca63e818b68f746ff5ea0c1f7271edfb87b0ea3",
+    "shared/remote-chat/connectionErrors.ts": "91570387d439e56fdd5f682d504d1aa61cc0def7042f1d793fbaea78ab3399b1",
     "shared/remote-chat/packetCipher.ts": "4d01758d749f512a544880f39150dc142909e2b163dc5f7f9d18691c523ca45d",
     "shared/chat/ChatFileReferences.tsx": "11c0697f551233c21fcfc34b143a8c2c5ebbe17bdfc168e87ab8f04acb8269e0",
     "shared/conversation/replyQuotes.ts": "fb8d762fb715f6aa915869948c0e5b056c1e9b1fd7837f60a24ca0c718211e4d",
@@ -167,7 +167,7 @@
     "shared/remote-chat/composer.ts": "cbb2d729c508a913f4a1cb1b3522209af01ace28244bd60249a621113f7c8276",
     "shared/remote-chat/client/useQueueEditor.ts": "074cfad3142be7b8deecfbc90780be03b6dda9aab58c0370c34e23b93c02d78a",
     "shared/remote-chat/publicEndpoints.ts": "58f8984fdcc83d7169a7145361f6da72f33040ce46376de39a8ce6ccc9371a6b",
-    "shared/remote-chat/connectionHealth.ts": "3def51ac00856b5bb5b63d89d4021f8bf7bd4c1bc539b716cc710d763e3eafcc",
+    "shared/remote-chat/connectionHealth.ts": "a7384b23e2da09ff5a8b7eb6534588c494f36bc43b3fac8e5d14521052044987",
     "shared/remote-chat/trustedHost.ts": "0108ec06a394f6812d014a2536e574bb076730c77ff9d33f37dedc8abc3cb024",
     "shared/context-usage/values.js": "fff2f389ced4f6ee7de613f90390b0f4de2db848c9a40fb2f536c4b6f0ee7a86",
     "shared/quota.ts": "0f070ca0a99580b46dd799967ab8c73038bca88a7001d7ea8cd8765e23d8aa69",
@@ -253,7 +253,7 @@
     "shared/remote-chat/client/composerSettings.ts": "1c129ddbea1ad90d5650086c471c070bcff4c23ebf7e4e7ed0dd1c8ac5c89452",
     "shared/chat/useProjectFileCandidates.ts": "f359c8c071de1e5a40b9a04c96a69cb5dfb34ae680eb355ee7b092f7f831b297",
     "shared/remote-chat/requestSpeed.ts": "7f2b611212fc6a53fc0fabcb456f0dc865b859688481df90e4b7d198c1745ec5",
-    "shared/remote-chat/client/connection.ts": "1a7807fa5abff7b39e78a213b3685b28494912ef11bd0f3216c96237239c5213",
+    "shared/remote-chat/client/connection.ts": "a2dfd8a9cab63dde9f30b725f3b8848ffe2b05672bc2db9944b6f859a70993a0",
     "shared/conversation/sshReferences.ts": "e2eba566247200ce6ab58b8479d590d208f70690ae86d2066919825f32eda558",
     "shared/chat/usePromptSuggestion.ts": "cc325dedaac9174475f7ca742ad54f3baa4a2e7e761a250faa4ce3bf92a07b8d",
     "shared/chat/composerTrigger.ts": "6d4b8d2864392aae53d062ad1aab305d90f6ff516baf0698f2f0003dd0e0eca7",

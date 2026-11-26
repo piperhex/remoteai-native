@@ -1,5 +1,6 @@
 import { displayText } from '../i18n/index';
 import { useThemeColor } from '../theme/store';
+import { HOST_KEYRING_REQUIRED } from '../../vendor/shared/remote-chat/connectionErrors';
 import Feather from '@expo/vector-icons/Feather';
 import type { ComponentProps } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -19,7 +20,7 @@ const stepIcons: Record<HealthStep['id'], IconName> = {
 const statusIcons: Record<HealthStatus, IconName> = { ok: 'check', waiting: 'clock', blocked: 'alert-circle' };
 
 export function ChatConnectionHealth({ state, device, reconnect, close }: {
-  state: ChatState; device?: { online: boolean }; reconnect: () => void; close: () => void;
+  state: ChatState; device?: { online: boolean; name?: string }; reconnect: () => void; close: () => void;
 }) {
   const css = useCss();
   const color = useThemeColor();
@@ -44,7 +45,8 @@ export function ChatConnectionHealth({ state, device, reconnect, close }: {
         <Feather name="info" size={22} color={color("#6782df", 'info')} accessible={false} />
         <View style={css.copy}>
           <Text style={css.label}>{displayText(health.nextTitle)}</Text>
-          <Text style={css.detail}>{displayText(health.next)}</Text>
+          <Text style={css.detail}>{health.next === HOST_KEYRING_REQUIRED && device?.name
+            ? t('client.keyring.remoteNamed', { name: device.name }) : displayText(health.next)}</Text>
         </View>
       </View>
       {health.reconnect && <Pressable accessibilityRole="button" onPress={reconnect}

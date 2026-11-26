@@ -1,5 +1,6 @@
 import canonicalCopy from '@remoteai/i18n/copy/client/connectionErrors';
 export const CONNECTION_ERRORS = canonicalCopy;
+export const HOST_KEYRING_REQUIRED = 'client.keyring.remote';
 
 export function socketConnectionError(code: number) {
   switch (code) {

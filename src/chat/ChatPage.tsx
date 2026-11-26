@@ -38,6 +38,7 @@ import { ChatDevices } from './ChatDevices';
 import { ChatConnectionInfo } from './ChatConnectionInfo';
 import { ChatTaskStatus } from './ChatTaskStatus';
 import { visibleChatError } from '../../vendor/shared/remote-chat/chatError';
+import { HOST_KEYRING_REQUIRED } from '../../vendor/shared/remote-chat/connectionErrors';
 import { TaskReviewProvider } from '../../vendor/shared/remote-chat/TaskReviewContext';
 import { ChatRetryProvider } from '../../vendor/shared/remote-chat/ChatRetryProvider';
 import { ChatTools } from './ChatTools';
@@ -148,7 +149,8 @@ function ConnectedChatContent({ session, device, devices, selected, active: page
     drawerRef.current?.closeDrawer(); setPickingDevice(false); setSearching(false);
   }, [notification, cli.controller]);
   const ready = state.ready;
-  const error = visibleChatError(state.error, state);
+  const error = state.error === HOST_KEYRING_REQUIRED && device?.name
+    ? t('client.keyring.remoteNamed', { name: device.name }) : visibleChatError(state.error, state);
   const runningTurn = ready ? currentRunningTurn(state.selected?.turns) : undefined;
   const running = Boolean(runningTurn);
   const openDrawer = useCallback(() => { Keyboard.dismiss(); setDrawer(true); drawerRef.current?.openDrawer(); }, []);

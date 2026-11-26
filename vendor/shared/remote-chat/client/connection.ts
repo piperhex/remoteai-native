@@ -8,7 +8,7 @@ import { browserChatSocket, type ChatSocket } from './socket';
 import { browserClientInfo, type ChatClientInfo } from './clientInfo';
 import { RelayQuota, RELAY_QUOTA_MESSAGE, type RelayIssue } from '../relayUsage';
 import { hasUpload, uploadProgress, type UploadProgress } from '../uploadProgress';
-import { authorizationError, CONNECTION_ERRORS, socketConnectionError } from '../connectionErrors';
+import { authorizationError, CONNECTION_ERRORS, HOST_KEYRING_REQUIRED, socketConnectionError } from '../connectionErrors';
 import { SessionRenewal } from './sessionRenewal';
 import { ReconnectBackoff } from '../../realtime/reconnectBackoff';
 import { PublicEndpointObserver } from '../publicEndpointObserver';
@@ -314,7 +314,9 @@ export class ChatConnection {
     }
     if (message.type === 'relay-ready') this.link?.enableRelay();
     if (message.type === 'relay' && typeof message.payload === 'string') this.link?.receive(message.payload);
-    if (message.type === 'peer-close') this.fail(CONNECTION_ERRORS.interrupted);
+    if (message.type === 'peer-close') {
+      this.fail(message.reason === 'host-keyring' ? HOST_KEYRING_REQUIRED : CONNECTION_ERRORS.interrupted);
+    }
   }
 
   private receiveQuota(message: Record<string, unknown>) {

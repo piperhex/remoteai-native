@@ -1,5 +1,5 @@
 import type { ChatState } from './client/types';
-import { CONNECTION_ERRORS } from './connectionErrors';
+import { CONNECTION_ERRORS, HOST_KEYRING_REQUIRED } from './connectionErrors';
 import { HOST_IDENTITY_CHANGED } from './trustedHost';
 
 export type ConnectionStage = 'login' | 'computer' | 'path' | 'chat' | 'ready';
@@ -25,6 +25,7 @@ export const HEALTH_INLINE_STATUS_MAX_CHARACTERS = 6;
 const LOGIN_ERRORS: readonly string[] = [CONNECTION_ERRORS.authorization, CONNECTION_ERRORS.expired];
 const COMPUTER_ERRORS: readonly string[] = [CONNECTION_ERRORS.unavailable, CONNECTION_ERRORS.interrupted];
 const CHAT_ERRORS: readonly string[] = [CONNECTION_ERRORS.gui, CONNECTION_ERRORS.guiTimeout,
+  HOST_KEYRING_REQUIRED,
   CONNECTION_ERRORS.guiDisconnected, CONNECTION_ERRORS.missingGui, CONNECTION_ERRORS.startup,
   CONNECTION_ERRORS.workspace, CONNECTION_ERRORS.configuration];
 
@@ -33,13 +34,14 @@ export function liveChat(state: ChatState) {
 }
 
 function connectionFacts(state: ChatState, device?: { online: boolean }) {
-  const issue = state.connectionIssue ?? '';
   const path = state.mode === 'direct' || state.mode === 'relay';
   const ready = liveChat(state);
+  const issue = ready && state.connectionIssue === HOST_KEYRING_REQUIRED ? '' : state.connectionIssue ?? '';
   const loginBlocked = !path && LOGIN_ERRORS.includes(issue);
   const computerBlocked = !path && (device?.online === false || COMPUTER_ERRORS.includes(issue));
-  const loginOk = !loginBlocked && (path || ['path', 'chat', 'ready'].includes(state.connectionStage ?? ''));
-  return { state, issue, ready, path, loginBlocked, computerBlocked, loginOk, device: Boolean(device) };
+  const reachedHost = path || issue === HOST_KEYRING_REQUIRED;
+  const loginOk = !loginBlocked && (reachedHost || ['path', 'chat', 'ready'].includes(state.connectionStage ?? ''));
+  return { state, issue, ready, path, reachedHost, loginBlocked, computerBlocked, loginOk, device: Boolean(device) };
 }
 
 type Facts = ReturnType<typeof connectionFacts>;
@@ -56,7 +58,7 @@ function loginStep(facts: Facts): HealthStep {
 }
 
 function computerStep(facts: Facts): HealthStep {
-  const contacted = facts.path || (!facts.computerBlocked && facts.state.connectionStage === 'path');
+  const contacted = facts.reachedHost || (!facts.computerBlocked && facts.state.connectionStage === 'path');
   const status = stepStatus(contacted, facts.computerBlocked);
   const details = { ok: "client.chatReliability.computerReached", blocked: "client.chatReliability.wakeYourComputerConnectItToTheInternetAndKeep",
     waiting: "client.chatReliability.contactingYourComputerMakeSureItIsTurnedOn" };
@@ -72,7 +74,8 @@ function pathStep(facts: Facts): HealthStep {
 function chatStep(facts: Facts): HealthStep {
   const ready = facts.ready && !facts.state.desktopOnly;
   return { id: 'chat', label: "client.chatReliability.chatOnComputer", status: stepStatus(ready, CHAT_ERRORS.includes(facts.issue)),
-    detail: ready ? "client.chatReliability.chatIsReady" : "client.chatReliability.tasksMessagesAndApprovalsWillSyncOnceConnected" };
+    detail: facts.issue === HOST_KEYRING_REQUIRED ? HOST_KEYRING_REQUIRED :
+      ready ? "client.chatReliability.chatIsReady" : "client.chatReliability.tasksMessagesAndApprovalsWillSyncOnceConnected" };
 }
 
 /** Live transport evidence takes precedence over potentially stale presence records. */
@@ -102,6 +105,7 @@ function healthStatus(facts: Facts, steps: HealthStep[]): HealthStatus {
 function healthSummary(input: Facts) {
   const { state, issue, loginBlocked } = input;
   if (!input.device) return { title: "client.chatReliability.noComputerSelected", next: "client.chatReliability.chooseAComputerToConnectTo" };
+  if (issue === HOST_KEYRING_REQUIRED) return { title: 'client.keyring.remoteTitle', next: HOST_KEYRING_REQUIRED };
   if (loginBlocked) return { title: "client.chatReliability.signInAgain", next: "client.chatReliability.returnToYourAccountPageSignInAgainThenConnect" };
   if (issue === HOST_IDENTITY_CHANGED) return { title: "client.chatReliability.verifyComputerIdentity", next: "client.chatReliability.closeThisCheckAndChooseVerifyComputerIdentityToContinue" };
   if (state.desktopOnly) return { title: "client.chatReliability.computerSignInRequired", next: "client.chatReliability.openRemoteDesktopSignInToTheComputerThenConnect" };
