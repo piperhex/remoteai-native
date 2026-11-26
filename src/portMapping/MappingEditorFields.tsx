@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import { DEFAULT_MAPPING_HOST } from '../../vendor/shared/port-mapping/target';
+import { DEFAULT_MAPPING_HOST, EXAMPLE_MAPPING_DOMAIN } from '../../vendor/shared/port-mapping/target';
 import type { useMappingFormState } from '../chat/portMapping/useMappingFormState';
 import { t } from '../i18n';
 import { useThemeColor } from '../theme/store';
@@ -46,5 +46,13 @@ export function MappingEditorFields({ form }: { form: FormState }) {
     </View>)}</View>
     {help && <View style={styles.help}><Text accessibilityRole="alert" style={styles.label}>
       {fields.find(field => field.name === help)?.hint}</Text></View>}
+    <View style={styles.section}>
+      <Text style={styles.label}>{t('client.mappingEditor.localDomain')}</Text>
+      <TextInput accessibilityLabel={t('client.mappingEditor.localDomain')} value={form.localDomain}
+        onChangeText={form.setLocalDomain} autoCapitalize="none" autoCorrect={false} editable={!form.locked}
+        keyboardType="url" placeholder={EXAMPLE_MAPPING_DOMAIN}
+        placeholderTextColor={color('#8a9bad', 'faint')} style={styles.input} />
+      <Text style={styles.label}>{t('client.mappingEditor.localDomainHelp')}</Text>
+    </View>
   </View>;
 }

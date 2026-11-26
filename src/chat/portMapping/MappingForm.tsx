@@ -5,7 +5,7 @@ import type { ForwardingEntry, PortForwardingService } from '../../../vendor/sha
 import { t } from '../../i18n';
 import { useMappingStyles } from './mappingStyles';
 import { MAPPING_PROTOCOLS } from '../../../vendor/shared/port-mapping/settings';
-import { DEFAULT_MAPPING_HOST } from '../../../vendor/shared/port-mapping/target';
+import { DEFAULT_MAPPING_HOST, EXAMPLE_MAPPING_DOMAIN } from '../../../vendor/shared/port-mapping/target';
 import { useMappingFormState } from './useMappingFormState';
 
 export function MappingForm({ service, disabled, connected = true, entry, done, devicePicker }: {
@@ -14,7 +14,7 @@ export function MappingForm({ service, disabled, connected = true, entry, done, 
 }) {
   const styles = useMappingStyles();
   const { remoteHost, setRemoteHost, protocol, setProtocol, remote, setRemote, local, setLocal,
-    error, saving, locked, reset, submit } = useMappingFormState({ service, disabled, entry, done });
+    localDomain, setLocalDomain, error, saving, locked, reset, submit } = useMappingFormState({ service, disabled, entry, done });
   return <View style={styles.form}>
     <Text style={styles.title}>{t(entry ? "client.portMappingEditing.editMapping" : "client.portMappingEditing.addMapping")}</Text>
     {devicePicker}
@@ -25,6 +25,13 @@ export function MappingForm({ service, disabled, connected = true, entry, done, 
         onPress={() => setProtocol(value)} style={[styles.button, protocol === value && styles.primary]}>
         <Text style={protocol === value ? styles.primaryText : styles.buttonText}>
           {value === 'both' ? t("client.portForwarding.bothTcpUdp") : value.toUpperCase()}</Text></Pressable>)}
+    </View>
+    <View>
+      <Text style={styles.muted}>{t('client.mappingEditor.localDomain')}</Text>
+      <TextInput accessibilityLabel={t('client.mappingEditor.localDomain')} value={localDomain}
+        onChangeText={setLocalDomain} autoCapitalize="none" autoCorrect={false} editable={!locked}
+        keyboardType="url" placeholder={EXAMPLE_MAPPING_DOMAIN} placeholderTextColor="#8a9bad" style={styles.input} />
+      <Text style={styles.muted}>{t('client.mappingEditor.localDomainHelp')}</Text>
     </View>
     <View style={styles.fields}>
       <View style={styles.hostField}><Text style={styles.muted}>{t("client.portForwarding.targetIp")}</Text>

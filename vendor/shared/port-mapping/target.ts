@@ -1,4 +1,6 @@
 export const DEFAULT_MAPPING_HOST = '127.0.0.1';
+export const EXAMPLE_MAPPING_DOMAIN = 'app.localhost';
+const DOMAIN_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 export const INVALID_MAPPING_HOST = '请输入有效的 IPv4 或 IPv6 地址。';
 
 /** Accept IP literals only, so a pasted URL cannot change the selected port or destination. */
@@ -23,4 +25,24 @@ export function mappingAddress(target: { remoteHost?: string; remotePort: number
 
 export function mappingOrigin(target: { remoteHost?: string; remotePort: number }): string {
   return `http://${mappingAddress(target)}`;
+}
+
+export function normalizeMappingDomain(value = ''): string | undefined {
+  const domain = value.trim().toLowerCase();
+  if (!domain) return;
+  if (domain === 'localhost') return domain;
+  const labels = domain.split('.');
+  if (domain.length > 253 || labels.length < 2 || !/^[a-z]/.test(labels[labels.length - 1])
+    || !labels.every(label => DOMAIN_LABEL.test(label))) {
+    throw new Error('client.mappingEditor.invalidLocalDomain');
+  }
+  return domain;
+}
+
+export function localMappingAddress({ localDomain, localPort }: { localDomain?: string; localPort: number }): string {
+  return `${localDomain || DEFAULT_MAPPING_HOST}:${localPort}`;
+}
+
+export function localMappingUrl(target: Parameters<typeof localMappingAddress>[0]): string {
+  return `http://${localMappingAddress(target)}`;
 }

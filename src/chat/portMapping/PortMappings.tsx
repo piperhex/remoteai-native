@@ -4,6 +4,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ForwardingClient, ForwardingEntry } from '../../../vendor/shared/port-mapping/service';
 import { MAX_PORT_MAPPINGS } from '../../../vendor/shared/port-mapping/settings';
+import { localMappingUrl } from '../../../vendor/shared/port-mapping/target';
 import { BottomSheet } from '../../components/BottomSheet';
 import { SheetScrollView } from '../../components/SheetScrollView';
 import type { AuthSession } from '../../types';
@@ -27,6 +28,7 @@ export function PortMappings(props: {
   const [newestFirst, setNewestFirst] = useState(false);
   const selected = entries.find(entry => entry.id === selection?.id && entry.status === 'running'
     && entry.protocol !== 'udp');
+  const url = selected ? localMappingUrl(selected) : '';
   const closeActions = () => setSelection(undefined);
   useEffect(() => {
     if (!props.active || !props.open || !selected) setSelection(undefined);
@@ -38,11 +40,11 @@ export function PortMappings(props: {
       title={t(selected ? "client.portForwarding.openMappedAddress" : "client.portForwarding.portMapping")}
       titleIcon={!selected && <View style={styles.heroIcon}>
         <Ionicons name="swap-horizontal-outline" size={26} color="#008b73" /></View>}
-      subtitle={selected ? `http://127.0.0.1:${selected.localPort}` : t("client.portMappingEditing.accessAnIpAndPortThroughTheRemoteComputer")}
+      subtitle={url || t('client.portMappingEditing.accessAnIpAndPortThroughTheRemoteComputer')}
       onClose={selected ? closeActions : props.close} onBack={selected ? closeActions : undefined}
       maxWidth={540} horizontalPadding={16} fullWidthContent={!selected}>
-      {selected ? <MappingOpenActions key={selected.id} port={selected.localPort}
-        preview={() => { closeActions(); props.close(); browser.open(`http://127.0.0.1:${selected.localPort}`); }}
+      {selected ? <MappingOpenActions key={selected.id} url={url}
+        preview={() => { closeActions(); props.close(); browser.open(url); }}
         opened={closeActions} /> :
       <SheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>

@@ -38,7 +38,7 @@ export function usePortMappings(options: {
     const session = options.session;
     if (managed || !identity || !session || session.baseUrl !== identity.baseUrl || session.email !== identity.account) return;
     return (document?: MappingDocument) => adminRequest<MappingDocument>(session,
-      `/devices/${encodeURIComponent(identity.deviceId)}/port-mappings`,
+      `/devices/${encodeURIComponent(identity.deviceId)}/port-mappings?localDomain=1`,
       document ? { method: 'PUT', body: JSON.stringify(document) } : {});
   }, [scope, options.session, managed]);
   const syncStatus = useMappingSync(service, { scope, storage, exchange, connected,

@@ -12,13 +12,13 @@ export function MappingCardAddress({ mapping, open, actions }: {
   const styles = useMappingCardStyles();
   const color = useThemeColor();
   const { entry } = mapping;
-  const { running, canOpen, copy } = actions;
+  const { running, canOpen, address, copy } = actions;
   return <View style={styles.address}>
       <View style={styles.addressMain}>
         <Text style={styles.label}>{t('client.portMappingEditing.accessAddress')}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel={`127.0.0.1:${entry.localPort}`}
+        <Pressable accessibilityRole="button" accessibilityLabel={address}
           disabled={!canOpen} onPress={open}>
-          <Text style={[styles.addressValue, !running && styles.disabled]}>127.0.0.1:{entry.localPort}</Text>
+          <Text style={[styles.addressValue, !running && styles.disabled]}>{address}</Text>
         </Pressable>
       </View>
       <View style={styles.row}>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDeviceMappings, type DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import { marketText } from '../../vendor/shared/provider-market/i18n';
 import { runningBrowserMappings, type BrowserDevice } from './browserMappings';
+import { localMappingUrl } from '../../vendor/shared/port-mapping/target';
 import { BottomSheet } from '../components/BottomSheet';
 import { SheetScrollView } from '../components/SheetScrollView';
 import { t, useLanguage } from '../i18n';
@@ -33,7 +34,7 @@ export function MappingAddress({ mapping, deviceName, visit }: {
   const alias = useSyncExternalStore(runtime.aliases.subscribe, () => runtime.aliases.get(entry.id));
   const styles = useBrowserListStyles();
   const color = useThemeColor();
-  const address = `http://127.0.0.1:${entry.localPort}`;
+  const address = localMappingUrl(entry);
   return <Pressable accessibilityRole="button" style={styles.row} onPress={() => visit(address)}
     onAccessibilityTap={() => visit(address)}>
     <Ionicons name="swap-horizontal-outline" size={22} color={color('#0b8065', 'accent')} />

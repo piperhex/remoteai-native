@@ -27,7 +27,7 @@ vi.mock('./PortMappingHeader', () => ({ PortMappingHeader: 'Header' }));
 vi.mock('./PortMappingCard', () => ({ PortMappingCard: 'Card' }));
 
 type Props = { children?: React.ReactNode; open?: () => void; onClose?: () => void;
-  preview?: () => void; opened?: () => void; port?: number; subtitle?: string };
+  preview?: () => void; opened?: () => void; url?: string; subtitle?: string };
 function elements(node: React.ReactNode): React.ReactElement<Props>[] {
   return React.Children.toArray(node).flatMap(child => React.isValidElement<Props>(child)
     ? [child, ...elements(child.props.children)] : []);
@@ -43,14 +43,16 @@ beforeEach(() => {
     status: 'running', protocol: 'tcp' } }] as DeviceMappingEntry[];
 });
 
-it('opens the chooser before creating a browser and passes the selected local port', () => {
+it.each([undefined, 'app.localhost'])('opens the chooser before launching the address for %s', localDomain => {
+  runtime.entries[0].entry.localDomain = localDomain;
+  const url = `http://${localDomain ?? '127.0.0.1'}:18306`;
   find('Card')!.open!();
   expect(find('Preview')).toBeUndefined();
-  expect(find('Sheet')!.subtitle).toBe('http://127.0.0.1:18306');
-  expect(find('Actions')!.port).toBe(18306);
+  expect(find('Sheet')!.subtitle).toBe(url);
+  expect(find('Actions')!.url).toBe(url);
   find('Actions')!.preview!();
   expect(find('Sheet')).toBeUndefined();
-  expect(runtime.open).toHaveBeenCalledWith('http://127.0.0.1:18306');
+  expect(runtime.open).toHaveBeenCalledWith(url);
 });
 
 it('dismisses the chooser after external opening or cancellation without entering a preview', () => {

@@ -1,4 +1,4 @@
-import { mappingAddress, normalizeMappingHost } from './target';
+import { mappingAddress, normalizeMappingDomain, normalizeMappingHost } from './target';
 
 export const MAX_PORT_MAPPINGS = 8;
 export const MAX_PORT = 65535;
@@ -9,6 +9,7 @@ export const protocolLabel = (protocol?: MappingProtocol) => protocol === 'both'
 export interface PortMapping {
   id: string; remoteHost?: string; remotePort: number; localPort: number; updatedAt?: number;
   protocol?: MappingProtocol;
+  localDomain?: string;
 }
 export type MappingMode = 'tcp' | 'preview';
 export interface MappingStorage {
@@ -40,27 +41,29 @@ export function readMapping(value: unknown, createId: () => string): PortMapping
   const entry = value as Record<string, unknown>;
   if (!validPort(entry.remotePort) || !validPort(entry.localPort)) return;
   if (entry.remoteHost !== undefined && typeof entry.remoteHost !== 'string') return;
+  if (entry.localDomain !== undefined && typeof entry.localDomain !== 'string') return;
   if (entry.protocol !== undefined && !MAPPING_PROTOCOLS.includes(entry.protocol as MappingProtocol)) return;
   try {
-    return { id: typeof entry.id === 'string' && /^[\w-]{1,64}$/.test(entry.id) ? entry.id : createId(),
-      remoteHost: normalizeMappingHost(entry.remoteHost), remotePort: entry.remotePort, localPort: entry.localPort,
-      ...(entry.protocol === undefined ? {} : { protocol: entry.protocol as MappingProtocol }),
-      ...(typeof entry.updatedAt === 'number' && Number.isFinite(entry.updatedAt) ? { updatedAt: entry.updatedAt } : {}) };
+    return mappingConfig({ id: typeof entry.id === 'string' && /^[\w-]{1,64}$/.test(entry.id) ? entry.id : createId(),
+      remoteHost: entry.remoteHost, remotePort: entry.remotePort, localPort: entry.localPort,
+      localDomain: entry.localDomain, protocol: entry.protocol as MappingProtocol | undefined,
+      updatedAt: typeof entry.updatedAt === 'number' && Number.isFinite(entry.updatedAt) ? entry.updatedAt : undefined });
   } catch { return; } // Discard invalid saved targets without losing the remaining mappings.
 }
 
 export function savePortMappings(scope: string, entries: readonly PortMapping[],
   storage: MappingStorage = localStorage) {
   try {
-    storage.setItem(STORAGE_PREFIX + scope,
-      JSON.stringify(entries.map(mappingConfig)));
+    storage.setItem(STORAGE_PREFIX + scope, JSON.stringify(entries.map(mappingConfig)));
   } catch { console.warn('Port forwarding settings could not be saved'); }
 }
 
-export function mappingConfig({ id, remoteHost, remotePort, localPort, updatedAt, protocol }: PortMapping): PortMapping {
+export function mappingConfig({ id, remoteHost, remotePort, localPort, updatedAt, protocol, localDomain }:
+  PortMapping): PortMapping {
   return { id, remoteHost: normalizeMappingHost(remoteHost), remotePort, localPort,
     ...(protocol === undefined ? {} : { protocol }),
-    ...(updatedAt === undefined ? {} : { updatedAt }) };
+    ...(updatedAt === undefined ? {} : { updatedAt }),
+    ...(localDomain === undefined ? {} : { localDomain: normalizeMappingDomain(localDomain) ?? '' }) };
 }
 
 export function mappingConflicts(left: Omit<PortMapping, 'id'>, right: Omit<PortMapping, 'id'>,

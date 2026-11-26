@@ -30,7 +30,7 @@ export function createNativeMappingRegistry(session: AuthSession) {
       }),
       validateTarget: (target, id) => registry.validateTarget(deviceId, target, id),
       exchange: (document?: MappingDocument) => adminRequest<MappingDocument>(session,
-        `/devices/${encodeURIComponent(deviceId)}/port-mappings`,
+        `/devices/${encodeURIComponent(deviceId)}/port-mappings?localDomain=1`,
         document ? { method: 'PUT', body: JSON.stringify(document) } : {}),
     }));
 }

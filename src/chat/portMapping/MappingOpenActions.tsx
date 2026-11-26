@@ -7,8 +7,8 @@ import { textMetrics } from '../../theme/text';
 const labelMetrics = textMetrics(13, 20);
 const detailMetrics = textMetrics(12, 18);
 
-export function MappingOpenActions({ port, preview, opened }: {
-  port: number; preview: () => void; opened: () => void;
+export function MappingOpenActions({ url, preview, opened }: {
+  url: string; preview: () => void; opened: () => void;
 }) {
   const styles = useStyles();
   const [opening, setOpening] = useState(false);
@@ -20,7 +20,7 @@ export function MappingOpenActions({ port, preview, opened }: {
     setOpening(true);
     setError('');
     try {
-      await Linking.openURL(`http://127.0.0.1:${port}`);
+      await Linking.openURL(url);
       opened();
     } catch {
       setError(t('client.portForwarding.couldNotOpenTheBrowserPleaseTryAgain'));

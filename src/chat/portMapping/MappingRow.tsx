@@ -15,7 +15,7 @@ export function MappingRow({ entry, service, connected, open, edit, deviceName, 
 }) {
   const styles = useMappingStyles();
   useLanguage();
-  const { notice, menu, setMenu, running, canOpen, busy, enabled, copy } = useMappingRowActions(entry);
+  const { notice, menu, setMenu, running, canOpen, busy, enabled, address, copy } = useMappingRowActions(entry);
   const details: Array<[MessageKey, string | number]> = [["client.portForwarding.protocol", protocolLabel(entry.protocol)], ["client.portForwarding.targetIp", entry.remoteHost || DEFAULT_MAPPING_HOST],
     ["client.portForwarding.remotePort", entry.remotePort],
     ["client.portForwarding.localPort", entry.localPort], ["client.portMappingEditing.lastEdited.4f04ab", entry.updatedAt
@@ -45,9 +45,9 @@ export function MappingRow({ entry, service, connected, open, edit, deviceName, 
       </View>}
       <View style={styles.row}>
         <View style={styles.addressBox}>
-          <Pressable accessibilityRole="button" accessibilityLabel={`127.0.0.1:${entry.localPort}`}
+          <Pressable accessibilityRole="button" accessibilityLabel={address}
             disabled={!canOpen} onPress={open} style={[styles.fill, !running && styles.disabled]}>
-            <Text style={styles.addressText}>127.0.0.1:{entry.localPort}</Text></Pressable>
+            <Text style={styles.addressText}>{address}</Text></Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel={t("client.portForwarding.copyLocalAddress")}
             style={styles.iconButton} onPress={() => { void copy(); }}>
             <Ionicons name="copy-outline" size={19} color="#62768a" /></Pressable>

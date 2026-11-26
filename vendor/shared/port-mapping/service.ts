@@ -2,7 +2,7 @@ import type { GuiToolsClient } from '../remote-chat/guiTools';
 import type { MappingTunnel, TunnelFactory } from './types';
 import { MAX_PORT_MAPPINGS, MAPPING_PROTOCOLS, mappingConflicts, validPort,
   type MappingMode, type MappingProtocol, type PortMapping } from './settings';
-import { mappingOrigin, normalizeMappingHost } from './target';
+import { mappingOrigin, normalizeMappingDomain, normalizeMappingHost } from './target';
 import { StreamBudget } from './streamBudget';
 import { MAPPING_RECONNECT_REQUIRED, MAPPING_UPDATE_REQUIRED } from './errors';
 
@@ -21,7 +21,7 @@ const RETRY_DELAY_MS = 5_000;
 const LOCAL_ERRORS = new Set(['本地端口已被占用，请换一个端口。', '无法监听本地端口，请换一个端口重试。',
   '请更新应用后使用端口映射。', '请返回应用后重新启动映射。',
   'UDP 映射未能启动，请确认两端应用均已更新。', MAPPING_UPDATE_REQUIRED, MAPPING_RECONNECT_REQUIRED]);
-type MappingTarget = Pick<PortMapping, 'remoteHost' | 'remotePort' | 'localPort' | 'protocol'>;
+type MappingTarget = Pick<PortMapping, 'remoteHost' | 'remotePort' | 'localPort' | 'protocol' | 'localDomain'>;
 
 /** One manager per authenticated computer; switching chat threads never releases its mappings. */
 export class PortForwardingService {
@@ -86,8 +86,11 @@ export class PortForwardingService {
   edit = async (id: string, target: MappingTarget) => {
     const previous = this.entries.find(entry => entry.id === id);
     if (!previous) throw new Error('该映射已被删除，请重新添加。');
-    const entry = { id, ...this.validate(target, id), updatedAt: Date.now() };
-    const applied = this.replace(entry);
+    const normalized = this.validate(target, id);
+    // Keep an explicit clear queued until the server has acknowledged it.
+    const localDomain = normalized.localDomain ?? (previous.localDomain === undefined ? undefined : '');
+    const entry = { id, ...normalized, localDomain, updatedAt: Date.now() };
+    const applied = this.applyConfig(entry, previous);
     this.changed(id, entry);
     await applied;
   };
@@ -99,17 +102,25 @@ export class PortForwardingService {
     }
     for (const entry of saved) {
       const previous = this.entries.find(value => value.id === entry.id);
-      if (previous && sameTarget(previous, entry) && previous.updatedAt === entry.updatedAt) continue;
-      void this.replace(entry);
+      void this.applyConfig(entry, previous);
     }
   };
+
+  private applyConfig(config: PortMapping, previous?: ForwardingEntry) {
+    if (!previous || !sameTarget(previous, config)) return this.replace(config);
+    const { id, localDomain, updatedAt } = config;
+    if (previous.localDomain !== localDomain || previous.updatedAt !== updatedAt) {
+      this.update(id, { localDomain, updatedAt });
+    }
+  }
 
   private validate(target: MappingTarget, id?: string) {
     if (!MAPPING_PROTOCOLS.includes(target.protocol ?? 'tcp')) throw new Error('请选择 TCP、UDP 或全部。');
     if (!validPort(target.remotePort) || !validPort(target.localPort)) {
       throw new Error('请输入 1–65535 之间的端口号。');
     }
-    const normalized = { ...target, remoteHost: normalizeMappingHost(target.remoteHost) };
+    const normalized = { ...target, remoteHost: normalizeMappingHost(target.remoteHost),
+      localDomain: normalizeMappingDomain(target.localDomain) };
     this.platform.validateTarget?.(normalized, id);
     if (this.entries.some(entry => entry.id !== id && mappingConflicts(entry, normalized, this.platform.mode))) {
       throw new Error(this.platform.mode === 'preview' ? '这个目标地址已有映射。' : '这个本地端口已有映射。');
@@ -248,7 +259,7 @@ export class PortForwardingService {
   }
 }
 
-function sameTarget(left: PortMapping, right: PortMapping) {
+function sameTarget(left: MappingTarget, right: MappingTarget) {
   return normalizeMappingHost(left.remoteHost) === normalizeMappingHost(right.remoteHost)
     && (left.protocol ?? 'tcp') === (right.protocol ?? 'tcp')
     && left.remotePort === right.remotePort && left.localPort === right.localPort;

@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/piperhex/remoteai.git",
-  "revision": "01c9c26843a00722b0b596773cba673120614b3f",
+  "revision": "e365ce0027e4315abaeced09e37ca6f70143c606",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "bbb287592f1a4cbcb459bb6218fafb559129308b"
+    "revision": "ff052a671edad3db51292491925db7fc1bc656b3"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.46/remoteai-i18n-0.1.46.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.47/remoteai-i18n-0.1.47.tgz",
   "files": {
     "shared/dependencies.json": "c9637842b16cec6473043597368291a427281e9c05d41f1691c2cded3e9444d4",
     "apps/desktop/src-tauri/icons/32x32.png": "f1ef425afd70853a3f0b4abd58163ef5614d707d7e5e210f27e7077b352c02b0",
@@ -34,7 +34,7 @@
     "apps/desktop/e2e/android-hierarchy.mjs": "96b09424e4721c100f8331572ac411d4410ff59c38b6da3541e742be7b9776b3",
     "shared/remote-chat/downloads.ts": "66c7d42d7cc62a736ea72475c2a5e1341d0a183df385f179e534c7dd8eda3c97",
     "shared/port-mapping/deviceRegistry.tsx": "c1a43c7cac48b6e2c45af123dce501a924e0f3a79a607b79dac4de0a2a0dddce",
-    "shared/port-mapping/testing/fixture.ts": "04e6cdfdf836e4d612a0a145afc07db4df441d8c08c8780e8a6f88860c09bd16",
+    "shared/port-mapping/testing/fixture.ts": "875ba8525cee777b46c0c22e73c6ba2b27ea516f9ef2e55796ac88d73ae1a4cd",
     "shared/remote-chat/client/historyLoad.ts": "b74d39fd3369d839bfbe876b4e135663943cf2b807e10b6e57be1a7a3f5798a1",
     "shared/remote-chat/testing/settingsFixture.ts": "ef4fd197fe842662327eda1062d2a17ff8971995e80258abfd6eed37a51cf152",
     "shared/chat/userMessageFixture.json": "2e3a1a1bc14467e6ce7341d154d9ac7e7be416d0f9932aa7cc24b44f16fa6d4d",
@@ -123,9 +123,10 @@
     "shared/provider-market/i18n.ts": "99dda5e97e45baf4e6a78c6db8ecf6df1dae0d66356af9647cfe4264dd9413b2",
     "shared/browser/data/presentation.ts": "d6ace98a340b40e96077d83fc9eebc5838f1e64acca99cf49af47eae86e20e28",
     "shared/browser/data/clear.ts": "a188d3d8c8dc8db9cad30a2a73b8c61087cb0ffcd6351a1f18aaabbd2b2e3fde",
-    "shared/port-mapping/service.ts": "8b483dd0244fce2acdba2f5040ee8b9266cb1baaf4cef971a83767243dfe98fb",
+    "shared/port-mapping/service.ts": "744b6a2d24760d813430ac5200eaff167f1acac5856c6eef398250bf1a21d772",
     "shared/browser/mouse/mousePreference.ts": "f7fb5cd8457935513e64f72ee724fa2490eba70afe5a2ce7f18e1812e8028cb5",
     "shared/browser/data/vault.ts": "2304274200f081f95d549f854b11273a8e9b5348e6d54a75080accd8b8658a61",
+    "shared/port-mapping/target.ts": "85ccdc07337ed3b8c526326cb3ff3c65a80df714c15f5a5cf048f0809c9af478",
     "shared/browser/searchEngine.ts": "6f3d67eabc3cb333ca29447b9e96c10f8740c58dd00ce9f357ac2194e6291bd4",
     "shared/browser/siteMode.ts": "f3a8bde3b6066ec266fa8191ab3a4976c164696eabc915b7001d49cc7072be62",
     "shared/browser/useMobileBrowserRenderers.ts": "b83d9508424f0496313d31c852ec1dbef8bcc715f4ba952d51796f213aef5189",
@@ -326,9 +327,8 @@
     "shared/remote-chat/client/offlineImages.ts": "7a7f6ed3793bea80ad709efccbf6adb5e8519a276051c26aea41a428996d7f05",
     "shared/chat/directory/storage.ts": "42aa228d5f8cedff6a8a832186c7361215d816af46cdb51eb6e7de89b717383e",
     "shared/remote-chat/nativePacketCompression.ts": "bc85790eeffb868c62a83a688893cd7eef710d48a72e236a47a10dfb5083f0db",
-    "shared/port-mapping/settings.ts": "c7748dfcc9de18ff477bb9049691c521528a55ce58e012788fab0fe912c2d650",
-    "shared/port-mapping/target.ts": "33a84374b85115e9085c75f481149e27839ff7acfae25f25cc216851c4d35a40",
-    "shared/port-mapping/sync.ts": "013fae8968f07bd34e753e1e2be56701cbef390eff4347ca1f6cdf5607bbffe0",
+    "shared/port-mapping/settings.ts": "6e8715e2d10d3fa3ba1fd615fd0629f3c05ee649b02fa6dfa30db2fdade676cd",
+    "shared/port-mapping/sync.ts": "1e8eb72c68ee765e6a99923684489cdcb5c13b3c94b737b7826bc8d297ec869e",
     "shared/port-mapping/socket.ts": "e759533a0a9073352022422d74539119e71acb49b0528ed2f40c29439675ec57",
     "shared/port-mapping/streamClient.ts": "6aa68bad57c1cab43a814ccdddd5875869cd1b0e37215546dd8fb47327767fae",
     "shared/platform/localBackend.ts": "bc2678e2da6f55c7023ef638a54ab5ef033119c747286d90a837b586b21df719",

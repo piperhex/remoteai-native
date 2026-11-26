@@ -32,7 +32,7 @@ export function mappingFixture(options: { storage: MappingStorage; createTunnel?
           options.storage.setItem(`fixture-cloud:${deviceId}`, JSON.stringify(document));
         }
         return { ...(documents.get(deviceId) ?? JSON.parse(options.storage.getItem(`fixture-cloud:${deviceId}`)
-          ?? '{"revision":0,"mappings":[]}')), accepted: true };
+          ?? '{"revision":0,"mappings":[]}')), accepted: true, supportsLocalDomain: true };
       },
     });
   });

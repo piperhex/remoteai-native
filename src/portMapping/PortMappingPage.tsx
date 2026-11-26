@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import type { RemoteDevice } from '../types';
 import { t, useLanguage } from '../i18n';
 import { useDeviceMappings, type DeviceMappingEntry } from '../../vendor/shared/port-mapping/deviceRegistry';
+import { localMappingUrl } from '../../vendor/shared/port-mapping/target';
 import { useNativeBrowser } from '../browser/context';
 import { MappingOpenActions } from '../chat/portMapping/MappingOpenActions';
 import { BottomSheet } from '../components/BottomSheet';
@@ -23,6 +24,7 @@ export function PortMappingPage({ devices, onBack }: { devices: RemoteDevice[]; 
   const [selection, setSelection] = useState<{ id: string }>();
   const selected = mappings.find(mapping => `${mapping.deviceId}:${mapping.entry.id}` === selection?.id
     && mapping.entry.status === 'running' && mapping.entry.protocol !== 'udp');
+  const url = selected ? localMappingUrl(selected.entry) : '';
   const close = () => setSelection(undefined);
   useEffect(() => { if (!selected) setSelection(undefined); }, [selected]);
   const edit = (mapping: DeviceMappingEntry | 'new') => {
@@ -45,9 +47,9 @@ export function PortMappingPage({ devices, onBack }: { devices: RemoteDevice[]; 
     </ScrollView>
     {selected && selection && <BottomSheet visible maxWidth={400}
       title={t('client.portForwarding.openMappedAddress')}
-      subtitle={`http://127.0.0.1:${selected.entry.localPort}`} onClose={close}>
-      <MappingOpenActions key={selection.id} port={selected.entry.localPort} opened={close}
-        preview={() => { browser.open(`http://127.0.0.1:${selected.entry.localPort}`); close(); }} />
+      subtitle={url} onClose={close}>
+      <MappingOpenActions key={selection.id} url={url} opened={close}
+        preview={() => { browser.open(url); close(); }} />
     </BottomSheet>}
   </View>;
 }
