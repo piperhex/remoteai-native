@@ -33,8 +33,8 @@ export class MouseViewport {
   constructor(private readonly point: () => Point, private readonly notify: () => void) {}
   getSnapshot = () => this.snapshot;
 
-  private calculate(options: MouseViewportOptions, point: Point) {
-    const previous = this.options && dimensions(this.options.base) === dimensions(options.base) ? this.pan : undefined;
+  private calculate(options: MouseViewportOptions, point: Point, previous =
+    this.options && dimensions(this.options.base) === dimensions(options.base) ? this.pan : undefined) {
     const inputX = this.options?.inputOpen ? this.inputX : this.snapshot?.content.x;
     const sameWidth = this.options?.base.stage.width === options.base.stage.width;
     const inputBase = sameWidth && inputX !== undefined
@@ -53,10 +53,10 @@ export class MouseViewport {
     return this.calculate(options, this.point()).viewport;
   }
 
-  configure(options: MouseViewportOptions) {
+  configure(options: MouseViewportOptions, previous?: DesktopPanState) {
     const key = mouseViewportKey(options);
-    if (this.key === key) return;
-    const result = this.calculate(options, this.point());
+    if (this.key === key && !previous) return;
+    const result = this.calculate(options, this.point(), previous);
     this.inputX = options.inputOpen ? result.viewport.content.x : undefined;
     this.options = options; this.key = key; this.pan = result;
     this.snapshots = new WeakSet();

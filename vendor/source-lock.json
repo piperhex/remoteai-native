@@ -3,7 +3,7 @@
   "revision": "642d0ab9e925aa7ba0f7306bb58c0922a67c0651",
   "sharedSource": {
     "repository": "https://github.com/piperhex/remoteai-shared.git",
-    "revision": "e93b00d173a3f1ef2fee7f340e16d35a7382dce4"
+    "revision": "77b6f8f5f202eafa0597b2b241d342048266d7ec"
   },
   "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.30/remoteai-i18n-0.1.30.tgz",
   "files": {
@@ -124,7 +124,7 @@
     "shared/browser/data/clear.ts": "a188d3d8c8dc8db9cad30a2a73b8c61087cb0ffcd6351a1f18aaabbd2b2e3fde",
     "shared/port-mapping/service.ts": "8b483dd0244fce2acdba2f5040ee8b9266cb1baaf4cef971a83767243dfe98fb",
     "shared/browser/mouse/mousePreference.ts": "f7fb5cd8457935513e64f72ee724fa2490eba70afe5a2ce7f18e1812e8028cb5",
-    "shared/browser/mouse/useBrowserMouse.ts": "4c6bffe06c61120dc0be9faeef7a0a83be714286247eca24f618b41c51274368",
+    "shared/browser/mouse/useBrowserMouse.ts": "985fce5c44fabfd7ca6176136bb55649c0af2e0730d47c7e3f5cec5ed5c5c5dd",
     "shared/browser/data/vault.ts": "2304274200f081f95d549f854b11273a8e9b5348e6d54a75080accd8b8658a61",
     "shared/browser/searchEngine.ts": "6f3d67eabc3cb333ca29447b9e96c10f8740c58dd00ce9f357ac2194e6291bd4",
     "shared/browser/siteMode.ts": "f3a8bde3b6066ec266fa8191ab3a4976c164696eabc915b7001d49cc7072be62",
@@ -267,13 +267,13 @@
     "shared/remote-desktop/softKeyboard.ts": "d7e405d672a9359653d0dd1ce1d3201d38c6025ca371c82d1db15d439b5c70cc",
     "shared/remote-desktop/useSoftKeyboard.ts": "4b12e8a2847d089629c8ac9a0e54dbdcf3bba2aca86b7455425f2b835665b88c",
     "shared/remote-desktop/useScrollPad.ts": "de61575c9e5f7f50ec5b3df0209ed274cb647df6c40ca7704e876128ae25c76b",
-    "shared/remote-desktop/input.ts": "c2e3e8640b88fd61b75884c5cf64fbfee34336e872aaf4559aa7a21cbc5623ef",
+    "shared/remote-desktop/input.ts": "67ed4228127a718e5de3478522cc69a55ecb880886e2cf9cbb69567832b69858",
     "shared/remote-desktop/scrollPad.ts": "9179736595b4533c99019a6e02a38011791615dfc7e31022324d1c0750828245",
     "shared/remote-desktop/stats.ts": "8aff117e651a7b69985b669d1d79a27022006f001ca09c5afdccc7b5611f8e50",
     "shared/remote-desktop/displaySettings.ts": "c448a906ed98afb2e3262f26006532ea8859c5bb5a4ef41ecd6476f0c72bca5d",
     "shared/remote-desktop/useFrameRateInput.ts": "605fcd3384e5aee0fa9bbe1286ee5dbe5b69f9ecb6c90cf9816d1bcb7a66f67a",
     "shared/remote-desktop/displays.ts": "52a299bb7c0ff7cf175ac71443a2eb22f086cb01cb97611f44e53bec5f189337",
-    "shared/remote-desktop/geometry.ts": "2dfb7a4d25f64ad11826a51b6e29911b44e5c794f09ea5aea9563c7ed03670e7",
+    "shared/remote-desktop/geometry.ts": "723a5eff0af5138172e783bcddf6347f82fb23cf2a45baac6ca0a3830302d547",
     "shared/remote-desktop/cursor.png": "549ef3e94d83c29099da09fc963a8d7d38b64c8032238efa79d1c03b937718ca",
     "shared/remote-desktop/useMousePanel.ts": "2037c627c2658fcb8660c2a75c664f361c496afbb94f6ec2015d3244096e1fa8",
     "shared/remote-desktop/useMouseButtons.ts": "f5c5714331a7bb4f01aeca16f32de1790b013b0861d612ea07737733c6f79e68",
@@ -609,7 +609,7 @@
     "shared/remote-chat/rtcObserver.ts": "bfd9ea6c70eb07ce74fd41b3345e49c3e368de582fd2e15fc2391ccc5b7858dc",
     "shared/remote-chat/bulkRtc.ts": "59dbb9805282502def9a32f007295ee9f4ba3434d2aa8e7f7a54865fcc8108aa",
     "shared/remote-chat/multipathChannel.ts": "6e7b883ab9359ae1dff61a5a9f459e4ae4249c3c457741577a737360b5323769",
-    "shared/remote-desktop/mouseViewport.ts": "ee6d3d6330d484bf2e3568ba4264b8bb7785fd1be1d2fbea08d6943a25f63d61",
+    "shared/remote-desktop/mouseViewport.ts": "f9ec7799a4a544f97eee8ddf774dc208cb96ae413d596142ab3e81bf270c097d",
     "shared/remote-desktop/displaySession.ts": "baebd67be2d456719e63205ae1cef0a50606a52996b774d54a5ff50a8ad5f371",
     "shared/remote-desktop/recovery.ts": "727538cd691f9c8739142e27cf38ab30b603bfc2d62a0be1f35d63a5bd464603",
     "shared/remote-desktop/directRetry.ts": "5cad966733d4660ed587689756980b0065d7b91c944b4b5b9f9f3439a4d66142",

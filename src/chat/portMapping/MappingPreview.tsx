@@ -66,6 +66,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
   const [toolbar, setToolbar] = useState({ height: 0, width: 0 });
   const [previewHeight, setPreviewHeight] = useState(0);
   const page = useRef<View>(null);
+  const cancelPageMouse = useRef<(() => void) | undefined>(undefined);
   const [mouseEnabled, setMouseEnabled] = useBrowserMousePreference();
   const canInspect = !browser.homeVisible && !browser.resourceVisible;
   const obscured = settingsOpen || !!drawer || fullscreenMenuOpen || !!records.candidate || !!records.focus;
@@ -131,8 +132,8 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
         }} />}
       {!!browser.error && <Text accessibilityRole="alert" style={[browserStyles.message, browserStyles.error]}>
         {browser.error}</Text>}
-      <View style={styles.fill}>
-      <View ref={page} collapsable={false} style={styles.fill}>
+      <BrowserMousePanel page={page} cancelOnLoad={cancelPageMouse} enabled={mouseEnabled}
+        active={visible && !obscured} home={browser.homeVisible}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
       {!!browser.source.uri && <WebView key={dataGeneration} ref={browser.webview}
         source={browser.source} style={styles.fill}
@@ -163,7 +164,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
             browser.webview.current?.injectJavaScript(`window.__remoteAiPageDownload?.start(...${args}); true;`);
           } else onDownload(request);
         })}
-        onLoadStart={activity.onLoadStart} onLoadEnd={activity.onLoadEnd}
+        onLoadStart={() => { cancelPageMouse.current?.(); activity.onLoadStart(); }} onLoadEnd={activity.onLoadEnd}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
         onNavigationStateChange={state => {
@@ -181,10 +182,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
       </View>}
       {browser.homeVisible && <BrowserHome devices={devices} visit={browser.visit}
         bookmarks={() => setDrawer('bookmarks')} />}
-      </View>
-      {visible && mouseEnabled && !obscured && <BrowserMousePanel
-        key={JSON.stringify([browser.currentUrl, dataGeneration])} page={page} />}
-      </View>
+      </BrowserMousePanel>
     </View>
     {settingsOpen && <MappingBrowserSettings top={toolbar.height} width={toolbar.width} height={previewHeight}
       url={browser.currentUrl} title={browser.title}

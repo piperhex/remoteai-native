@@ -82,7 +82,11 @@ const message = (data: string) => webview().onMessage!({ nativeEvent: { data } }
 beforeEach(() => { vi.stubGlobal('React', React); vi.clearAllMocks(); runtime.states = []; runtime.refs = []; });
 
 it('opens the mouse from settings and removes it when switched off', () => {
-  const panel = () => render().some(node => node.type === 'MousePanel');
+  const panel = () => {
+    const node = render().find(node => node.type === 'MousePanel')!;
+    const { enabled, active } = node.props as { enabled: boolean; active: boolean };
+    return enabled && active;
+  };
   const settings = () => {
     render().find(node => node.type === 'Toolbar')!.props.openSettings!();
     return render().find(node => node.type === 'Settings')!.props as React.ComponentProps<typeof MappingBrowserSettings>;

@@ -1,5 +1,5 @@
 import type { DesktopInput } from './protocol';
-import { relativeDesktopDelta, type DesktopViewport } from './geometry';
+import { cursorPosition, desktopPoint, relativeDesktopDelta, type DesktopViewport, type Point, type Size } from './geometry';
 import { MouseViewport } from './mouseViewport';
 
 export const MAX_BUFFERED_INPUT = 256 * 1024;
@@ -27,6 +27,17 @@ export class DesktopPointer {
   isHeld(button: 'left' | 'right' | 'middle') { return this.held.has(button); }
   private readonly held = new Set<'left' | 'right' | 'middle'>();
   constructor(private readonly send: (input: DesktopInput) => void) {}
+  /** Keep a page cursor in screen pixels when a keyboard or other browser chrome resizes its viewport. */
+  resizePage(base: DesktopViewport, panel: Size, originDelta: Point) {
+    const old = this.viewport.getSnapshot();
+    if (!old?.content.width || !old.content.height || !base.content.width || !base.content.height) return;
+    const cursor = cursorPosition(this.position, old);
+    const screen = { x: cursor.x - originDelta.x, y: cursor.y - originDelta.y };
+    const point = desktopPoint({ x: screen.x - old.content.x, y: screen.y - old.content.y }, base, true)!;
+    const page = cursorPosition(point, base);
+    this.position = point;
+    this.viewport.configure({ base, panel }, { point, offset: { x: screen.x - page.x, y: screen.y - page.y } });
+  }
   move(dx: number, dy: number, width: number, height: number) {
     if (!this.update(this.position.x + dx / Math.max(width, 1), this.position.y + dy / Math.max(height, 1))) return;
     this.timer ??= setTimeout(() => this.flush(), MOVE_INTERVAL);

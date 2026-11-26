@@ -19,7 +19,7 @@ import { useDesktopStyles as useS } from './styles';
 
 interface Props {
   pointer: DesktopPointer; viewport: DesktopViewport; panel: MousePanelActivity;
-  wheel: DesktopWheel; horizontal: boolean; contained?: boolean;
+  wheel: DesktopWheel; horizontal: boolean; browserPage?: boolean;
 }
 type MousePadProps = Omit<Props, 'wheel' | 'horizontal'> & { scroll: ScrollPadGesture };
 export function DesktopMouse({ visible, ...props }: Props & { visible: boolean }) {
@@ -29,7 +29,7 @@ export function DesktopMouse({ visible, ...props }: Props & { visible: boolean }
   const scroll = useScrollPad({ ...props, enabled: visible && props.panel.expanded });
   const cursor = cursorPosition(position, props.viewport);
   const panelSize = props.panel.expanded ? MOUSE_PANEL_SIZE : MOUSE_ICON_SIZE;
-  const panel = mousePanelPosition(cursor, props.contained ? { stage: props.viewport.stage, panel: panelSize } : undefined);
+  const panel = mousePanelPosition(cursor);
   return <>
     {props.panel.expanded && <View pointerEvents="none" accessible={false}
       style={[s.cursor, { left: cursor.x, top: cursor.y }]}>
@@ -58,14 +58,14 @@ function MouseIcon({ pointer, viewport, panel }: Props) {
 }
 const pageLabelMetrics = textMetrics(11, 15);
 
-function MousePad({ pointer, viewport, panel, scroll, contained }: MousePadProps) {
+function MousePad({ pointer, viewport, panel, scroll, browserPage }: MousePadProps) {
   const s = useS();
   const color = useThemeColor();
   useLanguage();
   const buttons = useMouseButtons(pointer);
-  const leftLabel = buttons.dragging && !contained ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.left';
-  const padLabel = buttons.dragging && contained ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.swipeToMove';
-  const labelStyle = contained ? [s.mouseText, pageLabelMetrics] : s.mouseText;
+  const leftLabel = buttons.dragging && !browserPage ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.left';
+  const padLabel = buttons.dragging && browserPage ? 'client.remoteDesktop.dragging' : 'client.remoteDesktop.swipeToMove';
+  const labelStyle = browserPage ? [s.mouseText, pageLabelMetrics] : s.mouseText;
   const left = useLeftMouseButton({ buttons, viewport, panel });
   const wheel = useScrollButton(scroll);
   const pad = useTrackpad({ pointer, viewport, panel, id: 'pad', cancel: buttons.cancel });
