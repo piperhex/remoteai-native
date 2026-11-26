@@ -4,12 +4,9 @@ import Storage from 'expo-sqlite/kv-store';
 import { DeviceMappingProvider, DeviceMappingRegistry } from '../../vendor/shared/port-mapping/deviceRegistry';
 import { DeviceMappingRuntime } from '../../vendor/shared/port-mapping/deviceRuntime';
 import { createMappingConnection } from '../../vendor/shared/port-mapping/connection';
-import { protocolTunnel } from '../../vendor/shared/port-mapping/protocolTunnel';
-import { UdpMappingTunnel } from '../../vendor/shared/port-mapping/udpTunnel';
 import type { MappingDocument } from '../../vendor/shared/port-mapping/sync';
 import { MobileChatConnection } from '../chat/connection';
-import { NativeMappingTunnel } from '../chat/portMapping/tunnel';
-import { listenUdp } from '../chat/portMapping/udpListener';
+import { createBrowserMappingTunnel } from './browserRoutes';
 import { adminRequest } from '../api/client';
 import type { AuthSession, RemoteDevice } from '../types';
 import { withMappingBackground } from './background';
@@ -24,10 +21,7 @@ export function createNativeMappingRegistry(session: AuthSession) {
       new MobileChatConnection({ session, deviceId, ...events }))),
     { scope: JSON.stringify([session.baseUrl, session.email, deviceId]), storage, createId: randomUUID,
       environment: nativeMappingEnvironment,
-      createTunnel: (connection, options) => protocolTunnel(options.protocol, {
-        tcp: () => new NativeMappingTunnel(connection, options),
-        udp: () => new UdpMappingTunnel(connection, options, listenUdp),
-      }),
+      createTunnel: createBrowserMappingTunnel,
       validateTarget: (target, id) => registry.validateTarget(deviceId, target, id),
       exchange: (document?: MappingDocument) => adminRequest<MappingDocument>(session,
         `/devices/${encodeURIComponent(deviceId)}/port-mappings?localDomain=1`,

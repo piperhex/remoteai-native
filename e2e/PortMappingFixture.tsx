@@ -8,7 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Storage from 'expo-sqlite/kv-store';
 import { DeviceMappingProvider } from '../vendor/shared/port-mapping/deviceRegistry';
 import { mappingFixture } from '../vendor/shared/port-mapping/testing/fixture';
-import { NativeMappingTunnel } from '../src/chat/portMapping/tunnel';
+import { createBrowserMappingTunnel } from '../src/portMapping/browserRoutes';
 import { DiscoveryPage } from '../src/discovery/DiscoveryPage';
 import { PortMappingPage } from '../src/portMapping/PortMappingPage';
 import { setInterfaceLanguage } from '../vendor/shared/localization/interfaceLanguage';
@@ -35,7 +35,7 @@ const fixture = mappingFixture({
   storage: { getItem: key => Storage.getItemSync(`hub-fixture:${key}`)
     ?? defaults.get(key) ?? null,
     setItem: (key, value) => Storage.setItemSync(`hub-fixture:${key}`, value) },
-  createTunnel: (client, options) => new NativeMappingTunnel(client, options),
+  createTunnel: createBrowserMappingTunnel,
 });
 
 function BrowserFixtureEntry() {

@@ -1,4 +1,5 @@
 import { browserAddress } from '../provider-market/browserAddress';
+import { browserMappings } from '../port-mapping/browserMappings';
 import { DEFAULT_SEARCH_ENGINE, searchUrl, type SearchEngine } from './searchEngine';
 
 const EXPLICIT_SCHEME = /^[a-z][a-z\d+.-]*:/i;
@@ -23,7 +24,12 @@ export function browserInput(value: string, engine: SearchEngine = DEFAULT_SEARC
   const host = input.split(/[/?#]/, 1)[0];
   const looksLikeHost = candidate && (host.includes('.') || host.toLowerCase() === 'localhost'
     || host.startsWith('[') || HOST_WITH_PORT.test(input));
-  if (looksLikeHost) { candidate.protocol = defaultProtocol; return candidate; }
+  if (looksLikeHost) {
+    const http = new URL(`http://${input.replace(/^\/\//, '')}`);
+    if (browserMappings.matches(http)) return http;
+    candidate.protocol = defaultProtocol;
+    return candidate;
+  }
   // Preserve errors for malformed host/port input instead of silently searching a broken URL.
   if (HOST_WITH_PORT.test(input) || input.includes('@')) return null;
   return searchUrl(input, engine);

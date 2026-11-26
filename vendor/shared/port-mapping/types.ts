@@ -5,6 +5,7 @@ import type { MappingProtocol } from './settings';
 export interface MappingTunnel {
   resolve: (resource: string, url: string) => Promise<string>;
   close: () => Promise<void>;
+  setBrowserDomain?: (domain?: string) => Promise<void>;
 }
 export interface MappingTunnelOptions {
   localPort: number;

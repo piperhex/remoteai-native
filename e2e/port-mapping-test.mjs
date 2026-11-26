@@ -97,7 +97,11 @@ try {
   await adb('shell', 'pm', 'clear', app);
   await adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0');
   await adb('shell', 'am', 'start', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
-  await delay(2_000);
+  for (let attempt = 0; attempt < 15; attempt++) {
+    if ((await nodes()).some(node => node.text === '端口映射')) break;
+    if (attempt === 14) throw new Error('The port mapping fixture did not finish starting');
+    await delay(500);
+  }
   await screenshot('discovery-1.0');
   await tap('端口映射', { includes: true });
   await tap('添加映射');
@@ -116,14 +120,14 @@ try {
   assert.ok((await nodes()).some(node => node.text?.includes('端口') && node.text?.includes('65535')));
   await screenshot('form-validation');
   await tap('取消');
-  await add('办公电脑', 18081, 'app.localhost');
+  await add('办公电脑', 18081, 'mes-dev.test');
   await reachable(18081, 'one');
   console.log('First device listener receives bytes');
   await add('家用电脑', 18082);
   await reachable(18082, 'two');
   await screenshot('mappings-1.0');
-  await tap('app.localhost:18081', { class: 'android.widget.Button' });
-  assert.ok((await nodes()).some(node => node.text === 'http://app.localhost:18081'));
+  await tap('mes-dev.test:18081', { class: 'android.widget.Button' });
+  assert.ok((await nodes()).some(node => node.text === 'http://mes-dev.test:18081'));
   await screenshot('custom-domain-open-1.0');
   await tap('内置浏览器');
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -172,7 +176,7 @@ try {
   await tap('端口映射', { includes: true });
   await screenshot('mappings-1.3');
   assert.ok((await nodes()).some(node => node.text === 'Home-dev'));
-  await tap('app.localhost:18081', { class: 'android.widget.Button' });
+  await tap('mes-dev.test:18081', { class: 'android.widget.Button' });
   await screenshot('custom-domain-open-1.3');
   await tap('关闭打开映射地址');
   console.log('Saving leaves listeners stopped; the local alias survives restart');

@@ -3,10 +3,7 @@ import { randomUUID } from 'expo-crypto';
 import Storage from 'expo-sqlite/kv-store';
 import { PortForwardingService, type ForwardingClient } from '../../../vendor/shared/port-mapping/service';
 import { readPortMappings, savePortMappings } from '../../../vendor/shared/port-mapping/settings';
-import { NativeMappingTunnel } from './tunnel';
-import { protocolTunnel } from '../../../vendor/shared/port-mapping/protocolTunnel';
-import { UdpMappingTunnel } from '../../../vendor/shared/port-mapping/udpTunnel';
-import { listenUdp } from './udpListener';
+import { createBrowserMappingTunnel } from '../../portMapping/browserRoutes';
 import { adminRequest } from '../../api/client';
 import type { AuthSession } from '../../types';
 import { mappingSyncScope, type MappingDocument } from '../../../vendor/shared/port-mapping/sync';
@@ -27,10 +24,7 @@ export function usePortMappings(options: {
   const managedSync = useSyncExternalStore(managed?.sync.subscribe ?? noSubscribe, managed?.sync.snapshot ?? noStatus);
   const service = useMemo(() => managed?.service ?? new PortForwardingService(client,
     readPortMappings(scope, storage, randomUUID), {
-    createId: randomUUID, createTunnel: (connection, config) => protocolTunnel(config.protocol, {
-      tcp: () => new NativeMappingTunnel(connection, config),
-      udp: () => new UdpMappingTunnel(connection, config, listenUdp),
-    }),
+    createId: randomUUID, createTunnel: createBrowserMappingTunnel,
   }), [client, scope, managed]);
   const entries = useSyncExternalStore(service.subscribe, service.snapshot);
   const exchange = useMemo(() => {

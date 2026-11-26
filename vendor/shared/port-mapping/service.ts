@@ -110,7 +110,13 @@ export class PortForwardingService {
     if (!previous || !sameTarget(previous, config)) return this.replace(config);
     const { id, localDomain, updatedAt } = config;
     if (previous.localDomain !== localDomain || previous.updatedAt !== updatedAt) {
+      const job = this.running.get(id);
+      const applied = job && previous.status === 'running' && previous.localDomain !== localDomain
+        ? job.tunnels.setBrowserDomain?.(localDomain) : undefined;
       this.update(id, { localDomain, updatedAt });
+      if (applied && job) return applied.then(() => {
+        if (this.running.get(id) === job) this.publish(this.entries);
+      }, () => this.fail(id, job, START_ERROR));
     }
   }
 
@@ -168,6 +174,14 @@ export class PortForwardingService {
       if (this.running.get(id) !== job) { await this.release(job); return; }
       await job.tunnels.resolve(job.resource, url);
       if (this.running.get(id) !== job) { await this.release(job); return; }
+      if (job.tunnels.setBrowserDomain) {
+        let domain: string | undefined;
+        do {
+          domain = this.entries.find(value => value.id === id)?.localDomain;
+          await job.tunnels.setBrowserDomain(domain);
+          if (this.running.get(id) !== job) { await this.release(job); return; }
+        } while (domain !== this.entries.find(value => value.id === id)?.localDomain);
+      }
       this.update(id, { status: 'running' });
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
@@ -244,9 +258,11 @@ export class PortForwardingService {
   private async release(job: RunningMapping) {
     const resource = job.resource;
     job.resource = undefined;
-    await job.tunnels.close();
-    if (resource) await this.client.closeResource(resource)
-      .catch(() => console.warn('Port forwarding remote cleanup failed'));
+    try { await job.tunnels.close(); }
+    finally {
+      if (resource) await this.client.closeResource(resource)
+        .catch(() => console.warn('Port forwarding remote cleanup failed'));
+    }
   }
 
   private update(id: string, change: Partial<ForwardingEntry>) {
