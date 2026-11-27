@@ -5,7 +5,7 @@ import { MappingSync } from '../../../vendor/shared/port-mapping/sync';
 import { PortMappings } from './PortMappings';
 
 const runtime = vi.hoisted(() => ({ cursor: 0, component: '', states: new Map<string, unknown[]>(),
-  service: undefined as PortForwardingService | undefined, syncStatus: '' }));
+  service: undefined as PortForwardingService | undefined, syncStatus: '', open: vi.fn() }));
 vi.mock('react', async original => ({ ...await original<typeof React>(), useEffect: vi.fn(),
   useSyncExternalStore: (_subscribe: unknown, snapshot: () => unknown) => snapshot(),
   useState: (initial: unknown) => {
@@ -20,13 +20,14 @@ vi.mock('react-native', () => ({ Text: 'Text', TextInput: 'TextInput', View: 'Vi
   Switch: 'Switch', Platform: { OS: 'android' } }));
 vi.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
 vi.mock('./mappingStyles', () => ({ useMappingStyles: () => ({}) }));
+vi.mock('../../portMapping/mappingEditorStyles', () => ({ useMappingEditorStyles: () => ({}) }));
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }));
 vi.mock('../styles', () => ({ useStyles: () => ({}) }));
 vi.mock('../../i18n', async () => ({ ...await vi.importActual<typeof import('../../i18n')>('../../i18n'),  }));
 vi.mock('../../components/BottomSheet', () => ({ BottomSheet: 'BottomSheet' }));
 vi.mock('../../components/SheetScrollView', () => ({ SheetScrollView: 'SheetScrollView' }));
 vi.mock('./MappingPreview', () => ({ MappingPreview: 'MappingPreview' }));
-vi.mock('../../browser/context', () => ({ useNativeBrowser: () => ({ open: vi.fn() }) }));
+vi.mock('../../browser/context', () => ({ useNativeBrowser: () => ({ open: runtime.open }) }));
 vi.mock('./MappingOpenActions', () => ({ MappingOpenActions: 'MappingOpenActions' }));
 vi.mock('./usePortMappings', () => ({ usePortMappings: () => ({ service: runtime.service,
   entries: runtime.service!.snapshot(), syncStatus: runtime.syncStatus }) }));
@@ -34,6 +35,8 @@ vi.mock('./usePortMappings', () => ({ usePortMappings: () => ({ service: runtime
 interface Props {
   children?: ReactNode; accessibilityLabel?: string; accessibilityRole?: string; maxWidth?: number;
   accessibilityLiveRegion?: string;
+  accessibilityState?: { checked?: boolean; disabled?: boolean };
+  preview?: () => void;
   value?: string; onChangeText?: (value: string) => void; onPress?: () => void;
 }
 function elements(node: ReactNode): ReactElement<Props>[] {
@@ -62,6 +65,7 @@ beforeEach(() => {
 
 it('adds and edits UDP mappings and shows copy without browser actions', async () => {
   field('UDP').props.onPress!();
+  expect(field('HTTPS').props.accessibilityState?.disabled).toBe(true);
   field('远程端口').props.onChangeText!('53');
   field('本地端口').props.onChangeText!('1053');
   submit();
@@ -73,6 +77,7 @@ it('adds and edits UDP mappings and shows copy without browser actions', async (
   render().find(element => element.props.accessibilityRole === 'button'
     && elements(element.props.children).some(child => child.props.children === '编辑映射'))!.props.onPress!();
   field('全部（TCP + UDP）').props.onPress!();
+  expect(field('HTTPS').props.accessibilityState?.disabled).toBe(false);
   render().find(element => element.props.accessibilityRole === 'button'
     && elements(element.props.children).some(child => child.props.children === '保存修改'))!.props.onPress!();
   for (let count = 0; count < 30; count++) await Promise.resolve();
@@ -130,6 +135,8 @@ it('preserves invalid input for correction and defaults an empty IP to the remot
 });
 
 it('opens the editing form from the card menu and updates the existing running mapping', async () => {
+  expect(field('HTTP').props.accessibilityState?.checked).toBe(true);
+  field('HTTPS').props.onPress!();
   field('远程端口').props.onChangeText!('3000'); submit();
   for (let count = 0; count < 10; count++) await Promise.resolve();
   const id = runtime.service!.snapshot()[0].id;
@@ -137,6 +144,7 @@ it('opens the editing form from the card menu and updates the existing running m
   const button = (text: string) => render().find(element => element.props.accessibilityRole === 'button'
     && elements(element.props.children).some(child => child.props.children === text))!;
   button('编辑映射').props.onPress!();
+  expect(field('HTTPS').props.accessibilityState?.checked).toBe(true);
   expect(field('远程端口').props.value).toBe('3000');
   field('目标 IP').props.onChangeText!('172.16.200.85');
   field('远程端口').props.onChangeText!('8306');
@@ -145,5 +153,9 @@ it('opens the editing form from the card menu and updates the existing running m
   for (let count = 0; count < 30; count++) await Promise.resolve();
   expect(runtime.service!.snapshot()).toHaveLength(1);
   expect(runtime.service!.snapshot()[0]).toMatchObject({ id, remoteHost: '172.16.200.85',
-    remotePort: 8306, localPort: 18306, status: 'running' });
+    remotePort: 8306, localPort: 18306, status: 'running', linkProtocol: 'https' });
+  expect(field('HTTP').props.accessibilityState?.checked).toBe(true);
+  field('打开').props.onPress!();
+  render().find(element => element.type === 'MappingOpenActions')!.props.preview!();
+  expect(runtime.open).toHaveBeenCalledWith('https://127.0.0.1:18306');
 });

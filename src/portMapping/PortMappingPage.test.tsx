@@ -43,9 +43,11 @@ beforeEach(() => {
     status: 'running', protocol: 'tcp' } }] as DeviceMappingEntry[];
 });
 
-it.each([undefined, 'app.localhost'])('opens the chooser before launching the address for %s', localDomain => {
-  runtime.entries[0].entry.localDomain = localDomain;
-  const url = `http://${localDomain ?? '127.0.0.1'}:18306`;
+it.each([
+  [undefined, undefined, 'http://127.0.0.1:18306'],
+  ['app.localhost', 'https', 'https://app.localhost:18306'],
+] as const)('opens the chooser for domain %s and link protocol %s', (localDomain, linkProtocol, url) => {
+  Object.assign(runtime.entries[0].entry, { localDomain, linkProtocol });
   find('Card')!.open!();
   expect(find('Preview')).toBeUndefined();
   expect(find('Sheet')!.subtitle).toBe(url);

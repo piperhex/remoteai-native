@@ -6,6 +6,7 @@ import { useMappingFormState, type MappingFormOptions } from '../chat/portMappin
 import { displayError, t, useLanguage } from '../i18n';
 import { useThemeColor } from '../theme/store';
 import { MappingEditorFields } from './MappingEditorFields';
+import { MappingLinkProtocolField } from './MappingLinkProtocolField';
 import { useMappingEditorStyles } from './mappingEditorStyles';
 
 export function MappingEditorForm({ devicePicker, ...options }: MappingFormOptions & { devicePicker: ReactNode }) {
@@ -31,6 +32,8 @@ export function MappingEditorForm({ devicePicker, ...options }: MappingFormOptio
         </Pressable>)}
       </View>
     </View>
+    <MappingLinkProtocolField value={form.linkProtocol} onChange={form.setLinkProtocol}
+      disabled={!!form.locked || form.protocol === 'udp'} />
     <MappingEditorFields form={form} />
     <MappingExplanation />
     {!!form.error && <Text accessibilityRole="alert" style={styles.error}>{displayError(form.error)}</Text>}

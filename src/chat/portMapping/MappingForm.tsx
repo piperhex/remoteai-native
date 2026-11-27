@@ -7,6 +7,7 @@ import { useMappingStyles } from './mappingStyles';
 import { MAPPING_PROTOCOLS } from '../../../vendor/shared/port-mapping/settings';
 import { DEFAULT_MAPPING_HOST, EXAMPLE_MAPPING_DOMAIN } from '../../../vendor/shared/port-mapping/target';
 import { useMappingFormState } from './useMappingFormState';
+import { MappingLinkProtocolField } from '../../portMapping/MappingLinkProtocolField';
 
 export function MappingForm({ service, disabled, connected = true, entry, done, devicePicker }: {
   service: PortForwardingService; disabled?: boolean; connected?: boolean; entry?: ForwardingEntry; done?: () => void;
@@ -14,7 +15,8 @@ export function MappingForm({ service, disabled, connected = true, entry, done, 
 }) {
   const styles = useMappingStyles();
   const { remoteHost, setRemoteHost, protocol, setProtocol, remote, setRemote, local, setLocal,
-    localDomain, setLocalDomain, error, saving, locked, reset, submit } = useMappingFormState({ service, disabled, entry, done });
+    localDomain, setLocalDomain, linkProtocol, setLinkProtocol, error, saving, locked, reset, submit }
+    = useMappingFormState({ service, disabled, entry, done });
   return <View style={styles.form}>
     <Text style={styles.title}>{t(entry ? "client.portMappingEditing.editMapping" : "client.portMappingEditing.addMapping")}</Text>
     {devicePicker}
@@ -26,6 +28,7 @@ export function MappingForm({ service, disabled, connected = true, entry, done, 
         <Text style={protocol === value ? styles.primaryText : styles.buttonText}>
           {value === 'both' ? t("client.portForwarding.bothTcpUdp") : value.toUpperCase()}</Text></Pressable>)}
     </View>
+    <MappingLinkProtocolField value={linkProtocol} onChange={setLinkProtocol} disabled={!!locked || protocol === 'udp'} />
     <View>
       <Text style={styles.muted}>{t('client.mappingEditor.localDomain')}</Text>
       <TextInput accessibilityLabel={t('client.mappingEditor.localDomain')} value={localDomain}
