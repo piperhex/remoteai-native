@@ -1,3 +1,5 @@
+import type { LinkProtocol } from './settings';
+
 export const DEFAULT_MAPPING_HOST = '127.0.0.1';
 export const EXAMPLE_MAPPING_DOMAIN = 'app.localhost';
 const DOMAIN_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
@@ -43,6 +45,6 @@ export function localMappingAddress({ localDomain, localPort }: { localDomain?: 
   return `${localDomain || DEFAULT_MAPPING_HOST}:${localPort}`;
 }
 
-export function localMappingUrl(target: Parameters<typeof localMappingAddress>[0]): string {
-  return `http://${localMappingAddress(target)}`;
+export function localMappingUrl(target: Parameters<typeof localMappingAddress>[0] & { linkProtocol?: LinkProtocol }): string {
+  return `${target.linkProtocol === 'https' ? 'https' : 'http'}://${localMappingAddress(target)}`;
 }

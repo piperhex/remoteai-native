@@ -32,7 +32,7 @@ export class DeviceMappingRuntime {
     this.aliases = new LocalMappingAliases(options.storage, options.scope);
     this.service = new PortForwardingService(connection.files,
       readPortMappings(options.scope, options.storage, options.createId), {
-        ...options, enabledIds: this.readEnabled(),
+        ...options, enabledIds: this.readEnabled(), consumer: () => this.consumer(),
       });
     this.sync = new MappingSync(this.service, options);
   }
@@ -73,6 +73,17 @@ export class DeviceMappingRuntime {
       const value: unknown = JSON.parse(this.options.storage.getItem(this.enabledKey) ?? '[]');
       return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [];
     } catch { return []; }
+  }
+
+  private consumer() {
+    const key = 'codex-port-mapping-consumer:' + this.options.scope;
+    try {
+      const saved = this.options.storage.getItem(key);
+      if (saved) return { deviceId: saved };
+      const deviceId = this.options.createId();
+      this.options.storage.setItem(key, deviceId);
+      return { deviceId };
+    } catch { return undefined; }
   }
 
   private dispose = () => {

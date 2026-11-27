@@ -26,7 +26,8 @@ export function browserInput(value: string, engine: SearchEngine = DEFAULT_SEARC
     || host.startsWith('[') || HOST_WITH_PORT.test(input));
   if (looksLikeHost) {
     const http = new URL(`http://${input.replace(/^\/\//, '')}`);
-    if (browserMappings.matches(http)) return http;
+    const mapping = browserMappings.findAddress(http);
+    if (mapping) return new URL(`${mapping.protocol}//${input}`);
     candidate.protocol = defaultProtocol;
     return candidate;
   }

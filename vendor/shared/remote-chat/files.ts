@@ -10,6 +10,7 @@ export interface FileMetadata {
   name: string; path: string; directory: boolean; size: number | null; modifiedAt?: number;
 }
 export interface FileActionResult { path: string; text?: string; saved: boolean; metadata?: FileMetadata }
+export interface MappingConsumer { deviceId: string; name?: string }
 export type PreviewKind = 'html' | 'markdown' | 'text' | 'image' | 'pdf' | 'video' | 'audio';
 export interface FilePreviewData extends FileReference {
   sessionId: string; name: string; kind: PreviewKind; text: string | null; url: string;
@@ -20,7 +21,7 @@ export const GUI_FILE_OPERATIONS = new Set([
   'guiFileApplications', 'guiFileAction', 'guiFilePreviewOpen', 'guiFilePreviewClose', 'guiFilePreviewHost',
   'guiFilePreviewText',
   'guiResourceOpen', 'guiResourceClose', 'guiResourceLink',
-  'guiResourceStream',
+  'guiResourceStream', 'guiResourceMappingActive',
 ]);
 
 /** Every request travels over the selected computer's authenticated connection. */
@@ -35,6 +36,8 @@ export function createGuiFilesClient(request: <T>(body: object) => Promise<T>,
     close: (id: string) => request<void>({ operation: 'guiFilePreviewClose', id }),
     forwardHost: (id: string, host: string) => request<void>({ operation: 'guiFilePreviewHost', id, host }),
     openResource: (url: string) => request<string>({ operation: 'guiResourceOpen', url }),
+    mappingActive: (id: string, mappingId: string, { deviceId, name }: MappingConsumer) =>
+      request<void>({ operation: 'guiResourceMappingActive', id, mappingId, consumer: { deviceId, name } }),
     closeResource: (id: string) => request<void>({ operation: 'guiResourceClose', id }),
     link: (id: string, input: TerminalLinkRequest) =>
       request<TerminalLinkReply>({ operation: 'guiResourceLink', id, request: input }),

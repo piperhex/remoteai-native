@@ -3,6 +3,7 @@ import { mappingAddress, normalizeMappingDomain, normalizeMappingHost } from './
 export const MAX_PORT_MAPPINGS = 8;
 export const MAX_PORT = 65535;
 export type MappingProtocol = 'tcp' | 'udp' | 'both';
+export type LinkProtocol = 'http' | 'https';
 export const MAPPING_PROTOCOLS: readonly MappingProtocol[] = ['tcp', 'udp', 'both'];
 export const protocolLabel = (protocol?: MappingProtocol) => protocol === 'both' ? 'TCP + UDP'
   : (protocol ?? 'tcp').toUpperCase();
@@ -10,6 +11,7 @@ export interface PortMapping {
   id: string; remoteHost?: string; remotePort: number; localPort: number; updatedAt?: number;
   protocol?: MappingProtocol;
   localDomain?: string;
+  linkProtocol?: LinkProtocol;
 }
 export type MappingMode = 'tcp' | 'preview';
 export interface MappingStorage {
@@ -42,11 +44,12 @@ export function readMapping(value: unknown, createId: () => string): PortMapping
   if (!validPort(entry.remotePort) || !validPort(entry.localPort)) return;
   if (entry.remoteHost !== undefined && typeof entry.remoteHost !== 'string') return;
   if (entry.localDomain !== undefined && typeof entry.localDomain !== 'string') return;
+  if (entry.linkProtocol !== undefined && entry.linkProtocol !== 'http' && entry.linkProtocol !== 'https') return;
   if (entry.protocol !== undefined && !MAPPING_PROTOCOLS.includes(entry.protocol as MappingProtocol)) return;
   try {
     return mappingConfig({ id: typeof entry.id === 'string' && /^[\w-]{1,64}$/.test(entry.id) ? entry.id : createId(),
       remoteHost: entry.remoteHost, remotePort: entry.remotePort, localPort: entry.localPort,
-      localDomain: entry.localDomain, protocol: entry.protocol as MappingProtocol | undefined,
+      localDomain: entry.localDomain, linkProtocol: entry.linkProtocol, protocol: entry.protocol as MappingProtocol | undefined,
       updatedAt: typeof entry.updatedAt === 'number' && Number.isFinite(entry.updatedAt) ? entry.updatedAt : undefined });
   } catch { return; } // Discard invalid saved targets without losing the remaining mappings.
 }
@@ -58,10 +61,11 @@ export function savePortMappings(scope: string, entries: readonly PortMapping[],
   } catch { console.warn('Port forwarding settings could not be saved'); }
 }
 
-export function mappingConfig({ id, remoteHost, remotePort, localPort, updatedAt, protocol, localDomain }:
+export function mappingConfig({ id, remoteHost, remotePort, localPort, updatedAt, protocol, localDomain, linkProtocol }:
   PortMapping): PortMapping {
   return { id, remoteHost: normalizeMappingHost(remoteHost), remotePort, localPort,
     ...(protocol === undefined ? {} : { protocol }),
+    ...(linkProtocol === undefined ? {} : { linkProtocol }),
     ...(updatedAt === undefined ? {} : { updatedAt }),
     ...(localDomain === undefined ? {} : { localDomain: normalizeMappingDomain(localDomain) ?? '' }) };
 }

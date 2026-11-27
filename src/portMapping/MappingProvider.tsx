@@ -24,7 +24,7 @@ export function createNativeMappingRegistry(session: AuthSession) {
       createTunnel: createBrowserMappingTunnel,
       validateTarget: (target, id) => registry.validateTarget(deviceId, target, id),
       exchange: (document?: MappingDocument) => adminRequest<MappingDocument>(session,
-        `/devices/${encodeURIComponent(deviceId)}/port-mappings?localDomain=1`,
+        `/devices/${encodeURIComponent(deviceId)}/port-mappings?localDomain=1&linkProtocol=1`,
         document ? { method: 'PUT', body: JSON.stringify(document) } : {}),
     }));
 }

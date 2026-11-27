@@ -4,6 +4,7 @@ import { MappingSyncPolling, type MappingSyncEnvironment } from './syncPolling';
 
 export interface MappingDocument {
   revision: number; mappings: PortMapping[]; accepted?: boolean; supportsLocalDomain?: boolean;
+  supportsLinkProtocol?: boolean;
 }
 export type MappingExchange = (document?: MappingDocument) => Promise<MappingDocument>;
 const SYNC_ERROR = '配置暂未同步，联网后会自动重试。';
@@ -115,15 +116,16 @@ export class MappingSync {
     }
     const persisted = this.persist();
     const visible = this.applyRemote(remote);
-    if (persisted) this.updateStatus(visible, remote.supportsLocalDomain === true);
+    if (persisted) this.updateStatus(visible, remote);
     // Retry CAS conflicts promptly; capacity-only overflow waits for the normal discovery poll.
     return Object.keys(planMappingUpload(remote, this.pending).sent).length > 0;
   }
 
   private applyRemote(remote: MappingDocument) {
-    const local = new Map(this.service.snapshot().map(entry => [entry.id, entry.localDomain]));
-    const mappings = remote.supportsLocalDomain ? remote.mappings
-      : remote.mappings.map(entry => ({ ...entry, localDomain: local.get(entry.id) }));
+    const local = new Map(this.service.snapshot().map(entry => [entry.id, entry]));
+    const mappings = remote.mappings.map(entry => ({ ...entry,
+      localDomain: remote.supportsLocalDomain ? entry.localDomain : local.get(entry.id)?.localDomain,
+      linkProtocol: remote.supportsLinkProtocol ? entry.linkProtocol : local.get(entry.id)?.linkProtocol }));
     const visible = mergeMappings(mappings, this.pending);
     this.service.applySaved(visible);
     return visible;
@@ -138,7 +140,7 @@ export class MappingSync {
       throw new Error(PROTOCOL_SYNC_ERROR);
     }
     for (const [id, value] of Object.entries(sent)) {
-      if (!remote.supportsLocalDomain && value?.localDomain !== undefined) continue;
+      if (value && hasUnsupportedSettings(value, remote)) continue;
       if (this.pending[id] === value) delete this.pending[id];
     }
   }
@@ -160,12 +162,12 @@ export class MappingSync {
     return Object.fromEntries(this.service.snapshot().map(entry => [entry.id, mappingConfig(entry)]));
   }
 
-  private updateStatus(visible: PortMapping[], supportsLocalDomain: boolean) {
+  private updateStatus(visible: PortMapping[], remote: MappingDocument) {
     if (visible.length > MAX_PORT_MAPPINGS) {
       this.setStatus(CAPACITY_CONFLICT);
       return;
     }
-    if (!supportsLocalDomain && Object.values(this.pending).some(entry => entry?.localDomain !== undefined)) {
+    if (Object.values(this.pending).some(entry => entry && hasUnsupportedSettings(entry, remote))) {
       this.setStatus(SYNC_ERROR);
       return;
     }
@@ -201,17 +203,20 @@ function readMappingDocument(value: MappingDocument): MappingDocument {
     return parsed;
   });
   return { revision: value.revision, mappings, accepted: value.accepted === true,
-    supportsLocalDomain: value.supportsLocalDomain === true };
+    supportsLocalDomain: value.supportsLocalDomain === true, supportsLinkProtocol: value.supportsLinkProtocol === true };
 }
 
 /** Apply edits/deletions first, then fill available slots; overflow remains in the durable pending queue. */
-function planMappingUpload({ mappings: remote, supportsLocalDomain }: MappingDocument, pending: Pending): {
+function planMappingUpload(document: MappingDocument, pending: Pending): {
   sent: Pending; mappings: PortMapping[];
 } {
+  const remote = document.mappings;
   const remoteIds = new Set(remote.map(entry => entry.id));
-  const changes = Object.entries(pending).filter(([id, entry]) => supportsLocalDomain
-    || entry?.localDomain === undefined || !remote.some(existing => existing.id === id
-      && JSON.stringify(withoutLocalDomain(existing)) === JSON.stringify(withoutLocalDomain(entry))));
+  const supported = (entry: PortMapping) => mappingConfig({ ...entry,
+    localDomain: document.supportsLocalDomain ? entry.localDomain : undefined,
+    linkProtocol: document.supportsLinkProtocol ? entry.linkProtocol : undefined });
+  const changes = Object.entries(pending).filter(([id, entry]) => !entry || !hasUnsupportedSettings(entry, document)
+    || !remote.some(existing => existing.id === id && JSON.stringify(supported(existing)) === JSON.stringify(supported(entry))));
   const sent = Object.fromEntries(changes.filter(([id, value]) => !value || remoteIds.has(id)));
   let mappings = mergeMappings(remote, sent);
   for (const [id, value] of changes) {
@@ -221,10 +226,13 @@ function planMappingUpload({ mappings: remote, supportsLocalDomain }: MappingDoc
     sent[id] = value;
     mappings = candidate;
   }
-  return { sent, mappings: supportsLocalDomain ? mappings : mappings.map(withoutLocalDomain) };
+  return { sent, mappings: mappings.map(supported) };
 }
 
-function withoutLocalDomain({ localDomain: _domain, ...entry }: PortMapping): PortMapping { return mappingConfig(entry); }
+function hasUnsupportedSettings(entry: PortMapping, remote: MappingDocument) {
+  return (!remote.supportsLocalDomain && entry.localDomain !== undefined)
+    || (!remote.supportsLinkProtocol && entry.linkProtocol !== undefined);
+}
 
 export function mergeMappings(remote: PortMapping[], pending: Pending): PortMapping[] {
   const merged = new Map(remote.map(entry => [entry.id, mappingConfig(entry)]));
