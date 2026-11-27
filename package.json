@@ -4,7 +4,7 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "postinstall": "node ./scripts/patch-drawer-taps.cjs && node ./scripts/patch-list-render-range.cjs && node ./scripts/patch-webrtc-ice.cjs && node ./scripts/patch-tcp-punch.cjs && node ./scripts/patch-udp.cjs && node ./scripts/patch-webview-permissions.cjs && node ./scripts/patch-webview-downloads.cjs && node ./scripts/patch-document-picker.cjs",
+    "postinstall": "node ./scripts/patch-drawer-taps.cjs && node ./scripts/patch-list-render-range.cjs && node ./scripts/patch-webrtc-ice.cjs && node ./scripts/patch-tcp-punch.cjs && node ./scripts/patch-udp.cjs && node ./scripts/patch-webview-permissions.cjs && node ./scripts/patch-webview-downloads.cjs && node ./scripts/patch-webview-certificates.cjs && node ./scripts/patch-document-picker.cjs",
     "start": "node ./scripts/expo.cjs start",
     "android": "node ./scripts/expo.cjs start --android",
     "ios": "node ./scripts/expo.cjs start --ios",
@@ -26,7 +26,7 @@
     "@noble/ciphers": "^1.3.0",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
-    "@remoteai/i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.48/remoteai-i18n-0.1.48.tgz",
+    "@remoteai/i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.49/remoteai-i18n-0.1.49.tgz",
     "base64-js": "1.5.1",
     "buffer": "^6.0.3",
     "expo": "^53.0.0",

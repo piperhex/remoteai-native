@@ -5,7 +5,7 @@
     "repository": "https://github.com/piperhex/remoteai-shared.git",
     "revision": "cf0ea5dbb460f70b1de0fc4ccb64bb0db002ebbe"
   },
-  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.48/remoteai-i18n-0.1.48.tgz",
+  "i18n": "https://github.com/piperhex/remoteai-i18n/releases/download/i18n-v0.1.49/remoteai-i18n-0.1.49.tgz",
   "files": {
     "shared/dependencies.json": "c9637842b16cec6473043597368291a427281e9c05d41f1691c2cded3e9444d4",
     "apps/desktop/src-tauri/icons/32x32.png": "f1ef425afd70853a3f0b4abd58163ef5614d707d7e5e210f27e7077b352c02b0",

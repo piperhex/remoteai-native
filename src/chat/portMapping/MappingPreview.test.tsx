@@ -34,6 +34,9 @@ vi.mock('react-native', () => ({ Linking: { openURL: runtime.openURL }, Keyboard
   Pressable: 'Pressable', Text: 'Text', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaProvider: 'Provider', SafeAreaView: 'SafeAreaView' }));
 vi.mock('react-native-webview', () => ({ WebView: 'WebView' }));
+vi.mock('expo-sqlite/kv-store', () => ({ default: { getItemSync: vi.fn(), setItemSync: vi.fn() } }));
+vi.mock('../../../vendor/shared/port-mapping/deviceRegistry', () => ({ useDeviceMappings: () => [] }));
+vi.mock('../../browser/MappingCertificateWarning', () => ({ MappingCertificateWarning: 'CertificateWarning' }));
 vi.mock('react-native-view-shot', () => ({ captureRef: vi.fn() }));
 vi.mock('../../browser/useBrowserNavigationGestures', () => ({ useBrowserNavigationGestures: () => ({}) }));
 vi.mock('../../browser/context', () => ({ useBrowserSafeAreaEdges: () => undefined }));

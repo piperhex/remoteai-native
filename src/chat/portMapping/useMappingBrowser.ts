@@ -118,5 +118,6 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     history: homeVisible ? { back: homeReturn === 'goBack', forward: homeReturn === 'goForward' }
       : { back: true, forward: !resourceVisible ? history.forward : Boolean(currentUrl) },
     home, homeVisible, resourceVisible, resourceGeneration, error, activity,
-    navigate, submit, visit, onNavigationStateChange, openExternal, onError };
+    navigate, submit, visit, retry: (uri: string) => { setError(''); setSource({ uri }); },
+    onNavigationStateChange, openExternal, onError };
 }

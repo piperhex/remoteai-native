@@ -113,7 +113,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
                 return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]}
                   collapsable={false} pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
                   importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-                  <MappingPreview dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
+                  <MappingPreview trustScope={scope} dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
                     request={tab.request} onRequestHandled={request => browser.consumeRequest(tab.id, request)}
                     visible={active} devices={devices}
                     onDownload={download} pageDownloads={pageDownloads} openDownloads={openDownloads}

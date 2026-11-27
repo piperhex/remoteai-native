@@ -10,6 +10,8 @@ import { MappingBrowserSettings } from './MappingBrowserSettings';
 import { useMappingBrowserStyles } from './mappingBrowserStyles';
 import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
+import { useMappingCertificate } from '../../browser/useMappingCertificate';
+import { MappingCertificateWarning } from '../../browser/MappingCertificateWarning';
 import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
 import { BrowserHome } from '../../browser/BrowserHome';
 import { BrowserMousePanel, useBrowserMousePreference } from '../../browser/BrowserMousePanel';
@@ -32,12 +34,12 @@ import { isPageDownloadUrl, PAGE_DOWNLOAD_SCRIPT } from '../../browser/pageDownl
 
 const COMPACT_TOOLBAR_WIDTH = 272;
 
-export function MappingPreview({ port, initialUrl = '', resource, request, onRequestHandled,
+export function MappingPreview({ port, trustScope, initialUrl = '', resource, request, onRequestHandled,
   visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
   fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange,
   onDownload, pageDownloads, openDownloads }: {
-  port?: number; initialUrl?: string; request?: { url: string }; visible?: boolean;
+  port?: number; trustScope?: string; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource; onRequestHandled?: (request: { url: string }) => void;
   onNavigate?: (url: string, title: string) => void; close: () => void;
   devices?: readonly BrowserDevice[];
@@ -53,6 +55,7 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
   const safeAreaEdges = useBrowserSafeAreaEdges();
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl, resource);
+  const certificate = useMappingCertificate(trustScope, browser.source.uri);
   const site = useBrowserSiteMode(desktop, browser.webview);
   const records = useNativeBrowserRecords(browser.webview, visible);
   const downloads = useRef<PageDownloads | undefined>(undefined);
@@ -135,7 +138,9 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
       <BrowserMousePanel page={page} cancelOnLoad={cancelPageMouse} enabled={mouseEnabled}
         active={visible && !obscured} home={browser.homeVisible}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
-      {!!browser.source.uri && <WebView key={dataGeneration} ref={browser.webview}
+      {!!browser.source.uri && <WebView<{ mappingCertificatePolicy?: string }>
+        key={JSON.stringify([dataGeneration, certificate.policy])} ref={browser.webview}
+        mappingCertificatePolicy={certificate.policy}
         source={browser.source} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
@@ -172,10 +177,16 @@ export function MappingPreview({ port, initialUrl = '', resource, request, onReq
           browser.onNavigationStateChange(state);
           records.navigate(state);
         }}
-        renderError={() => <View style={styles.empty}>
+        renderError={() => certificate.current ? <MappingCertificateWarning key={certificate.current.fingerprint}
+          url={certificate.current.url} fingerprint={certificate.current.fingerprint} changed={certificate.changed}
+          back={() => { certificate.dismiss(); browser.navigate('goBack'); }}
+          trust={() => { browser.retry(certificate.current!.url); certificate.trust(); }} /> : <View style={styles.empty}>
           <Text style={browserStyles.message}>
             {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
-        onError={browser.onError} />}
+        onError={event => {
+          if (certificate.capture(event.nativeEvent)) activity.reset();
+          else { certificate.dismiss(); browser.onError(); }
+        }} />}
       </View>
       {resource && <View key={browser.resourceGeneration}
         style={[styles.fill, (!browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
