@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Storage from 'expo-sqlite/kv-store';
 import { closeBrowserTab, createBrowserHome, newBrowserTab, restoreBrowserTabs, serializeBrowserTabs,
   type NativeBrowserTab, type NativeBrowserResource } from './browserTabs';
@@ -23,6 +23,10 @@ export function useNativeBrowserTabs(scope: string) {
   const update = (id: string, patch: Partial<NativeBrowserTab>) => setState(current => ({ ...current,
     tabs: current.tabs.map(tab => tab.id === id ? { ...tab, ...patch } : tab) }));
   const previewOrder = useRef<string[]>([]);
+  const resetPreviews = useCallback(() => {
+    previewOrder.current = [];
+    setState(current => ({ ...current, tabs: current.tabs.map(tab => ({ ...tab, preview: undefined })) }));
+  }, []);
   const setPreview = (id: string, preview: string) => {
     const kept = [id, ...previewOrder.current.filter(previous => previous !== id)].slice(0, MAX_TAB_PREVIEWS);
     previewOrder.current = kept;
@@ -40,7 +44,7 @@ export function useNativeBrowserTabs(scope: string) {
   const consumeRequest = (id: string, request: { url: string }) => setState(current => ({ ...current,
     tabs: current.tabs.map(tab => tab.id === id && tab.request === request
       ? { ...tab, url: request.url, request: undefined } : tab) }));
-  return { ...state, update, add, visit, setPreview, consumeRequest,
+  return { ...state, update, add, visit, setPreview, resetPreviews, consumeRequest,
     closeAll: () => setState(createBrowserHome()),
     select: (activeId: string) => setState(current => ({ ...current, activeId })),
     remove: (id: string) => setState(current => closeBrowserTab(current, id)) };

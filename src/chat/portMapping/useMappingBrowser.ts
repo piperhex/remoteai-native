@@ -107,9 +107,10 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
     catch { setError(t('client.portForwarding.couldNotOpenTheBrowserPleaseTryAgain')); }
     finally { opening.current = false; }
   };
-  const onError = () => {
+  const resetPage = () => {
     activity.reset();
-    setError(t('client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs'));
+    setHistory({ back: false, forward: false });
+    setSource({ uri: currentUrl || source.uri });
   };
   const editAddress = (value: string) => { editing.current = true; setAddress(value); };
   return { webview, source, address, setAddress: editAddress,
@@ -119,5 +120,5 @@ export function useMappingBrowser(initialUrl: string, resource?: NativeBrowserRe
       : { back: true, forward: !resourceVisible ? history.forward : Boolean(currentUrl) },
     home, homeVisible, resourceVisible, resourceGeneration, error, activity,
     navigate, submit, visit, retry: (uri: string) => { setError(''); setSource({ uri }); },
-    onNavigationStateChange, openExternal, onError };
+    onNavigationStateChange, openExternal, resetPage };
 }

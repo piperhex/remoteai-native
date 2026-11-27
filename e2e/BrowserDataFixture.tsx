@@ -14,12 +14,33 @@ import { textMetrics } from '../src/theme/text';
 import { readBrowserDocument } from '../vendor/shared/browser/data/model';
 import vaultFixture from './browser-data-vault.json';
 import { BrowserLoginFixture } from './BrowserLoginFixture';
+import { DeviceMappingProvider, useDeviceMappings } from '../vendor/shared/port-mapping/deviceRegistry';
+import { mappingFixture } from '../vendor/shared/port-mapping/testing/fixture';
 
 setInterfaceLanguage('zh');
 updateThemeMode('light');
+const deviceIds = ['browser-data-fixture'];
+const storedMappings = new Map<string, string>();
+const { registry } = mappingFixture({ storage: {
+  getItem: key => storedMappings.get(key) ?? null, setItem: (key, value) => { storedMappings.set(key, value); },
+} });
+const siteAddress = '127.0.0.1:19876';
+
+function FixtureSiteLinks() {
+  const browser = useNativeBrowser();
+  const mapped = useDeviceMappings().some(({ connected, entry }) => connected && entry.status === 'running');
+  return <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+    <Pressable accessibilityRole="button" onPress={() => browser.openTab(`http://${siteAddress}/site`)}>
+      <Text style={textMetrics(14, 22)}>Site data</Text></Pressable>
+    {mapped && <Pressable accessibilityRole="button" onPress={() => browser.openTab(`https://${siteAddress}/retry`)}>
+      <Text style={textMetrics(14, 22)}>TLS error</Text></Pressable>}
+  </View>;
+}
+
 function FixtureFooter() {
   const browser = useNativeBrowser(), { store } = useBrowserData();
   const [ready, setReady] = useState(false);
+  useEffect(() => { registry.get(deviceIds[0]).service.add(19876, 19876, '127.0.0.1', 'tcp'); }, []);
   useEffect(() => {
     if (store.snapshot().entries.length) { setReady(true); return; }
     const now = Date.now();
@@ -32,7 +53,7 @@ function FixtureFooter() {
     if (!document) throw new Error('Invalid encrypted fixture');
     store.edit(Object.fromEntries(document.entries.map(entry => [entry.id, entry]))); setReady(true);
   }, [store]);
-  return <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 8 }}>
+  return <View><FixtureSiteLinks /><View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 8 }}>
     {ready && <Text style={textMetrics(12, 20)}>Ready</Text>}
     <Pressable accessibilityRole="button" onPress={() => browser.openResource({ url: 'https://browser-fixture.test/',
       title: 'Login test', render: ({ close }) => <BrowserLoginFixture close={close} /> })}>
@@ -40,11 +61,13 @@ function FixtureFooter() {
     {['Light', 'Dark', 'Browser'].map((name, index) => <Pressable key={name} accessibilityRole="button"
       onPress={() => index === 2 ? browser.open() : updateThemeMode(index === 0 ? 'light' : 'dark')}>
       <Text style={textMetrics(14, 22)}>{name}</Text></Pressable>)}
-  </View>;
+  </View></View>;
 }
 function Fixture() {
   const [fonts] = useFonts(Ionicons.font), [active, setActive] = useState(true);
-  return <SafeAreaProvider>{fonts && <NativeBrowserProvider scope="browser-data-fixture" active={active}
-    onActiveChange={setActive} footer={<FixtureFooter />}><View /></NativeBrowserProvider>}</SafeAreaProvider>;
+  return <SafeAreaProvider>{fonts && <DeviceMappingProvider registry={registry} deviceIds={deviceIds}>
+    <NativeBrowserProvider scope="browser-data-fixture" active={active} onActiveChange={setActive}
+      footer={<FixtureFooter />}><View /></NativeBrowserProvider>
+  </DeviceMappingProvider>}</SafeAreaProvider>;
 }
 registerRootComponent(Fixture);

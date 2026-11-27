@@ -5,8 +5,11 @@ const registration = 'packages.add(com.codexswitch.browserdata.BrowserDataPackag
 
 module.exports = function withBrowserData(config) {
   config = withAppBuildGradle(config, result => {
-    const dependency = 'implementation "androidx.webkit:webkit:1.12.1"';
-    if (!result.modResults.contents.includes(dependency)) result.modResults.contents +=
+    const dependency = 'implementation "androidx.webkit:webkit:1.13.0"';
+    const previous = 'implementation "androidx.webkit:webkit:1.12.1"';
+    if (result.modResults.contents.includes(previous)) {
+      result.modResults.contents = result.modResults.contents.replace(previous, dependency);
+    } else if (!result.modResults.contents.includes(dependency)) result.modResults.contents +=
       '\ndependencies { ' + dependency + ' }\n';
     return result;
   });

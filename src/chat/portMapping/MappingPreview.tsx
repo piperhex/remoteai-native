@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleSheet, Text, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
-import { t, useLanguage } from '../../i18n';
+import { WebView, type WebViewProps } from 'react-native-webview';
+import { useDeviceMappings } from '../../../vendor/shared/port-mapping/deviceRegistry';
+import { useLanguage } from '../../i18n';
 import { useStyles } from '../styles';
 import { MappingBrowserToolbar } from './MappingBrowserToolbar';
 import { MappingBrowserSettings } from './MappingBrowserSettings';
@@ -12,6 +13,8 @@ import { PREVIEW_NETWORK_SCRIPT } from './previewNetworkActivity';
 import { useMappingBrowser } from './useMappingBrowser';
 import { useMappingCertificate } from '../../browser/useMappingCertificate';
 import { MappingCertificateWarning } from '../../browser/MappingCertificateWarning';
+import { BrowserLoadError } from '../../browser/BrowserLoadError';
+import { mappedHttpRetry } from '../../browser/browserLoadFailure';
 import { BrowserBookmarks } from '../../browser/BrowserBookmarks';
 import { BrowserHome } from '../../browser/BrowserHome';
 import { BrowserMousePanel, useBrowserMousePreference } from '../../browser/BrowserMousePanel';
@@ -37,7 +40,7 @@ const COMPACT_TOOLBAR_WIDTH = 272;
 export function MappingPreview({ port, trustScope, initialUrl = '', resource, request, onRequestHandled,
   visible = true, onNavigate, close, devices = [],
   tabCount = 1, newTab = () => {}, manageTabs = () => {}, onPreview, desktop = false, onDesktopChange = () => {},
-  fullscreen = false, onFullscreenChange = () => {}, dataGeneration = 0, inspector, onInspectorObscuredChange,
+  fullscreen = false, onFullscreenChange = () => {}, suspended = false, inspector, onInspectorObscuredChange,
   onDownload, pageDownloads, openDownloads }: {
   port?: number; trustScope?: string; initialUrl?: string; request?: { url: string }; visible?: boolean;
   resource?: NativeBrowserResource; onRequestHandled?: (request: { url: string }) => void;
@@ -45,7 +48,7 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
   devices?: readonly BrowserDevice[];
   tabCount?: number; newTab?: () => void; manageTabs?: () => void; onPreview?: (uri: string) => void;
   desktop?: boolean; onDesktopChange?: (desktop: boolean) => void;
-  fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void; dataGeneration?: number;
+  fullscreen?: boolean; onFullscreenChange?: (fullscreen: boolean) => void; suspended?: boolean;
   inspector?: BrowserInspectorControls; onInspectorObscuredChange?: (obscured: boolean) => void;
   onDownload?: (request: BrowserDownloadRequest) => void;
   pageDownloads?: PageDownloadHandlers;
@@ -56,8 +59,10 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
   const browserStyles = useMappingBrowserStyles();
   const browser = useMappingBrowser(port ? `http://127.0.0.1:${port}` : initialUrl, resource);
   const certificate = useMappingCertificate(trustScope, browser.source.uri);
+  const mappings = useDeviceMappings();
+  const [failure, setFailure] = useState<Parameters<NonNullable<WebViewProps['onError']>>[0]['nativeEvent']>();
   const site = useBrowserSiteMode(desktop, browser.webview);
-  const records = useNativeBrowserRecords(browser.webview, visible);
+  const records = useNativeBrowserRecords(browser.webview, visible && !suspended);
   const downloads = useRef<PageDownloads | undefined>(undefined);
   downloads.current ??= new PageDownloads();
   const downloadScript = pageDownloads ? PAGE_DOWNLOAD_SCRIPT : '';
@@ -99,7 +104,14 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
     Keyboard.dismiss(); inspector?.hideKeyboard();
   });
   useLanguage();
-  useEffect(() => () => downloads.current?.reset(), [dataGeneration]);
+  useEffect(() => () => downloads.current?.reset(), []);
+  useEffect(() => {
+    if (!suspended) return;
+    downloads.current?.reset();
+    certificate.dismiss();
+    setFailure(undefined);
+    browser.resetPage();
+  }, [suspended]);
   useEffect(() => {
     if (request) { browser.visit(request.url); onRequestHandled?.(request); }
   }, [request]);
@@ -138,12 +150,14 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
       <BrowserMousePanel page={page} cancelOnLoad={cancelPageMouse} enabled={mouseEnabled}
         active={visible && !obscured} home={browser.homeVisible}>
       <View style={[StyleSheet.absoluteFill, (browser.resourceVisible || browser.homeVisible) && { display: 'none' }]}>
-      {!!browser.source.uri && <WebView<{ mappingCertificatePolicy?: string }>
-        key={JSON.stringify([dataGeneration, certificate.policy])} ref={browser.webview}
+      {!suspended && !!browser.source.uri && <WebView<{ mappingCertificatePolicy?: string }>
+        key={certificate.policy} ref={browser.webview}
         mappingCertificatePolicy={certificate.policy}
         source={browser.source} style={styles.fill}
         // Keep the system's default UA mobile; desktop mode overrides it without replacing the WebView.
         userAgent={site.userAgent} contentMode="mobile"
+        importantForAccessibility={failure || certificate.current ? 'no-hide-descendants' : 'auto'}
+        accessibilityElementsHidden={!!(failure || certificate.current)}
         incognito={false} domStorageEnabled
         originWhitelist={['http://*', 'https://*']} allowFileAccess={false}
         allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
@@ -169,7 +183,8 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
             browser.webview.current?.injectJavaScript(`window.__remoteAiPageDownload?.start(...${args}); true;`);
           } else onDownload(request);
         })}
-        onLoadStart={() => { cancelPageMouse.current?.(); activity.onLoadStart(); }} onLoadEnd={activity.onLoadEnd}
+        onLoadStart={() => { cancelPageMouse.current?.(); activity.onLoadStart(); }}
+        onLoad={() => setFailure(undefined)} onLoadEnd={activity.onLoadEnd}
         onLoadProgress={activity.onLoadProgress}
         onShouldStartLoadWithRequest={request => /^https?:\/\//i.test(request.url)
           || !browser.source.uri && request.url === 'about:blank'}
@@ -180,12 +195,16 @@ export function MappingPreview({ port, trustScope, initialUrl = '', resource, re
         renderError={() => certificate.current ? <MappingCertificateWarning key={certificate.current.fingerprint}
           url={certificate.current.url} fingerprint={certificate.current.fingerprint} changed={certificate.changed}
           back={() => { certificate.dismiss(); browser.navigate('goBack'); }}
-          trust={() => { browser.retry(certificate.current!.url); certificate.trust(); }} /> : <View style={styles.empty}>
-          <Text style={browserStyles.message}>
-            {t("client.portForwarding.couldNotLoadTheWebsiteCheckThatTheServiceIs")}</Text></View>}
+          trust={() => { browser.retry(certificate.current!.url); certificate.trust(); }} /> : <BrowserLoadError
+          retryUrl={failure && mappedHttpRetry(failure, mappings)} retry={url => {
+            setFailure(undefined); browser.submit(url);
+          }} />}
         onError={event => {
-          if (certificate.capture(event.nativeEvent)) activity.reset();
-          else { certificate.dismiss(); browser.onError(); }
+          activity.reset();
+          if (!certificate.capture(event.nativeEvent)) {
+            certificate.dismiss();
+            setFailure(event.nativeEvent);
+          }
         }} />}
       </View>
       {resource && <View key={browser.resourceGeneration}

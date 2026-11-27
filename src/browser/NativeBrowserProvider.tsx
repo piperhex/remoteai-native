@@ -9,6 +9,7 @@ import { MappingPreview } from '../chat/portMapping/MappingPreview';
 import { NativeBrowserContext } from './context';
 import type { BrowserDevice } from './browserMappings';
 import { useNativeBrowserTabs } from './useNativeBrowserTabs';
+import { useBrowserSiteData } from './useBrowserSiteData';
 import { BrowserTabManager } from './BrowserTabManager';
 import { BrowserInspectorDock } from './inspector/BrowserInspectorDock';
 import { useBrowserInspector } from './inspector/useBrowserInspector';
@@ -44,9 +45,9 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   }, [releaseBackground]);
   useEffect(() => { if (!visible) setFullscreen(false); }, [visible]);
   const [manager, setManager] = useState(false);
-  const [dataGeneration, setDataGeneration] = useState(0);
+  const { generation, suspended, clearSiteData } = useBrowserSiteData(browser.resetPreviews);
   const [inspectorObscured, setInspectorObscured] = useState(false);
-  const inspector = useBrowserInspector(browser.activeId, dataGeneration);
+  const inspector = useBrowserInspector(browser.activeId, generation);
   const hideInspectorKeyboard = inspector.hideKeyboard;
   useEffect(() => { if (!visible) hideInspectorKeyboard(); }, [visible, hideInspectorKeyboard]);
   const dismissKeyboard = useCallback(() => {
@@ -75,13 +76,13 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
   const context = useMemo(() => ({ visible, hasBottomNavigation, close,
     tabs: browser.tabs.map(tab => ({ id: tab.id, at: tab.visitedAt ?? 0 })),
     closeTabs: (ids: string[]) => ids.forEach(id => browser.remove(id)),
-    reloadTabs: () => setDataGeneration(value => value + 1),
+    clearSiteData,
     open: (url?: string) => { if (url) browser.visit(url); reveal(); },
     openTab: (url: string) => { browser.add(url); reveal(); },
     openResource: (resource: import('./browserTabs').NativeBrowserResource) => {
       browser.add(resource.url, resource); reveal();
     },
-  }), [visible, hasBottomNavigation, close, onActiveChange, browser.tabs]);
+  }), [visible, hasBottomNavigation, close, onActiveChange, browser.tabs, clearSiteData]);
   const add = () => { Keyboard.dismiss(); browser.add(); setManager(false); };
   const remove = (id: string) => {
     browser.remove(id);
@@ -113,7 +114,7 @@ export function NativeBrowserProvider({ scope, channel, children, devices = [], 
                 return <View key={tab.id} style={[StyleSheet.absoluteFill, !active && styles.hidden]}
                   collapsable={false} pointerEvents={active ? 'auto' : 'none'} accessibilityElementsHidden={!active}
                   importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}>
-                  <MappingPreview trustScope={scope} dataGeneration={dataGeneration} initialUrl={tab.url} resource={tab.resource}
+                  <MappingPreview trustScope={scope} suspended={suspended} initialUrl={tab.url} resource={tab.resource}
                     request={tab.request} onRequestHandled={request => browser.consumeRequest(tab.id, request)}
                     visible={active} devices={devices}
                     onDownload={download} pageDownloads={pageDownloads} openDownloads={openDownloads}

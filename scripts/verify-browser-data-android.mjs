@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
 
 const run = promisify(execFile), serial = process.env.ANDROID_SERIAL;
 assert.ok(serial, 'Set ANDROID_SERIAL to a physical test device');
@@ -56,10 +57,90 @@ async function type(label, value) {
   await delay(300);
 }
 const back = async () => { await adb('shell', 'input', 'keyevent', '4'); await delay(400); };
+
+function siteFixture(request, response) {
+  const path = new URL(request.url, 'http://127.0.0.1').pathname;
+  response.setHeader('Cache-Control', 'no-store');
+  if (path === '/sign-in') {
+    response.setHeader('Set-Cookie', 'fixture-login=1; Path=/; HttpOnly');
+    response.end('ok'); return;
+  }
+  if (path === '/worker.js') {
+    response.setHeader('Content-Type', 'text/javascript');
+    response.end('self.addEventListener("install", () => self.skipWaiting());'); return;
+  }
+  const signedIn = request.headers.cookie?.includes('fixture-login=1') ?? false;
+  response.setHeader('Content-Type', 'text/html; charset=utf-8');
+  response.end(`<!doctype html><meta name="viewport" content="width=device-width"><title>Website storage test</title>
+    <h1>${path === '/retry' ? 'Protocol recovery' : 'Website storage test'}</h1>
+    <button id="login">Sign in to test site</button><p id="status" role="status"></p>
+    <script>
+    let cookie = ${signedIn};
+    async function report() {
+      const found = [cookie, !!localStorage.fixture, !!sessionStorage.fixture,
+        (await indexedDB.databases()).some(db => db.name === 'fixture'),
+        await caches.has('fixture'), (await navigator.serviceWorker.getRegistrations()).length > 0];
+      document.querySelector('#status').textContent = found.every(Boolean) ? 'Stored login present'
+        : found.some(Boolean) ? 'Residual storage ' + found.map(Number).join('') : 'Signed out and storage empty';
+    }
+    document.querySelector('#login').onclick = async () => {
+      cookie = (await fetch('/sign-in', { method: 'POST' })).ok;
+      localStorage.fixture = sessionStorage.fixture = 'signed-in';
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.open('fixture');
+        request.onsuccess = () => { request.result.close(); resolve(); };
+        request.onerror = reject;
+      });
+      await caches.open('fixture');
+      await navigator.serviceWorker.register('/worker.js');
+      await report();
+    };
+    report();</script>`);
+}
+
+async function verifySiteData() {
+  const port = 19876;
+  const server = createServer(siteFixture);
+  await new Promise((resolve, reject) => server.listen(port, '127.0.0.1', resolve).once('error', reject));
+  try {
+    await adb('reverse', `tcp:${port}`, `tcp:${port}`);
+    for (const scale of ['1.0', '1.3']) {
+      await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
+      await adb('shell', 'pm', 'clear', app);
+      await adb('shell', 'am', 'start', '-S', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+      await find('Ready'); await tap('TLS error');
+      await find('网页未能加载，请确认服务已启动后刷新。');
+      await shot(`android-tls-error-font-${scale}`);
+      await tap(`http://127.0.0.1:${port}`); await find('Protocol recovery');
+      assert.equal((await find('访问地址')).text, `http://127.0.0.1:${port}/retry`);
+      await tap('Site data'); await find('Signed out and storage empty');
+      await tap('Sign in to test site'); await find('Stored login present');
+      await clearSiteData(); await shot(`android-site-data-deleted-font-${scale}`);
+      await back(); await back(); await find('Signed out and storage empty');
+      await shot(`android-site-data-signed-out-font-${scale}`);
+      await adb('shell', 'am', 'start', '-S', '-n', `${app}/com.codexswitch.mobile.MainActivity`);
+      await find('Ready'); await find('Signed out and storage empty');
+      console.log(`Passed Android TLS recovery and complete site data deletion at font scale ${scale}`);
+    }
+  } finally {
+    await adb('reverse', '--remove', `tcp:${port}`);
+    server.close();
+  }
+}
+
+async function clearSiteData() {
+  await tap('设置'); await tap('历史记录'); await tap('删除浏览数据');
+  const cache = (await nodes()).find(node => node['content-desc']?.split(', ').includes('缓存的图片和文件'));
+  assert.equal(cache?.checked, 'true');
+  await tapNode(cache);
+  await tap('删除数据'); await tap('删除数据'); await find('所选数据已删除。');
+}
+
 await mkdir(output, { recursive: true });
 const scaleBefore = await adb('shell', 'settings', 'get', 'system', 'font_scale');
 const results = [];
 try {
+  if (process.argv.includes('--site-data')) await verifySiteData();
   if (process.argv.includes('--login')) {
     for (const scale of ['1.0', '1.3']) {
       const prefix = `android-login-font-${scale}`;
@@ -89,7 +170,8 @@ try {
       scales: [1.0, 1.3], nodeCreatedVaultUnlocked: true, physicalDevice: serial }));
     console.log('Native WebView capture, save, fill and cross-platform decryption passed');
   }
-  const scales = process.argv.includes('--login') ? [] : process.env.TEST_FONT_SCALE ? [process.env.TEST_FONT_SCALE] : ['1.0', '1.3'];
+  const scales = process.argv.some(arg => ['--login', '--site-data'].includes(arg)) ? []
+    : process.env.TEST_FONT_SCALE ? [process.env.TEST_FONT_SCALE] : ['1.0', '1.3'];
   for (const scale of scales) {
     await adb('shell', 'settings', 'put', 'system', 'font_scale', scale);
     for (const theme of (process.env.TEST_THEME ? [process.env.TEST_THEME] : ['Light', 'Dark'])) {

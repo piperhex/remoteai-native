@@ -36,14 +36,36 @@ RCT_REMAP_METHOD(derive, derivePassphrase:(NSString *)passphrase salt:(NSString 
 
 RCT_REMAP_METHOD(clear, clearCookies:(BOOL)cookies cache:(BOOL)cache
                  resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
-  NSMutableSet<NSString *> *types = [NSMutableSet set];
-  if (cookies) {
-    [types addObjectsFromArray:@[WKWebsiteDataTypeCookies, WKWebsiteDataTypeLocalStorage,
-      WKWebsiteDataTypeSessionStorage, WKWebsiteDataTypeIndexedDBDatabases, WKWebsiteDataTypeWebSQLDatabases]];
+  NSSet<NSString *> *networkCaches = [NSSet setWithArray:@[WKWebsiteDataTypeDiskCache,
+    WKWebsiteDataTypeMemoryCache, WKWebsiteDataTypeOfflineWebApplicationCache]];
+  NSMutableSet<NSString *> *types = cookies ? [WKWebsiteDataStore.allWebsiteDataTypes mutableCopy] : [NSMutableSet set];
+  if (cache) [types unionSet:networkCaches]; else [types minusSet:networkCaches];
+  if (!types.count) { resolve(nil); return; }
+  if (@available(iOS 17.0, *)) {
+    [WKWebsiteDataStore fetchAllDataStoreIdentifiers:^(NSArray<NSUUID *> *identifiers) {
+      NSMutableArray<WKWebsiteDataStore *> *stores =
+        [NSMutableArray arrayWithObject:WKWebsiteDataStore.defaultDataStore];
+      for (NSUUID *identifier in identifiers) [stores addObject:[WKWebsiteDataStore dataStoreForIdentifier:identifier]];
+      [self clearStores:stores types:types cookies:cookies resolve:resolve];
+    }];
+  } else {
+    [self clearStores:@[WKWebsiteDataStore.defaultDataStore] types:types cookies:cookies resolve:resolve];
   }
-  if (cache) [types addObjectsFromArray:@[WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache,
-    WKWebsiteDataTypeOfflineWebApplicationCache]];
-  [[WKWebsiteDataStore defaultDataStore] removeDataOfTypes:types modifiedSince:[NSDate distantPast]
-    completionHandler:^{ resolve(nil); }];
+}
+
+- (void)clearStores:(NSArray<WKWebsiteDataStore *> *)stores types:(NSSet<NSString *> *)types
+            cookies:(BOOL)cookies resolve:(RCTPromiseResolveBlock)resolve {
+  dispatch_group_t group = dispatch_group_create();
+  for (WKWebsiteDataStore *store in stores) {
+    dispatch_group_enter(group);
+    [store removeDataOfTypes:types modifiedSince:NSDate.distantPast completionHandler:^{
+      dispatch_group_leave(group);
+    }];
+  }
+  dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+    // The WebView cookie bridge can otherwise restore the deleted cookies on the next mount.
+    if (cookies) [NSHTTPCookieStorage.sharedHTTPCookieStorage removeCookiesSinceDate:NSDate.distantPast];
+    resolve(nil);
+  });
 }
 @end

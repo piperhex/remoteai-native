@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState, type RefObject } from 'react';
-import { AppState, NativeModules } from 'react-native';
+import { AppState } from 'react-native';
 import type { WebView, WebViewMessageEvent, WebViewNavigation } from 'react-native-webview';
 import { useBrowserData } from '../../vendor/shared/browser/data/context';
 import { newDataId, validateLogin } from '../../vendor/shared/browser/data/crypto';
@@ -9,8 +9,6 @@ import type { DataControls } from '../../vendor/shared/browser/data/clear';
 import { NativeBrowserContext } from './context';
 import { isPasswordFocus, matchingPasswords, type PasswordFocus } from '../../vendor/shared/browser/data/passwordFocus';
 
-interface SiteDataBridge { clear: (cookies: boolean, cache: boolean) => Promise<void> }
-const bridge = NativeModules.BrowserData as SiteDataBridge | undefined;
 export function useNativeBrowserRecords(webview: RefObject<WebView | null>, visible: boolean) {
   const { store, vault, random } = useBrowserData(), browser = useContext(NativeBrowserContext);
   const previous = useRef(''), current = useRef(''), [candidate, setCandidate] = useState<Login>();
@@ -73,9 +71,7 @@ export function useNativeBrowserRecords(webview: RefObject<WebView | null>, visi
       window.ReactNativeWebView.postMessage(JSON.stringify({type:'browser-fill',id:${JSON.stringify(id)},ok}));})();true;`);
   });
   const controls: DataControls = { tabs: browser?.tabs ?? [], closeTabs: ids => browser?.closeTabs?.(ids),
-    clearSiteData: bridge ? async options => {
-      await bridge.clear(options.cookies, options.cache); browser?.reloadTabs?.();
-    } : undefined };
+    clearSiteData: browser?.clearSiteData };
   return { navigate, receive, fill, controls, candidate, closeCapture, focus, closeSuggestions,
     script: passwordScript({ action: 'install', native: true }) + ';true;' };
 }

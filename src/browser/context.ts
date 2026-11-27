@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { NativeBrowserResource } from './browserTabs';
+import type { DataControls } from '../../vendor/shared/browser/data/clear';
 
 export const NativeBrowserContext = createContext<{
   open: (url?: string) => void;
@@ -10,7 +11,7 @@ export const NativeBrowserContext = createContext<{
   hasBottomNavigation: boolean;
   tabs?: { id: string; at: number }[];
   closeTabs?: (ids: string[]) => void;
-  reloadTabs?: () => void;
+  clearSiteData?: DataControls['clearSiteData'];
 } | null>(null);
 
 export function useBrowserSafeAreaEdges() {
